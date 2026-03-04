@@ -15,6 +15,8 @@ interface Props {
   description?: string;
   isCompareSelected?: boolean;
   onCompareToggle?: () => void;
+  compareButton?: React.ReactNode;
+  index?: number;
 }
 
 function StarRating({ rating, count }: { rating: number; count: number }) {
@@ -47,13 +49,17 @@ function formatPrice(price: number): string {
   return `$${price.toFixed(2)}`;
 }
 
-export function SearchResultCard({ product, reviewSnippet, reviewSnippets, description, isCompareSelected, onCompareToggle }: Props) {
+export function SearchResultCard({ product, reviewSnippet, reviewSnippets, description, isCompareSelected, onCompareToggle, compareButton, index }: Props) {
   const hasDiscount = product.discount_percentage && product.discount_percentage > 0;
   const imageUrl = product.images?.[0]?.url;
   const imageAlt = product.images?.[0]?.alt || product.name;
 
   // Use the array form if available (SSR sends multiple), otherwise single snippet (RSC)
   const snippets = reviewSnippets || (reviewSnippet ? [reviewSnippet] : []);
+
+  // Above-the-fold images (first row of 3-column grid) load eagerly for LCP.
+  // Below-the-fold images stay lazy to save bandwidth.
+  const isAboveFold = index !== undefined && index < 3;
 
   // Render a truncated markdown description as HTML — this is expensive
   // In RSC: runs server-side (marked + highlight.js never shipped to client)
@@ -71,7 +77,8 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
             src={imageUrl}
             alt={imageAlt}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
+            loading={isAboveFold ? 'eager' : 'lazy'}
+            {...(index === 0 ? { fetchPriority: 'high' } : {})}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -97,7 +104,10 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           </div>
         )}
 
-        {/* Compare checkbox — only rendered in SSR (interactive, needs hydration) */}
+        {/* Compare button — RSC passes a client component island via compareButton prop */}
+        {compareButton}
+
+        {/* Compare checkbox — rendered in SSR (interactive, needs hydration) */}
         {onCompareToggle && (
           <button
             onClick={(e) => { e.stopPropagation(); onCompareToggle(); }}

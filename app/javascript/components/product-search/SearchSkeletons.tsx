@@ -46,6 +46,26 @@ export function ProductCardSkeleton() {
   );
 }
 
+export function FilterSidebarSkeleton() {
+  return (
+    <aside className="w-full space-y-4 animate-pulse">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="border-b border-gray-100 pb-3">
+          <div className="h-4 w-24 bg-gray-200 rounded mb-3" />
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((j) => (
+              <div key={j} className="flex items-center justify-between px-3">
+                <div className="h-3 bg-gray-200 rounded" style={{ width: `${50 + j * 15}px` }} />
+                <div className="h-3 w-6 bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </aside>
+  );
+}
+
 export function ReviewSnippetsSkeleton() {
   return (
     <div className="animate-pulse space-y-3 mt-3">

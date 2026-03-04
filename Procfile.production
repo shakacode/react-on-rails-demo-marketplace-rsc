@@ -1,2 +1,2 @@
 web: DATABASE_USERNAME=${DATABASE_USERNAME:-abanoub} DATABASE_NAME=${DATABASE_NAME:-localhub_demo_development} SECRET_KEY_BASE=${SECRET_KEY_BASE:-test123} RAILS_SERVE_STATIC_FILES=1 RAILS_ENV=production bundle exec rails server -b 0.0.0.0 -p ${PORT:-3001}
-renderer: node node-renderer.js
+renderer: NODE_ENV=production node node-renderer.js

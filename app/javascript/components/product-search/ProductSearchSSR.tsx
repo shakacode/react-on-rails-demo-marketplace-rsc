@@ -15,7 +15,7 @@ import { SortBar } from './SortBar';
 import { SearchInput } from './SearchInput';
 import { PaginationControls } from './PaginationControls';
 import { ActiveFilterPills } from './ActiveFilterPills';
-import { INPOverlay } from '../blog/INPOverlay';
+
 
 interface BrandHighlight {
   name: string;
@@ -206,7 +206,7 @@ export default function ProductSearchSSR({
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {products.map((product) => (
+                  {products.map((product, idx) => (
                     <SearchResultCard
                       key={product.id}
                       product={product}
@@ -214,6 +214,7 @@ export default function ProductSearchSSR({
                       reviewSnippets={review_snippets[product.id]}
                       isCompareSelected={compareList.has(product.id)}
                       onCompareToggle={() => handleCompareToggle(product.id)}
+                      index={idx}
                     />
                   ))}
                 </div>
@@ -228,7 +229,6 @@ export default function ProductSearchSSR({
         </div>
       </div>
 
-      <INPOverlay />
     </div>
   );
 }

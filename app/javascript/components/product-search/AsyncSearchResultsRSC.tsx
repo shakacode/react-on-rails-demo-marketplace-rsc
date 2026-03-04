@@ -1,20 +1,28 @@
 // No 'use client' — this is a server component that awaits streamed search results.
 // The SearchResultCard components are rendered server-side as pure HTML.
 // No JS is shipped for the product cards themselves.
-// Only the AddToCartButton (client component) hydrates per card.
+// Only the AddToCartButton and CompareButton (client components) hydrate per card.
+//
+// Now includes the same data as SSR for a fair comparison:
+//   - 2 review snippets per product (same as SSR)
+//   - Compare button on each card (same as SSR)
+//   - Active filter pills (same as SSR)
+//   - 500-char descriptions, 6 features, specs (same as SSR)
 
 import React from 'react';
-import type { SearchProduct, Pagination as PaginationType } from './types';
+import type { SearchProduct, Pagination as PaginationType, ReviewSnippet } from './types';
 import { SearchResultCard } from './SearchResultCard';
-import { SearchShellSort, SearchShellPagination } from './SearchShell';
+import { SearchShellSort, SearchShellPagination, CompareButton, SearchShellActiveFilters } from './SearchShell';
 
 interface SearchResultsData {
   products: SearchProduct[];
+  review_snippets: Record<number, ReviewSnippet[]>;
   pagination: PaginationType;
   meta: {
     query: string;
     sort: string;
     total_results: number;
+    filters_applied: { type: string; value: string }[];
   };
 }
 
@@ -24,10 +32,13 @@ interface Props {
 
 export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }: Props) {
   const data: SearchResultsData = await getReactOnRailsAsyncProp('search_results');
-  const { products, pagination, meta } = data;
+  const { products, review_snippets, pagination, meta } = data;
 
   return (
     <div>
+      {/* Active filter pills — client component wrapper */}
+      <SearchShellActiveFilters filtersApplied={meta.filters_applied || []} />
+
       {/* Sort bar — client component wrapper (receives data, manages its own state) */}
       <SearchShellSort currentSort={meta.sort} totalResults={meta.total_results} />
 
@@ -42,13 +53,16 @@ export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }
       ) : (
         <>
           {/* Product grid — ALL cards are server-rendered HTML, zero JS hydration cost.
-              Only the AddToCartButton (client component) hydrates per card. */}
+              Only the AddToCartButton and CompareButton (client components) hydrate per card. */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {products.map((product) => (
+            {products.map((product, idx) => (
               <SearchResultCard
                 key={product.id}
                 product={product}
                 description={product.description}
+                reviewSnippets={review_snippets[product.id]}
+                compareButton={<CompareButton productId={product.id} />}
+                index={idx}
               />
             ))}
           </div>

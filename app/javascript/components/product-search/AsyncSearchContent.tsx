@@ -10,7 +10,7 @@ import { FilterSidebar } from './FilterSidebar';
 import { SortBar } from './SortBar';
 import { PaginationControls } from './PaginationControls';
 import { ResultsGridSkeleton } from './SearchSkeletons';
-import { FilterSidebarSkeleton } from './FilterSidebar';
+import { FilterSidebarSkeleton } from './SearchSkeletons';
 
 interface Props {
   searchParams: SearchParams;
@@ -117,12 +117,13 @@ export default function AsyncSearchContent({ searchParams }: Props) {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {products.map((product) => (
+                  {products.map((product, idx) => (
                     <SearchResultCard
                       key={product.id}
                       product={product}
                       description={product.description}
                       reviewSnippet={reviewSnippets[product.id]}
+                      index={idx}
                     />
                   ))}
                 </div>
