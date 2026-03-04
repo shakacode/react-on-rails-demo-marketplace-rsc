@@ -11,7 +11,7 @@ import { FilterSidebar } from './FilterSidebar';
 import { FilterSidebarSkeleton } from './SearchSkeletons';
 import { PaginationControls } from './PaginationControls';
 import { ActiveFilterPills } from './ActiveFilterPills';
-import type { Facets, Pagination } from './types';
+import type { Facets, Pagination, ReviewSnippet } from './types';
 
 interface BrandHighlight {
   name: string;
@@ -321,3 +321,107 @@ export function SearchShellBrandHighlights({ brands }: SearchShellBrandHighlight
   );
 }
 
+// --- Card sub-components moved to client to reduce RSC Flight payload ---
+// Instead of serializing large element trees (className strings, nested divs) into the
+// Flight payload, we pass only small data props and render on the client.
+// Net effect: ~80-90KB less Flight payload, ~2KB more client JS.
+
+function formatCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+interface CardStarRatingProps {
+  rating: number;
+  count: number;
+}
+
+export function CardStarRating({ rating, count }: CardStarRatingProps) {
+  const full = Math.floor(rating);
+  const hasHalf = rating - full >= 0.3;
+  const display = Number(rating).toFixed(1);
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center text-sm">
+        <span className="text-amber-400">
+          {'★'.repeat(full)}
+          {hasHalf ? '½' : ''}
+        </span>
+        <span className="text-gray-300">
+          {'★'.repeat(5 - full - (hasHalf ? 1 : 0))}
+        </span>
+      </div>
+      <span className="text-sm font-medium text-gray-700">{display}</span>
+      <span className="text-xs text-gray-400">({formatCount(count)})</span>
+    </div>
+  );
+}
+
+interface CardReviewSnippetsProps {
+  snippets: ReviewSnippet[];
+}
+
+export function CardReviewSnippets({ snippets }: CardReviewSnippetsProps) {
+  if (snippets.length === 0) return null;
+  return (
+    <div className="mt-2 space-y-1.5">
+      {snippets.map((snippet, idx) => (
+        <div key={idx} className="bg-amber-50 rounded-lg p-2.5 border border-amber-100">
+          <div className="flex items-center gap-1 mb-1">
+            <span className="text-amber-400 text-xs">{'★'.repeat(snippet.rating)}</span>
+            <span className="text-xs font-medium text-gray-700">{snippet.title}</span>
+          </div>
+          <p className="text-xs text-gray-600 line-clamp-2 italic">
+            &ldquo;{snippet.comment}&rdquo;
+          </p>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-gray-400">{snippet.reviewer_name}</span>
+            {snippet.helpful_count > 0 && (
+              <span className="text-xs text-gray-400">
+                {snippet.helpful_count} found helpful
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface CardFeaturesListProps {
+  features: string[];
+}
+
+export function CardFeaturesList({ features }: CardFeaturesListProps) {
+  if (features.length === 0) return null;
+  return (
+    <ul className="text-xs text-gray-500 space-y-0.5 mt-1">
+      {features.map((feature, i) => (
+        <li key={i} className="flex items-start gap-1.5">
+          <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+          <span className="line-clamp-1">{feature}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+interface CardProductTagsProps {
+  tags: string[];
+}
+
+export function CardProductTags({ tags }: CardProductTagsProps) {
+  if (tags.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-auto pt-2">
+      {tags.slice(0, 3).map((tag) => (
+        <span
+          key={tag}
+          className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}

@@ -6,7 +6,7 @@
 import React from 'react';
 import { SearchProduct, ReviewSnippet } from './types';
 import { renderMarkdown } from '../../utils/renderMarkdown';
-import { AddToCartButton } from './SearchShell';
+import { AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShell';
 
 interface Props {
   product: SearchProduct;
@@ -17,32 +17,6 @@ interface Props {
   onCompareToggle?: () => void;
   compareButton?: React.ReactNode;
   index?: number;
-}
-
-function StarRating({ rating, count }: { rating: number; count: number }) {
-  const full = Math.floor(rating);
-  const hasHalf = rating - full >= 0.3;
-  const display = Number(rating).toFixed(1);
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex items-center text-sm">
-        <span className="text-amber-400">
-          {'★'.repeat(full)}
-          {hasHalf ? '½' : ''}
-        </span>
-        <span className="text-gray-300">
-          {'★'.repeat(5 - full - (hasHalf ? 1 : 0))}
-        </span>
-      </div>
-      <span className="text-sm font-medium text-gray-700">{display}</span>
-      <span className="text-xs text-gray-400">({formatCount(count)})</span>
-    </div>
-  );
-}
-
-function formatCount(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return String(n);
 }
 
 function formatPrice(price: number): string {
@@ -143,20 +117,11 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           {product.name}
         </h3>
 
-        {/* Rating */}
-        <StarRating rating={product.average_rating} count={product.review_count} />
+        {/* Rating — client component: sends 2 numbers instead of full element tree */}
+        <CardStarRating rating={product.average_rating} count={product.review_count} />
 
-        {/* Features (rendered as server component — no JS cost in RSC) */}
-        {product.features && product.features.length > 0 && (
-          <ul className="text-xs text-gray-500 space-y-0.5 mt-1">
-            {product.features.map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5">
-                <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
-                <span className="line-clamp-1">{feature}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Features — client component: sends string[] instead of full <ul>/<li> tree */}
+        <CardFeaturesList features={product.features || []} />
 
         {/* Markdown description snippet (expensive to render) */}
         {descriptionHtml && (
@@ -166,44 +131,11 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           />
         )}
 
-        {/* Review snippets — SSR renders up to 3, RSC renders 1 */}
-        {snippets.length > 0 && (
-          <div className="mt-2 space-y-1.5">
-            {snippets.map((snippet, idx) => (
-              <div key={idx} className="bg-amber-50 rounded-lg p-2.5 border border-amber-100">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-amber-400 text-xs">{'★'.repeat(snippet.rating)}</span>
-                  <span className="text-xs font-medium text-gray-700">{snippet.title}</span>
-                </div>
-                <p className="text-xs text-gray-600 line-clamp-2 italic">
-                  &ldquo;{snippet.comment}&rdquo;
-                </p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-gray-400">{snippet.reviewer_name}</span>
-                  {snippet.helpful_count > 0 && (
-                    <span className="text-xs text-gray-400">
-                      {snippet.helpful_count} found helpful
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Review snippets — client component: sends ReviewSnippet[] data instead of full element tree */}
+        <CardReviewSnippets snippets={snippets} />
 
-        {/* Tags */}
-        {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-auto pt-2">
-            {product.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Tags — client component: sends string[] instead of full <span> tree */}
+        <CardProductTags tags={product.tags || []} />
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mt-auto pt-2 border-t border-gray-100">
