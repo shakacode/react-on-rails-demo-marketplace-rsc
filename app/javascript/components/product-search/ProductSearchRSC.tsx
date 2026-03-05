@@ -40,7 +40,7 @@
 
 import React, { Suspense } from 'react';
 import type { SearchParams } from './types';
-import { SearchShellHeader, CompareBar } from './SearchShell';
+import { SearchShellHeader, CompareBar } from './SearchShellForServer';
 import AsyncSearchResultsRSC from './AsyncSearchResultsRSC';
 import AsyncFacetsRSC from './AsyncFacetsRSC';
 import AsyncSidebarExtrasRSC from './AsyncSidebarExtrasRSC';

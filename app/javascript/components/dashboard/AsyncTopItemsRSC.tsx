@@ -2,7 +2,7 @@
 // d3 format + scale stays server-side → 0KB to client
 // InteractiveTopItems is 'use client' — only the tiny filter logic ships to browser
 import React from 'react';
-import InteractiveTopItems from './InteractiveTopItems';
+import InteractiveTopItems from './InteractiveTopItemsForServer';
 
 interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;

@@ -6,7 +6,6 @@
 import React from 'react';
 import { SearchProduct, ReviewSnippet } from './types';
 import { renderMarkdown } from '../../utils/renderMarkdown';
-import { AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShell';
 
 interface Props {
   product: SearchProduct;
@@ -16,6 +15,11 @@ interface Props {
   isCompareSelected?: boolean;
   onCompareToggle?: () => void;
   compareButton?: React.ReactNode;
+  addToCartButton?: React.ReactNode;
+  starRating?: React.ReactNode;
+  reviewSnippetsNode?: React.ReactNode;
+  featuresList?: React.ReactNode;
+  productTags?: React.ReactNode;
   index?: number;
 }
 
@@ -23,7 +27,7 @@ function formatPrice(price: number): string {
   return `$${price.toFixed(2)}`;
 }
 
-export function SearchResultCard({ product, reviewSnippet, reviewSnippets, description, isCompareSelected, onCompareToggle, compareButton, index }: Props) {
+export function SearchResultCard({ product, reviewSnippet, reviewSnippets, description, isCompareSelected, onCompareToggle, compareButton, addToCartButton, starRating, reviewSnippetsNode, featuresList, productTags, index }: Props) {
   const hasDiscount = product.discount_percentage && product.discount_percentage > 0;
   const imageUrl = product.images?.[0]?.url;
   const imageAlt = product.images?.[0]?.alt || product.name;
@@ -117,11 +121,11 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           {product.name}
         </h3>
 
-        {/* Rating — client component: sends 2 numbers instead of full element tree */}
-        <CardStarRating rating={product.average_rating} count={product.review_count} />
+        {/* Rating — passed as prop to avoid importing 'use client' modules */}
+        {starRating}
 
-        {/* Features — client component: sends string[] instead of full <ul>/<li> tree */}
-        <CardFeaturesList features={product.features || []} />
+        {/* Features — passed as prop to avoid importing 'use client' modules */}
+        {featuresList}
 
         {/* Markdown description snippet (expensive to render) */}
         {descriptionHtml && (
@@ -131,11 +135,11 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           />
         )}
 
-        {/* Review snippets — client component: sends ReviewSnippet[] data instead of full element tree */}
-        <CardReviewSnippets snippets={snippets} />
+        {/* Review snippets — passed as prop to avoid importing 'use client' modules */}
+        {reviewSnippetsNode}
 
-        {/* Tags — client component: sends string[] instead of full <span> tree */}
-        <CardProductTags tags={product.tags || []} />
+        {/* Tags — passed as prop to avoid importing 'use client' modules */}
+        {productTags}
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mt-auto pt-2 border-t border-gray-100">
@@ -154,10 +158,10 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           )}
         </div>
 
-        {/* Add to Cart — the only interactive element per card.
+        {/* Add to Cart — passed as prop to avoid importing 'use client' modules.
             In RSC: only this tiny client component hydrates, zero JS for the rest.
             In SSR: hydrates along with the entire card. */}
-        <AddToCartButton productId={product.id} inStock={product.in_stock} />
+        {addToCartButton}
       </div>
     </div>
   );

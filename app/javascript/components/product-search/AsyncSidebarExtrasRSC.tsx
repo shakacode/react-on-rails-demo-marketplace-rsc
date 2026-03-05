@@ -2,7 +2,7 @@
 // These are additional sidebar sections that stream after the main facets.
 
 import React from 'react';
-import { SearchShellTags, SearchShellBrandHighlights } from './SearchShell';
+import { SearchShellTags, SearchShellBrandHighlights } from './SearchShellForServer';
 
 interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;

@@ -10,6 +10,7 @@
 import React, { useState, useCallback } from 'react';
 import type { SearchProduct, Facets, Pagination as PaginationType, ReviewSnippet, SearchMeta } from './types';
 import { SearchResultCard } from './SearchResultCard';
+import { AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShell';
 import { FilterSidebar } from './FilterSidebar';
 import { SortBar } from './SortBar';
 import { SearchInput } from './SearchInput';
@@ -214,6 +215,11 @@ export default function ProductSearchSSR({
                       reviewSnippets={review_snippets[product.id]}
                       isCompareSelected={compareList.has(product.id)}
                       onCompareToggle={() => handleCompareToggle(product.id)}
+                      addToCartButton={<AddToCartButton productId={product.id} inStock={product.in_stock} />}
+                      starRating={<CardStarRating rating={product.average_rating} count={product.review_count} />}
+                      reviewSnippetsNode={<CardReviewSnippets snippets={review_snippets[product.id] || []} />}
+                      featuresList={<CardFeaturesList features={product.features || []} />}
+                      productTags={<CardProductTags tags={product.tags || []} />}
                       index={idx}
                     />
                   ))}

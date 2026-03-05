@@ -4,11 +4,11 @@ import React, { Suspense } from 'react';
 import { BlogPost } from '../../types/blog';
 import { renderMarkdown } from '../../utils/renderMarkdown';
 import { BlogPostHeader } from './BlogPostHeader';
-import { BookmarkShareBar } from './BookmarkShareBar';
-import { TableOfContents } from './TableOfContents';
-import { ReadingModeToggle } from './ReadingModeToggle';
-import { InteractiveSection } from './InteractiveSection';
-import { INPOverlay } from './INPOverlay';
+import { BookmarkShareBar } from './BookmarkShareBarForServer';
+import { TableOfContents } from './TableOfContentsForServer';
+import { ReadingModeToggle } from './ReadingModeToggleForServer';
+import { InteractiveSection } from './InteractiveSectionForServer';
+import { INPOverlay } from './INPOverlayForServer';
 import { RelatedPostsSkeleton } from './RelatedPostsSkeleton';
 import AsyncRelatedPostsRSC from './AsyncRelatedPostsRSC';
 

@@ -2,7 +2,7 @@
 // date-fns stays server-side → 30KB savings
 // SortableOrdersTable is 'use client' — only the tiny sort/filter logic ships to browser
 import React from 'react';
-import SortableOrdersTable from './SortableOrdersTable';
+import SortableOrdersTable from './SortableOrdersTableForServer';
 
 interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;

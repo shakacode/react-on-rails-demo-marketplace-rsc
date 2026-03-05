@@ -1,5 +1,3 @@
-'use client';
-
 // SearchShell — client component wrappers for all interactive elements in RSC.
 // Product result cards are rendered as server components (zero JS).
 // Each wrapper is a separate client component island that hydrates independently.

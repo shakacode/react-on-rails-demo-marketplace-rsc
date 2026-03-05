@@ -12,7 +12,7 @@
 import React from 'react';
 import type { SearchProduct, Pagination as PaginationType, ReviewSnippet } from './types';
 import { SearchResultCard } from './SearchResultCard';
-import { SearchShellSort, SearchShellPagination, CompareButton, SearchShellActiveFilters } from './SearchShell';
+import { SearchShellSort, SearchShellPagination, CompareButton, SearchShellActiveFilters, AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShellForServer';
 
 interface SearchResultsData {
   products: SearchProduct[];
@@ -62,6 +62,11 @@ export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }
                 description={product.description}
                 reviewSnippets={review_snippets[product.id]}
                 compareButton={<CompareButton productId={product.id} />}
+                addToCartButton={<AddToCartButton productId={product.id} inStock={product.in_stock} />}
+                starRating={<CardStarRating rating={product.average_rating} count={product.review_count} />}
+                reviewSnippetsNode={<CardReviewSnippets snippets={review_snippets[product.id] || []} />}
+                featuresList={<CardFeaturesList features={product.features || []} />}
+                productTags={<CardProductTags tags={product.tags || []} />}
                 index={idx}
               />
             ))}
