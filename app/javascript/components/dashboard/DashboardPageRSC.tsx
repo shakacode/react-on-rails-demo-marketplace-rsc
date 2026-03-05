@@ -20,7 +20,7 @@
 import React, { Suspense } from 'react';
 import type { DashboardRestaurant } from '../../types/dashboard';
 import DashboardHeader from './DashboardHeader';
-import DashboardFilters from './DashboardFilters';
+import DashboardFilters from './DashboardFiltersForServer';
 import AsyncKpiStatsRSC from './AsyncKpiStatsRSC';
 import AsyncRevenueChartRSC from './AsyncRevenueChartRSC';
 import AsyncOrderStatusRSC from './AsyncOrderStatusRSC';

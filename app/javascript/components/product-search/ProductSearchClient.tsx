@@ -8,9 +8,9 @@ import React from 'react';
 import loadable from '@loadable/component';
 import type { SearchParams } from './types';
 import { SearchInput } from './SearchInput';
-import { INPOverlay } from '../blog/INPOverlay';
+
 import { ResultsGridSkeleton } from './SearchSkeletons';
-import { FilterSidebarSkeleton } from './FilterSidebar';
+import { FilterSidebarSkeleton } from './SearchSkeletons';
 
 const AsyncSearchContent = loadable(
   () => import('./AsyncSearchContent'),
@@ -56,7 +56,6 @@ export default function ProductSearchClient({ search_params }: Props) {
         <AsyncSearchContent searchParams={search_params} />
       </div>
 
-      <INPOverlay />
     </div>
   );
 }

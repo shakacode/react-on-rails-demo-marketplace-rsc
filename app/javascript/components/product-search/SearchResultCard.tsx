@@ -6,7 +6,6 @@
 import React from 'react';
 import { SearchProduct, ReviewSnippet } from './types';
 import { renderMarkdown } from '../../utils/renderMarkdown';
-import { AddToCartButton } from './SearchShell';
 
 interface Props {
   product: SearchProduct;
@@ -15,45 +14,30 @@ interface Props {
   description?: string;
   isCompareSelected?: boolean;
   onCompareToggle?: () => void;
-}
-
-function StarRating({ rating, count }: { rating: number; count: number }) {
-  const full = Math.floor(rating);
-  const hasHalf = rating - full >= 0.3;
-  const display = Number(rating).toFixed(1);
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex items-center text-sm">
-        <span className="text-amber-400">
-          {'★'.repeat(full)}
-          {hasHalf ? '½' : ''}
-        </span>
-        <span className="text-gray-300">
-          {'★'.repeat(5 - full - (hasHalf ? 1 : 0))}
-        </span>
-      </div>
-      <span className="text-sm font-medium text-gray-700">{display}</span>
-      <span className="text-xs text-gray-400">({formatCount(count)})</span>
-    </div>
-  );
-}
-
-function formatCount(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return String(n);
+  compareButton?: React.ReactNode;
+  addToCartButton?: React.ReactNode;
+  starRating?: React.ReactNode;
+  reviewSnippetsNode?: React.ReactNode;
+  featuresList?: React.ReactNode;
+  productTags?: React.ReactNode;
+  index?: number;
 }
 
 function formatPrice(price: number): string {
   return `$${price.toFixed(2)}`;
 }
 
-export function SearchResultCard({ product, reviewSnippet, reviewSnippets, description, isCompareSelected, onCompareToggle }: Props) {
+export function SearchResultCard({ product, reviewSnippet, reviewSnippets, description, isCompareSelected, onCompareToggle, compareButton, addToCartButton, starRating, reviewSnippetsNode, featuresList, productTags, index }: Props) {
   const hasDiscount = product.discount_percentage && product.discount_percentage > 0;
   const imageUrl = product.images?.[0]?.url;
   const imageAlt = product.images?.[0]?.alt || product.name;
 
   // Use the array form if available (SSR sends multiple), otherwise single snippet (RSC)
   const snippets = reviewSnippets || (reviewSnippet ? [reviewSnippet] : []);
+
+  // Above-the-fold images (first row of 3-column grid) load eagerly for LCP.
+  // Below-the-fold images stay lazy to save bandwidth.
+  const isAboveFold = index !== undefined && index < 3;
 
   // Render a truncated markdown description as HTML — this is expensive
   // In RSC: runs server-side (marked + highlight.js never shipped to client)
@@ -71,7 +55,8 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
             src={imageUrl}
             alt={imageAlt}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
+            loading={isAboveFold ? 'eager' : 'lazy'}
+            {...(index === 0 ? { fetchPriority: 'high' } : {})}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -97,7 +82,10 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           </div>
         )}
 
-        {/* Compare checkbox — only rendered in SSR (interactive, needs hydration) */}
+        {/* Compare button — RSC passes a client component island via compareButton prop */}
+        {compareButton}
+
+        {/* Compare checkbox — rendered in SSR (interactive, needs hydration) */}
         {onCompareToggle && (
           <button
             onClick={(e) => { e.stopPropagation(); onCompareToggle(); }}
@@ -133,20 +121,11 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           {product.name}
         </h3>
 
-        {/* Rating */}
-        <StarRating rating={product.average_rating} count={product.review_count} />
+        {/* Rating — passed as prop to avoid importing 'use client' modules */}
+        {starRating}
 
-        {/* Features (rendered as server component — no JS cost in RSC) */}
-        {product.features && product.features.length > 0 && (
-          <ul className="text-xs text-gray-500 space-y-0.5 mt-1">
-            {product.features.map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5">
-                <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
-                <span className="line-clamp-1">{feature}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Features — passed as prop to avoid importing 'use client' modules */}
+        {featuresList}
 
         {/* Markdown description snippet (expensive to render) */}
         {descriptionHtml && (
@@ -156,44 +135,11 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           />
         )}
 
-        {/* Review snippets — SSR renders up to 3, RSC renders 1 */}
-        {snippets.length > 0 && (
-          <div className="mt-2 space-y-1.5">
-            {snippets.map((snippet, idx) => (
-              <div key={idx} className="bg-amber-50 rounded-lg p-2.5 border border-amber-100">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-amber-400 text-xs">{'★'.repeat(snippet.rating)}</span>
-                  <span className="text-xs font-medium text-gray-700">{snippet.title}</span>
-                </div>
-                <p className="text-xs text-gray-600 line-clamp-2 italic">
-                  &ldquo;{snippet.comment}&rdquo;
-                </p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-gray-400">{snippet.reviewer_name}</span>
-                  {snippet.helpful_count > 0 && (
-                    <span className="text-xs text-gray-400">
-                      {snippet.helpful_count} found helpful
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Review snippets — passed as prop to avoid importing 'use client' modules */}
+        {reviewSnippetsNode}
 
-        {/* Tags */}
-        {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-auto pt-2">
-            {product.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Tags — passed as prop to avoid importing 'use client' modules */}
+        {productTags}
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mt-auto pt-2 border-t border-gray-100">
@@ -212,10 +158,10 @@ export function SearchResultCard({ product, reviewSnippet, reviewSnippets, descr
           )}
         </div>
 
-        {/* Add to Cart — the only interactive element per card.
+        {/* Add to Cart — passed as prop to avoid importing 'use client' modules.
             In RSC: only this tiny client component hydrates, zero JS for the rest.
             In SSR: hydrates along with the entire card. */}
-        <AddToCartButton productId={product.id} inStock={product.in_stock} />
+        {addToCartButton}
       </div>
     </div>
   );

@@ -17,15 +17,15 @@
 
 import React, { Suspense } from 'react';
 import { Product } from '../../types/product';
-import { ProductImageGallery } from './ProductImageGallery';
+import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
-import { AddToCartSection } from './AddToCartSection';
+import { AddToCartSection } from './AddToCartSectionForServer';
 import AsyncProductDetailsRSC from './AsyncProductDetailsRSC';
 import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';
 import AsyncRelatedProductsRSC from './AsyncRelatedProductsRSC';
 import { ProductDetailsSkeleton, ReviewStatsSkeleton, ReviewsSkeleton, RelatedProductsSkeleton } from './ProductSkeletons';
-import { INPOverlay } from '../blog/INPOverlay';
+import { INPOverlay } from '../blog/INPOverlayForServer';
 
 interface Props {
   product: Product;

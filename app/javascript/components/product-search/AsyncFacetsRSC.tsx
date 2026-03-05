@@ -3,7 +3,7 @@
 
 import React from 'react';
 import type { Facets } from './types';
-import { SearchShellFilters } from './SearchShell';
+import { SearchShellFilters } from './SearchShellForServer';
 
 interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;

@@ -5,7 +5,7 @@ import React from 'react';
 import { Marked } from 'marked';
 import { BlogPost } from '../../types/blog';
 import { BlogPostHeader } from './BlogPostHeader';
-import { InteractiveSection } from './InteractiveSection';
+import { InteractiveSection } from './InteractiveSectionForServer';
 
 const marked = new Marked();
 

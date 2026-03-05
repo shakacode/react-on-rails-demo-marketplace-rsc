@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { TopMenuItem } from '../../types/dashboard';
 

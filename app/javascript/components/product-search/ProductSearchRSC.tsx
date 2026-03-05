@@ -2,10 +2,22 @@
 //
 // V3: RSC Streaming — Search shell with input streams immediately.
 // Results (with review snippets merged) and facets stream progressively.
+// Popular tags and brand highlights stream as separate async props.
 //
-// Only 2 streaming emits (reduced from 3):
-//   1. search_results (products + review_snippets + pagination + meta)
+// Now includes ALL the same features as SSR for a fair comparison:
+//   - Compare button per card (client component island)
+//   - Compare bar at top (client component)
+//   - Active filter pills (client component)
+//   - Popular tags cloud (client component, streamed separately)
+//   - Brand highlights (client component, streamed separately)
+//   - 2 review snippets per product
+//   - 500-char descriptions, 6 features, specs
+//
+// 4 streaming emits:
+//   1. search_results (products + review_snippets + pagination + meta + filters)
 //   2. facets (category/brand/price/rating aggregations)
+//   3. popular_tags (tag cloud data)
+//   4. brand_highlights (top brands with counts/ratings)
 //
 // Libraries that stay SERVER-SIDE (never shipped to browser):
 //   - marked + highlight.js (~350KB) — used to render description markdown
@@ -17,19 +29,23 @@
 //   - SearchShellFilters (~4KB) — filter sidebar
 //   - SearchShellSort (~1KB) — sort dropdown
 //   - SearchShellPagination (~2KB) — page navigation
-//   - INPOverlay (~2KB) — performance monitoring
+//   - CompareButton (~1KB) — compare toggle per card (client island)
+//   - CompareBar (~1KB) — sticky compare bar
+//   - SearchShellActiveFilters (~1KB) — active filter pills
+//   - SearchShellTags (~1KB) — popular tags cloud
+//   - SearchShellBrandHighlights (~1KB) — brand highlights
 //
-// Total JS savings: ~400KB+ eliminated from client bundle.
+// Total JS savings: ~400KB+ eliminated from client bundle (marked + highlight.js).
 // Result cards (the heaviest content) are pure HTML — zero hydration cost.
 
 import React, { Suspense } from 'react';
 import type { SearchParams } from './types';
-import { SearchShellHeader } from './SearchShell';
-import { INPOverlay } from '../blog/INPOverlay';
+import { SearchShellHeader, CompareBar } from './SearchShellForServer';
 import AsyncSearchResultsRSC from './AsyncSearchResultsRSC';
 import AsyncFacetsRSC from './AsyncFacetsRSC';
+import AsyncSidebarExtrasRSC from './AsyncSidebarExtrasRSC';
 import { ResultsGridSkeleton } from './SearchSkeletons';
-import { FilterSidebarSkeleton } from './FilterSidebar';
+import { FilterSidebarSkeleton } from './SearchSkeletons';
 
 interface Props {
   search_params: SearchParams;
@@ -52,14 +68,22 @@ export default function ProductSearchRSC({ search_params, getReactOnRailsAsyncPr
         </div>
       </header>
 
+      {/* Compare bar — client component, shared state across CompareButton islands */}
+      <CompareBar />
+
       {/* Main content */}
       <div className="container mx-auto max-w-7xl px-4 py-6">
         <div className="flex gap-6">
-          {/* Sidebar — facets stream from server */}
+          {/* Sidebar — facets stream from server, then tags and brand highlights */}
           <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-[140px]">
+            <div className="sticky top-[140px] space-y-4">
               <Suspense fallback={<FilterSidebarSkeleton />}>
                 <AsyncFacetsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
+              </Suspense>
+
+              {/* Popular tags + Brand highlights stream as separate async props */}
+              <Suspense fallback={null}>
+                <AsyncSidebarExtrasRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
               </Suspense>
             </div>
           </div>
@@ -73,7 +97,6 @@ export default function ProductSearchRSC({ search_params, getReactOnRailsAsyncPr
         </div>
       </div>
 
-      <INPOverlay />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import React from 'react';
 import { BlogPost } from '../../types/blog';
 import { renderMarkdown } from '../../utils/renderMarkdown';
 import { BlogPostHeader } from './BlogPostHeader';
-import { InteractiveSection } from './InteractiveSection';
+import { InteractiveSection } from './InteractiveSectionForServer';
 
 interface Props {
   post: BlogPost;
