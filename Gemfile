@@ -17,9 +17,13 @@ gem 'turbo-rails'
 gem 'stimulus-rails'
 
 # React on Rails
-gem 'react_on_rails', path: '/mnt/ssd/react_on_rails_v16.3/react_on_rails'
-gem 'react_on_rails_pro', path: '/mnt/ssd/react_on_rails_v16.3/react_on_rails_pro'
-gem 'httpx', path: '/mnt/ssd/open-source/httpx'
+gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git',
+                       branch: 'upcoming-v16.3.0',
+                       glob: 'react_on_rails/*.gemspec'
+gem 'react_on_rails_pro', git: 'https://github.com/shakacode/react_on_rails.git',
+                            branch: 'upcoming-v16.3.0',
+                            glob: 'react_on_rails_pro/*.gemspec'
+gem 'httpx', '~> 1.7'
 
 # Shakapacker for webpack integration
 gem 'shakapacker', '~> 9.5'
