@@ -6,7 +6,7 @@
 ```bash
 DOCKER_BUILDKIT=1 docker build --ssh default -f .controlplane/Dockerfile -t react-server-components-demo .
 ```
-`--ssh default` forwards your SSH agent (needed for private `react-on-rails-builds` repo).
+`--ssh default` is required because `pnpm install` needs to clone the private repo [shakacode/react-on-rails-builds](https://github.com/shakacode/react-on-rails-builds) which contains pre-built packages (`react-on-rails`, `react-on-rails-pro`, `react-on-rails-pro-node-renderer`) from the unreleased `upcoming-v16.3.0` branch of React on Rails. This flag temporarily forwards your local SSH agent into the Docker build step so git can authenticate with GitHub — the keys are never stored in the image.
 
 **Migrate & seed:**
 ```bash
