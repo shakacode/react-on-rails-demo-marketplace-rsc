@@ -1,0 +1,35 @@
+kind: gvc
+name: {{APP_NAME}}
+spec:
+  env:
+    - name: RAILS_ENV
+      value: production
+    - name: NODE_ENV
+      value: production
+    - name: RAILS_SERVE_STATIC_FILES
+      value: 'true'
+    - name: RAILS_LOG_TO_STDOUT
+      value: 'true'
+    - name: RAILS_MAX_THREADS
+      value: '5'
+    - name: PORT
+      value: '3000'
+    - name: RENDERER_PORT
+      value: '3800'
+    - name: RENDERER_LOG_LEVEL
+      value: info
+    - name: RENDERER_WORKERS_COUNT
+      value: '2'
+    - name: RENDERER_URL
+      value: http://localhost:3800
+    - name: SECRET_KEY_BASE
+      value: cpln://secret/react-server-components-demo-secrets.SECRET_KEY_BASE
+    - name: DATABASE_URL
+      value: cpln://secret/react-server-components-demo-secrets.DATABASE_URL
+    - name: RENDERER_PASSWORD
+      value: cpln://secret/react-server-components-demo-secrets.RENDERER_PASSWORD
+    - name: REACT_ON_RAILS_PRO_LICENSE
+      value: cpln://secret/react-server-components-demo-secrets.REACT_ON_RAILS_PRO_LICENSE
+  staticPlacement:
+    locationLinks:
+      - {{APP_LOCATION_LINK}}
