@@ -8,8 +8,6 @@ ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
 require "bundler/setup"
 require "shakapacker"
 require "shakapacker/webpack_runner"
-require "pry"
-require "pry-byebug"
 
 APP_ROOT = File.expand_path("..", __dir__)
 Dir.chdir(APP_ROOT) do

@@ -39,9 +39,8 @@
     "marked-highlight": "^2.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-on-rails": "file:.yalc/react-on-rails",
-    "react-on-rails-pro": "file:.yalc/react-on-rails-pro",
-    "react-on-rails-pro-node-renderer": "file:.yalc/react-on-rails-pro-node-renderer",
+    "react-on-rails-pro": "github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro",
+    "react-on-rails-pro-node-renderer": "github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro-node-renderer",
     "react-on-rails-rsc": "19.0.5-rc.1",
     "web-vitals": "^4.2.0"
   },
