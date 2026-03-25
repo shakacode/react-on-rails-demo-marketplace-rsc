@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   root 'home#index'
   get '/search-performance' => 'pages#search_performance'
   get '/rsc' => 'home#rsc'
+  get '/why-rsc' => 'pages#why_rsc'
 
   # Search routes — three versions of the same page
   get '/search/ssr', to: 'restaurants#search_ssr'       # V1: All data fetched on server, returned at once
