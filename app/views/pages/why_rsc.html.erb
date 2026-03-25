@@ -212,23 +212,30 @@
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f87171" stroke-width="2"/><path d="M7 7l6 6M13 7l-6 6" stroke="#f87171" stroke-width="2" stroke-linecap="round"/></svg>
           <span class="text-red-400 font-semibold text-sm uppercase tracking-wider">Traditional SSR</span>
         </div>
-        <svg viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Traditional SSR timeline showing sequential steps: fetch all data, render HTML, download JS, hydrate all, taking 4-6 seconds total">
+        <svg viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Traditional SSR timeline: sequential waterfall where each step blocks the next, taking 4-6 seconds total before the page becomes interactive">
           <!-- Labels -->
           <text x="0" y="24" fill="#94a3b8" font-size="11" font-family="monospace">Fetch all data</text>
           <text x="0" y="58" fill="#94a3b8" font-size="11" font-family="monospace">Render HTML</text>
           <text x="0" y="92" fill="#94a3b8" font-size="11" font-family="monospace">Download JS</text>
           <text x="0" y="126" fill="#94a3b8" font-size="11" font-family="monospace">Hydrate all</text>
-          <!-- Bars (sequential - each waits for previous) -->
-          <rect x="110" y="12" width="200" height="18" rx="4" fill="#ef4444" opacity="0.3"/>
-          <rect x="110" y="12" width="200" height="18" rx="4" fill="#ef4444" class="timeline-bar"/>
-          <rect x="110" y="46" width="160" height="18" rx="4" fill="#f97316" opacity="0.3"/>
-          <rect x="110" y="46" width="160" height="18" rx="4" fill="#f97316" class="timeline-bar timeline-bar-delay-1"/>
-          <rect x="110" y="80" width="180" height="18" rx="4" fill="#eab308" opacity="0.3"/>
-          <rect x="110" y="80" width="180" height="18" rx="4" fill="#eab308" class="timeline-bar timeline-bar-delay-2"/>
-          <rect x="110" y="114" width="200" height="18" rx="4" fill="#f87171" opacity="0.3"/>
-          <rect x="110" y="114" width="200" height="18" rx="4" fill="#f87171" class="timeline-bar timeline-bar-delay-3"/>
-          <!-- Time marker -->
-          <text x="270" y="152" fill="#64748b" font-size="10" font-family="monospace">~4-6s to interactive</text>
+          <!-- Waterfall bars: each starts where previous ends -->
+          <rect x="110" y="12" width="55" height="18" rx="4" fill="#ef4444" class="timeline-bar"/>
+          <rect x="165" y="46" width="45" height="18" rx="4" fill="#f97316" class="timeline-bar timeline-bar-delay-1"/>
+          <rect x="210" y="80" width="60" height="18" rx="4" fill="#eab308" class="timeline-bar timeline-bar-delay-2"/>
+          <rect x="270" y="114" width="60" height="18" rx="4" fill="#f87171" class="timeline-bar timeline-bar-delay-3"/>
+          <!-- Connecting lines to show blocking -->
+          <line x1="165" y1="30" x2="165" y2="46" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="210" y1="64" x2="210" y2="80" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="270" y1="98" x2="270" y2="114" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <!-- "Blocked" annotations -->
+          <text x="170" y="42" fill="#64748b" font-size="7" font-family="monospace">blocked</text>
+          <text x="215" y="76" fill="#64748b" font-size="7" font-family="monospace">blocked</text>
+          <text x="275" y="110" fill="#64748b" font-size="7" font-family="monospace">blocked</text>
+          <!-- Time span indicator -->
+          <line x1="110" y1="145" x2="330" y2="145" stroke="#64748b" stroke-width="1"/>
+          <line x1="110" y1="141" x2="110" y2="149" stroke="#64748b" stroke-width="1"/>
+          <line x1="330" y1="141" x2="330" y2="149" stroke="#64748b" stroke-width="1"/>
+          <text x="220" y="162" text-anchor="middle" fill="#ef4444" font-size="10" font-family="monospace" font-weight="bold">~4-6s before anything is interactive</text>
         </svg>
       </div>
 
@@ -238,23 +245,31 @@
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#34d399" stroke-width="2"/><path d="M6 10l3 3 5-6" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="text-emerald-400 font-semibold text-sm uppercase tracking-wider">RSC + Streaming</span>
         </div>
-        <svg viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC streaming timeline showing parallel steps: instant shell HTML, streaming content, minimal JS, selective hydration, interactive in about 1.3 seconds">
+        <svg viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC streaming timeline: steps run concurrently with minimal JS, page becomes interactive in about 1.3 seconds">
           <!-- Labels -->
           <text x="0" y="24" fill="#94a3b8" font-size="11" font-family="monospace">Shell HTML</text>
           <text x="0" y="58" fill="#94a3b8" font-size="11" font-family="monospace">Stream content</text>
           <text x="0" y="92" fill="#94a3b8" font-size="11" font-family="monospace">Minimal JS</text>
           <text x="0" y="126" fill="#94a3b8" font-size="11" font-family="monospace">Selective hydrate</text>
-          <!-- Bars (parallel/overlapping - much faster) -->
-          <rect x="110" y="12" width="40" height="18" rx="4" fill="#34d399" class="timeline-bar"/>
-          <rect x="110" y="46" width="130" height="18" rx="4" fill="#6366f1" opacity="0.3"/>
-          <rect x="110" y="46" width="130" height="18" rx="4" fill="#6366f1" class="timeline-bar timeline-bar-delay-1"/>
-          <rect x="110" y="80" width="60" height="18" rx="4" fill="#8b5cf6" opacity="0.3"/>
-          <rect x="110" y="80" width="60" height="18" rx="4" fill="#8b5cf6" class="timeline-bar timeline-bar-delay-1"/>
-          <rect x="110" y="114" width="80" height="18" rx="4" fill="#34d399" opacity="0.3"/>
-          <rect x="110" y="114" width="80" height="18" rx="4" fill="#34d399" class="timeline-bar timeline-bar-delay-2"/>
-          <!-- Interactive marker -->
-          <line x1="150" y1="4" x2="150" y2="140" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" style="transform-origin: 150px 4px; transform: scaleY(0); animation: grow-line 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;"/>
-          <text x="154" y="150" fill="#34d399" font-size="10" font-family="monospace" font-weight="bold">Interactive in ~1.3s</text>
+          <!-- Concurrent bars: overlapping to show parallelism -->
+          <rect x="110" y="12" width="25" height="18" rx="4" fill="#34d399" class="timeline-bar"/>
+          <text x="138" y="25" fill="#34d399" font-size="7" font-family="monospace" font-weight="bold">instant!</text>
+          <rect x="110" y="46" width="120" height="18" rx="4" fill="#6366f1" opacity="0.15"/>
+          <rect x="110" y="46" width="120" height="18" rx="4" fill="#6366f1" class="timeline-bar timeline-bar-delay-1"/>
+          <rect x="115" y="80" width="35" height="18" rx="4" fill="#8b5cf6" opacity="0.15"/>
+          <rect x="115" y="80" width="35" height="18" rx="4" fill="#8b5cf6" class="timeline-bar timeline-bar-delay-1"/>
+          <text x="155" y="93" fill="#a78bfa" font-size="7" font-family="monospace">tiny bundle</text>
+          <rect x="120" y="114" width="50" height="18" rx="4" fill="#34d399" opacity="0.15"/>
+          <rect x="120" y="114" width="50" height="18" rx="4" fill="#34d399" class="timeline-bar timeline-bar-delay-2"/>
+          <!-- "concurrent" annotation -->
+          <text x="110" y="142" fill="#64748b" font-size="7" font-family="monospace">all steps overlap</text>
+          <!-- Interactive marker line -->
+          <line x1="170" y1="4" x2="170" y2="136" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" style="transform-origin: 170px 4px; transform: scaleY(0); animation: grow-line 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;"/>
+          <!-- Time span indicator (much shorter) -->
+          <line x1="110" y1="152" x2="170" y2="152" stroke="#34d399" stroke-width="1"/>
+          <line x1="110" y1="148" x2="110" y2="156" stroke="#34d399" stroke-width="1"/>
+          <line x1="170" y1="148" x2="170" y2="156" stroke="#34d399" stroke-width="1"/>
+          <text x="140" y="167" text-anchor="middle" fill="#34d399" font-size="10" font-family="monospace" font-weight="bold">~1.3s interactive</text>
         </svg>
       </div>
     </div>
@@ -389,20 +404,27 @@
           <div class="w-3 h-3 rounded-full bg-red-400"></div>
           <span class="text-sm font-semibold text-slate-700">Traditional SSR</span>
         </div>
-        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" class="w-full">
+        <svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Traditional SSR: entire page is blank for 2-4 seconds while all data is fetched on the server, then everything appears at once">
           <!-- Page outline -->
           <rect x="10" y="10" width="280" height="180" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-          <!-- All blocks gray (waiting) for first 3 seconds, then all appear -->
+          <!-- All blocks gray with loading shimmer effect to show "waiting" -->
           <rect x="20" y="20" width="260" height="24" rx="4" fill="#e2e8f0"/>
-          <text x="150" y="37" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Header</text>
+          <rect x="20" y="20" width="80" height="24" rx="4" fill="#d1d5db" opacity="0.4"/>
+          <text x="150" y="37" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Header (waiting...)</text>
           <rect x="20" y="52" width="260" height="50" rx="4" fill="#e2e8f0"/>
-          <text x="150" y="82" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Hero Content</text>
+          <rect x="20" y="52" width="120" height="50" rx="4" fill="#d1d5db" opacity="0.4"/>
+          <text x="150" y="82" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Hero Content (waiting...)</text>
           <rect x="20" y="110" width="125" height="70" rx="4" fill="#e2e8f0"/>
-          <text x="82" y="150" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Product</text>
+          <rect x="20" y="110" width="50" height="70" rx="4" fill="#d1d5db" opacity="0.4"/>
+          <text x="82" y="145" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Product</text>
+          <text x="82" y="158" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="monospace">(waiting...)</text>
           <rect x="155" y="110" width="125" height="70" rx="4" fill="#e2e8f0"/>
-          <text x="217" y="150" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Reviews</text>
-          <!-- Waiting indicator -->
-          <text x="150" y="195" text-anchor="middle" fill="#ef4444" font-size="11" font-family="monospace" font-weight="bold">Blank screen for 2-4s...</text>
+          <rect x="155" y="110" width="50" height="70" rx="4" fill="#d1d5db" opacity="0.4"/>
+          <text x="217" y="145" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Reviews</text>
+          <text x="217" y="158" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="monospace">(waiting...)</text>
+          <!-- Hourglass icon -->
+          <text x="150" y="200" text-anchor="middle" fill="#ef4444" font-size="11" font-family="monospace" font-weight="bold">User sees nothing for 2-4s</text>
+          <text x="150" y="214" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="monospace">Slowest query blocks entire page</text>
         </svg>
       </div>
 
@@ -412,7 +434,7 @@
           <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
           <span class="text-sm font-semibold text-slate-700">RSC + Streaming</span>
         </div>
-        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" class="w-full">
+        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC streaming: page sections appear progressively as their data resolves, from header instantly to reviews at 1.5 seconds">
           <!-- Page outline -->
           <rect x="10" y="10" width="280" height="180" rx="8" fill="#f8fafc" stroke="#d1fae5" stroke-width="1.5"/>
           <!-- Header: instant (green) -->
@@ -529,19 +551,23 @@
         <div class="flex items-center gap-2 mb-4">
           <span class="text-sm font-semibold text-orange-700">@loadable — Initial HTML Response</span>
         </div>
-        <svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" class="w-full">
-          <rect x="10" y="10" width="280" height="200" rx="8" fill="white" stroke="#fed7aa" stroke-width="1.5"/>
+        <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="@loadable initial HTML: header and hero are server-rendered but reviews and related items are missing, requiring JavaScript to render later">
+          <rect x="10" y="10" width="280" height="210" rx="8" fill="white" stroke="#fed7aa" stroke-width="1.5"/>
           <!-- SSR'd content (present) -->
           <rect x="20" y="20" width="260" height="24" rx="4" fill="#6366f1"/>
-          <text x="150" y="37" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Header (SSR)</text>
+          <text x="150" y="37" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Header (SSR'd in HTML)</text>
           <rect x="20" y="52" width="260" height="40" rx="4" fill="#8b5cf6"/>
-          <text x="150" y="77" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Hero Content (SSR)</text>
-          <!-- Lazy gaps (missing from HTML) -->
-          <rect x="20" y="100" width="260" height="35" rx="4" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
-          <text x="150" y="122" text-anchor="middle" fill="#f97316" font-size="9" font-family="monospace">Reviews (deferred &mdash; client only)</text>
-          <rect x="20" y="143" width="260" height="35" rx="4" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
-          <text x="150" y="165" text-anchor="middle" fill="#f97316" font-size="9" font-family="monospace">Related Items (deferred &mdash; client only)</text>
-          <text x="150" y="195" text-anchor="middle" fill="#9a3412" font-size="10" font-family="monospace" font-weight="bold">Non-critical content deferred</text>
+          <text x="150" y="77" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Hero Content (SSR'd in HTML)</text>
+          <!-- Lazy gaps (missing from HTML) with JS cost labels -->
+          <rect x="20" y="100" width="260" height="35" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
+          <text x="150" y="116" text-anchor="middle" fill="#c2410c" font-size="9" font-family="monospace" font-weight="bold">Reviews (empty until JS loads)</text>
+          <text x="150" y="129" text-anchor="middle" fill="#9a3412" font-size="7" font-family="monospace">requires JS download + hydration</text>
+          <rect x="20" y="143" width="260" height="35" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
+          <text x="150" y="159" text-anchor="middle" fill="#c2410c" font-size="9" font-family="monospace" font-weight="bold">Related Items (empty until JS loads)</text>
+          <text x="150" y="172" text-anchor="middle" fill="#9a3412" font-size="7" font-family="monospace">requires JS download + hydration</text>
+          <!-- Summary -->
+          <text x="150" y="198" text-anchor="middle" fill="#9a3412" font-size="10" font-family="monospace" font-weight="bold">Content missing from initial HTML</text>
+          <text x="150" y="212" text-anchor="middle" fill="#9a3412" font-size="8" font-family="monospace">Invisible to search engines on first crawl</text>
         </svg>
       </div>
 
@@ -550,18 +576,22 @@
         <div class="flex items-center gap-2 mb-4">
           <span class="text-sm font-semibold text-green-700">RSC — Initial HTML Response</span>
         </div>
-        <svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" class="w-full">
-          <rect x="10" y="10" width="280" height="200" rx="8" fill="white" stroke="#bbf7d0" stroke-width="1.5"/>
+        <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC initial HTML: all content including reviews and related items is fully server-rendered in the HTML with zero JavaScript cost">
+          <rect x="10" y="10" width="280" height="210" rx="8" fill="white" stroke="#bbf7d0" stroke-width="1.5"/>
           <!-- All content present -->
           <rect x="20" y="20" width="260" height="24" rx="4" fill="#6366f1"/>
-          <text x="150" y="37" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Header (server rendered)</text>
+          <text x="150" y="37" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Header (in HTML, 0 JS)</text>
           <rect x="20" y="52" width="260" height="40" rx="4" fill="#8b5cf6"/>
-          <text x="150" y="77" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Hero Content (server rendered)</text>
+          <text x="150" y="77" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Hero Content (in HTML, 0 JS)</text>
           <rect x="20" y="100" width="260" height="35" rx="4" fill="#34d399"/>
-          <text x="150" y="122" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Reviews (server rendered, 0 JS)</text>
+          <text x="150" y="116" text-anchor="middle" fill="white" font-size="9" font-family="monospace" font-weight="bold">Reviews (in HTML, 0 JS)</text>
+          <text x="150" y="129" text-anchor="middle" fill="#d1fae5" font-size="7" font-family="monospace">no hydration needed</text>
           <rect x="20" y="143" width="260" height="35" rx="4" fill="#10b981"/>
-          <text x="150" y="165" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Related Items (server rendered, 0 JS)</text>
-          <text x="150" y="195" text-anchor="middle" fill="#166534" font-size="10" font-family="monospace" font-weight="bold">100% complete, 0 JS penalty</text>
+          <text x="150" y="159" text-anchor="middle" fill="white" font-size="9" font-family="monospace" font-weight="bold">Related Items (in HTML, 0 JS)</text>
+          <text x="150" y="172" text-anchor="middle" fill="#d1fae5" font-size="7" font-family="monospace">no hydration needed</text>
+          <!-- Summary -->
+          <text x="150" y="198" text-anchor="middle" fill="#166534" font-size="10" font-family="monospace" font-weight="bold">100% content in initial HTML</text>
+          <text x="150" y="212" text-anchor="middle" fill="#166534" font-size="8" font-family="monospace">Fully visible to search engines on first crawl</text>
         </svg>
       </div>
     </div>
