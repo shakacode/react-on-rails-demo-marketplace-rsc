@@ -395,14 +395,15 @@
 <span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">marked</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'marked'</span><span class="syn-op">;</span>    <span class="syn-cm">// 36 KB</span>
 <span class="syn-kw">import</span> <span class="syn-fn">hljs</span> <span class="syn-kw">from</span> <span class="syn-str">'highlight.js'</span><span class="syn-op">;</span> <span class="syn-cm">// 200+ KB</span>
 
-<span class="syn-fn">marked</span><span class="syn-op">.</span><span class="syn-fn">use</span><span class="syn-op">({</span> <span class="syn-prop">highlight</span><span class="syn-op">:</span> <span class="syn-op">(</span><span class="syn-prop">code</span><span class="syn-op">,</span> <span class="syn-prop">lang</span><span class="syn-op">) =&gt;</span>
-  <span class="syn-fn">hljs</span><span class="syn-op">.</span><span class="syn-fn">highlight</span><span class="syn-op">(</span><span class="syn-prop">code</span><span class="syn-op">,</span> <span class="syn-op">{</span> <span class="syn-prop">language</span><span class="syn-op">:</span> <span class="syn-prop">lang</span> <span class="syn-op">}).</span><span class="syn-prop">value</span>
+<span class="syn-fn">marked</span><span class="syn-op">.</span><span class="syn-fn">use</span><span class="syn-op">({</span>
+  <span class="syn-prop">highlight</span><span class="syn-op">:</span> <span class="syn-op">(</span><span class="syn-prop">code</span><span class="syn-op">,</span> <span class="syn-prop">lang</span><span class="syn-op">) =&gt;</span>
+    <span class="syn-fn">hljs</span><span class="syn-op">.</span><span class="syn-fn">highlight</span><span class="syn-op">(</span><span class="syn-prop">code</span><span class="syn-op">,</span> <span class="syn-op">{</span> <span class="syn-prop">language</span><span class="syn-op">:</span> <span class="syn-prop">lang</span> <span class="syn-op">}).</span><span class="syn-prop">value</span>
 <span class="syn-op">});</span>
 
 <span class="syn-kw">export default async function</span> <span class="syn-fn">Content</span><span class="syn-op">(</span>
-  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
+  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span><span class="syn-op">:</span> <span class="syn-prop">getAsync</span> <span class="syn-op">}</span>
 <span class="syn-op">) {</span>
-  <span class="syn-kw">const</span> md <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span><span class="syn-str">'content'</span><span class="syn-op">);</span>
+  <span class="syn-kw">const</span> md <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getAsync</span><span class="syn-op">(</span><span class="syn-str">'content'</span><span class="syn-op">);</span>
   <span class="syn-kw">return</span> <span class="syn-ty">&lt;article&gt;</span><span class="syn-op">{</span><span class="syn-fn">marked</span><span class="syn-op">(</span>md<span class="syn-op">)}</span><span class="syn-ty">&lt;/article&gt;</span><span class="syn-op">;</span>
 <span class="syn-op">}</span></code></pre>
         </div>
