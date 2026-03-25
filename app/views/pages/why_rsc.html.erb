@@ -764,23 +764,23 @@
           </div>
           <pre class="text-slate-300"><code><span class="syn-dir">'use client'</span><span class="syn-op">;</span>
 <span class="syn-kw">function</span> <span class="syn-fn">Reviews</span><span class="syn-op">({</span> <span class="syn-prop">productId</span> <span class="syn-op">}) {</span>
-  <span class="syn-kw">const</span> <span class="syn-op">[</span>reviews<span class="syn-op">,</span> setReviews<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">null</span><span class="syn-op">);</span>
+  <span class="syn-kw">const</span> <span class="syn-op">[</span>data<span class="syn-op">,</span> setData<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">null</span><span class="syn-op">);</span>
   <span class="syn-kw">const</span> <span class="syn-op">[</span>loading<span class="syn-op">,</span> setLoading<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">true</span><span class="syn-op">);</span>
-  <span class="syn-kw">const</span> <span class="syn-op">[</span>error<span class="syn-op">,</span> setError<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">null</span><span class="syn-op">);</span>
+  <span class="syn-kw">const</span> <span class="syn-op">[</span>err<span class="syn-op">,</span> setErr<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">null</span><span class="syn-op">);</span>
 
   <span class="syn-fn">useEffect</span><span class="syn-op">(() =&gt; {</span>
-    <span class="syn-kw">let</span> cancelled <span class="syn-op">=</span> <span class="syn-num">false</span><span class="syn-op">;</span>
+    <span class="syn-kw">let</span> skip <span class="syn-op">=</span> <span class="syn-num">false</span><span class="syn-op">;</span>
     <span class="syn-fn">fetch</span><span class="syn-op">(</span><span class="syn-str">`/api/reviews/${<span class="syn-prop">productId</span>}`</span><span class="syn-op">)</span>
       <span class="syn-op">.</span><span class="syn-fn">then</span><span class="syn-op">(</span>r <span class="syn-op">=&gt;</span> r<span class="syn-op">.</span><span class="syn-fn">json</span><span class="syn-op">())</span>
-      <span class="syn-op">.</span><span class="syn-fn">then</span><span class="syn-op">(</span>d <span class="syn-op">=&gt;</span> <span class="syn-op">{</span> <span class="syn-kw">if</span> <span class="syn-op">(!</span>cancelled<span class="syn-op">)</span> <span class="syn-fn">setReviews</span><span class="syn-op">(</span>d<span class="syn-op">); })</span>
-      <span class="syn-op">.</span><span class="syn-fn">catch</span><span class="syn-op">(</span>e <span class="syn-op">=&gt;</span> <span class="syn-op">{</span> <span class="syn-kw">if</span> <span class="syn-op">(!</span>cancelled<span class="syn-op">)</span> <span class="syn-fn">setError</span><span class="syn-op">(</span>e<span class="syn-op">); })</span>
-      <span class="syn-op">.</span><span class="syn-fn">finally</span><span class="syn-op">(() =&gt; {</span> <span class="syn-kw">if</span> <span class="syn-op">(!</span>cancelled<span class="syn-op">)</span> <span class="syn-fn">setLoading</span><span class="syn-op">(</span><span class="syn-num">false</span><span class="syn-op">); });</span>
-    <span class="syn-kw">return</span> <span class="syn-op">() =&gt; {</span> cancelled <span class="syn-op">=</span> <span class="syn-num">true</span><span class="syn-op">; };</span>
+      <span class="syn-op">.</span><span class="syn-fn">then</span><span class="syn-op">(</span>d <span class="syn-op">=&gt; !</span>skip <span class="syn-op">&amp;&amp;</span> <span class="syn-fn">setData</span><span class="syn-op">(</span>d<span class="syn-op">))</span>
+      <span class="syn-op">.</span><span class="syn-fn">catch</span><span class="syn-op">(</span>e <span class="syn-op">=&gt; !</span>skip <span class="syn-op">&amp;&amp;</span> <span class="syn-fn">setErr</span><span class="syn-op">(</span>e<span class="syn-op">))</span>
+      <span class="syn-op">.</span><span class="syn-fn">finally</span><span class="syn-op">(() =&gt;</span> <span class="syn-fn">setLoading</span><span class="syn-op">(</span><span class="syn-num">false</span><span class="syn-op">));</span>
+    <span class="syn-kw">return</span> <span class="syn-op">() =&gt; {</span> skip <span class="syn-op">=</span> <span class="syn-num">true</span><span class="syn-op">; };</span>
   <span class="syn-op">}, [</span><span class="syn-prop">productId</span><span class="syn-op">]);</span>
 
   <span class="syn-kw">if</span> <span class="syn-op">(</span>loading<span class="syn-op">)</span> <span class="syn-kw">return</span> <span class="syn-ty">&lt;Spinner /&gt;</span><span class="syn-op">;</span>
-  <span class="syn-kw">if</span> <span class="syn-op">(</span>error<span class="syn-op">)</span> <span class="syn-kw">return</span> <span class="syn-ty">&lt;Error /&gt;</span><span class="syn-op">;</span>
-  <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>reviews<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
+  <span class="syn-kw">if</span> <span class="syn-op">(</span>err<span class="syn-op">)</span> <span class="syn-kw">return</span> <span class="syn-ty">&lt;Error /&gt;</span><span class="syn-op">;</span>
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>data<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
 <span class="syn-op">}</span></code></pre>
         </div>
       </div>
@@ -798,17 +798,21 @@
             <span class="code-dot" style="background:#34d399;"></span>
             <span class="text-slate-400 text-xs ml-2 font-mono">Reviews.tsx</span>
           </div>
-          <pre class="text-slate-300"><code><span class="syn-kw">async function</span> <span class="syn-fn">Reviews</span><span class="syn-op">({</span> <span class="syn-prop">productId</span> <span class="syn-op">}) {</span>
-  <span class="syn-kw">const</span> reviews <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">db</span><span class="syn-op">.</span><span class="syn-prop">reviews</span><span class="syn-op">.</span><span class="syn-fn">findMany</span><span class="syn-op">({</span>
-    <span class="syn-prop">where</span><span class="syn-op">: {</span> <span class="syn-prop">productId</span> <span class="syn-op">}</span>
-  <span class="syn-op">});</span>
-
+          <pre class="text-slate-300"><code><span class="syn-kw">async function</span> <span class="syn-fn">Reviews</span><span class="syn-op">(</span>
+  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
+<span class="syn-op">) {</span>
+  <span class="syn-kw">const</span> <span class="syn-op">{</span> reviews <span class="syn-op">} =</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span>
+    <span class="syn-str">'reviews'</span>
+  <span class="syn-op">);</span>
   <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>reviews<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
 <span class="syn-op">}</span>
 
-<span class="syn-cm">// No useState. No useEffect. No cleanup.</span>
-<span class="syn-cm">// No loading state. No error boilerplate.</span>
-<span class="syn-cm">// No stale closures. No dependency arrays.</span>
+<span class="syn-cm">// No useState. No useEffect.</span>
+<span class="syn-cm">// No cleanup. No loading state.</span>
+<span class="syn-cm">// No error boilerplate.</span>
+<span class="syn-cm">// No stale closures.</span>
+<span class="syn-cm">// No dependency arrays.</span>
+<span class="syn-cm">// No API endpoints.</span>
 <span class="syn-cm">// Just an async function.</span></code></pre>
         </div>
       </div>
