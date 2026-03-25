@@ -5,6 +5,7 @@ Rails.application.routes.draw do
 
   # Root route (will be updated later)
   root 'home#index'
+  get '/search-performance' => 'pages#search_performance'
   get '/rsc' => 'home#rsc'
 
   # Search routes — three versions of the same page
