@@ -392,17 +392,18 @@
             <span class="code-dot" style="background:#34d399;"></span>
             <span class="text-slate-400 text-xs ml-2 font-mono">AsyncBlogContent.tsx</span>
           </div>
-          <pre class="text-slate-300"><code><span class="syn-cm">// These stay on the server &mdash; 0 KB to browser</span>
-<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">marked</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'marked'</span><span class="syn-op">;</span>       <span class="syn-cm">// 36 KB</span>
-<span class="syn-kw">import</span> <span class="syn-fn">hljs</span> <span class="syn-kw">from</span> <span class="syn-str">'highlight.js'</span><span class="syn-op">;</span>    <span class="syn-cm">// 200+ KB</span>
+          <pre class="text-slate-300"><code><span class="syn-cm">// 0 KB to browser &mdash; server only</span>
+<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">marked</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'marked'</span><span class="syn-op">;</span>    <span class="syn-cm">// 36 KB</span>
+<span class="syn-kw">import</span> <span class="syn-fn">hljs</span> <span class="syn-kw">from</span> <span class="syn-str">'highlight.js'</span><span class="syn-op">;</span> <span class="syn-cm">// 200+ KB</span>
 
-<span class="syn-kw">export default async function</span> <span class="syn-fn">AsyncBlogContent</span><span class="syn-op">(</span>
+<span class="syn-kw">export default async function</span> <span class="syn-fn">Content</span><span class="syn-op">(</span>
   <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
 <span class="syn-op">) {</span>
   <span class="syn-cm">// Await data streamed from Rails</span>
-  <span class="syn-kw">const</span> content <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span><span class="syn-str">'content'</span><span class="syn-op">);</span>
-  <span class="syn-kw">const</span> html <span class="syn-op">=</span> <span class="syn-fn">marked</span><span class="syn-op">(</span>content<span class="syn-op">);</span>       <span class="syn-cm">// rendered on server</span>
-  <span class="syn-kw">return</span> <span class="syn-ty">&lt;article</span> <span class="syn-op">{...</span>html<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
+  <span class="syn-kw">const</span> data <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span>
+    <span class="syn-str">'content'</span>
+  <span class="syn-op">);</span>
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;article&gt;</span><span class="syn-op">{</span><span class="syn-fn">marked</span><span class="syn-op">(</span>data<span class="syn-op">)}</span><span class="syn-ty">&lt;/article&gt;</span><span class="syn-op">;</span>
 <span class="syn-op">}</span></code></pre>
         </div>
       </div>
