@@ -348,23 +348,61 @@
       </div>
     </div>
 
-    <!-- Code Snippet -->
-    <div class="reveal max-w-2xl mx-auto mb-16">
-      <div class="code-block shadow-2xl shadow-slate-200">
-        <div class="code-header">
-          <span class="code-dot" style="background:#f87171;"></span>
-          <span class="code-dot" style="background:#fbbf24;"></span>
-          <span class="code-dot" style="background:#34d399;"></span>
-          <span class="text-slate-400 text-xs ml-2 font-mono">BlogPost.tsx &mdash; Server Component</span>
+    <!-- Code Snippets: Ruby + React side-by-side -->
+    <div class="reveal max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16">
+      <!-- Ruby: Rails View -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-red-500"></div>
+          <span class="text-sm font-semibold text-slate-600">Rails View &mdash; streams data</span>
         </div>
-        <pre class="text-slate-300"><code><span class="syn-cm">// These libraries stay on the server &mdash; 0 KB to browser</span>
-<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">marked</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'marked'</span><span class="syn-op">;</span>          <span class="syn-cm">// 36 KB</span>
-<span class="syn-kw">import</span> <span class="syn-fn">hljs</span> <span class="syn-kw">from</span> <span class="syn-str">'highlight.js'</span><span class="syn-op">;</span>           <span class="syn-cm">// 200+ KB</span>
+        <div class="code-block shadow-lg">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">post_rsc.html.erb</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-op">&lt;%=</span> <span class="syn-fn">stream_react_component_with_async_props</span><span class="syn-op">(</span>
+  <span class="syn-str">"BlogPostRSC"</span><span class="syn-op">,</span>
+  <span class="syn-prop">props:</span> <span class="syn-op">{</span> <span class="syn-prop">title:</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">title</span> <span class="syn-op">}</span>
+<span class="syn-op">) </span><span class="syn-kw">do</span> <span class="syn-op">|</span><span class="syn-prop">emit</span><span class="syn-op">|</span>
 
-<span class="syn-kw">export default async function</span> <span class="syn-fn">BlogPost</span><span class="syn-op">({</span> <span class="syn-prop">slug</span> <span class="syn-op">}) {</span>
-  <span class="syn-kw">const</span> post <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">db</span><span class="syn-op">.</span><span class="syn-prop">posts</span><span class="syn-op">.</span><span class="syn-fn">findBySlug</span><span class="syn-op">(</span><span class="syn-prop">slug</span><span class="syn-op">);</span>
-  <span class="syn-kw">return</span> <span class="syn-ty">&lt;article</span> <span class="syn-prop">dangerouslySetInnerHTML</span><span class="syn-op">={{</span> <span class="syn-prop">__html</span><span class="syn-op">:</span> <span class="syn-fn">marked</span><span class="syn-op">(</span>post<span class="syn-op">.</span><span class="syn-prop">content</span><span class="syn-op">)</span> <span class="syn-op">}}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
+  <span class="syn-cm"># Stream markdown content to React</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"content"</span><span class="syn-op">,</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">content</span><span class="syn-op">)</span>
+
+  <span class="syn-cm"># Stream related posts (slow query)</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"related"</span><span class="syn-op">,</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">related_posts</span><span class="syn-op">)</span>
+
+<span class="syn-kw">end</span> <span class="syn-op">%&gt;</span></code></pre>
+        </div>
+      </div>
+      <!-- React: Server Component -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+          <span class="text-sm font-semibold text-slate-600">Server Component &mdash; 0 KB to client</span>
+        </div>
+        <div class="code-block shadow-lg">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">AsyncBlogContent.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-cm">// These stay on the server &mdash; 0 KB to browser</span>
+<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">marked</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'marked'</span><span class="syn-op">;</span>       <span class="syn-cm">// 36 KB</span>
+<span class="syn-kw">import</span> <span class="syn-fn">hljs</span> <span class="syn-kw">from</span> <span class="syn-str">'highlight.js'</span><span class="syn-op">;</span>    <span class="syn-cm">// 200+ KB</span>
+
+<span class="syn-kw">export default async function</span> <span class="syn-fn">AsyncBlogContent</span><span class="syn-op">(</span>
+  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
+<span class="syn-op">) {</span>
+  <span class="syn-cm">// Await data streamed from Rails</span>
+  <span class="syn-kw">const</span> content <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span><span class="syn-str">'content'</span><span class="syn-op">);</span>
+  <span class="syn-kw">const</span> html <span class="syn-op">=</span> <span class="syn-fn">marked</span><span class="syn-op">(</span>content<span class="syn-op">);</span>       <span class="syn-cm">// rendered on server</span>
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;article</span> <span class="syn-op">{...</span>html<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
 <span class="syn-op">}</span></code></pre>
+        </div>
       </div>
     </div>
 
