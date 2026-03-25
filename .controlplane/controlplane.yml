@@ -1,0 +1,18 @@
+aliases:
+  common: &common
+    cpln_org: shakacode-open-source-examples-staging
+    default_location: aws-us-east-2
+    one_off_workload: rails
+    app_workloads:
+      - rails
+    additional_workloads: []
+    fix_terminal_size: true
+    image_retention_days: 30
+
+apps:
+  react-server-components-demo:
+    <<: *common
+    release_script: rails db:migrate
+    setup_app_templates:
+      - app
+      - rails
