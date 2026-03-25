@@ -158,10 +158,15 @@
 
   /* ── Comparison table ── */
   .comparison-table th { background: #f1f5f9; font-weight: 600; text-align: left; }
-  .comparison-table td, .comparison-table th { padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .comparison-table thead th.ssr-col { background: #fef2f2; color: #b91c1c; }
+  .comparison-table thead th.rsc-col { background: #f0fdf4; color: #047857; }
+  .comparison-table td, .comparison-table th { padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
   .comparison-table tr:last-child td { border-bottom: none; }
   .comparison-table .rsc-col   { background: #f0fdf4; }
   .comparison-table .ssr-col   { background: #fef2f2; }
+  .comparison-table tbody tr:hover td { background-color: #f8fafc; transition: background-color 0.15s; }
+  .comparison-table tbody tr:hover td.ssr-col { background-color: #fef2f2; }
+  .comparison-table tbody tr:hover td.rsc-col { background-color: #ecfdf5; }
 
   /* ── Accessibility ── */
   @media (prefers-reduced-motion: reduce) {
@@ -212,26 +217,26 @@
     </p>
 
     <!-- Hero Stat Cards -->
-    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
-        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-400 mb-1">22%</div>
-        <div class="text-sm font-semibold text-white">Faster FCP</div>
-        <div class="text-xs text-slate-400 mt-1">2508ms &rarr; 1948ms</div>
+    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 text-left">
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-400 mb-2">22%</div>
+        <div class="text-sm font-semibold text-white mb-1">Faster FCP</div>
+        <div class="text-xs text-slate-400">2508ms &rarr; 1948ms</div>
       </div>
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
-        <div class="text-3xl sm:text-4xl font-extrabold text-indigo-400 mb-1">81%</div>
-        <div class="text-sm font-semibold text-white">Less JS Shipped</div>
-        <div class="text-xs text-slate-400 mt-1">1332 KB &rarr; 258 KB</div>
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-indigo-400 mb-2">81%</div>
+        <div class="text-sm font-semibold text-white mb-1">Less JS Shipped</div>
+        <div class="text-xs text-slate-400">1332 KB &rarr; 258 KB</div>
       </div>
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
-        <div class="text-3xl sm:text-4xl font-extrabold text-purple-400 mb-1">72%</div>
-        <div class="text-sm font-semibold text-white">Faster TBT</div>
-        <div class="text-xs text-slate-400 mt-1">677ms &rarr; 189ms</div>
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-purple-400 mb-2">72%</div>
+        <div class="text-sm font-semibold text-white mb-1">Faster TBT</div>
+        <div class="text-xs text-slate-400">677ms &rarr; 189ms</div>
       </div>
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
-        <div class="text-3xl sm:text-4xl font-extrabold text-pink-400 mb-1">0 KB</div>
-        <div class="text-sm font-semibold text-white">Markdown Libs</div>
-        <div class="text-xs text-slate-400 mt-1">Stays server-side</div>
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-pink-400 mb-2">0 KB</div>
+        <div class="text-sm font-semibold text-white mb-1">Markdown Libs</div>
+        <div class="text-xs text-slate-400">Stays server-side</div>
       </div>
     </div>
   </div>
@@ -268,7 +273,7 @@
               <span class="text-sm font-medium text-slate-700">Traditional SSR Bundle</span>
               <span class="text-sm font-bold text-red-500">1,332 KB</span>
             </div>
-            <div class="h-10 rounded-lg overflow-hidden bg-slate-200 flex">
+            <div class="h-12 rounded-lg overflow-hidden bg-slate-200 flex">
               <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:24%">
                 <span class="hidden sm:inline">markdown-libs</span><span class="sm:hidden">Libs</span>
               </div>
@@ -293,7 +298,7 @@
               <span class="text-sm font-medium text-slate-700">RSC Bundle</span>
               <span class="text-sm font-bold text-emerald-600">258 KB</span>
             </div>
-            <div class="h-10 rounded-lg overflow-hidden bg-slate-200 flex">
+            <div class="h-12 rounded-lg overflow-hidden bg-slate-200 flex">
               <div class="bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--bar-width:19.4%;">
                 Interactive UI only
               </div>
@@ -618,55 +623,55 @@
               <tr>
                 <td class="font-semibold text-slate-800">
                   First Contentful Paint
-                  <div class="text-xs text-slate-400 font-normal">When the first pixel renders</div>
+                  <div class="text-xs text-slate-500 font-normal mt-1">When the first pixel renders</div>
                 </td>
-                <td class="ssr-col font-mono">2,508 ms</td>
-                <td class="rsc-col font-mono">1,948 ms</td>
-                <td><span class="inline-flex items-center gap-1 text-emerald-600 font-bold"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 22%</span></td>
+                <td class="ssr-col font-mono text-base">2,508 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">1,948 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 22%</span></td>
               </tr>
               <tr>
                 <td class="font-semibold text-slate-800">
                   Largest Contentful Paint
-                  <div class="text-xs text-slate-400 font-normal">When the main content is visible</div>
+                  <div class="text-xs text-slate-500 font-normal mt-1">When the main content is visible</div>
                 </td>
-                <td class="ssr-col font-mono">2,508 ms</td>
-                <td class="rsc-col font-mono">2,432 ms</td>
-                <td><span class="inline-flex items-center gap-1 text-emerald-600 font-bold"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 3%</span></td>
+                <td class="ssr-col font-mono text-base">2,508 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">2,432 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 3%</span></td>
               </tr>
               <tr>
                 <td class="font-semibold text-slate-800">
                   Time to First Byte
-                  <div class="text-xs text-slate-400 font-normal">Server response time</div>
+                  <div class="text-xs text-slate-500 font-normal mt-1">Server response time</div>
                 </td>
-                <td class="ssr-col font-mono">539 ms</td>
-                <td class="rsc-col font-mono">239 ms</td>
-                <td><span class="inline-flex items-center gap-1 text-emerald-600 font-bold"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 56%</span></td>
+                <td class="ssr-col font-mono text-base">539 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">239 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 56%</span></td>
               </tr>
               <tr>
                 <td class="font-semibold text-slate-800">
                   Total Blocking Time
-                  <div class="text-xs text-slate-400 font-normal">Main thread blocked (affects interactivity)</div>
+                  <div class="text-xs text-slate-500 font-normal mt-1">Main thread blocked (affects interactivity)</div>
                 </td>
-                <td class="ssr-col font-mono">677 ms</td>
-                <td class="rsc-col font-mono">189 ms</td>
-                <td><span class="inline-flex items-center gap-1 text-emerald-600 font-bold"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 72%</span></td>
+                <td class="ssr-col font-mono text-base">677 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">189 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 72%</span></td>
               </tr>
               <tr>
                 <td class="font-semibold text-slate-800">
                   JS Transfer Size
-                  <div class="text-xs text-slate-400 font-normal">JavaScript shipped to browser</div>
+                  <div class="text-xs text-slate-500 font-normal mt-1">JavaScript shipped to browser</div>
                 </td>
-                <td class="ssr-col font-mono">1,332 KB</td>
-                <td class="rsc-col font-mono">258 KB</td>
-                <td><span class="inline-flex items-center gap-1 text-emerald-600 font-bold"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 81%</span></td>
+                <td class="ssr-col font-mono text-base">1,332 KB</td>
+                <td class="rsc-col font-mono text-base font-semibold">258 KB</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 81%</span></td>
               </tr>
               <tr>
                 <td class="font-semibold text-slate-800">
                   Cumulative Layout Shift
-                  <div class="text-xs text-slate-400 font-normal">Visual stability</div>
+                  <div class="text-xs text-slate-500 font-normal mt-1">Visual stability</div>
                 </td>
-                <td class="ssr-col font-mono">0.000</td>
-                <td class="rsc-col font-mono">0.000</td>
+                <td class="ssr-col font-mono text-base">0.000</td>
+                <td class="rsc-col font-mono text-base font-semibold">0.000</td>
                 <td><span class="text-slate-400 text-xs">identical</span></td>
               </tr>
             </tbody>
@@ -677,31 +682,31 @@
 
     <!-- Across all pages -->
     <div class="reveal max-w-4xl mx-auto">
-      <h3 class="text-center text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">RSC Wins Across Every Page Type</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <h3 class="text-center text-base sm:text-lg font-bold text-slate-700 uppercase tracking-wider mb-8">RSC Wins Across Every Page Type</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Blog</div>
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">92%</div>
-          <div class="text-xs text-slate-500">Faster hydration</div>
-          <div class="text-xs text-slate-400 mt-1">8505ms &rarr; 701ms</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Blog</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">92%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster hydration</div>
+          <div class="text-xs text-slate-500">8505ms &rarr; 701ms</div>
         </div>
         <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Product</div>
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">27%</div>
-          <div class="text-xs text-slate-500">Faster FCP</div>
-          <div class="text-xs text-slate-400 mt-1">2408ms &rarr; 1756ms</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Product</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">27%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+          <div class="text-xs text-slate-500">2408ms &rarr; 1756ms</div>
         </div>
         <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Search</div>
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">22%</div>
-          <div class="text-xs text-slate-500">Faster FCP</div>
-          <div class="text-xs text-slate-400 mt-1">2508ms &rarr; 1948ms</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Search</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">22%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+          <div class="text-xs text-slate-500">2508ms &rarr; 1948ms</div>
         </div>
         <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Dashboard</div>
-          <div class="text-2xl font-extrabold text-emerald-600 mb-1">80%</div>
-          <div class="text-xs text-slate-500">Faster FCP</div>
-          <div class="text-xs text-slate-400 mt-1">7228ms &rarr; 1416ms</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Dashboard</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">80%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+          <div class="text-xs text-slate-500">7228ms &rarr; 1416ms</div>
         </div>
       </div>
     </div>
@@ -722,87 +727,107 @@
     </div>
 
     <!-- Server vs Client split -->
-    <div class="reveal max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+    <div class="reveal max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
       <!-- Server side -->
-      <div class="bg-slate-900 rounded-2xl p-6 sm:p-8">
-        <div class="flex items-center gap-2 mb-5">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#818cf8" stroke-width="1.5"/><path d="M6 20h8" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M10 16v4" stroke="#818cf8" stroke-width="1.5"/></svg>
+      <div class="bg-slate-900 rounded-2xl p-7 sm:p-9 ring-1 ring-indigo-500/20">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-9 h-9 bg-indigo-500/15 rounded-lg flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#818cf8" stroke-width="1.5"/><path d="M6 20h8" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M10 16v4" stroke="#818cf8" stroke-width="1.5"/></svg>
+          </div>
           <span class="text-indigo-400 font-semibold text-sm uppercase tracking-wider">Server Components</span>
         </div>
-        <ul class="space-y-3">
+        <ul class="space-y-5">
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-white">Product cards (24)</div>
-              <div class="text-xs text-slate-400">Images, prices, ratings, descriptions</div>
+              <div class="text-xs text-slate-300 mt-0.5">Images, prices, ratings, descriptions</div>
             </div>
           </li>
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-white">Markdown rendering</div>
-              <div class="text-xs text-slate-400">marked + highlight.js (321 KB eliminated)</div>
+              <div class="text-xs text-slate-300 mt-0.5">marked + highlight.js (321 KB eliminated)</div>
             </div>
           </li>
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-white">Review snippets</div>
-              <div class="text-xs text-slate-400">Star ratings, reviewer info, comments</div>
+              <div class="text-xs text-slate-300 mt-0.5">Star ratings, reviewer info, comments</div>
             </div>
           </li>
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-white">Tags &amp; brand highlights</div>
-              <div class="text-xs text-slate-400">Aggregation badges, counts, avg ratings</div>
+              <div class="text-xs text-slate-300 mt-0.5">Aggregation badges, counts, avg ratings</div>
             </div>
           </li>
         </ul>
-        <div class="mt-5 pt-4 border-t border-slate-700">
-          <div class="text-xs text-slate-400">Result: <strong class="text-indigo-400">Pure HTML, 0 KB JavaScript</strong></div>
+        <div class="mt-6 pt-5 border-t border-slate-700">
+          <div class="text-sm text-slate-300">Result: <strong class="text-indigo-300 text-base">Pure HTML, 0 KB JavaScript</strong></div>
         </div>
       </div>
 
       <!-- Client side -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8">
-        <div class="flex items-center gap-2 mb-5">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="14" height="18" rx="2" stroke="#34d399" stroke-width="1.5"/><circle cx="10" cy="15" r="1" fill="#34d399"/></svg>
+      <div class="bg-white border border-slate-200 rounded-2xl p-7 sm:p-9 shadow-sm">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="14" height="18" rx="2" stroke="#34d399" stroke-width="1.5"/><circle cx="10" cy="15" r="1" fill="#34d399"/></svg>
+          </div>
           <span class="text-emerald-600 font-semibold text-sm uppercase tracking-wider">Client Islands</span>
-          <span class="text-xs text-slate-400 ml-auto">~10 KB total</span>
+          <span class="text-xs text-slate-400 ml-auto font-medium">~10 KB total</span>
         </div>
-        <ul class="space-y-3">
+        <ul class="space-y-5">
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#34d399" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-slate-800">Sort dropdown</div>
-              <div class="text-xs text-slate-500">onChange triggers re-sort</div>
+              <div class="text-xs text-slate-500 mt-0.5">onChange triggers re-sort</div>
             </div>
           </li>
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#34d399" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-slate-800">Filter sidebar</div>
-              <div class="text-xs text-slate-500">Category, brand, price, rating toggles</div>
+              <div class="text-xs text-slate-500 mt-0.5">Category, brand, price, rating toggles</div>
             </div>
           </li>
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#34d399" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-slate-800">Pagination</div>
-              <div class="text-xs text-slate-500">Page navigation buttons</div>
+              <div class="text-xs text-slate-500 mt-0.5">Page navigation buttons</div>
             </div>
           </li>
           <li class="flex items-start gap-3">
-            <svg class="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#34d399" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <div>
               <div class="text-sm font-semibold text-slate-800">Compare &amp; Add-to-Cart</div>
-              <div class="text-xs text-slate-500">Interactive buttons per card</div>
+              <div class="text-xs text-slate-500 mt-0.5">Interactive buttons per card</div>
             </div>
           </li>
         </ul>
-        <div class="mt-5 pt-4 border-t border-slate-100">
-          <div class="text-xs text-slate-400">Result: <strong class="text-emerald-600">Only interactive shells hydrate</strong></div>
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <div class="text-sm text-slate-500">Result: <strong class="text-emerald-600 text-base">Only interactive shells hydrate</strong></div>
         </div>
       </div>
     </div>
@@ -812,7 +837,16 @@
 <!-- ════════════════════════════════════════════════════════════════
      SECTION 6: CTA
      ════════════════════════════════════════════════════════════════ -->
-<section class="section-dark py-14 sm:py-20 lg:py-28 relative overflow-hidden">
+<!-- Wave divider into CTA -->
+<div class="wave-divider" style="background: #0f172a;">
+  <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
+    <path d="M0 0V30C240 60 480 60 720 30C960 0 1200 0 1440 30V0H0Z" fill="#ffffff"/>
+  </svg>
+</div>
+
+<section class="hero-gradient relative overflow-hidden py-20 sm:py-28 lg:py-36">
+  <div class="hero-glow absolute inset-0"></div>
+
   <!-- Grid pattern -->
   <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
@@ -825,22 +859,22 @@
 
   <div class="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
     <div class="reveal">
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-5 tracking-tight">
-        Try it yourself
+      <h2 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+        See the Difference<br/><span class="gradient-text">For Yourself</span>
       </h2>
-      <p class="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-        Open both versions side by side. Throttle your network. See the difference in real time.
+      <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+        Open both versions side by side. Throttle your network to Slow 3G. Watch RSC stream content progressively while SSR stalls.
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="/product-search/rsc" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="scale(0.75) translate(3,3)"/></svg>
+        <a href="/product-search/rsc" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-semibold px-8 py-4 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
           View RSC Search
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a href="/product-search/ssr" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-3.5 rounded-xl transition-all border border-white/20">
+        <a href="/product-search/ssr" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-xl transition-all border border-white/20">
           View SSR Search
         </a>
       </div>
-      <p class="text-xs text-slate-500 mt-8">
+      <p class="text-xs text-slate-500 mt-12">
         Powered by <a href="https://www.shakacode.com/react-on-rails-pro/" class="text-indigo-400 hover:underline">React on Rails Pro</a> &mdash; React Server Components for Ruby on Rails
       </p>
     </div>
