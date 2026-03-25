@@ -1,0 +1,910 @@
+<% content_for :head do %>
+<style>
+  /* ── Scroll-reveal animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Hero gradient ── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #172554 100%);
+  }
+  .hero-glow {
+    background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(99, 102, 241, 0.18) 0%, transparent 70%);
+  }
+
+  /* ── Gradient text ── */
+  .gradient-text {
+    background: linear-gradient(135deg, #818cf8, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .gradient-text-green {
+    background: linear-gradient(135deg, #34d399, #6ee7b7, #a7f3d0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Metric counter animation ── */
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .metric-animate {
+    animation: count-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-play-state: paused;
+    opacity: 0;
+  }
+  .visible .metric-animate { animation-play-state: running; }
+  .visible .metric-animate.delay-1 { animation-delay: 0.15s; }
+  .visible .metric-animate.delay-2 { animation-delay: 0.3s; }
+  .visible .metric-animate.delay-3 { animation-delay: 0.45s; }
+
+  /* ── Bar grow animation ── */
+  @keyframes grow-width {
+    from { width: 0; }
+    to   { width: var(--bar-width); }
+  }
+  .bar-animate {
+    animation: grow-width 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-play-state: paused;
+    width: 0;
+  }
+  .visible .bar-animate { animation-play-state: running; }
+  .visible .bar-animate.delay-1 { animation-delay: 0.2s; }
+  .visible .bar-animate.delay-2 { animation-delay: 0.4s; }
+
+  /* ── Timeline grow ── */
+  .timeline-bar {
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: grow-bar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .timeline-bar-delay-1 { animation-delay: 0.3s; }
+  .timeline-bar-delay-2 { animation-delay: 0.6s; }
+  .timeline-bar-delay-3 { animation-delay: 0.9s; }
+  .timeline-bar-delay-4 { animation-delay: 1.2s; }
+  @keyframes grow-bar {
+    to { transform: scaleX(1); }
+  }
+  @keyframes grow-line {
+    to { transform: scaleY(1); }
+  }
+
+  /* ── Streaming blocks ── */
+  .rsc-block-0 { animation: rsc-anim0 8s ease infinite; opacity: 0; }
+  .rsc-block-1 { animation: rsc-anim1 8s ease infinite; opacity: 0; }
+  .rsc-block-2 { animation: rsc-anim2 8s ease infinite; opacity: 0; }
+  .rsc-block-3 { animation: rsc-anim3 8s ease infinite; opacity: 0; }
+  @keyframes rsc-anim0 { 0%,4% { opacity:0; } 5%  { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
+  @keyframes rsc-anim1 { 0%,14%{ opacity:0; } 15% { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
+  @keyframes rsc-anim2 { 0%,29%{ opacity:0; } 30% { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
+  @keyframes rsc-anim3 { 0%,49%{ opacity:0; } 50% { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
+  .ssr-skeleton { animation: ssr-shimmer 8s ease-in-out infinite; }
+  .ssr-content  { animation: ssr-appear  8s ease infinite; opacity: 0; }
+  @keyframes ssr-shimmer   { 0%,70% { opacity:0.3; } 71%,72% { opacity:0.5; } 73% { opacity:0.3; } }
+  @keyframes ssr-appear    { 0%,74% { opacity:0;   } 75%     { opacity:1;   } 95% { opacity:1;   } 100% { opacity:0; } }
+  .rsc-skel-0 { animation: rsc-sk0 8s ease infinite; }
+  .rsc-skel-1 { animation: rsc-sk1 8s ease infinite; }
+  .rsc-skel-2 { animation: rsc-sk2 8s ease infinite; }
+  .rsc-skel-3 { animation: rsc-sk3 8s ease infinite; }
+  @keyframes rsc-sk0 { 0%,4%  { opacity:1; } 5%  { opacity:0; } 100% { opacity:0; } }
+  @keyframes rsc-sk1 { 0%,14% { opacity:1; } 15% { opacity:0; } 100% { opacity:0; } }
+  @keyframes rsc-sk2 { 0%,29% { opacity:1; } 30% { opacity:0; } 100% { opacity:0; } }
+  @keyframes rsc-sk3 { 0%,49% { opacity:1; } 50% { opacity:0; } 100% { opacity:0; } }
+
+  /* ── Floating particles ── */
+  @keyframes float-particle {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+    50%      { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+  }
+  .particle {
+    animation: float-particle var(--duration, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* ── Pulse glow for metric cards ── */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.2); }
+    50%      { box-shadow: 0 0 24px 4px rgba(99, 102, 241, 0.12); }
+  }
+  .metric-card:hover { animation: pulse-glow 2s ease-in-out infinite; }
+
+  /* ── Sections ── */
+  .section-light { background: #ffffff; }
+  .section-muted { background: #f8fafc; }
+  .section-dark  { background: #0f172a; color: #e2e8f0; }
+
+  /* ── Wave divider ── */
+  .wave-divider { position: relative; margin-top: -1px; }
+
+  /* ── Code block ── */
+  .code-block {
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', ui-monospace, monospace;
+  }
+  @media (min-width: 640px) { .code-block { font-size: 0.875rem; } }
+  .code-block pre { margin: 0; padding: 1rem; overflow-x: auto; flex: 1; }
+  @media (min-width: 640px) { .code-block pre { padding: 1.5rem 1.75rem; } }
+  .code-header {
+    background: #334155;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .syn-kw   { color: #c084fc; }
+  .syn-fn   { color: #67e8f9; }
+  .syn-str  { color: #86efac; }
+  .syn-cm   { color: #64748b; }
+  .syn-ty   { color: #fbbf24; }
+  .syn-op   { color: #94a3b8; }
+  .syn-prop { color: #f9a8d4; }
+  .syn-num  { color: #fbbf24; }
+  .syn-dir  { color: #fb923c; }
+
+  /* ── Comparison table ── */
+  .comparison-table th { background: #f1f5f9; font-weight: 600; text-align: left; }
+  .comparison-table thead th.ssr-col { background: #fef2f2; color: #b91c1c; }
+  .comparison-table thead th.rsc-col { background: #f0fdf4; color: #047857; }
+  .comparison-table td, .comparison-table th { padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table .rsc-col   { background: #f0fdf4; }
+  .comparison-table .ssr-col   { background: #fef2f2; }
+  .comparison-table tbody tr:hover td { background-color: #f8fafc; transition: background-color 0.15s; }
+  .comparison-table tbody tr:hover td.ssr-col { background-color: #fef2f2; }
+  .comparison-table tbody tr:hover td.rsc-col { background-color: #ecfdf5; }
+
+  /* ── Accessibility ── */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { transition: none; opacity: 1; transform: none; }
+    .timeline-bar { animation: none; transform: scaleX(1); }
+    .bar-animate { animation: none; width: var(--bar-width); }
+    .metric-animate { animation: none; opacity: 1; }
+    .particle { animation: none; opacity: 0.4; }
+    .ssr-skeleton { animation: none; opacity: 0; }
+    .ssr-content  { animation: none; opacity: 1; }
+    .rsc-block-0, .rsc-block-1, .rsc-block-2, .rsc-block-3 { animation: none; opacity: 1; }
+    .rsc-skel-0, .rsc-skel-1, .rsc-skel-2, .rsc-skel-3 { animation: none; opacity: 0; }
+  }
+</style>
+<% end %>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden">
+  <div class="hero-glow absolute inset-0"></div>
+
+  <!-- Floating particles -->
+  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle class="particle" cx="8%"  cy="18%" r="2"   fill="#818cf8" style="--duration:5s;--delay:0s;"/>
+    <circle class="particle" cx="88%" cy="12%" r="1.5" fill="#a78bfa" style="--duration:4s;--delay:1s;"/>
+    <circle class="particle" cx="72%" cy="78%" r="2"   fill="#6366f1" style="--duration:6s;--delay:0.5s;"/>
+    <circle class="particle" cx="22%" cy="72%" r="1.5" fill="#818cf8" style="--duration:4.5s;--delay:2s;"/>
+    <circle class="particle" cx="50%" cy="38%" r="1"   fill="#c4b5fd" style="--duration:3.5s;--delay:1.5s;"/>
+    <rect   class="particle" x="92%" y="58%" width="3" height="3" rx="0.5" fill="#818cf8" style="--duration:5.5s;--delay:0.8s;"/>
+    <rect   class="particle" x="14%" y="48%" width="2.5" height="2.5" rx="0.5" fill="#a78bfa" style="--duration:4.2s;--delay:2.5s;"/>
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 text-center" style="padding-top: 5rem; padding-bottom: 5rem;">
+    <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 rounded-full px-4 py-1.5 mb-8">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+      <span class="text-indigo-300 text-sm font-medium">React on Rails Pro</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white tracking-tight" style="line-height: 1.3; margin-bottom: 1.5rem;">
+      From 2.5s to 1.9s FCP<br/>
+      <span class="gradient-text">81% Less JavaScript</span>
+    </h1>
+
+    <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed" style="margin-bottom: 2rem;">
+      The same product search page &mdash; built with traditional SSR and with React Server Components. Open both and compare.
+    </p>
+
+    <!-- Demo links -->
+    <div class="flex items-center justify-center gap-8" style="margin-bottom: 3.5rem;">
+      <a href="/product-search/rsc" class="inline-flex items-center gap-1.5 text-indigo-300 hover:text-white font-medium text-sm transition-colors">
+        Open RSC version <span aria-hidden="true">&rarr;</span>
+      </a>
+      <a href="/product-search/ssr" class="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-200 font-medium text-sm transition-colors">
+        Open SSR version <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+
+    <!-- Hero Stat Cards -->
+    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 text-left">
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-400 mb-2">22%</div>
+        <div class="text-sm font-semibold text-white mb-1">Faster FCP</div>
+        <div class="text-xs text-slate-400">2508ms &rarr; 1948ms</div>
+      </div>
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-indigo-400 mb-2">81%</div>
+        <div class="text-sm font-semibold text-white mb-1">Less JS Shipped</div>
+        <div class="text-xs text-slate-400">1332 KB &rarr; 258 KB</div>
+      </div>
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-purple-400 mb-2">72%</div>
+        <div class="text-sm font-semibold text-white mb-1">Faster TBT</div>
+        <div class="text-xs text-slate-400">677ms &rarr; 189ms</div>
+      </div>
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="text-3xl sm:text-4xl font-extrabold text-pink-400 mb-2">0 KB</div>
+        <div class="text-sm font-semibold text-white mb-1">Markdown Libs</div>
+        <div class="text-xs text-slate-400">Stays server-side</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wave divider -->
+  <div class="wave-divider">
+    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
+      <path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#ffffff"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 1: THE CHALLENGE
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-red-500 font-semibold text-sm uppercase tracking-wider mb-3">The Problem</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Search Pages Are Heavy</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        A typical e-commerce search page renders 24 product cards, each with images, ratings, pricing, descriptions with markdown, and review snippets. Traditional SSR ships everything &mdash; including rendering libraries &mdash; straight to the browser.
+      </p>
+    </div>
+
+    <!-- What SSR ships -->
+    <div class="reveal max-w-3xl mx-auto mb-10 sm:mb-16">
+      <div class="bg-slate-50 rounded-2xl p-5 sm:p-8 border border-slate-200">
+        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">What SSR Ships to the Browser</h3>
+        <div class="space-y-5">
+          <!-- Total bar -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-slate-700">Traditional SSR Bundle</span>
+              <span class="text-sm font-bold text-red-500">1,332 KB</span>
+            </div>
+            <div class="h-12 rounded-lg overflow-hidden bg-slate-200 flex">
+              <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:24%">
+                <span class="hidden sm:inline">markdown-libs</span><span class="sm:hidden">Libs</span>
+              </div>
+              <div class="h-full bg-orange-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:5%"></div>
+              <div class="h-full bg-amber-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:50%">
+                <span class="hidden sm:inline">React + React DOM + ReactOnRails</span><span class="sm:hidden">React</span>
+              </div>
+              <div class="h-full bg-yellow-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:21%">
+                <span class="hidden sm:inline">App Components</span><span class="sm:hidden">App</span>
+              </div>
+            </div>
+            <div class="flex gap-3 mt-2 text-xs text-slate-400 flex-wrap">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-red-400"></span> marked + highlight.js (321 KB gzip)</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-orange-400"></span> Search chunks</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span> React core (66 KB gzip)</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-500"></span> App code</span>
+            </div>
+          </div>
+          <!-- RSC bar -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-slate-700">With RSC &mdash; Client Bundle Only</span>
+              <span class="text-sm font-bold text-emerald-600">258 KB</span>
+            </div>
+            <div class="h-12 rounded-lg overflow-hidden bg-slate-200 flex">
+              <div class="bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--bar-width:19.4%;">
+                Interactive UI only
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3v8" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Only <code class="syn-kw">'use client'</code> components ship to browser. Markdown, descriptions, reviews &rarr; <strong class="text-emerald-600 ml-0.5">server only, 0 KB to client</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What RSC removes -->
+    <div class="reveal grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18M8 4h13v13M4 8v13h13"/></svg>
+        </div>
+        <div class="text-2xl font-extrabold text-red-500 mb-1">321 KB</div>
+        <div class="text-sm font-semibold text-slate-800">marked + highlight.js</div>
+        <div class="text-xs text-slate-500 mt-1">Removed from client</div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center mx-auto mb-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+        </div>
+        <div class="text-2xl font-extrabold text-orange-500 mb-1">24 cards</div>
+        <div class="text-sm font-semibold text-slate-800">Zero-JS product cards</div>
+        <div class="text-xs text-slate-500 mt-1">Pure server-rendered HTML</div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="text-2xl font-extrabold text-emerald-500 mb-1">9 KB</div>
+        <div class="text-sm font-semibold text-slate-800">RSC client runtime</div>
+        <div class="text-xs text-slate-500 mt-1">Only addition vs SSR</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 2: STREAMING VISUALIZATION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-muted py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Streaming</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">See the Difference</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        SSR blocks until <em>all</em> data is ready. RSC streams the search shell instantly, then fills in results, filters, tags, and brands as each query resolves.
+      </p>
+    </div>
+
+    <!-- Streaming comparison -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- SSR -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <span class="text-sm font-semibold text-slate-700">Traditional SSR</span>
+          <span class="text-xs text-slate-400 ml-auto">TTFB: 539ms</span>
+        </div>
+        <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="SSR: blank page for 2.5 seconds, then everything appears at once">
+          <!-- Page chrome -->
+          <rect x="8" y="8" width="284" height="224" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+          <!-- Search bar skeleton -->
+          <rect x="18" y="18" width="264" height="20" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <!-- Filter sidebar skeleton -->
+          <rect x="18" y="46" width="80" height="176" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <!-- Product grid skeletons (6 cards) -->
+          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="106" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="194" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="106" y="170" width="80" height="52" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="194" y="170" width="80" height="52" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <!-- Content appears all at once -->
+          <rect x="18" y="18" width="264" height="20" rx="4" fill="#6366f1" class="ssr-content"/>
+          <text x="150" y="32" text-anchor="middle" fill="white" font-size="9" font-family="monospace" class="ssr-content">Search Bar + Sort</text>
+          <rect x="18"  y="46" width="80"  height="176" rx="4" fill="#8b5cf6" class="ssr-content"/>
+          <text x="58"  y="138" text-anchor="middle" fill="white" font-size="8" font-family="monospace" class="ssr-content">Filters</text>
+          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <rect x="106" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <rect x="194" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <rect x="106" y="170" width="80" height="52" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <rect x="194" y="170" width="80" height="52" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <text x="150" y="78"  text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
+          <text x="238" y="78"  text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
+          <text x="150" y="140" text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
+          <text x="238" y="140" text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
+        </svg>
+        <div class="text-center mt-3">
+          <span class="text-xs font-bold text-red-500 font-mono">FCP: 2508ms &mdash; blank until all queries finish</span>
+        </div>
+      </div>
+
+      <!-- RSC -->
+      <div class="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm ring-1 ring-emerald-100">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-semibold text-slate-700">RSC + Streaming</span>
+          <span class="text-xs text-emerald-500 ml-auto">TTFB: 239ms</span>
+        </div>
+        <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC: search shell appears instantly, then products, filters, and extras stream in progressively">
+          <!-- Page chrome -->
+          <rect x="8" y="8" width="284" height="224" rx="8" fill="#f8fafc" stroke="#d1fae5" stroke-width="1.5"/>
+          <!-- Skeletons that fade out -->
+          <rect x="18" y="18" width="264" height="20" rx="4" fill="#e2e8f0" class="rsc-skel-0"/>
+          <rect x="18" y="46" width="80" height="130" rx="4" fill="#e2e8f0" class="rsc-skel-1"/>
+          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
+          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
+          <rect x="106" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
+          <rect x="194" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
+          <rect x="18"  y="184" width="80"  height="38" rx="4" fill="#e2e8f0" class="rsc-skel-3"/>
+          <rect x="106" y="170" width="168" height="52" rx="4" fill="#e2e8f0" class="rsc-skel-3"/>
+          <!-- Streamed content -->
+          <rect x="18" y="18" width="264" height="20" rx="4" fill="#6366f1" class="rsc-block-0"/>
+          <text x="150" y="32" text-anchor="middle" fill="white" font-size="9" font-family="monospace" font-weight="bold" class="rsc-block-0">Search Shell (instant)</text>
+          <rect x="18" y="46" width="80" height="130" rx="4" fill="#8b5cf6" class="rsc-block-1"/>
+          <text x="58" y="115" text-anchor="middle" fill="white" font-size="8" font-family="monospace" font-weight="bold" class="rsc-block-1">Facets</text>
+          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
+          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
+          <rect x="106" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
+          <rect x="194" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
+          <text x="150" y="78" text-anchor="middle" fill="white" font-size="7" font-family="monospace" font-weight="bold" class="rsc-block-2">Products stream</text>
+          <rect x="18"  y="184" width="80"  height="38" rx="4" fill="#34d399" class="rsc-block-3"/>
+          <text x="58"  y="207" text-anchor="middle" fill="white" font-size="7" font-family="monospace" font-weight="bold" class="rsc-block-3">Tags</text>
+          <rect x="106" y="170" width="168" height="52" rx="4" fill="#34d399" class="rsc-block-3"/>
+          <text x="190" y="200" text-anchor="middle" fill="white" font-size="7" font-family="monospace" font-weight="bold" class="rsc-block-3">Brand Highlights</text>
+        </svg>
+        <div class="text-center mt-3">
+          <span class="text-xs font-bold text-emerald-600 font-mono">FCP: 1948ms &mdash; shell streams immediately</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- The 4 async props -->
+    <div class="reveal max-w-4xl mx-auto">
+      <h3 class="text-center text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">4 Async Props, Streamed Independently</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
+          <div class="text-xs font-bold text-indigo-600 mb-2 font-mono">emit 1</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">search_results</div>
+          <div class="text-xs text-slate-500">24 products with descriptions, reviews, specs, and pagination</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+          <div class="text-xs font-bold text-purple-600 mb-2 font-mono">emit 2</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">facets</div>
+          <div class="text-xs text-slate-500">Category, brand, price range, and rating aggregations</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+          <div class="text-xs font-bold text-emerald-600 mb-2 font-mono">emit 3</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">popular_tags</div>
+          <div class="text-xs text-slate-500">Top 20 tags across all matching products</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-pink-500"></div>
+          <div class="text-xs font-bold text-pink-600 mb-2 font-mono">emit 4</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">brand_highlights</div>
+          <div class="text-xs text-slate-500">Top 8 brands with counts and average ratings</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 3: THE CODE
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-indigo-600 font-semibold text-sm uppercase tracking-wider mb-3">Implementation</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Elegant, Simple Code</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Rails streams data with <code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm text-indigo-600">emit.call</code>. React Server Components render each section as its data arrives. No API routes, no <code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm text-indigo-600">useEffect</code>, no loading state management.
+      </p>
+    </div>
+
+    <!-- Code: Rails view -->
+    <div class="reveal max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12" style="align-items: stretch;">
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-red-500"></div>
+          <span class="text-sm font-semibold text-slate-600">Rails View &mdash; streams 4 independent data slices</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">search_rsc.html.erb</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-op">&lt;%=</span> <span class="syn-fn">stream_react_component_with_async_props</span><span class="syn-op">(</span>
+  <span class="syn-str">"ProductSearchRSC"</span><span class="syn-op">,</span>
+  <span class="syn-prop">props:</span> <span class="syn-op">{</span> <span class="syn-prop">query:</span> <span class="syn-fn">params</span><span class="syn-op">[:</span><span class="syn-str">q</span><span class="syn-op">]</span> <span class="syn-op">}</span>
+<span class="syn-op">)</span> <span class="syn-kw">do</span> <span class="syn-op">|</span><span class="syn-prop">emit</span><span class="syn-op">|</span>
+
+  <span class="syn-cm"># Each emit streams independently</span>
+  <span class="syn-cm"># Browser renders as data arrives</span>
+
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"search_results"</span><span class="syn-op">,</span> <span class="syn-fn">@results</span><span class="syn-op">)</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"facets"</span><span class="syn-op">,</span>          <span class="syn-fn">@facets</span><span class="syn-op">)</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"popular_tags"</span><span class="syn-op">,</span>    <span class="syn-fn">@tags</span><span class="syn-op">)</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"brand_highlights"</span><span class="syn-op">,</span> <span class="syn-fn">@brands</span><span class="syn-op">)</span>
+
+<span class="syn-kw">end</span> <span class="syn-op">%&gt;</span></code></pre>
+        </div>
+      </div>
+
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+          <span class="text-sm font-semibold text-slate-600">React Server Component &mdash; 0 KB to browser</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">AsyncSearchResultsRSC.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-cm">// This component runs on the server only.</span>
+<span class="syn-cm">// marked + highlight.js never ship to browser.</span>
+
+<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">renderMarkdown</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'../../utils/renderMarkdown'</span><span class="syn-op">;</span>
+
+<span class="syn-kw">export default async function</span> <span class="syn-fn">AsyncSearchResults</span><span class="syn-op">({</span>
+  <span class="syn-prop">getReactOnRailsAsyncProp</span>
+<span class="syn-op">}) {</span>
+  <span class="syn-kw">const</span> data <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span>
+    <span class="syn-str">'search_results'</span>
+  <span class="syn-op">);</span>
+
+  <span class="syn-kw">return</span> <span class="syn-op">(</span>
+    <span class="syn-ty">&lt;div</span> <span class="syn-prop">className</span><span class="syn-op">=</span><span class="syn-str">"grid grid-cols-3 gap-4"</span><span class="syn-ty">&gt;</span>
+      <span class="syn-op">{</span>data<span class="syn-op">.</span>products<span class="syn-op">.</span><span class="syn-fn">map</span><span class="syn-op">(</span>p <span class="syn-op">=&gt;</span>
+        <span class="syn-ty">&lt;ProductCard</span>
+          <span class="syn-prop">key</span><span class="syn-op">={</span>p<span class="syn-op">.</span>id<span class="syn-op">}</span>
+          <span class="syn-prop">product</span><span class="syn-op">={</span>p<span class="syn-op">}</span>
+          <span class="syn-cm">{/* HTML rendered on server */}</span>
+        <span class="syn-ty">/&gt;</span>
+      <span class="syn-op">)}</span>
+    <span class="syn-ty">&lt;/div&gt;</span>
+  <span class="syn-op">);</span>
+<span class="syn-op">}</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suspense code -->
+    <div class="reveal max-w-3xl mx-auto mb-12">
+      <div class="code-block shadow-2xl shadow-slate-200/50">
+        <div class="code-header">
+          <span class="code-dot" style="background:#f87171;"></span>
+          <span class="code-dot" style="background:#fbbf24;"></span>
+          <span class="code-dot" style="background:#34d399;"></span>
+          <span class="text-slate-400 text-xs ml-2 font-mono">ProductSearchRSC.tsx &mdash; Root Server Component</span>
+        </div>
+        <pre class="text-slate-300"><code><span class="syn-cm">// No 'use client' &mdash; this is a server component</span>
+<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">Suspense</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'react'</span><span class="syn-op">;</span>
+
+<span class="syn-kw">export default function</span> <span class="syn-fn">ProductSearchRSC</span><span class="syn-op">({</span> <span class="syn-prop">query</span><span class="syn-op">,</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}) {</span>
+  <span class="syn-kw">return</span> <span class="syn-op">(</span>
+    <span class="syn-ty">&lt;div&gt;</span>
+      <span class="syn-ty">&lt;SearchHeader</span> <span class="syn-prop">query</span><span class="syn-op">={</span>query<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span>  <span class="syn-cm">{/* Renders instantly */}</span>
+
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;ResultsSkeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncSearchResults</span>                <span class="syn-cm">{/* Streams when ready */}</span>
+          <span class="syn-prop">getReactOnRailsAsyncProp</span><span class="syn-op">={</span>getReactOnRailsAsyncProp<span class="syn-op">}</span>
+        <span class="syn-ty">/&gt;</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;FacetsSkeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncFacets ... /&gt;</span>                 <span class="syn-cm">{/* Independent stream */}</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;SidebarSkeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncSidebarExtras ... /&gt;</span>          <span class="syn-cm">{/* Tags + Brands */}</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+    <span class="syn-ty">&lt;/div&gt;</span>
+  <span class="syn-op">);</span>
+<span class="syn-op">}</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 4: FULL BENCHMARK TABLE
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-muted py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Benchmarks</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">The Numbers</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Measured with Puppeteer under throttled conditions: 4&times; CPU slowdown and Slow 3G network (1.6 Mbps, 150ms latency). Median of 5 runs after 2 warmup iterations.
+      </p>
+    </div>
+
+    <div class="reveal max-w-4xl mx-auto mb-12">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="comparison-table w-full text-sm" style="min-width: 600px;">
+            <thead>
+              <tr>
+                <th class="text-slate-600" style="width:35%">Metric</th>
+                <th class="ssr-col text-red-700" style="width:25%">SSR</th>
+                <th class="rsc-col text-emerald-700" style="width:25%">RSC</th>
+                <th style="width:15%">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-semibold text-slate-800">
+                  First Contentful Paint
+                  <div class="text-xs text-slate-500 font-normal mt-1">When the first pixel renders</div>
+                </td>
+                <td class="ssr-col font-mono text-base">2,508 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">1,948 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 22%</span></td>
+              </tr>
+              <tr>
+                <td class="font-semibold text-slate-800">
+                  Largest Contentful Paint
+                  <div class="text-xs text-slate-500 font-normal mt-1">When the main content is visible</div>
+                </td>
+                <td class="ssr-col font-mono text-base">2,508 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">2,432 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 3%</span></td>
+              </tr>
+              <tr>
+                <td class="font-semibold text-slate-800">
+                  Time to First Byte
+                  <div class="text-xs text-slate-500 font-normal mt-1">Server response time</div>
+                </td>
+                <td class="ssr-col font-mono text-base">539 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">239 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 56%</span></td>
+              </tr>
+              <tr>
+                <td class="font-semibold text-slate-800">
+                  Total Blocking Time
+                  <div class="text-xs text-slate-500 font-normal mt-1">Main thread blocked (affects interactivity)</div>
+                </td>
+                <td class="ssr-col font-mono text-base">677 ms</td>
+                <td class="rsc-col font-mono text-base font-semibold">189 ms</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 72%</span></td>
+              </tr>
+              <tr>
+                <td class="font-semibold text-slate-800">
+                  JS Transfer Size
+                  <div class="text-xs text-slate-500 font-normal mt-1">JavaScript shipped to browser</div>
+                </td>
+                <td class="ssr-col font-mono text-base">1,332 KB</td>
+                <td class="rsc-col font-mono text-base font-semibold">258 KB</td>
+                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 81%</span></td>
+              </tr>
+              <tr>
+                <td class="font-semibold text-slate-800">
+                  Cumulative Layout Shift
+                  <div class="text-xs text-slate-500 font-normal mt-1">Visual stability</div>
+                </td>
+                <td class="ssr-col font-mono text-base">0.000</td>
+                <td class="rsc-col font-mono text-base font-semibold">0.000</td>
+                <td><span class="text-slate-400 text-xs">identical</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Across all pages -->
+    <div class="reveal max-w-4xl mx-auto">
+      <h3 class="text-center text-base sm:text-lg font-bold text-slate-700 uppercase tracking-wider mb-8">RSC Wins Across Every Page Type</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Blog</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">92%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster hydration</div>
+          <div class="text-xs text-slate-500">8505ms &rarr; 701ms</div>
+        </div>
+        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Product</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">27%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+          <div class="text-xs text-slate-500">2408ms &rarr; 1756ms</div>
+        </div>
+        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Search</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">22%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+          <div class="text-xs text-slate-500">2508ms &rarr; 1948ms</div>
+        </div>
+        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Dashboard</div>
+          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">80%</div>
+          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+          <div class="text-xs text-slate-500">7228ms &rarr; 1416ms</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 5: ARCHITECTURE DEEP DIVE
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Architecture</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">What Stays on the Server</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        RSC keeps heavy rendering work server-side. Only tiny interactive shells hydrate in the browser. Product cards, descriptions, and reviews are pure HTML &mdash; zero JavaScript.
+      </p>
+    </div>
+
+    <!-- Server vs Client split -->
+    <div class="reveal max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Server side -->
+      <div class="bg-slate-900 rounded-2xl p-7 sm:p-9 ring-1 ring-indigo-500/20">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-9 h-9 bg-indigo-500/15 rounded-lg flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#818cf8" stroke-width="1.5"/><path d="M6 20h8" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M10 16v4" stroke="#818cf8" stroke-width="1.5"/></svg>
+          </div>
+          <span class="text-indigo-400 font-semibold text-sm uppercase tracking-wider">Server Components</span>
+        </div>
+        <ul class="space-y-5">
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Product cards (24)</div>
+              <div class="text-xs text-slate-300 mt-0.5">Images, prices, ratings, descriptions</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Markdown rendering</div>
+              <div class="text-xs text-slate-300 mt-0.5">marked + highlight.js (321 KB eliminated)</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Review snippets</div>
+              <div class="text-xs text-slate-300 mt-0.5">Star ratings, reviewer info, comments</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Tags &amp; brand highlights</div>
+              <div class="text-xs text-slate-300 mt-0.5">Aggregation badges, counts, avg ratings</div>
+            </div>
+          </li>
+        </ul>
+        <div class="mt-6 pt-5 border-t border-slate-700">
+          <div class="text-sm text-slate-300">Result: <strong class="text-indigo-300 text-base">Pure HTML, 0 KB JavaScript</strong></div>
+        </div>
+      </div>
+
+      <!-- Client side -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-7 sm:p-9 shadow-sm">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="14" height="18" rx="2" stroke="#34d399" stroke-width="1.5"/><circle cx="10" cy="15" r="1" fill="#34d399"/></svg>
+          </div>
+          <span class="text-emerald-600 font-semibold text-sm uppercase tracking-wider">Client Islands</span>
+          <span class="text-xs text-slate-400 ml-auto font-medium">~10 KB total</span>
+        </div>
+        <ul class="space-y-5">
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">Sort dropdown</div>
+              <div class="text-xs text-slate-500 mt-0.5">onChange triggers re-sort</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">Filter sidebar</div>
+              <div class="text-xs text-slate-500 mt-0.5">Category, brand, price, rating toggles</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">Pagination</div>
+              <div class="text-xs text-slate-500 mt-0.5">Page navigation buttons</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">Compare &amp; Add-to-Cart</div>
+              <div class="text-xs text-slate-500 mt-0.5">Interactive buttons per card</div>
+            </div>
+          </li>
+        </ul>
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <div class="text-sm text-slate-500">Result: <strong class="text-emerald-600 text-base">Only interactive shells hydrate</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 6: CTA
+     ════════════════════════════════════════════════════════════════ -->
+<!-- Wave divider into CTA -->
+<div class="wave-divider" style="background: #0f172a;">
+  <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
+    <path d="M0 0V30C240 60 480 60 720 30C960 0 1200 0 1440 30V0H0Z" fill="#ffffff"/>
+  </svg>
+</div>
+
+<section class="hero-gradient relative overflow-hidden py-20 sm:py-28 lg:py-36">
+  <div class="hero-glow absolute inset-0"></div>
+
+  <!-- Grid pattern -->
+  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <pattern id="cta-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M40 0H0V40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#cta-grid)"/>
+  </svg>
+
+  <div class="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
+    <div class="reveal">
+      <h2 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+        See the Difference<br/><span class="gradient-text">For Yourself</span>
+      </h2>
+      <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+        Open both versions side by side. Throttle your network to Slow 3G. Watch RSC stream content progressively while SSR stalls.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/product-search/rsc" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-semibold px-8 py-4 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
+          View RSC Search
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="/product-search/ssr" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-xl transition-all border border-white/20">
+          View SSR Search
+        </a>
+      </div>
+      <p class="text-xs text-slate-500 mt-12">
+        Powered by <a href="https://www.shakacode.com/react-on-rails-pro/" class="text-indigo-400 hover:underline">React on Rails Pro</a> &mdash; React Server Components for Ruby on Rails
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Scroll reveal observer ── -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(function(el) {
+    observer.observe(el);
+  });
+});
+</script>
