@@ -211,20 +211,10 @@
       <span class="gradient-text">81% Less JavaScript</span>
     </h1>
 
-    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed">
+    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-14 leading-relaxed">
       A real product search page with 24 products, faceted filters, reviews, and pagination &mdash;<br class="hidden sm:block"/>
       rebuilt with React Server Components. Here's what changed.
     </p>
-
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
-      <a href="/product-search/rsc" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-semibold px-7 py-3 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
-        View RSC Search
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
-      <a href="/product-search/ssr" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-3 rounded-xl transition-all border border-white/20">
-        View SSR Search
-      </a>
-    </div>
 
     <!-- Hero Stat Cards -->
     <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 text-left">
@@ -348,6 +338,17 @@
         <div class="text-sm font-semibold text-slate-800">RSC client runtime</div>
         <div class="text-xs text-slate-500 mt-1">Only addition vs SSR</div>
       </div>
+    </div>
+
+    <!-- Try it links -->
+    <div class="reveal flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
+      <a href="/product-search/rsc" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-7 py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/25">
+        Try the RSC version
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="/product-search/ssr" class="inline-flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 font-semibold px-7 py-3 rounded-xl transition-colors border border-slate-300 hover:border-slate-400">
+        Compare with SSR
+      </a>
     </div>
   </div>
 </section>
