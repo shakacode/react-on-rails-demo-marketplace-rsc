@@ -367,6 +367,8 @@
   <span class="syn-str">"BlogPostRSC"</span><span class="syn-op">,</span>
   <span class="syn-prop">props:</span> <span class="syn-op">{</span> <span class="syn-prop">title:</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">title</span> <span class="syn-op">}</span>
 <span class="syn-op">) </span><span class="syn-kw">do</span> <span class="syn-op">|</span><span class="syn-prop">emit</span><span class="syn-op">|</span>
+  <span class="syn-cm"># Runs concurrently in background while</span>
+  <span class="syn-cm"># the page shell streams to the browser</span>
 
   <span class="syn-cm"># Stream markdown content to React</span>
   <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"content"</span><span class="syn-op">,</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">content</span><span class="syn-op">)</span>
