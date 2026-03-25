@@ -1,0 +1,1018 @@
+<% content_for :head do %>
+<style>
+  /* ── Scroll-reveal animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Hero gradient ── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+  }
+  .hero-glow {
+    background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  }
+
+  /* ── Timeline animation (Hero) ── */
+  .timeline-bar {
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: grow-bar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .timeline-bar-delay-1 { animation-delay: 0.3s; }
+  .timeline-bar-delay-2 { animation-delay: 0.8s; }
+  .timeline-bar-delay-3 { animation-delay: 1.3s; }
+  .timeline-bar-delay-4 { animation-delay: 1.8s; }
+
+  @keyframes grow-bar {
+    to { transform: scaleX(1); }
+  }
+  @keyframes grow-line {
+    to { transform: scaleY(1); }
+  }
+
+  /* ── Streaming blocks animation ── */
+  @keyframes stream-in {
+    0% { opacity: 0.15; background-color: #e2e8f0; }
+    100% { opacity: 1; background-color: var(--stream-color, #6366f1); }
+  }
+  .stream-block {
+    animation: stream-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0.15;
+  }
+
+  /* ── Bundle shrink animation ── */
+  @keyframes shrink-bundle {
+    0% { max-width: 100%; }
+    100% { max-width: var(--target-width); }
+  }
+  .bundle-bar-animate {
+    animation: shrink-bundle 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-play-state: paused;
+    will-change: max-width;
+  }
+  .visible .bundle-bar-animate {
+    animation-play-state: running;
+  }
+
+  /* ── Pulse glow for metrics ── */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.2); }
+    50% { box-shadow: 0 0 20px 4px rgba(99, 102, 241, 0.15); }
+  }
+  .metric-card:hover {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* ── Gradient text fix ── */
+  .gradient-text {
+    background: linear-gradient(to right, #818cf8, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Code block styling ── */
+  .code-block {
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', ui-monospace, monospace;
+  }
+  @media (min-width: 640px) {
+    .code-block { font-size: 0.875rem; }
+  }
+  .code-block pre {
+    margin: 0;
+    padding: 1rem 1rem;
+    overflow-x: auto;
+    flex: 1;
+  }
+  @media (min-width: 640px) {
+    .code-block pre { padding: 1.5rem 1.75rem; }
+  }
+  .code-header {
+    background: #334155;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Syntax colors */
+  .syn-kw { color: #c084fc; }   /* keyword: async, function, const, await, import, from, export, default, return */
+  .syn-fn { color: #67e8f9; }   /* function name */
+  .syn-str { color: #86efac; }  /* string */
+  .syn-cm { color: #64748b; }   /* comment */
+  .syn-ty { color: #fbbf24; }   /* type / tag */
+  .syn-op { color: #94a3b8; }   /* operator / punctuation */
+  .syn-prop { color: #f9a8d4; } /* property */
+  .syn-num { color: #fbbf24; }  /* number */
+  .syn-dir { color: #fb923c; }  /* directive */
+
+  /* ── Comparison page SVG ── */
+  @keyframes fade-in-block {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .page-block {
+    animation: fade-in-block 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  /* ── Streaming demo: Traditional SSR (all at once after long wait) ── */
+  @keyframes ssr-shimmer {
+    0%, 70% { opacity: 0.3; }
+    71%, 72% { opacity: 0.5; }
+    73% { opacity: 0.3; }
+  }
+  @keyframes ssr-appear-all {
+    0%, 74% { opacity: 0; }
+    75% { opacity: 1; }
+    95% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .ssr-skeleton {
+    animation: ssr-shimmer 8s ease-in-out infinite;
+  }
+  .ssr-content {
+    animation: ssr-appear-all 8s ease infinite;
+    opacity: 0;
+  }
+
+  /* ── Streaming demo: RSC (progressive, one by one) ── */
+  @keyframes rsc-appear {
+    0%, var(--start) { opacity: 0; transform: translateY(4px); }
+    var(--end) { opacity: 1; transform: translateY(0); }
+    87% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(0); }
+  }
+  .rsc-block-0 { animation: rsc-block-anim0 8s ease infinite; opacity: 0; }
+  .rsc-block-1 { animation: rsc-block-anim1 8s ease infinite; opacity: 0; }
+  .rsc-block-2 { animation: rsc-block-anim2 8s ease infinite; opacity: 0; }
+  .rsc-block-3 { animation: rsc-block-anim3 8s ease infinite; opacity: 0; }
+  @keyframes rsc-block-anim0 {
+    0%, 4% { opacity: 0; } 5% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; }
+  }
+  @keyframes rsc-block-anim1 {
+    0%, 14% { opacity: 0; } 15% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; }
+  }
+  @keyframes rsc-block-anim2 {
+    0%, 29% { opacity: 0; } 30% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; }
+  }
+  @keyframes rsc-block-anim3 {
+    0%, 49% { opacity: 0; } 50% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; }
+  }
+  /* RSC skeleton that fades out as content appears */
+  .rsc-skel-0 { animation: rsc-skel-anim0 8s ease infinite; }
+  .rsc-skel-1 { animation: rsc-skel-anim1 8s ease infinite; }
+  .rsc-skel-2 { animation: rsc-skel-anim2 8s ease infinite; }
+  .rsc-skel-3 { animation: rsc-skel-anim3 8s ease infinite; }
+  @keyframes rsc-skel-anim0 {
+    0%, 4% { opacity: 1; } 5% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes rsc-skel-anim1 {
+    0%, 14% { opacity: 1; } 15% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes rsc-skel-anim2 {
+    0%, 29% { opacity: 1; } 30% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes rsc-skel-anim3 {
+    0%, 49% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 0; }
+  }
+
+  /* ── Floating particles in hero ── */
+  @keyframes float-particle {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+  }
+  .particle {
+    animation: float-particle var(--duration, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* ── Section divider wave ── */
+  .wave-divider {
+    position: relative;
+    margin-top: -1px;
+  }
+
+  /* ── Smooth gradient sections ── */
+  .section-light { background: #ffffff; }
+  .section-muted { background: #f8fafc; }
+  .section-dark { background: #0f172a; color: #e2e8f0; }
+
+  /* ── Comparison table ── */
+  .comparison-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    text-align: left;
+  }
+  .comparison-table td, .comparison-table th {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table .rsc-col { background: #f0fdf4; }
+  .comparison-table .loadable-col { background: #fff7ed; }
+
+  /* ── Accessibility: reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { transition: none; opacity: 1; transform: none; }
+    .timeline-bar { animation: none; transform: scaleX(1); }
+    line[style*="grow-line"] { animation: none !important; transform: scaleY(1) !important; }
+    .stream-block { animation: none; opacity: 1; }
+    .bundle-bar-animate { animation: none; max-width: var(--target-width); }
+    .particle { animation: none; opacity: 0.4; }
+    .page-block { animation: none; opacity: 1; }
+    .ssr-skeleton { animation: none; opacity: 0; }
+    .ssr-content { animation: none; opacity: 1; }
+    .rsc-block-0, .rsc-block-1, .rsc-block-2, .rsc-block-3 { animation: none; opacity: 1; }
+    .rsc-skel-0, .rsc-skel-1, .rsc-skel-2, .rsc-skel-3 { animation: none; opacity: 0; }
+  }
+</style>
+<% end %>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden">
+  <div class="hero-glow absolute inset-0"></div>
+
+  <!-- Floating particles -->
+  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle class="particle" cx="10%" cy="20%" r="2" fill="#818cf8" style="--duration: 5s; --delay: 0s;" />
+    <circle class="particle" cx="85%" cy="15%" r="1.5" fill="#a78bfa" style="--duration: 4s; --delay: 1s;" />
+    <circle class="particle" cx="70%" cy="80%" r="2" fill="#6366f1" style="--duration: 6s; --delay: 0.5s;" />
+    <circle class="particle" cx="25%" cy="75%" r="1.5" fill="#818cf8" style="--duration: 4.5s; --delay: 2s;" />
+    <circle class="particle" cx="50%" cy="40%" r="1" fill="#c4b5fd" style="--duration: 3.5s; --delay: 1.5s;" />
+    <rect class="particle" x="90%" y="60%" width="3" height="3" rx="0.5" fill="#818cf8" style="--duration: 5.5s; --delay: 0.8s;" />
+    <rect class="particle" x="15%" y="50%" width="2.5" height="2.5" rx="0.5" fill="#a78bfa" style="--duration: 4.2s; --delay: 2.5s;" />
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 sm:pt-32 sm:pb-40 text-center">
+    <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 rounded-full px-4 py-1.5 mb-8">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+      <span class="text-indigo-300 text-sm font-medium">React on Rails Pro</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+      React Server Components<br/>
+      <span class="gradient-text">Change Everything</span>
+    </h1>
+
+    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-14 leading-relaxed">
+      Smaller bundles. Instant pages. Simpler code.<br class="hidden sm:block"/>
+      Ship less JavaScript, load pages faster, and write components that just make sense.
+    </p>
+
+    <!-- Hero SVG: Traditional vs RSC Timeline -->
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+      <!-- Traditional Timeline -->
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="flex items-center gap-2 mb-5">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f87171" stroke-width="2"/><path d="M7 7l6 6M13 7l-6 6" stroke="#f87171" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="text-red-400 font-semibold text-sm uppercase tracking-wider">Traditional SSR</span>
+        </div>
+        <svg viewBox="0 0 340 195" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Traditional SSR timeline: server fetches all data then renders HTML, browser downloads JS and renders HTML in parallel, but hydration waits for both to complete, taking 4-6 seconds total">
+          <!-- Server-side label -->
+          <text x="0" y="10" fill="#64748b" font-size="8" font-family="monospace" font-weight="bold">SERVER</text>
+          <line x1="0" y1="14" x2="100" y2="14" stroke="#334155" stroke-width="0.5"/>
+          <!-- Server-side steps -->
+          <text x="0" y="34" fill="#94a3b8" font-size="11" font-family="monospace">Fetch all data</text>
+          <text x="0" y="62" fill="#94a3b8" font-size="11" font-family="monospace">Render HTML</text>
+          <!-- Server bars: sequential -->
+          <rect x="110" y="22" width="55" height="16" rx="4" fill="#ef4444" class="timeline-bar"/>
+          <rect x="165" y="50" width="45" height="16" rx="4" fill="#f97316" class="timeline-bar timeline-bar-delay-1"/>
+          <!-- Blocked connector: fetch → render -->
+          <line x1="165" y1="38" x2="165" y2="50" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="170" y="47" fill="#64748b" font-size="7" font-family="monospace">blocked</text>
+          <!-- Browser-side label -->
+          <text x="0" y="86" fill="#64748b" font-size="8" font-family="monospace" font-weight="bold">BROWSER</text>
+          <line x1="0" y1="90" x2="100" y2="90" stroke="#334155" stroke-width="0.5"/>
+          <!-- Browser-side steps -->
+          <text x="0" y="108" fill="#94a3b8" font-size="11" font-family="monospace">Render HTML</text>
+          <text x="0" y="130" fill="#94a3b8" font-size="11" font-family="monospace">Download JS</text>
+          <text x="0" y="156" fill="#94a3b8" font-size="11" font-family="monospace">Hydrate all</text>
+          <!-- Browser bars: render HTML and download JS start in parallel after server responds -->
+          <rect x="210" y="96" width="55" height="16" rx="4" fill="#f97316" class="timeline-bar timeline-bar-delay-2"/>
+          <rect x="210" y="118" width="70" height="16" rx="4" fill="#eab308" class="timeline-bar timeline-bar-delay-2"/>
+          <!-- Parallel annotation -->
+          <text x="212" y="141" fill="#64748b" font-size="7" font-family="monospace">parallel</text>
+          <!-- Connector from server render → browser (response sent) -->
+          <line x1="210" y1="66" x2="210" y2="96" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="214" y="82" fill="#64748b" font-size="7" font-family="monospace">response</text>
+          <!-- Hydrate bar: starts after BOTH HTML render and JS download complete -->
+          <rect x="280" y="144" width="50" height="16" rx="4" fill="#f87171" class="timeline-bar timeline-bar-delay-3"/>
+          <!-- Converging lines: both feed into hydrate -->
+          <line x1="265" y1="108" x2="280" y2="148" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="280" y1="130" x2="280" y2="144" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="284" y="142" fill="#64748b" font-size="7" font-family="monospace">waits for both</text>
+          <!-- Time span indicator -->
+          <line x1="110" y1="172" x2="330" y2="172" stroke="#64748b" stroke-width="1"/>
+          <line x1="110" y1="168" x2="110" y2="176" stroke="#64748b" stroke-width="1"/>
+          <line x1="330" y1="168" x2="330" y2="176" stroke="#64748b" stroke-width="1"/>
+          <text x="220" y="190" text-anchor="middle" fill="#ef4444" font-size="10" font-family="monospace" font-weight="bold">~4-6s before anything is interactive</text>
+        </svg>
+      </div>
+
+      <!-- RSC Timeline -->
+      <div class="bg-white/5 backdrop-blur-sm border border-emerald-400/20 rounded-2xl p-6 ring-1 ring-emerald-400/10">
+        <div class="flex items-center gap-2 mb-5">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#34d399" stroke-width="2"/><path d="M6 10l3 3 5-6" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="text-emerald-400 font-semibold text-sm uppercase tracking-wider">RSC + Streaming</span>
+        </div>
+        <svg viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC streaming timeline: steps run concurrently with minimal JS, page becomes interactive in about 1.3 seconds">
+          <!-- Labels -->
+          <text x="0" y="24" fill="#94a3b8" font-size="11" font-family="monospace">Shell HTML</text>
+          <text x="0" y="58" fill="#94a3b8" font-size="11" font-family="monospace">Stream content</text>
+          <text x="0" y="92" fill="#94a3b8" font-size="11" font-family="monospace">Minimal JS</text>
+          <text x="0" y="126" fill="#94a3b8" font-size="11" font-family="monospace">Selective hydrate</text>
+          <!-- Concurrent bars: all start at same x to show parallelism -->
+          <rect x="130" y="12" width="25" height="18" rx="4" fill="#34d399" class="timeline-bar"/>
+          <text x="158" y="25" fill="#34d399" font-size="7" font-family="monospace" font-weight="bold">instant!</text>
+          <rect x="130" y="46" width="120" height="18" rx="4" fill="#6366f1" opacity="0.15"/>
+          <rect x="130" y="46" width="120" height="18" rx="4" fill="#6366f1" class="timeline-bar timeline-bar-delay-1"/>
+          <rect x="130" y="80" width="35" height="18" rx="4" fill="#8b5cf6" opacity="0.15"/>
+          <rect x="130" y="80" width="35" height="18" rx="4" fill="#8b5cf6" class="timeline-bar timeline-bar-delay-1"/>
+          <text x="169" y="93" fill="#a78bfa" font-size="7" font-family="monospace">tiny bundle</text>
+          <rect x="130" y="114" width="50" height="18" rx="4" fill="#34d399" opacity="0.15"/>
+          <rect x="130" y="114" width="50" height="18" rx="4" fill="#34d399" class="timeline-bar timeline-bar-delay-2"/>
+          <!-- "concurrent" annotation -->
+          <text x="130" y="142" fill="#64748b" font-size="7" font-family="monospace">all steps overlap</text>
+          <!-- Interactive marker line -->
+          <line x1="180" y1="4" x2="180" y2="136" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" style="transform-origin: 180px 4px; transform: scaleY(0); animation: grow-line 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;"/>
+          <!-- Time span indicator (much shorter) -->
+          <line x1="130" y1="152" x2="180" y2="152" stroke="#34d399" stroke-width="1"/>
+          <line x1="130" y1="148" x2="130" y2="156" stroke="#34d399" stroke-width="1"/>
+          <line x1="180" y1="148" x2="180" y2="156" stroke="#34d399" stroke-width="1"/>
+          <text x="155" y="167" text-anchor="middle" fill="#34d399" font-size="10" font-family="monospace" font-weight="bold">~1.3s interactive</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wave divider -->
+  <div class="wave-divider">
+    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
+      <path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#ffffff"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PILLAR 1: LIGHTER APPS, FASTER LOADS
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-indigo-600 font-semibold text-sm uppercase tracking-wider mb-3">Performance</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Lighter Apps, Faster Loads</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Server Components run once on the server and send only HTML. Heavy libraries never reach the browser &mdash; zero JavaScript, zero cost.
+      </p>
+    </div>
+
+    <!-- Bundle Size Comparison SVG -->
+    <div class="reveal max-w-3xl mx-auto mb-10 sm:mb-16">
+      <div class="bg-slate-50 rounded-2xl p-5 sm:p-8 border border-slate-200">
+        <div class="space-y-6">
+          <!-- Traditional bundle -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-slate-700">Traditional Client Bundle</span>
+              <span class="text-sm font-bold text-red-500">450 KB</span>
+            </div>
+            <div class="h-11 rounded-lg overflow-hidden bg-slate-200 flex">
+              <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width: 38%">App Code</div>
+              <div class="h-full bg-orange-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width: 26%">Markdown</div>
+              <div class="h-full bg-amber-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width: 20%">Charts</div>
+              <div class="h-full bg-yellow-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width: 16%">Utils</div>
+            </div>
+          </div>
+          <!-- RSC bundle -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-slate-700">With React Server Components</span>
+              <span class="text-sm font-bold text-emerald-600">~170 KB</span>
+            </div>
+            <div class="h-11 rounded-lg overflow-hidden bg-slate-200 flex">
+              <div class="bundle-bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--target-width: 38%;">Interactive UI only</div>
+            </div>
+            <div class="flex items-center gap-4 mt-3 text-xs text-slate-400">
+              <span class="flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3v8" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Markdown, charts, date formatting &rarr; <strong class="text-emerald-600 ml-0.5">server only, 0 KB to client</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Snippets: Ruby + React side-by-side -->
+    <div class="reveal max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16" style="align-items: stretch;">
+
+      <!-- Ruby: Rails View -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-red-500"></div>
+          <span class="text-sm font-semibold text-slate-600">Rails View &mdash; streams data</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">post_rsc.html.erb</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-op">&lt;%=</span> <span class="syn-fn">stream_react_component_with_async_props</span><span class="syn-op">(</span>
+  <span class="syn-str">"BlogPostRSC"</span><span class="syn-op">,</span>
+  <span class="syn-prop">props:</span> <span class="syn-op">{</span> <span class="syn-prop">title:</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">title</span> <span class="syn-op">}</span>
+<span class="syn-op">) </span><span class="syn-kw">do</span> <span class="syn-op">|</span><span class="syn-prop">emit</span><span class="syn-op">|</span>
+  <span class="syn-cm"># Runs concurrently in background</span>
+  <span class="syn-cm"># while shell streams to browser</span>
+
+  <span class="syn-cm"># Stream content to React component</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"content"</span><span class="syn-op">,</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">content</span><span class="syn-op">)</span>
+
+  <span class="syn-cm"># Stream related posts</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"related"</span><span class="syn-op">,</span> <span class="syn-fn">@post</span><span class="syn-op">.</span><span class="syn-prop">related_posts</span><span class="syn-op">)</span>
+<span class="syn-kw">end</span> <span class="syn-op">%&gt;</span></code></pre>
+        </div>
+      </div>
+      <!-- React: Server Component -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+          <span class="text-sm font-semibold text-slate-600">Server Component &mdash; 0 KB to client</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">AsyncBlogContent.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-cm">// 0 KB to browser &mdash; server only</span>
+<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">marked</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'marked'</span><span class="syn-op">;</span>    <span class="syn-cm">// 36 KB</span>
+<span class="syn-kw">import</span> <span class="syn-fn">hljs</span> <span class="syn-kw">from</span> <span class="syn-str">'highlight.js'</span><span class="syn-op">;</span> <span class="syn-cm">// 200+ KB</span>
+
+<span class="syn-fn">marked</span><span class="syn-op">.</span><span class="syn-fn">use</span><span class="syn-op">({</span>
+  <span class="syn-prop">highlight</span><span class="syn-op">:</span> <span class="syn-op">(</span><span class="syn-prop">code</span><span class="syn-op">,</span> <span class="syn-prop">lang</span><span class="syn-op">) =&gt;</span>
+    <span class="syn-fn">hljs</span><span class="syn-op">.</span><span class="syn-fn">highlight</span><span class="syn-op">(</span><span class="syn-prop">code</span><span class="syn-op">,</span> <span class="syn-op">{</span> <span class="syn-prop">language</span><span class="syn-op">:</span> <span class="syn-prop">lang</span> <span class="syn-op">}).</span><span class="syn-prop">value</span>
+<span class="syn-op">});</span>
+
+<span class="syn-kw">export default async function</span> <span class="syn-fn">Content</span><span class="syn-op">(</span>
+  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span><span class="syn-op">:</span> <span class="syn-prop">getAsync</span> <span class="syn-op">}</span>
+<span class="syn-op">) {</span>
+  <span class="syn-kw">const</span> md <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getAsync</span><span class="syn-op">(</span><span class="syn-str">'content'</span><span class="syn-op">);</span>
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;article&gt;</span><span class="syn-op">{</span><span class="syn-fn">marked</span><span class="syn-op">(</span>md<span class="syn-op">)}</span><span class="syn-ty">&lt;/article&gt;</span><span class="syn-op">;</span>
+<span class="syn-op">}</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <a href="https://frigade.com/blog/bundle-size-reduction-with-rsc-and-frigade" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-300 transition-all group">
+        <div class="text-3xl font-extrabold text-indigo-600 mb-1">62%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Smaller Bundles</div>
+        <div class="text-xs text-slate-500 mb-3">Frigade reduced JS bundle size by 62% with 63% faster Speed Index</div>
+        <span class="text-xs text-indigo-500 group-hover:underline">Frigade Engineering &rarr;</span>
+      </a>
+      <a href="https://www.developerway.com/posts/react-server-components-performance" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-300 transition-all group">
+        <div class="text-3xl font-extrabold text-indigo-600 mb-1">69%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Better LCP</div>
+        <div class="text-xs text-slate-500 mb-3">LCP improved from 4.1s to 1.28s in lab benchmarks</div>
+        <span class="text-xs text-indigo-500 group-hover:underline">developerway.com &rarr;</span>
+      </a>
+      <a href="https://geekyants.com/en-us/blog/boosting-performance-with-nextjs-and-react-server-components-a-geekyantscom-case-study" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-300 transition-all group">
+        <div class="text-2xl sm:text-3xl font-extrabold text-indigo-600 mb-1">50 &rarr; 93</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Lighthouse Score</div>
+        <div class="text-xs text-slate-500 mb-3">GeekyAnts jumped from ~50 to 93, plus 52% less code</div>
+        <span class="text-xs text-indigo-500 group-hover:underline">GeekyAnts Case Study &rarr;</span>
+      </a>
+      <a href="https://blog.chromium.org/2020/05/the-science-behind-web-vitals.html" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-300 transition-all group">
+        <div class="text-3xl font-extrabold text-indigo-600 mb-1">24%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Less Abandonment</div>
+        <div class="text-xs text-slate-500 mb-3">Users 24% less likely to abandon when Core Web Vitals pass</div>
+        <span class="text-xs text-indigo-500 group-hover:underline">Google Chromium Blog &rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PILLAR 2: INSTANT PAGES, NO WAITING
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-muted py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Streaming</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Instant Pages, No Waiting</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Traditional SSR waits for <em>all</em> data before sending <em>any</em> HTML. With RSC streaming, the shell renders instantly and content streams in as each query resolves.
+      </p>
+    </div>
+
+    <!-- Streaming Visualization -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Traditional: Everything waits -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <span class="text-sm font-semibold text-slate-700">Traditional SSR</span>
+        </div>
+        <svg viewBox="0 0 300 210" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Traditional SSR: entire page shows skeleton placeholders for a long time, then everything appears all at once">
+          <!-- Page outline -->
+          <rect x="10" y="10" width="280" height="180" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+          <!-- Skeleton placeholders (visible while waiting, shimmer) -->
+          <rect x="20" y="20" width="260" height="24" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="20" y="52" width="260" height="50" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="20" y="110" width="125" height="70" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <rect x="155" y="110" width="125" height="70" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
+          <!-- Actual content (all appear at once after long wait) -->
+          <rect x="20" y="20" width="260" height="24" rx="4" fill="#6366f1" class="ssr-content"/>
+          <text x="150" y="37" text-anchor="middle" fill="white" font-size="10" font-family="monospace" class="ssr-content">Header</text>
+          <rect x="20" y="52" width="260" height="50" rx="4" fill="#8b5cf6" class="ssr-content"/>
+          <text x="150" y="82" text-anchor="middle" fill="white" font-size="10" font-family="monospace" class="ssr-content">Hero Content</text>
+          <rect x="20" y="110" width="125" height="70" rx="4" fill="#a78bfa" class="ssr-content"/>
+          <text x="82" y="150" text-anchor="middle" fill="white" font-size="10" font-family="monospace" class="ssr-content">Product</text>
+          <rect x="155" y="110" width="125" height="70" rx="4" fill="#34d399" class="ssr-content"/>
+          <text x="217" y="150" text-anchor="middle" fill="white" font-size="10" font-family="monospace" class="ssr-content">Reviews</text>
+          <!-- Label -->
+          <text x="150" y="202" text-anchor="middle" fill="#ef4444" font-size="11" font-family="monospace" font-weight="bold">All at once after long wait</text>
+        </svg>
+      </div>
+
+      <!-- RSC: Progressive streaming -->
+      <div class="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm ring-1 ring-emerald-100">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-semibold text-slate-700">RSC + Streaming</span>
+        </div>
+        <svg viewBox="0 0 300 210" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC streaming: page sections appear one by one progressively as their data resolves">
+          <!-- Page outline -->
+          <rect x="10" y="10" width="280" height="180" rx="8" fill="#f8fafc" stroke="#d1fae5" stroke-width="1.5"/>
+          <!-- Skeleton placeholders (fade out as content appears) -->
+          <rect x="20" y="20" width="260" height="24" rx="4" fill="#e2e8f0" class="rsc-skel-0"/>
+          <rect x="20" y="52" width="260" height="50" rx="4" fill="#e2e8f0" class="rsc-skel-1"/>
+          <rect x="20" y="110" width="125" height="70" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
+          <rect x="155" y="110" width="125" height="70" rx="4" fill="#e2e8f0" class="rsc-skel-3"/>
+          <!-- Content blocks appear one by one -->
+          <rect x="20" y="20" width="260" height="24" rx="4" fill="#6366f1" class="rsc-block-0"/>
+          <text x="150" y="37" text-anchor="middle" fill="white" font-size="10" font-family="monospace" font-weight="bold" class="rsc-block-0">Header (instant)</text>
+          <rect x="20" y="52" width="260" height="50" rx="4" fill="#8b5cf6" class="rsc-block-1"/>
+          <text x="150" y="82" text-anchor="middle" fill="white" font-size="10" font-family="monospace" font-weight="bold" class="rsc-block-1">Hero (200ms)</text>
+          <rect x="20" y="110" width="125" height="70" rx="4" fill="#a78bfa" class="rsc-block-2"/>
+          <text x="82" y="150" text-anchor="middle" fill="white" font-size="10" font-family="monospace" font-weight="bold" class="rsc-block-2">Product (500ms)</text>
+          <rect x="155" y="110" width="125" height="70" rx="4" fill="#34d399" class="rsc-block-3"/>
+          <text x="217" y="150" text-anchor="middle" fill="white" font-size="10" font-family="monospace" font-weight="bold" class="rsc-block-3">Reviews (1.5s)</text>
+          <!-- Label -->
+          <text x="150" y="202" text-anchor="middle" fill="#059669" font-size="11" font-family="monospace" font-weight="bold">Streams in one by one</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Code Snippet: Async Props -->
+    <div class="reveal max-w-2xl mx-auto mb-10 sm:mb-16">
+      <div class="code-block shadow-2xl shadow-slate-200/50">
+        <div class="code-header">
+          <span class="code-dot" style="background:#f87171;"></span>
+          <span class="code-dot" style="background:#fbbf24;"></span>
+          <span class="code-dot" style="background:#34d399;"></span>
+          <span class="text-slate-400 text-xs ml-2 font-mono">ProductPage.tsx &mdash; Streaming with Suspense</span>
+        </div>
+        <pre class="text-slate-300"><code><span class="syn-kw">export default function</span> <span class="syn-fn">ProductPage</span><span class="syn-op">({</span> <span class="syn-prop">product</span> <span class="syn-op">}) {</span>
+  <span class="syn-kw">return</span> <span class="syn-op">(</span>
+    <span class="syn-ty">&lt;&gt;</span>
+      <span class="syn-ty">&lt;ProductHeader</span> <span class="syn-prop">product</span><span class="syn-op">={</span><span class="syn-prop">product</span><span class="syn-op">}</span> <span class="syn-ty">/&gt;</span>    <span class="syn-cm">{/* instant */}</span>
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;Skeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncReviews /&gt;</span>              <span class="syn-cm">{/* streams when ready */}</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;Skeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncRecommendations /&gt;</span>      <span class="syn-cm">{/* streams independently */}</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+    <span class="syn-ty">&lt;/&gt;</span>
+  <span class="syn-op">);</span>
+<span class="syn-op">}</span></code></pre>
+      </div>
+    </div>
+
+    <!-- Streaming Benefits Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 3v14" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-1">Shell-First Rendering</h3>
+        <p class="text-sm text-slate-500">Layout, navigation, and structure appear in milliseconds. Data-heavy sections show elegant skeletons that swap to real content as data arrives.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-1">Priority-Based Streaming</h3>
+        <p class="text-sm text-slate-500">Fast queries (200ms) render first. Slow aggregations (2-3s) stream in later. Users see real progress, not a frozen screen.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10a5 5 0 1 1 10 0 5 5 0 0 1-10 0z" stroke="#7c3aed" stroke-width="2"/><path d="M10 7v3l2 1.5" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-1">No &ldquo;Slowest Query Wins&rdquo;</h3>
+        <p class="text-sm text-slate-500">Each Suspense boundary is independent. A slow recommendation engine doesn&rsquo;t block the product details from rendering.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8 4l4 6-4 6" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-1">Selective Hydration</h3>
+        <p class="text-sm text-slate-500">Users interact with already-hydrated sections while others stream. React even prioritizes hydrating the component being clicked.</p>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="flex flex-col sm:flex-row justify-center gap-6 mt-12">
+      <a href="https://vercel.com/blog/improving-interaction-to-next-paint-with-react-18-and-suspense" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl px-8 py-6 text-center hover:border-purple-300 transition-all group">
+        <div class="text-3xl font-extrabold text-purple-600 mb-1">81%</div>
+        <div class="text-sm font-semibold text-slate-800">Less Blocking Time</div>
+        <div class="text-xs text-slate-500 mt-1">nextjs.org TBT: 430ms &rarr; 80ms</div>
+        <span class="text-xs text-purple-500 group-hover:underline mt-2 block">Vercel Blog &rarr;</span>
+      </a>
+      <a href="https://www.wix.engineering/post/40-faster-interaction-how-wix-solved-react-s-hydration-problem-with-selective-hydration-and-suspen" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl px-8 py-6 text-center hover:border-purple-300 transition-all group">
+        <div class="text-3xl font-extrabold text-purple-600 mb-1">40%</div>
+        <div class="text-sm font-semibold text-slate-800">Faster Interaction</div>
+        <div class="text-xs text-slate-500 mt-1">Wix selective hydration results</div>
+        <span class="text-xs text-purple-500 group-hover:underline mt-2 block">Wix Engineering &rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PILLAR 3: BEYOND CODE SPLITTING — RSC vs @loadable
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">RSC vs @loadable/component</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Beyond Code Splitting</h2>
+      <p class="text-lg text-slate-500 max-w-3xl mx-auto">
+        <code class="bg-slate-100 px-2 py-0.5 rounded text-sm">@loadable/component</code> defers <em>when</em> JavaScript loads.
+        RSC <strong>eliminates</strong> it entirely. The difference between &ldquo;load this later&rdquo; and &ldquo;never load this at all.&rdquo;
+      </p>
+    </div>
+
+    <!-- Side-by-Side Page Completeness SVG -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Loadable: Gaps in initial HTML -->
+      <div class="bg-orange-50 rounded-2xl border border-orange-200 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-sm font-semibold text-orange-700">@loadable — Initial HTML Response</span>
+        </div>
+        <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="@loadable initial HTML: header and hero are server-rendered but reviews and related items are missing, requiring JavaScript to render later">
+          <rect x="10" y="10" width="280" height="210" rx="8" fill="white" stroke="#fed7aa" stroke-width="1.5"/>
+          <!-- SSR'd content (present) -->
+          <rect x="20" y="20" width="260" height="24" rx="4" fill="#6366f1"/>
+          <text x="150" y="37" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Header (SSR'd in HTML)</text>
+          <rect x="20" y="52" width="260" height="40" rx="4" fill="#8b5cf6"/>
+          <text x="150" y="77" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Hero Content (SSR'd in HTML)</text>
+          <!-- Lazy gaps (missing from HTML) with JS cost labels -->
+          <rect x="20" y="100" width="260" height="35" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
+          <text x="150" y="116" text-anchor="middle" fill="#c2410c" font-size="9" font-family="monospace" font-weight="bold">Reviews (empty until JS loads)</text>
+          <text x="150" y="129" text-anchor="middle" fill="#9a3412" font-size="7" font-family="monospace">requires JS download + hydration</text>
+          <rect x="20" y="143" width="260" height="35" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
+          <text x="150" y="159" text-anchor="middle" fill="#c2410c" font-size="9" font-family="monospace" font-weight="bold">Related Items (empty until JS loads)</text>
+          <text x="150" y="172" text-anchor="middle" fill="#9a3412" font-size="7" font-family="monospace">requires JS download + hydration</text>
+          <!-- Summary -->
+          <text x="150" y="198" text-anchor="middle" fill="#9a3412" font-size="10" font-family="monospace" font-weight="bold">Content missing from initial HTML</text>
+          <text x="150" y="212" text-anchor="middle" fill="#9a3412" font-size="8" font-family="monospace">Invisible to search engines on first crawl</text>
+        </svg>
+      </div>
+
+      <!-- RSC: Complete initial HTML -->
+      <div class="bg-green-50 rounded-2xl border border-green-200 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-sm font-semibold text-green-700">RSC — Initial HTML Response</span>
+        </div>
+        <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC initial HTML: all content including reviews and related items is fully server-rendered in the HTML with zero JavaScript cost">
+          <rect x="10" y="10" width="280" height="210" rx="8" fill="white" stroke="#bbf7d0" stroke-width="1.5"/>
+          <!-- All content present -->
+          <rect x="20" y="20" width="260" height="24" rx="4" fill="#6366f1"/>
+          <text x="150" y="37" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Header (in HTML, 0 JS)</text>
+          <rect x="20" y="52" width="260" height="40" rx="4" fill="#8b5cf6"/>
+          <text x="150" y="77" text-anchor="middle" fill="white" font-size="9" font-family="monospace">Hero Content (in HTML, 0 JS)</text>
+          <rect x="20" y="100" width="260" height="35" rx="4" fill="#34d399"/>
+          <text x="150" y="116" text-anchor="middle" fill="white" font-size="9" font-family="monospace" font-weight="bold">Reviews (in HTML, 0 JS)</text>
+          <text x="150" y="129" text-anchor="middle" fill="#d1fae5" font-size="7" font-family="monospace">no hydration needed</text>
+          <rect x="20" y="143" width="260" height="35" rx="4" fill="#10b981"/>
+          <text x="150" y="159" text-anchor="middle" fill="white" font-size="9" font-family="monospace" font-weight="bold">Related Items (in HTML, 0 JS)</text>
+          <text x="150" y="172" text-anchor="middle" fill="#d1fae5" font-size="7" font-family="monospace">no hydration needed</text>
+          <!-- Summary -->
+          <text x="150" y="198" text-anchor="middle" fill="#166534" font-size="10" font-family="monospace" font-weight="bold">100% content in initial HTML</text>
+          <text x="150" y="212" text-anchor="middle" fill="#166534" font-size="8" font-family="monospace">Fully visible to search engines on first crawl</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- The Tradeoff Explanation -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-8">
+      <h3 class="font-bold text-lg text-slate-900 mb-4">The @loadable/component Tradeoff</h3>
+      <p class="text-slate-600 mb-4">
+        You <em>can</em> SSR every loadable component &mdash; but the architecture forces a painful choice:
+      </p>
+      <div class="space-y-3">
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+          <p class="text-sm text-slate-600"><strong class="text-slate-800">SSR&rsquo;ing everything delays TTFB and FCP</strong> &mdash; <code>@loadable</code>&rsquo;s ChunkExtractor requires <code>renderToString</code>, which cannot stream. The server must finish rendering all components before sending any HTML.</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+          <p class="text-sm text-slate-600"><strong class="text-slate-800">Every SSR&rsquo;d component still needs JS for hydration</strong> &mdash; the HTML is visible but frozen until its JavaScript downloads, parses, and executes. More components = more JS = higher TTI.</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+          <p class="text-sm text-slate-600"><strong class="text-slate-800">So teams are forced to choose:</strong> SSR critical components for fast FCP (non-critical content missing from HTML), or SSR everything for complete HTML (but slow FCP and heavy hydration).</p>
+        </div>
+      </div>
+      <div class="mt-5 bg-emerald-100 border border-emerald-300 rounded-xl p-4">
+        <p class="text-sm text-emerald-800 font-semibold">RSC eliminates this tradeoff. Server components are in the initial HTML AND cost zero JavaScript AND require zero hydration. No penalty for rendering everything on the server.</p>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 overflow-x-auto">
+      <table class="comparison-table w-full rounded-2xl overflow-hidden border border-slate-200 bg-white text-sm" style="min-width: 640px;">
+        <thead>
+          <tr>
+            <th class="rounded-tl-2xl" style="width: 20%;">Aspect</th>
+            <th class="loadable-col" style="width: 40%;">@loadable/component</th>
+            <th class="rsc-col rounded-tr-2xl" style="width: 40%;">React Server Components</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-semibold text-slate-700">JS to client</td>
+            <td class="loadable-col text-slate-600">Full component code in lazy chunks &mdash; <strong>deferred, not eliminated</strong></td>
+            <td class="rsc-col text-slate-600"><strong class="text-emerald-700">Zero</strong> for server components &mdash; truly eliminated</td>
+          </tr>
+          <tr>
+            <td class="font-semibold text-slate-700">Hydration</td>
+            <td class="loadable-col text-slate-600">Required for <strong>every</strong> component, including lazy ones after chunks load</td>
+            <td class="rsc-col text-slate-600">Only for interactive <code class="bg-emerald-100 px-1 rounded text-xs">'use client'</code> components</td>
+          </tr>
+          <tr>
+            <td class="font-semibold text-slate-700">Setup</td>
+            <td class="loadable-col text-slate-600">5 packages + webpack plugin + SWC/Babel plugin + ChunkExtractor + loadableReady</td>
+            <td class="rsc-col text-slate-600">Add <code class="bg-emerald-100 px-1 rounded text-xs">'use client'</code> to interactive components. Done.</td>
+          </tr>
+          <tr>
+            <td class="font-semibold text-slate-700">Code splitting</td>
+            <td class="loadable-col text-slate-600">Manual &mdash; wrap each import with <code class="bg-orange-100 px-1 rounded text-xs">loadable()</code></td>
+            <td class="rsc-col text-slate-600"><strong class="text-emerald-700">Automatic</strong> at every client component boundary</td>
+          </tr>
+          <tr>
+            <td class="font-semibold text-slate-700">SEO</td>
+            <td class="loadable-col text-slate-600">Lazy content absent from initial HTML &mdash; depends on Google&rsquo;s JS rendering queue</td>
+            <td class="rsc-col text-slate-600"><strong class="text-emerald-700">All content</strong> in initial HTML &mdash; indexed on first crawl</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SEO Deep Dive -->
+    <div class="reveal max-w-4xl mx-auto bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-8">
+      <h3 class="font-bold text-lg text-slate-900 mb-3">Why This Matters for SEO</h3>
+      <p class="text-sm text-slate-600 mb-4">
+        Google indexes pages in two waves. The first wave reads raw HTML immediately. The second wave renders JavaScript &mdash; but with a <strong>median delay of ~10 seconds</strong>, up to <strong>18 hours</strong> at the 99th percentile.
+      </p>
+      <p class="text-sm text-slate-600 mb-4">
+        Content behind lazy-loaded components &mdash; reviews, recommendations, comments &mdash; is exactly the <strong>long-tail keyword-rich content</strong> that drives organic search traffic. With <code class="bg-slate-200 px-1 rounded text-xs">@loadable</code>, this content is invisible to the first wave. With RSC, it&rsquo;s all in the initial HTML.
+      </p>
+      <div class="flex flex-wrap gap-4 text-xs">
+        <a href="https://vercel.com/blog/how-google-handles-javascript-throughout-the-indexing-process" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">Vercel Googlebot Research &rarr;</a>
+        <a href="https://www.onely.com/blog/googles-rendering-delay-5-seconds/" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">Onely Rendering Delay Study &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PILLAR 4: SIMPLER CODE, FASTER DEVELOPMENT
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-muted py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Developer Experience</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Simpler Code, Faster Development</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Replace the <code class="bg-slate-200 px-2 py-0.5 rounded text-sm">useEffect</code> boilerplate with plain async functions. No state management. No cleanup. No stale closures.
+      </p>
+    </div>
+
+    <!-- Before/After Code Comparison -->
+    <div class="reveal max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16">
+      <!-- Before: useEffect -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <span class="text-sm font-semibold text-slate-600">Before &mdash; Client Component</span>
+        </div>
+        <div class="code-block shadow-lg border border-red-200/50 flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">Reviews.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-dir">'use client'</span><span class="syn-op">;</span>
+<span class="syn-kw">function</span> <span class="syn-fn">Reviews</span><span class="syn-op">({</span> <span class="syn-prop">productId</span> <span class="syn-op">}) {</span>
+  <span class="syn-kw">const</span> <span class="syn-op">[</span>data<span class="syn-op">,</span> setData<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">null</span><span class="syn-op">);</span>
+  <span class="syn-kw">const</span> <span class="syn-op">[</span>loading<span class="syn-op">,</span> setLoading<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">true</span><span class="syn-op">);</span>
+  <span class="syn-kw">const</span> <span class="syn-op">[</span>err<span class="syn-op">,</span> setErr<span class="syn-op">]</span> <span class="syn-op">=</span> <span class="syn-fn">useState</span><span class="syn-op">(</span><span class="syn-num">null</span><span class="syn-op">);</span>
+
+  <span class="syn-fn">useEffect</span><span class="syn-op">(() =&gt; {</span>
+    <span class="syn-kw">let</span> skip <span class="syn-op">=</span> <span class="syn-num">false</span><span class="syn-op">;</span>
+    <span class="syn-fn">fetch</span><span class="syn-op">(</span><span class="syn-str">`/api/reviews/${<span class="syn-prop">productId</span>}`</span><span class="syn-op">)</span>
+      <span class="syn-op">.</span><span class="syn-fn">then</span><span class="syn-op">(</span>r <span class="syn-op">=&gt;</span> r<span class="syn-op">.</span><span class="syn-fn">json</span><span class="syn-op">())</span>
+      <span class="syn-op">.</span><span class="syn-fn">then</span><span class="syn-op">(</span>d <span class="syn-op">=&gt; !</span>skip <span class="syn-op">&amp;&amp;</span> <span class="syn-fn">setData</span><span class="syn-op">(</span>d<span class="syn-op">))</span>
+      <span class="syn-op">.</span><span class="syn-fn">catch</span><span class="syn-op">(</span>e <span class="syn-op">=&gt; !</span>skip <span class="syn-op">&amp;&amp;</span> <span class="syn-fn">setErr</span><span class="syn-op">(</span>e<span class="syn-op">))</span>
+      <span class="syn-op">.</span><span class="syn-fn">finally</span><span class="syn-op">(() =&gt;</span> <span class="syn-fn">setLoading</span><span class="syn-op">(</span><span class="syn-num">false</span><span class="syn-op">));</span>
+    <span class="syn-kw">return</span> <span class="syn-op">() =&gt; {</span> skip <span class="syn-op">=</span> <span class="syn-num">true</span><span class="syn-op">; };</span>
+  <span class="syn-op">}, [</span><span class="syn-prop">productId</span><span class="syn-op">]);</span>
+
+  <span class="syn-kw">if</span> <span class="syn-op">(</span>loading<span class="syn-op">)</span> <span class="syn-kw">return</span> <span class="syn-ty">&lt;Spinner /&gt;</span><span class="syn-op">;</span>
+  <span class="syn-kw">if</span> <span class="syn-op">(</span>err<span class="syn-op">)</span> <span class="syn-kw">return</span> <span class="syn-ty">&lt;Error /&gt;</span><span class="syn-op">;</span>
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>data<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
+<span class="syn-op">}</span></code></pre>
+        </div>
+      </div>
+
+      <!-- After: Server Component -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-semibold text-slate-600">After &mdash; Server Component</span>
+        </div>
+        <div class="code-block shadow-lg border border-emerald-200/50 flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">Reviews.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-kw">async function</span> <span class="syn-fn">Reviews</span><span class="syn-op">(</span>
+  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
+<span class="syn-op">) {</span>
+  <span class="syn-kw">const</span> get <span class="syn-op">=</span> getReactOnRailsAsyncProp<span class="syn-op">;</span>
+  <span class="syn-kw">const</span> <span class="syn-op">{</span> reviews <span class="syn-op">} =</span> <span class="syn-kw">await</span> <span class="syn-fn">get</span><span class="syn-op">(</span><span class="syn-str">'reviews'</span><span class="syn-op">);</span>
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>reviews<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
+<span class="syn-op">}</span>
+
+<span class="syn-cm">// No useState. No useEffect.</span>
+<span class="syn-cm">// No cleanup. No loading state.</span>
+<span class="syn-cm">// No error boilerplate.</span>
+<span class="syn-cm">// No stale closures.</span>
+<span class="syn-cm">// No dependency arrays.</span>
+<span class="syn-cm">// No API endpoints.</span>
+<span class="syn-cm">// Just an async function.</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- DX Benefits Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h7" stroke="#059669" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">No API Endpoints</h3>
+        <p class="text-sm text-slate-500">Server components access data directly. No REST routes, no GraphQL schemas, no fetch libraries.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">No Waterfalls</h3>
+        <p class="text-sm text-slate-500">Parent and child components fetch data in parallel on the server with near-zero latency.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#059669" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="#059669" stroke-width="2"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">No Memoization</h3>
+        <p class="text-sm text-slate-500">Server components render once, never re-render. No useMemo, useCallback, or dependency arrays.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     WORKS WITH YOUR RAILS APP
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-dark py-14 sm:py-20 lg:py-28 relative overflow-hidden">
+  <!-- Subtle grid background -->
+  <svg class="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#grid)"/>
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-indigo-400 font-semibold text-sm uppercase tracking-wider mb-3">React on Rails Pro</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4">Works With Your Rails App</h2>
+      <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+        RSC is not Next.js-only. React on Rails Pro is the <strong class="text-white">first framework</strong> to bring full React Server Components support to Ruby on Rails.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5l7-3 7 3v8l-7 4-7-4V5z" stroke="#818cf8" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 5l7 4 7-4" stroke="#818cf8" stroke-width="1.5"/><path d="M10 9v8" stroke="#818cf8" stroke-width="1.5"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Keep Your Stack</h3>
+        <p class="text-sm text-slate-400">Controllers, routes, views, authentication &mdash; everything stays.</p>
+      </div>
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="#818cf8" stroke-width="1.5"/><path d="M7 7h6M7 10h4M7 13h5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">No Migration Needed</h3>
+        <p class="text-sm text-slate-400">No rewrite to Next.js or any Node framework. Adopt RSC incrementally.</p>
+      </div>
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M10 6v4l2.5 2.5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Your Ruby Ecosystem</h3>
+        <p class="text-sm text-slate-400">Devise, Pundit, ActiveRecord, Sidekiq &mdash; RSC works alongside your entire Rails stack.</p>
+      </div>
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10a6 6 0 0 1 12 0" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M10 10v-4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="16" r="1.5" fill="#818cf8"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Full RSC Integration</h3>
+        <p class="text-sm text-slate-400">Streaming SSR, RSC payload embedding, client/server code splitting &mdash; all handled for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CTA SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden py-16 sm:py-24 lg:py-36">
+  <div class="hero-glow absolute inset-0"></div>
+  <div class="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+    <div class="reveal">
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-6">Ready for Faster Pages and Happier Users?</h2>
+      <p class="text-lg sm:text-xl text-slate-300 mb-12 max-w-xl mx-auto leading-relaxed">
+        Upgrade to React on Rails Pro and bring the full power of React Server Components to your Rails application.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="https://www.shakacode.com/react-on-rails-pro/" class="inline-flex items-center justify-center bg-white text-slate-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
+          Start with React on Rails Pro
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://github.com/shakacode/react_on_rails" class="inline-flex items-center justify-center bg-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/20 transition-colors border border-white/30">
+          View on GitHub
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll-reveal observer (minimal inline JS) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(function(el) {
+      observer.observe(el);
+    });
+  });
+</script>
