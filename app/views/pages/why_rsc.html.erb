@@ -801,9 +801,8 @@
           <pre class="text-slate-300"><code><span class="syn-kw">async function</span> <span class="syn-fn">Reviews</span><span class="syn-op">(</span>
   <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
 <span class="syn-op">) {</span>
-  <span class="syn-kw">const</span> <span class="syn-op">{</span> reviews <span class="syn-op">} =</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span>
-    <span class="syn-str">'reviews'</span>
-  <span class="syn-op">);</span>
+  <span class="syn-kw">const</span> get <span class="syn-op">=</span> getReactOnRailsAsyncProp<span class="syn-op">;</span>
+  <span class="syn-kw">const</span> <span class="syn-op">{</span> reviews <span class="syn-op">} =</span> <span class="syn-kw">await</span> <span class="syn-fn">get</span><span class="syn-op">(</span><span class="syn-str">'reviews'</span><span class="syn-op">);</span>
   <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>reviews<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
 <span class="syn-op">}</span>
 
