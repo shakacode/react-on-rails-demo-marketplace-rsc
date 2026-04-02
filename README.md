@@ -2,6 +2,13 @@
 
 A restaurant marketplace discovery platform demonstrating how React Server Components with streaming dramatically improve Web Vitals compared to traditional SSR + lazy-loading.
 
+## Demo and Source
+
+- Live demo: https://rsc.reactonrails.com
+- Source code: https://github.com/shakacode/react-server-components-marketplace-demo
+- Contributor guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Issue tracker: https://github.com/shakacode/react-server-components-marketplace-demo/issues
+
 ## Quick Start
 
 **The Problem**: Public-facing marketplace pages with dynamic real-time content suffer poor Web Vitals (slow LCP, high CLS) using traditional SSR + lazy-loading.
@@ -327,6 +334,10 @@ A: Not implemented. Goal is proving RSC advantage without caching complexity.
 **Q: Can I use different data?**
 A: Yes, keep 10M orders. Change restaurant names/cuisines as desired.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, demo guardrails, deployment notes, and PR expectations.
+
 ## Related Resources
 
 - React 19 Server Components: https://react.dev/blog/2024/12/19/react-19
@@ -336,5 +347,5 @@ A: Yes, keep 10M orders. Change restaurant names/cuisines as desired.
 
 ---
 
-**Status**: Ready for implementation
-**Next Step**: Read `IMPLEMENTATION_TASKS.md`, then start Task 1
+**Status**: Active demo app for React on Rails SSR, client, and RSC comparisons
+**Next Step**: Run the demo locally, compare the routes, and open an issue or PR for improvements

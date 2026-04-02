@@ -6,9 +6,7 @@ class HomeController < ApplicationController
 
   enable_async_react_rendering only: [:rsc]
 
-  def index
-    @name = 'World'
-  end
+  def index; end
 
   def rsc
     stream_view_containing_react_components(template: "/home/rsc")

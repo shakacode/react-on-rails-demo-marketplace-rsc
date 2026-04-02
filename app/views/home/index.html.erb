@@ -1,58 +1,128 @@
-<div class="container mx-auto max-w-4xl px-4 py-8">
-  <h1 class="text-3xl font-bold mb-2">LocalHub Demo</h1>
-  <p class="text-gray-600 mb-8">React on Rails — SSR vs Client vs RSC Performance Comparison</p>
-
-  <%= react_component('HelloWorld', props: { name: @name }, prerender: true) %>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-    <!-- Search Page Demo -->
-    <div class="border border-gray-200 rounded-xl p-6">
-      <h2 class="text-lg font-bold mb-2">Restaurant Search</h2>
-      <p class="text-sm text-gray-600 mb-4">Search page with real-time data streaming</p>
-      <div class="space-y-2">
-        <a href="/search/ssr" class="block text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 hover:bg-amber-100 transition-colors">V1: Full SSR</a>
-        <a href="/search/client" class="block text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors">V2: Client Components</a>
-        <a href="/search/rsc" class="block text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 hover:bg-green-100 transition-colors">V3: RSC Streaming</a>
+<div class="mx-auto max-w-6xl px-4 py-10">
+  <section class="overflow-hidden rounded-3xl bg-slate-900 px-6 py-8 text-white shadow-xl md:px-8 md:py-10">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-end">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">Open Source Example</p>
+        <h1 class="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">LocalHub Marketplace Demo</h1>
+        <p class="mt-4 max-w-2xl text-base leading-7 text-slate-200 md:text-lg">
+          Compare full SSR, client components, and React Server Components across identical marketplace experiences.
+          This deployment is intentionally easy to inspect, fork, and improve.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <%= link_to 'Browse source on GitHub', source_code_path, class: 'rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200' %>
+          <%= link_to 'Read the contributor guide', contributing_guide_path, class: 'rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/10' %>
+        </div>
       </div>
+
+      <dl class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <dt class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">LCP Improvement</dt>
+          <dd class="mt-2 text-2xl font-semibold text-white">59%</dd>
+          <p class="mt-2 text-sm text-slate-300">RSC versions render meaningful content faster under the same data load.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <dt class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Routes to Compare</dt>
+          <dd class="mt-2 text-2xl font-semibold text-white">12</dd>
+          <p class="mt-2 text-sm text-slate-300">Four user journeys, each implemented with SSR, client, and RSC variants.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <dt class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Contributor Paths</dt>
+          <dd class="mt-2 text-2xl font-semibold text-white">3</dd>
+          <p class="mt-2 text-sm text-slate-300">Source, issues, and contribution docs are all reachable directly from this app.</p>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="mt-8 grid gap-4 md:grid-cols-3">
+    <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Source</p>
+      <h2 class="mt-3 text-xl font-semibold text-slate-900">Inspect the implementation</h2>
+      <p class="mt-3 text-sm leading-6 text-slate-600">
+        Browse the Rails, React, and deployment code behind the demo without hunting through Slack or PR history.
+      </p>
+      <%= link_to 'Open the GitHub repo', source_code_path, class: 'mt-4 inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Contributing</p>
+      <h2 class="mt-3 text-xl font-semibold text-slate-900">Start from the right docs</h2>
+      <p class="mt-3 text-sm leading-6 text-slate-600">
+        Follow the contributor guide for setup, demo guardrails, PR expectations, and deployment touchpoints.
+      </p>
+      <%= link_to 'Read CONTRIBUTING.md', contributing_guide_path, class: 'mt-4 inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Support</p>
+      <h2 class="mt-3 text-xl font-semibold text-slate-900">Ask questions or report gaps</h2>
+      <p class="mt-3 text-sm leading-6 text-slate-600">
+        Use the issue tracker for repo work and React on Rails docs for framework-specific questions and background.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-4">
+        <%= link_to 'Open an issue', project_issues_path, class: 'inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
+        <%= link_to 'React on Rails docs', 'https://reactonrails.com/docs', class: 'inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
+      </div>
+    </article>
+  </section>
+
+  <section class="mt-10">
+    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Demo Routes</p>
+        <h2 class="mt-2 text-2xl font-semibold text-slate-900">Compare the same flows across rendering strategies</h2>
+      </div>
+      <p class="max-w-2xl text-sm leading-6 text-slate-600">
+        Each surface below keeps the user journey aligned so you can attribute the difference to rendering strategy, not feature scope.
+      </p>
     </div>
 
-    <!-- Blog Post Demo -->
-    <div class="border border-gray-200 rounded-xl p-6">
-      <h2 class="text-lg font-bold mb-2">Blog Post</h2>
-      <p class="text-sm text-gray-600 mb-4">Content page with markdown rendering</p>
-      <div class="space-y-2">
-        <a href="/blog/ssr" class="block text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 hover:bg-amber-100 transition-colors">V1: Full SSR</a>
-        <a href="/blog/client" class="block text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors">V2: Client Components</a>
-        <a href="/blog/rsc" class="block text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 hover:bg-green-100 transition-colors">V3: RSC Streaming</a>
+    <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-900">Restaurant Search</h3>
+        <p class="mt-2 text-sm text-slate-600">Classic marketplace discovery with real-time availability and streaming content.</p>
+        <div class="mt-4 space-y-2">
+          <a href="/search/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
+          <a href="/search/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
+          <a href="/search/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
+        </div>
       </div>
-    </div>
 
-    <!-- Product Page Demo -->
-    <div class="border border-gray-200 rounded-xl p-6 ring-2 ring-indigo-200">
-      <div class="flex items-center gap-2 mb-2">
-        <h2 class="text-lg font-bold">Product Page</h2>
-        <span class="px-2 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">NEW</span>
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-900">Blog Post</h3>
+        <p class="mt-2 text-sm text-slate-600">Markdown-heavy content that highlights the client bundle savings from server rendering.</p>
+        <div class="mt-4 space-y-2">
+          <a href="/blog/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
+          <a href="/blog/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
+          <a href="/blog/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
+        </div>
       </div>
-      <p class="text-sm text-gray-600 mb-4">E-commerce product page with reviews &amp; charts</p>
-      <div class="space-y-2">
-        <a href="/product/ssr" class="block text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 hover:bg-amber-100 transition-colors">V1: Full SSR</a>
-        <a href="/product/client" class="block text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors">V2: Client Components</a>
-        <a href="/product/rsc" class="block text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 hover:bg-green-100 transition-colors">V3: RSC Streaming</a>
-      </div>
-    </div>
 
-    <!-- Product Search Demo -->
-    <div class="border border-gray-200 rounded-xl p-6 ring-2 ring-indigo-200">
-      <div class="flex items-center gap-2 mb-2">
-        <h2 class="text-lg font-bold">Product Search</h2>
-        <span class="px-2 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">NEW</span>
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-indigo-100">
+        <div class="flex items-center gap-2">
+          <h3 class="text-lg font-semibold text-slate-900">Product Page</h3>
+          <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">NEW</span>
+        </div>
+        <p class="mt-2 text-sm text-slate-600">Detailed product pages with reviews, charts, and related content.</p>
+        <div class="mt-4 space-y-2">
+          <a href="/product/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
+          <a href="/product/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
+          <a href="/product/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
+        </div>
       </div>
-      <p class="text-sm text-gray-600 mb-4">Faceted search with filters, sort &amp; pagination</p>
-      <div class="space-y-2">
-        <a href="/product-search/ssr" class="block text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 hover:bg-amber-100 transition-colors">V1: Full SSR</a>
-        <a href="/product-search/client" class="block text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors">V2: Client Components</a>
-        <a href="/product-search/rsc" class="block text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 hover:bg-green-100 transition-colors">V3: RSC Streaming</a>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-indigo-100">
+        <div class="flex items-center gap-2">
+          <h3 class="text-lg font-semibold text-slate-900">Product Search</h3>
+          <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">NEW</span>
+        </div>
+        <p class="mt-2 text-sm text-slate-600">Faceted search with filters, pagination, and server-streamed result sections.</p>
+        <div class="mt-4 space-y-2">
+          <a href="/product-search/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
+          <a href="/product-search/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
+          <a href="/product-search/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>
