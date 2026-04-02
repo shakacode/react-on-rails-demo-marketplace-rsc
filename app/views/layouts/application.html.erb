@@ -11,7 +11,7 @@
     <%= yield :head %>
   </head>
 
-  <body>
+  <body class="min-h-screen bg-slate-50 text-slate-900">
     <script>
       window.addEventListener('error', function(event) {
         var err = event.error;
@@ -44,7 +44,39 @@
         }
       });
     </script>
-    <%= yield %>
+    <header class="border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <a href="/" class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">React on Rails Demo</a>
+          <p class="mt-1 text-lg font-semibold text-slate-900">LocalHub Marketplace Demo</p>
+          <p class="text-sm text-slate-600">Open-source SSR, client, and RSC comparisons built with React on Rails.</p>
+        </div>
+        <nav class="flex flex-wrap gap-2 text-sm font-medium">
+          <%= link_to 'Home', '/', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+          <%= link_to 'Why RSC', '/why-rsc', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+          <%= link_to 'Source', source_code_path, class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+          <%= link_to 'Contributing', contributing_guide_path, class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+          <%= link_to 'Issues', project_issues_path, class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+          <%= link_to 'Docs', 'https://reactonrails.com/docs', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <%= yield %>
+    </main>
+
+    <footer class="border-t border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+        <p>Explore the code, compare the rendering strategies, and open a PR when you improve the demo.</p>
+        <div class="flex flex-wrap gap-4">
+          <%= link_to 'GitHub repo', source_code_path, class: 'transition hover:text-slate-900' %>
+          <%= link_to 'Contributor guide', contributing_guide_path, class: 'transition hover:text-slate-900' %>
+          <%= link_to 'Forum', 'https://forum.shakacode.com/c/reactjs', class: 'transition hover:text-slate-900' %>
+          <%= link_to 'ShakaCode', 'https://www.shakacode.com', class: 'transition hover:text-slate-900' %>
+        </div>
+      </div>
+    </footer>
 
     <%= javascript_pack_tag 'client-bundle', async: true %>
   </body>

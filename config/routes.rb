@@ -1,10 +1,16 @@
 Rails.application.routes.draw do
   rsc_payload_route
+  repository_url = 'https://github.com/shakacode/react-server-components-marketplace-demo'
+  contributing_url = "#{repository_url}/blob/main/CONTRIBUTING.md"
+  issues_url = "#{repository_url}/issues"
+
   # Health check endpoint
   get 'up' => 'rails/health#show', as: :rails_health_check
 
-  # Root route (will be updated later)
   root 'home#index'
+  get '/source', to: redirect(repository_url, status: 308), as: :source_code
+  get '/contributing', to: redirect(contributing_url, status: 308), as: :contributing_guide
+  get '/issues', to: redirect(issues_url, status: 308), as: :project_issues
   get '/search-performance' => 'pages#search_performance'
   get '/rsc' => 'home#rsc'
   get '/why-rsc' => 'pages#why_rsc'
