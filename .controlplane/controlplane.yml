@@ -1,18 +1,51 @@
+# Keys beginning with "cpln_" correspond to your settings in Control Plane.
+#
+# This demo builds from `.controlplane/Dockerfile`, which installs private
+# GitHub dependencies during `pnpm install`. The generated GitHub Actions
+# workflows support that by reading `DOCKER_BUILD_SSH_KEY` and
+# `DOCKER_BUILD_EXTRA_ARGS` from repository settings.
+
+allow_org_override_by_env: true
+allow_app_override_by_env: true
+
 aliases:
   common: &common
-    cpln_org: shakacode-open-source-examples-staging
+    cpln_org: my-org-staging
     default_location: aws-us-east-2
+
+    setup_app_templates:
+      - app
+      - rails
+
+    # Runtime secrets such as DATABASE_URL and SECRET_KEY_BASE are expected to
+    # be configured directly in Control Plane after the apps exist.
+    skip_secrets_setup: true
+
     one_off_workload: rails
     app_workloads:
       - rails
     additional_workloads: []
     fix_terminal_size: true
-    image_retention_days: 30
+
+    release_script: rails db:migrate
+
+    stale_app_image_deployed_days: 5
+    image_retention_days: 7
+
+  production: &production
+    <<: *common
+    allow_org_override_by_env: false
+    allow_app_override_by_env: false
+    cpln_org: my-org-production
+    upstream: react-server-components-marketplace-demo-staging
 
 apps:
-  react-server-components-demo:
+  react-server-components-marketplace-demo-staging:
     <<: *common
-    release_script: rails db:migrate
-    setup_app_templates:
-      - app
-      - rails
+
+  react-server-components-marketplace-demo-review:
+    <<: *common
+    match_if_app_name_starts_with: true
+
+  react-server-components-marketplace-demo-production:
+    <<: *production

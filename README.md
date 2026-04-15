@@ -239,7 +239,7 @@ time curl http://localhost:3000/api/restaurants/1/wait_time
 
 ## Deployment
 
-See Task 5 for full deployment guide (Docker, Heroku).
+See [.controlplane/README.md](./.controlplane/README.md) for the Docker workflow, the shared `cpflow` GitHub Actions flow for review apps and staging, and the manual Control Plane deployment steps.
 
 ## Project Structure
 

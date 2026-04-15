@@ -23,13 +23,13 @@ spec:
     - name: RENDERER_URL
       value: http://localhost:3800
     - name: SECRET_KEY_BASE
-      value: cpln://secret/react-server-components-demo-secrets.SECRET_KEY_BASE
+      value: cpln://secret/{{APP_SECRETS}}.SECRET_KEY_BASE
     - name: DATABASE_URL
-      value: cpln://secret/react-server-components-demo-secrets.DATABASE_URL
+      value: cpln://secret/{{APP_SECRETS}}.DATABASE_URL
     - name: RENDERER_PASSWORD
-      value: cpln://secret/react-server-components-demo-secrets.RENDERER_PASSWORD
+      value: cpln://secret/{{APP_SECRETS}}.RENDERER_PASSWORD
     - name: REACT_ON_RAILS_PRO_LICENSE
-      value: cpln://secret/react-server-components-demo-secrets.REACT_ON_RAILS_PRO_LICENSE
+      value: cpln://secret/{{APP_SECRETS}}.REACT_ON_RAILS_PRO_LICENSE
   staticPlacement:
     locationLinks:
       - {{APP_LOCATION_LINK}}
