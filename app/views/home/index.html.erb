@@ -1,128 +1,537 @@
-<div class="mx-auto max-w-6xl px-4 py-10">
-  <section class="overflow-hidden rounded-3xl bg-slate-900 px-6 py-8 text-white shadow-xl md:px-8 md:py-10">
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-end">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">Open Source Example</p>
-        <h1 class="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">LocalHub Marketplace Demo</h1>
-        <p class="mt-4 max-w-2xl text-base leading-7 text-slate-200 md:text-lg">
-          Compare full SSR, client components, and React Server Components across identical marketplace experiences.
-          This deployment is intentionally easy to inspect, fork, and improve.
-        </p>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <%= link_to 'Browse source on GitHub', source_code_path, class: 'rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200' %>
-          <%= link_to 'Read the contributor guide', contributing_guide_path, class: 'rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/10' %>
-        </div>
-      </div>
+<% content_for :head do %>
+<style>
+  /* ── Scroll-reveal animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-      <dl class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <dt class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">LCP Improvement</dt>
-          <dd class="mt-2 text-2xl font-semibold text-white">59%</dd>
-          <p class="mt-2 text-sm text-slate-300">RSC versions render meaningful content faster under the same data load.</p>
-        </div>
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <dt class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Routes to Compare</dt>
-          <dd class="mt-2 text-2xl font-semibold text-white">12</dd>
-          <p class="mt-2 text-sm text-slate-300">Four user journeys, each implemented with SSR, client, and RSC variants.</p>
-        </div>
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <dt class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Contributor Paths</dt>
-          <dd class="mt-2 text-2xl font-semibold text-white">3</dd>
-          <p class="mt-2 text-sm text-slate-300">Source, issues, and contribution docs are all reachable directly from this app.</p>
-        </div>
-      </dl>
+  /* ── Hero gradient ── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+  }
+  .hero-glow {
+    background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  }
+
+  /* ── Gradient text ── */
+  .gradient-text {
+    background: linear-gradient(to right, #818cf8, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Floating particles ── */
+  @keyframes float-particle {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+  }
+  .particle {
+    animation: float-particle var(--duration, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* ── Pulse glow for metric cards ── */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.2); }
+    50% { box-shadow: 0 0 20px 4px rgba(99, 102, 241, 0.15); }
+  }
+  .metric-card:hover {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* ── Metric counter animation ── */
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .metric-animate {
+    animation: count-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-play-state: paused;
+    opacity: 0;
+  }
+  .visible .metric-animate { animation-play-state: running; }
+  .visible .metric-animate.delay-1 { animation-delay: 0.15s; }
+  .visible .metric-animate.delay-2 { animation-delay: 0.3s; }
+  .visible .metric-animate.delay-3 { animation-delay: 0.45s; }
+
+  /* ── Bar grow animation ── */
+  @keyframes grow-width {
+    from { width: 0; }
+    to   { width: var(--bar-width); }
+  }
+  .bar-animate {
+    animation: grow-width 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-play-state: paused;
+    width: 0;
+  }
+  .visible .bar-animate { animation-play-state: running; }
+  .visible .bar-animate.delay-1 { animation-delay: 0.2s; }
+
+  /* ── Section backgrounds ── */
+  .section-light { background: #ffffff; }
+  .section-muted { background: #f8fafc; }
+  .section-dark { background: #0f172a; color: #e2e8f0; }
+
+  /* ── Wave divider ── */
+  .wave-divider { position: relative; margin-top: -1px; }
+
+  /* ── Demo card hover ── */
+  .demo-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .demo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* ── Accessibility: reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { transition: none; opacity: 1; transform: none; }
+    .particle { animation: none; opacity: 0.4; }
+    .metric-animate { animation: none; opacity: 1; }
+    .bar-animate { animation: none; width: var(--bar-width); }
+    .demo-card { transition: none; }
+  }
+</style>
+<% end %>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden">
+  <div class="hero-glow absolute inset-0"></div>
+
+  <!-- Floating particles -->
+  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle class="particle" cx="10%" cy="20%" r="2" fill="#818cf8" style="--duration: 5s; --delay: 0s;" />
+    <circle class="particle" cx="85%" cy="15%" r="1.5" fill="#a78bfa" style="--duration: 4s; --delay: 1s;" />
+    <circle class="particle" cx="70%" cy="80%" r="2" fill="#6366f1" style="--duration: 6s; --delay: 0.5s;" />
+    <circle class="particle" cx="25%" cy="75%" r="1.5" fill="#818cf8" style="--duration: 4.5s; --delay: 2s;" />
+    <circle class="particle" cx="50%" cy="40%" r="1" fill="#c4b5fd" style="--duration: 3.5s; --delay: 1.5s;" />
+    <rect class="particle" x="90%" y="60%" width="3" height="3" rx="0.5" fill="#818cf8" style="--duration: 5.5s; --delay: 0.8s;" />
+    <rect class="particle" x="15%" y="50%" width="2.5" height="2.5" rx="0.5" fill="#a78bfa" style="--duration: 4.2s; --delay: 2.5s;" />
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 sm:pt-28 sm:pb-36 text-center">
+    <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 rounded-full px-4 py-1.5 mb-8">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+      <span class="text-indigo-300 text-sm font-medium">React on Rails Pro</span>
     </div>
-  </section>
 
-  <section class="mt-8 grid gap-4 md:grid-cols-3">
-    <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Source</p>
-      <h2 class="mt-3 text-xl font-semibold text-slate-900">Inspect the implementation</h2>
-      <p class="mt-3 text-sm leading-6 text-slate-600">
-        Browse the Rails, React, and deployment code behind the demo without hunting through Slack or PR history.
-      </p>
-      <%= link_to 'Open the GitHub repo', source_code_path, class: 'mt-4 inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
-    </article>
+    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+      React Server Components<br/>
+      <span class="gradient-text">For Your Rails App</span>
+    </h1>
 
-    <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Contributing</p>
-      <h2 class="mt-3 text-xl font-semibold text-slate-900">Start from the right docs</h2>
-      <p class="mt-3 text-sm leading-6 text-slate-600">
-        Follow the contributor guide for setup, demo guardrails, PR expectations, and deployment touchpoints.
-      </p>
-      <%= link_to 'Read CONTRIBUTING.md', contributing_guide_path, class: 'mt-4 inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
-    </article>
+    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed">
+      Ship less JavaScript, load pages faster, and write simpler code.<br class="hidden sm:block"/>
+      React on Rails Pro is the first framework to bring full RSC support to Ruby on Rails.
+    </p>
 
-    <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Support</p>
-      <h2 class="mt-3 text-xl font-semibold text-slate-900">Ask questions or report gaps</h2>
-      <p class="mt-3 text-sm leading-6 text-slate-600">
-        Use the issue tracker for repo work and React on Rails docs for framework-specific questions and background.
-      </p>
-      <div class="mt-4 flex flex-wrap gap-4">
-        <%= link_to 'Open an issue', project_issues_path, class: 'inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
-        <%= link_to 'React on Rails docs', 'https://reactonrails.com/docs', class: 'inline-flex text-sm font-semibold text-cyan-700 transition hover:text-cyan-600' %>
-      </div>
-    </article>
-  </section>
+    <div class="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+      <a href="#demos" class="inline-flex items-center justify-center bg-white text-slate-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
+        Explore the Demo
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="https://github.com/shakacode/react_on_rails" class="inline-flex items-center justify-center bg-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/20 transition-colors border border-white/30">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="mr-2"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
 
-  <section class="mt-10">
-    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Demo Routes</p>
-        <h2 class="mt-2 text-2xl font-semibold text-slate-900">Compare the same flows across rendering strategies</h2>
-      </div>
-      <p class="max-w-2xl text-sm leading-6 text-slate-600">
-        Each surface below keeps the user journey aligned so you can attribute the difference to rendering strategy, not feature scope.
+  <!-- Wave divider -->
+  <div class="wave-divider">
+    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
+      <path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#ffffff"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PERFORMANCE WINS
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-indigo-600 font-semibold text-sm uppercase tracking-wider mb-3">Performance</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Real Numbers, Not Promises</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Measured on this demo under throttled conditions (4x CPU slowdown, Slow 3G). Not synthetic benchmarks &mdash; real pages you can open right now.
       </p>
     </div>
 
-    <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-slate-900">Restaurant Search</h3>
-        <p class="mt-2 text-sm text-slate-600">Classic marketplace discovery with real-time availability and streaming content.</p>
-        <div class="mt-4 space-y-2">
-          <a href="/search/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
-          <a href="/search/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
-          <a href="/search/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
-        </div>
+    <!-- Stat cards -->
+    <div class="reveal grid grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto mb-12">
+      <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="metric-animate text-3xl sm:text-4xl font-extrabold text-emerald-600 mb-2">22%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
+        <div class="text-xs text-slate-500">2508ms &rarr; 1948ms</div>
       </div>
-
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-slate-900">Blog Post</h3>
-        <p class="mt-2 text-sm text-slate-600">Markdown-heavy content that highlights the client bundle savings from server rendering.</p>
-        <div class="mt-4 space-y-2">
-          <a href="/blog/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
-          <a href="/blog/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
-          <a href="/blog/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
-        </div>
+      <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="metric-animate delay-1 text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">81%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Less JavaScript</div>
+        <div class="text-xs text-slate-500">1332 KB &rarr; 258 KB</div>
       </div>
-
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-indigo-100">
-        <div class="flex items-center gap-2">
-          <h3 class="text-lg font-semibold text-slate-900">Product Page</h3>
-          <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">NEW</span>
-        </div>
-        <p class="mt-2 text-sm text-slate-600">Detailed product pages with reviews, charts, and related content.</p>
-        <div class="mt-4 space-y-2">
-          <a href="/product/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
-          <a href="/product/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
-          <a href="/product/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
-        </div>
+      <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="metric-animate delay-2 text-3xl sm:text-4xl font-extrabold text-purple-600 mb-2">72%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Faster TBT</div>
+        <div class="text-xs text-slate-500">677ms &rarr; 189ms</div>
       </div>
+      <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center">
+        <div class="metric-animate delay-3 text-3xl sm:text-4xl font-extrabold text-pink-600 mb-2">56%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Faster TTFB</div>
+        <div class="text-xs text-slate-500">539ms &rarr; 239ms</div>
+      </div>
+    </div>
 
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-indigo-100">
-        <div class="flex items-center gap-2">
-          <h3 class="text-lg font-semibold text-slate-900">Product Search</h3>
-          <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">NEW</span>
-        </div>
-        <p class="mt-2 text-sm text-slate-600">Faceted search with filters, pagination, and server-streamed result sections.</p>
-        <div class="mt-4 space-y-2">
-          <a href="/product-search/ssr" class="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-100">V1: Full SSR</a>
-          <a href="/product-search/client" class="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100">V2: Client Components</a>
-          <a href="/product-search/rsc" class="block rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 transition hover:bg-green-100">V3: RSC Streaming</a>
+    <!-- JS bundle comparison bar -->
+    <div class="reveal max-w-3xl mx-auto mb-10">
+      <div class="bg-slate-50 rounded-2xl p-5 sm:p-8 border border-slate-200">
+        <div class="space-y-6">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-slate-700">Traditional SSR Bundle</span>
+              <span class="text-sm font-bold text-red-500">1,332 KB</span>
+            </div>
+            <div class="h-10 rounded-lg overflow-hidden bg-slate-200 flex">
+              <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:24%"><span class="hidden sm:inline">Markdown Libs</span></div>
+              <div class="h-full bg-orange-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:5%"></div>
+              <div class="h-full bg-amber-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:50%"><span class="hidden sm:inline">React + React DOM</span><span class="sm:hidden">React</span></div>
+              <div class="h-full bg-yellow-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:21%"><span class="hidden sm:inline">App Code</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-slate-700">With React Server Components</span>
+              <span class="text-sm font-bold text-emerald-600">258 KB</span>
+            </div>
+            <div class="h-10 rounded-lg overflow-hidden bg-slate-200 flex">
+              <div class="bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--bar-width:19.4%;">Interactive UI only</div>
+            </div>
+            <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3v8" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Markdown, charts, reviews &rarr; <strong class="text-emerald-600 ml-0.5">server only, 0 KB to client</strong>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </section>
-</div>
+
+    <div class="text-center">
+      <a href="/search-performance" class="inline-flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:text-indigo-700 transition-colors">
+        See full benchmark breakdown
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     WHY REACT ON RAILS + RSC
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-muted py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Why RSC</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">A Better Way to Build</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        React Server Components aren't just faster &mdash; they're simpler. Less code, fewer moving parts, better results.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12">
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 3l14 14M17 3L3 17" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Zero-JS Components</h3>
+        <p class="text-sm text-slate-500">Heavy libraries like markdown parsers and chart renderers stay on the server. They never reach the browser.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Streaming Built In</h3>
+        <p class="text-sm text-slate-500">Page shell renders instantly. Data-heavy sections stream in progressively as each query resolves.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5l7-3 7 3v8l-7 4-7-4V5z" stroke="#059669" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 5l7 4 7-4" stroke="#059669" stroke-width="1.5"/><path d="M10 9v8" stroke="#059669" stroke-width="1.5"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Keep Your Rails Stack</h3>
+        <p class="text-sm text-slate-500">No migration to Next.js. Controllers, routes, views, Devise, Pundit &mdash; everything stays.</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Simpler Code</h3>
+        <p class="text-sm text-slate-500">Replace useEffect boilerplate with plain async functions. No state management, no cleanup, no stale closures.</p>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <a href="/why-rsc" class="inline-flex items-center gap-2 text-purple-600 font-semibold text-sm hover:text-purple-700 transition-colors">
+        Deep dive: Why React Server Components change everything
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SEE IT IN ACTION — DEMO ROUTES
+     ════════════════════════════════════════════════════════════════ -->
+<section id="demos" class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Live Demo</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">See It In Action</h2>
+      <p class="text-lg text-slate-500 max-w-3xl mx-auto">
+        LocalHub is a real marketplace demo with 5 page types, each built 3 ways &mdash; SSR, Client, and RSC &mdash; so you can compare rendering strategies directly.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+      <!-- Restaurant Search -->
+      <a href="/search/rsc" class="reveal demo-card bg-white rounded-2xl border border-slate-200 p-6 block group">
+        <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#ea580c" stroke-width="1.5"/><path d="M7 8h6M7 12h4" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Restaurant Search</h3>
+        <p class="text-sm text-slate-500 mb-4">Real-time availability, streaming specials, and dynamic search results across a marketplace.</p>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">SSR</span>
+          <span class="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-blue-700">Client</span>
+          <span class="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700 font-semibold">RSC</span>
+        </div>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
+          Compare versions <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+
+      <!-- Blog Post -->
+      <a href="/blog/rsc" class="reveal demo-card bg-white rounded-2xl border border-slate-200 p-6 block group">
+        <div class="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="2" stroke="#7c3aed" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Blog Post</h3>
+        <p class="text-sm text-slate-500 mb-4">Markdown-heavy content that highlights client bundle savings &mdash; 321 KB of libraries eliminated.</p>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">SSR</span>
+          <span class="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-blue-700">Client</span>
+          <span class="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700 font-semibold">RSC</span>
+        </div>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
+          Compare versions <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+
+      <!-- Product Page -->
+      <a href="/product/rsc" class="reveal demo-card bg-white rounded-2xl border border-slate-200 p-6 block group">
+        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="10" rx="2" stroke="#2563eb" stroke-width="1.5"/><path d="M7 5V3a3 3 0 0 1 6 0v2" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Product Page</h3>
+        <p class="text-sm text-slate-500 mb-4">Full e-commerce product page with reviews, charts, related items, and rich content.</p>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">SSR</span>
+          <span class="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-blue-700">Client</span>
+          <span class="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700 font-semibold">RSC</span>
+        </div>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
+          Compare versions <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+
+      <!-- Product Search -->
+      <a href="/product-search/rsc" class="reveal demo-card bg-white rounded-2xl border border-slate-200 p-6 block group">
+        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5" stroke="#059669" stroke-width="1.5"/><path d="M13 13l4 4" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Product Search</h3>
+        <p class="text-sm text-slate-500 mb-4">Faceted search with filters, pagination, and 4 independently streamed data sections.</p>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">SSR</span>
+          <span class="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-blue-700">Client</span>
+          <span class="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700 font-semibold">RSC</span>
+        </div>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
+          Compare versions <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+
+      <!-- Analytics Dashboard -->
+      <a href="/analytics/rsc" class="reveal demo-card bg-white rounded-2xl border border-slate-200 p-6 block group">
+        <div class="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="10" width="3" height="7" rx="1" stroke="#db2777" stroke-width="1.5"/><rect x="8.5" y="6" width="3" height="11" rx="1" stroke="#db2777" stroke-width="1.5"/><rect x="14" y="3" width="3" height="14" rx="1" stroke="#db2777" stroke-width="1.5"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Analytics Dashboard</h3>
+        <p class="text-sm text-slate-500 mb-4">Data-intensive dashboard with KPIs, charts, tables, and 6 streamed async data sources.</p>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">SSR</span>
+          <span class="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-blue-700">Client</span>
+          <span class="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700 font-semibold">RSC</span>
+        </div>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
+          Compare versions <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+
+      <!-- Performance Showcase card -->
+      <a href="/search-performance" class="reveal demo-card bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 p-6 block group">
+        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 10h14" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="10" r="3" stroke="#4f46e5" stroke-width="1.5"/><circle cx="10" cy="10" r="7" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Performance Showcase</h3>
+        <p class="text-sm text-slate-500 mb-4">Detailed benchmarks, bundle analysis, and streaming visualizations for the product search page.</p>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="rounded-full bg-indigo-100 border border-indigo-200 px-2 py-0.5 text-indigo-700 font-semibold">Benchmarks</span>
+          <span class="rounded-full bg-purple-100 border border-purple-200 px-2 py-0.5 text-purple-700 font-semibold">Analysis</span>
+        </div>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
+          View benchmarks <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+    </div>
+
+    <!-- RSC wins across page types -->
+    <div class="reveal max-w-4xl mx-auto">
+      <h3 class="text-center text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">RSC Wins Across Every Page Type</h3>
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">92%</div>
+          <div class="text-xs font-semibold text-slate-800">Faster Hydration</div>
+          <div class="text-xs text-slate-400 mt-1">Blog</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">80%</div>
+          <div class="text-xs font-semibold text-slate-800">Faster FCP</div>
+          <div class="text-xs text-slate-400 mt-1">Dashboard</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">27%</div>
+          <div class="text-xs font-semibold text-slate-800">Faster FCP</div>
+          <div class="text-xs text-slate-400 mt-1">Product</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">22%</div>
+          <div class="text-xs font-semibold text-slate-800">Faster FCP</div>
+          <div class="text-xs text-slate-400 mt-1">Search</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 text-center col-span-2 lg:col-span-1">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">81%</div>
+          <div class="text-xs font-semibold text-slate-800">Less JS</div>
+          <div class="text-xs text-slate-400 mt-1">Search</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     WORKS WITH YOUR RAILS APP
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-dark py-14 sm:py-20 lg:py-28 relative overflow-hidden">
+  <!-- Subtle grid background -->
+  <svg class="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#grid)"/>
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-indigo-400 font-semibold text-sm uppercase tracking-wider mb-3">React on Rails Pro</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4">Works With Your Rails App</h2>
+      <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+        RSC is not Next.js-only. React on Rails Pro is the <strong class="text-white">first framework</strong> to bring full React Server Components support to Ruby on Rails.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5l7-3 7 3v8l-7 4-7-4V5z" stroke="#818cf8" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 5l7 4 7-4" stroke="#818cf8" stroke-width="1.5"/><path d="M10 9v8" stroke="#818cf8" stroke-width="1.5"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Keep Your Stack</h3>
+        <p class="text-sm text-slate-400">Controllers, routes, views, authentication &mdash; everything stays.</p>
+      </div>
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="#818cf8" stroke-width="1.5"/><path d="M7 7h6M7 10h4M7 13h5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">No Migration Needed</h3>
+        <p class="text-sm text-slate-400">No rewrite to Next.js or any Node framework. Adopt RSC incrementally.</p>
+      </div>
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M10 6v4l2.5 2.5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Your Ruby Ecosystem</h3>
+        <p class="text-sm text-slate-400">Devise, Pundit, ActiveRecord, Sidekiq &mdash; RSC works alongside your entire Rails stack.</p>
+      </div>
+      <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10a6 6 0 0 1 12 0" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M10 10v-4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="16" r="1.5" fill="#818cf8"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Full RSC Integration</h3>
+        <p class="text-sm text-slate-400">Streaming SSR, RSC payload embedding, client/server code splitting &mdash; all handled for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CTA SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden py-16 sm:py-24 lg:py-36">
+  <div class="hero-glow absolute inset-0"></div>
+  <div class="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+    <div class="reveal">
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-6">Ready to Add RSC to Your Rails App?</h2>
+      <p class="text-lg sm:text-xl text-slate-300 mb-12 max-w-xl mx-auto leading-relaxed">
+        Upgrade to React on Rails Pro and bring the full power of React Server Components to your Rails application.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="https://www.shakacode.com/react-on-rails-pro/" class="inline-flex items-center justify-center bg-white text-slate-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
+          Start with React on Rails Pro
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://github.com/shakacode/react_on_rails" class="inline-flex items-center justify-center bg-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/20 transition-colors border border-white/30">
+          View on GitHub
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll-reveal observer (minimal inline JS) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(function(el) {
+      observer.observe(el);
+    });
+  });
+</script>
