@@ -65,13 +65,13 @@ importers:
         version: 19.2.4(react@19.2.4)
       react-on-rails-pro:
         specifier: github:shakacode/react-on-rails-builds#v16.5.1-rsc-flush-fix&path:react-on-rails-pro
-        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
+        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
       react-on-rails-pro-node-renderer:
         specifier: github:shakacode/react-on-rails-builds#v16.5.1-rsc-flush-fix&path:react-on-rails-pro-node-renderer
         version: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro-node-renderer
       react-on-rails-rsc:
-        specifier: 19.0.5-rc.1
-        version: 19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
+        specifier: github:shakacode/react_on_rails_rsc#perf/rsc-revive-model-walk
+        version: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
       web-vitals:
         specifier: ^4.2.0
         version: 4.2.4
@@ -3957,8 +3957,9 @@ packages:
       react-on-rails-rsc:
         optional: true
 
-  react-on-rails-rsc@19.0.5-rc.1:
-    resolution: {integrity: sha512-Qf+pT82eKsicLW29/2Mfz6H3Cq+2rn5tDGSTy2tdvMGsQhq5gVFwnhLKE66FasH/gvFjoTIZJmUFy7PLmHoMMw==}
+  react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d:
+    resolution: {tarball: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d}
+    version: 19.0.5-rc.1
     peerDependencies:
       react: ^19.0.3
       react-dom: ^19.0.3
@@ -9060,15 +9061,15 @@ snapshots:
       lockfile: 1.0.4
       pino: 9.14.0
 
-  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
+  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-on-rails: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     optionalDependencies:
-      react-on-rails-rsc: 19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
+      react-on-rails-rsc: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
 
-  react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4):
+  react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
