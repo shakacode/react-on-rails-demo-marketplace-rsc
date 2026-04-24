@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  react-on-rails: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails
+  react-on-rails: github:shakacode/react-on-rails-builds#v16.5.1-rsc-flush-fix&path:react-on-rails
   shakapacker: 9.5.0
 
 importers:
@@ -64,11 +64,11 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
       react-on-rails-pro:
-        specifier: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro
-        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
+        specifier: github:shakacode/react-on-rails-builds#v16.5.1-rsc-flush-fix&path:react-on-rails-pro
+        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
       react-on-rails-pro-node-renderer:
-        specifier: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro-node-renderer
-        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails-pro-node-renderer
+        specifier: github:shakacode/react-on-rails-builds#v16.5.1-rsc-flush-fix&path:react-on-rails-pro-node-renderer
+        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro-node-renderer
       react-on-rails-rsc:
         specifier: 19.0.5-rc.1
         version: 19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
@@ -2635,8 +2635,8 @@ packages:
   fastify-plugin@5.1.0:
     resolution: {integrity: sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==}
 
-  fastify@5.8.2:
-    resolution: {integrity: sha512-lZmt3navvZG915IE+f7/TIVamxIwmBd+OMB+O9WBzcpIwOo6F0LTh0sluoMFk5VkrKTvvrwIaoJPkir4Z+jtAg==}
+  fastify@5.8.5:
+    resolution: {integrity: sha512-Yqptv59pQzPgQUSIm87hMqHJmdkb1+GPxdE6vW6FRyVE9G86mt7rOghitiU4JHRaTyDUk9pfeKmDeu70lAwM4Q==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -3928,9 +3928,9 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails-pro-node-renderer:
-    resolution: {commit: 909e26603db9f52f5172e4c42cc22758610d8bd5, path: react-on-rails-pro-node-renderer, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.4.0
+  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro-node-renderer:
+    resolution: {commit: 0499ae9e5074fbf6976f799fea09c9764170f776, path: react-on-rails-pro-node-renderer, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
+    version: 16.5.1
     peerDependencies:
       '@honeybadger-io/js': '>=4.0.0'
       '@sentry/node': '>=5.0.0 <11.0.0'
@@ -3943,9 +3943,9 @@ packages:
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails-pro:
-    resolution: {commit: 909e26603db9f52f5172e4c42cc22758610d8bd5, path: react-on-rails-pro, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.4.0
+  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro:
+    resolution: {commit: 0499ae9e5074fbf6976f799fea09c9764170f776, path: react-on-rails-pro, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
+    version: 16.5.1
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       react: '>= 16'
@@ -3964,9 +3964,9 @@ packages:
       react-dom: ^19.0.3
       webpack: ^5.59.0
 
-  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails:
-    resolution: {commit: 909e26603db9f52f5172e4c42cc22758610d8bd5, path: react-on-rails, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.4.0
+  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails:
+    resolution: {commit: 0499ae9e5074fbf6976f799fea09c9764170f776, path: react-on-rails, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
+    version: 16.5.1
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -7656,7 +7656,7 @@ snapshots:
 
   fastify-plugin@5.1.0: {}
 
-  fastify@5.8.2:
+  fastify@5.8.5:
     dependencies:
       '@fastify/ajv-compiler': 4.0.5
       '@fastify/error': 4.2.0
@@ -9050,21 +9050,21 @@ snapshots:
 
   react-is@16.13.1: {}
 
-  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails-pro-node-renderer:
+  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro-node-renderer:
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
-      fastify: 5.8.2
+      fastify: 5.8.5
       fs-extra: 11.3.4
       jsonwebtoken: 9.0.3
       lockfile: 1.0.4
       pino: 9.14.0
 
-  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
+  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-on-rails: git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-on-rails: git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     optionalDependencies:
       react-on-rails-rsc: 19.0.5-rc.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
 
@@ -9077,7 +9077,7 @@ snapshots:
       webpack: 5.105.4(@swc/core@1.15.21)(webpack-cli@5.1.4)
       webpack-sources: 3.3.4
 
-  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#909e26603db9f52f5172e4c42cc22758610d8bd5&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#0499ae9e5074fbf6976f799fea09c9764170f776&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
