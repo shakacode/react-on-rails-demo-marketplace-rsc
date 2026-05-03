@@ -45,10 +45,17 @@ class RestaurantsController < ApplicationController
   private
 
   def fetch_restaurants
-    Restaurant
-      .by_cuisine(params[:cuisine] || 'Italian')
-      .in_city(params[:city] || 'New York')
-      .limit(4)
+    scope = Restaurant.all
+    scope = scope.by_cuisine(params[:cuisine]) if params[:cuisine].present?
+    scope = scope.in_city(params[:city]) if params[:city].present?
+    if params[:q].present?
+      query = "%#{params[:q].to_s.strip}%"
+      scope = scope.where(
+        "name ILIKE :q OR cuisine_type ILIKE :q OR city ILIKE :q",
+        q: query,
+      )
+    end
+    scope.limit(12)
   end
 
   def serialize_promotion(promo)

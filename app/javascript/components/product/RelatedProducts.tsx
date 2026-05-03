@@ -21,7 +21,7 @@ export function RelatedProducts({ products }: Props) {
             {/* Product image */}
             <div className="aspect-square bg-gray-50 overflow-hidden">
               <img
-                src={product.images[0]?.url || 'https://via.placeholder.com/400'}
+                src={product.images[0]?.url || '/seed-images/placeholder.svg'}
                 alt={product.name}
                 loading="lazy"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

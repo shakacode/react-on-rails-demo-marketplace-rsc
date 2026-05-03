@@ -30,7 +30,6 @@ import HourlyChart from './HourlyChart';
 import DashboardFilters from './DashboardFilters';
 import SortableOrdersTable from './SortableOrdersTable';
 import InteractiveTopItems from './InteractiveTopItems';
-import { INPOverlay } from '../blog/INPOverlay';
 
 interface Props {
   restaurant: DashboardRestaurant;
@@ -99,7 +98,6 @@ export default function DashboardPageSSR({
           <InteractiveTopItems items={top_items} />
         </div>
 
-        <INPOverlay />
       </div>
     </div>
   );

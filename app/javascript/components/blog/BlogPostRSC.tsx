@@ -8,7 +8,6 @@ import { BookmarkShareBar } from './BookmarkShareBarForServer';
 import { TableOfContents } from './TableOfContentsForServer';
 import { ReadingModeToggle } from './ReadingModeToggleForServer';
 import { InteractiveSection } from './InteractiveSectionForServer';
-import { INPOverlay } from './INPOverlayForServer';
 import { RelatedPostsSkeleton } from './RelatedPostsSkeleton';
 import AsyncRelatedPostsRSC from './AsyncRelatedPostsRSC';
 
@@ -74,7 +73,6 @@ export default function BlogPostRSC({ post, getReactOnRailsAsyncProp }: Props) {
         <AsyncRelatedPostsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
       </Suspense>
 
-      <INPOverlay />
     </div>
   );
 }

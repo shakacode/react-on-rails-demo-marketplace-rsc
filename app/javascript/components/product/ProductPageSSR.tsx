@@ -16,7 +16,6 @@ import { ProductSpecs } from './ProductSpecs';
 import { ReviewDistributionChart } from './ReviewDistributionChart';
 import { ReviewsList } from './ReviewsList';
 import { RelatedProducts } from './RelatedProducts';
-import { INPOverlay } from '../blog/INPOverlay';
 
 interface Props {
   product: Product;
@@ -74,7 +73,6 @@ export default function ProductPageSSR({ product, reviews, review_stats, related
         {/* Related products */}
         <RelatedProducts products={related_products} />
 
-        <INPOverlay />
       </div>
     </div>
   );

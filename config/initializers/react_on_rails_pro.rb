@@ -20,8 +20,8 @@ ReactOnRailsPro.configure do |config|
   # RSC payload generation URL path
   config.rsc_payload_generation_url_path = 'rsc_payload/'
 
-  # Copy loadable-stats.json to the node renderer for @loadable/server ChunkExtractor
-  config.assets_to_copy = (if ENV["HMR"] != "true"
-                             Rails.root.join("public", "packs", "loadable-stats.json")
-                           end)
+  # Copy loadable-stats.json to the node renderer for @loadable/server ChunkExtractor.
+  # Always copied so the SSR bundle's ChunkExtractor can resolve async chunks even
+  # in HMR dev mode (otherwise client-variant pages 500 with "cannot find … in stats").
+  config.assets_to_copy = Rails.root.join("public", "packs", "loadable-stats.json")
 end

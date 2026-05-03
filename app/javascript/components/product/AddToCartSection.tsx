@@ -18,9 +18,16 @@ export function AddToCartSection({ price, inStock, stockQuantity }: Props) {
     setQuantity((q) => Math.min(stockQuantity, q + 1));
   }, [stockQuantity]);
 
+  const [buyingNow, setBuyingNow] = useState(false);
+
   const handleAddToCart = useCallback(() => {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+  }, []);
+
+  const handleBuyNow = useCallback(() => {
+    setBuyingNow(true);
+    setTimeout(() => setBuyingNow(false), 2000);
   }, []);
 
   return (
@@ -78,10 +85,15 @@ export function AddToCartSection({ price, inStock, stockQuantity }: Props) {
           )}
         </button>
         <button
+          onClick={handleBuyNow}
           disabled={!inStock}
-          className="py-3.5 px-6 rounded-xl text-sm font-semibold border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className={`py-3.5 px-6 rounded-xl text-sm font-semibold border-2 transition-all active:scale-[0.98] ${
+            buyingNow
+              ? 'bg-green-600 text-white border-green-600'
+              : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50 disabled:opacity-30 disabled:cursor-not-allowed'
+          }`}
         >
-          Buy Now
+          {buyingNow ? 'Order placed!' : 'Buy Now'}
         </button>
       </div>
 

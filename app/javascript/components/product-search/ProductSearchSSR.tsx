@@ -16,6 +16,7 @@ import { SortBar } from './SortBar';
 import { SearchInput } from './SearchInput';
 import { PaginationControls } from './PaginationControls';
 import { ActiveFilterPills } from './ActiveFilterPills';
+import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
 
 
 interface BrandHighlight {
@@ -50,8 +51,6 @@ export default function ProductSearchSSR({
   popular_tags,
   brand_highlights,
 }: Props) {
-  const [currentSort, setCurrentSort] = useState(search_meta.sort);
-  const [currentPage, setCurrentPage] = useState(pagination.current_page);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [compareList, setCompareList] = useState<Set<number>>(new Set());
 
@@ -61,8 +60,39 @@ export default function ProductSearchSSR({
     label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace('_', ' '),
   }));
 
-  const handleFilterChange = useCallback(() => {
-    // In real app: would update URL params and re-fetch
+  const handleSearch = useCallback((q: string) => {
+    applySearchParams({ q: q || undefined });
+  }, []);
+
+  const handleSortChange = useCallback((sort: string) => {
+    applySearchParams({ sort });
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    applySearchParams({ page: String(page) });
+  }, []);
+
+  const handleFilterChange = useCallback((filters: Record<string, string | undefined>) => {
+    applySearchParams(filters as SearchParamUpdates);
+  }, []);
+
+  const handleRemoveFilter = useCallback((type: string) => {
+    if (type === 'price') {
+      applySearchParams({ price_min: undefined, price_max: undefined });
+    } else {
+      applySearchParams({ [type as 'category']: undefined });
+    }
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    applySearchParams({
+      category: undefined,
+      brand: undefined,
+      min_rating: undefined,
+      in_stock: undefined,
+      price_min: undefined,
+      price_max: undefined,
+    });
   }, []);
 
   const handleTagClick = useCallback((tag: string) => {
@@ -96,7 +126,7 @@ export default function ProductSearchSSR({
           </div>
           <SearchInput
             initialQuery={search_meta.query}
-            onSearch={() => {}}
+            onSearch={handleSearch}
           />
         </div>
       </header>
@@ -128,8 +158,8 @@ export default function ProductSearchSSR({
         {/* Active filter pills */}
         <ActiveFilterPills
           filters={activeFiltersList}
-          onRemoveFilter={() => {}}
-          onClearAll={() => {}}
+          onRemoveFilter={handleRemoveFilter}
+          onClearAll={handleClearAllFilters}
         />
 
         <div className="flex gap-6">
@@ -138,7 +168,12 @@ export default function ProductSearchSSR({
             <div className="sticky top-[140px] space-y-4">
               <FilterSidebar
                 facets={facets}
-                activeFilters={{}}
+                activeFilters={{
+                  category: search_meta.filters_applied?.find((f) => f.type === 'category')?.value,
+                  brand: search_meta.filters_applied?.find((f) => f.type === 'brand')?.value,
+                  min_rating: search_meta.filters_applied?.find((f) => f.type === 'min_rating')?.value?.replace('+', ''),
+                  in_stock: search_meta.filters_applied?.find((f) => f.type === 'in_stock') ? 'true' : undefined,
+                }}
                 onFilterChange={handleFilterChange}
               />
 
@@ -194,9 +229,9 @@ export default function ProductSearchSSR({
           {/* Results */}
           <div className="flex-1 min-w-0">
             <SortBar
-              currentSort={currentSort}
+              currentSort={search_meta.sort}
               totalResults={search_meta.total_results}
-              onSortChange={setCurrentSort}
+              onSortChange={handleSortChange}
             />
 
             {products.length === 0 ? (
@@ -227,7 +262,7 @@ export default function ProductSearchSSR({
 
                 <PaginationControls
                   pagination={pagination}
-                  onPageChange={setCurrentPage}
+                  onPageChange={handlePageChange}
                 />
               </>
             )}

@@ -12,7 +12,6 @@
 //   - DashboardFilters (~3KB) — time range + status filter buttons
 //   - SortableOrdersTable (~4KB) — click-to-sort columns
 //   - InteractiveTopItems (~3KB) — category filter buttons
-//   - INPOverlay (~2KB) — interaction monitoring
 //
 // Total client JS: ~12KB interactive components vs ~120KB+ for SSR/Client (d3+date-fns+components)
 // Plus: streaming means shell appears in <50ms instead of waiting for ALL queries.
@@ -28,8 +27,6 @@ import AsyncHourlyChartRSC from './AsyncHourlyChartRSC';
 import AsyncRecentOrdersRSC from './AsyncRecentOrdersRSC';
 import AsyncTopItemsRSC from './AsyncTopItemsRSC';
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, TopItemsSkeleton } from './DashboardSkeletons';
-// INPOverlay removed from RSC page — its chunk group pulls in charting-libs
-// import { INPOverlay } from '../blog/INPOverlay';
 
 interface Props {
   restaurant: DashboardRestaurant;

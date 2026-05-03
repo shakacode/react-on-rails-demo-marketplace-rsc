@@ -10,6 +10,7 @@ import { FilterSidebarSkeleton } from './SearchSkeletons';
 import { PaginationControls } from './PaginationControls';
 import { ActiveFilterPills } from './ActiveFilterPills';
 import type { Facets, Pagination, ReviewSnippet } from './types';
+import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
 
 interface BrandHighlight {
   name: string;
@@ -29,7 +30,7 @@ interface SearchShellHeaderProps {
 // Client-side search bar wrapper
 export function SearchShellHeader({ initialQuery }: SearchShellHeaderProps) {
   const handleSearch = useCallback((query: string) => {
-    // In a real app, this would update URL params
+    applySearchParams({ q: query || undefined });
   }, []);
 
   return (
@@ -44,23 +45,24 @@ interface SearchShellSortProps {
 
 // Client-side sort bar wrapper
 export function SearchShellSort({ currentSort, totalResults }: SearchShellSortProps) {
-  const [sort, setSort] = useState(currentSort);
+  const handleSortChange = useCallback((sort: string) => {
+    applySearchParams({ sort });
+  }, []);
 
   return (
-    <SortBar currentSort={sort} totalResults={totalResults} onSortChange={setSort} />
+    <SortBar currentSort={currentSort} totalResults={totalResults} onSortChange={handleSortChange} />
   );
 }
 
 interface SearchShellFiltersProps {
   facets: Facets;
+  activeFilters?: Record<string, string | undefined>;
 }
 
 // Client-side filter sidebar wrapper
-export function SearchShellFilters({ facets }: SearchShellFiltersProps) {
-  const [activeFilters, setActiveFilters] = useState<Record<string, string | undefined>>({});
-
+export function SearchShellFilters({ facets, activeFilters = {} }: SearchShellFiltersProps) {
   const handleFilterChange = useCallback((filters: Record<string, string | undefined>) => {
-    setActiveFilters(filters);
+    applySearchParams(filters as SearchParamUpdates);
   }, []);
 
   return (
@@ -79,7 +81,7 @@ interface SearchShellPaginationProps {
 // Client-side pagination wrapper
 export function SearchShellPagination({ pagination }: SearchShellPaginationProps) {
   const handlePageChange = useCallback((page: number) => {
-    // In a real app, this would update URL params
+    applySearchParams({ page: String(page) });
   }, []);
 
   return (
@@ -236,11 +238,30 @@ export function SearchShellActiveFilters({ filtersApplied }: SearchShellActiveFi
     label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace('_', ' '),
   }));
 
+  const handleRemove = useCallback((type: string) => {
+    if (type === 'price') {
+      applySearchParams({ price_min: undefined, price_max: undefined });
+    } else {
+      applySearchParams({ [type as 'category']: undefined });
+    }
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    applySearchParams({
+      category: undefined,
+      brand: undefined,
+      min_rating: undefined,
+      in_stock: undefined,
+      price_min: undefined,
+      price_max: undefined,
+    });
+  }, []);
+
   return (
     <ActiveFilterPills
       filters={filters}
-      onRemoveFilter={() => {}}
-      onClearAll={() => {}}
+      onRemoveFilter={handleRemove}
+      onClearAll={handleClearAll}
     />
   );
 }

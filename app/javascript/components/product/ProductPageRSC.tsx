@@ -11,7 +11,6 @@
 // Only shipped to client:
 //   - ProductImageGallery (~3KB) — interactive image navigation
 //   - AddToCartSection (~2KB) — quantity selector + add to cart
-//   - INPOverlay (~2KB) — performance monitoring
 //
 // Total JS savings: ~400KB+ eliminated from client bundle.
 
@@ -25,7 +24,6 @@ import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';
 import AsyncRelatedProductsRSC from './AsyncRelatedProductsRSC';
 import { ProductDetailsSkeleton, ReviewStatsSkeleton, ReviewsSkeleton, RelatedProductsSkeleton } from './ProductSkeletons';
-import { INPOverlay } from '../blog/INPOverlayForServer';
 
 interface Props {
   product: Product;
@@ -83,7 +81,6 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
           <AsyncRelatedProductsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
         </Suspense>
 
-        <INPOverlay />
       </div>
     </div>
   );
