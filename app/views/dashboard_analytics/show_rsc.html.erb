@@ -1,5 +1,8 @@
+<%
+  range_days = DashboardAnalyticsController::ALLOWED_RANGES[@range]
+%>
 <%= stream_react_component_with_async_props("DashboardPageRSC",
-    props: { restaurant: @restaurant_data }, prerender: true) do |emit|
+    props: { restaurant: @restaurant_data, range: @range }, prerender: true) do |emit|
 
   # Stream each section as its query completes — sequential execution
   # avoids PostgreSQL resource contention and ensures each query runs
@@ -7,19 +10,19 @@
   # appears on screen as soon as it's ready (no waiting for ALL data).
 
   # KPI stats — simple aggregation (~200-500ms)
-  emit.call("kpi_stats", Restaurant.dashboard_kpi_stats)
+  emit.call("kpi_stats", Restaurant.dashboard_kpi_stats(days: range_days))
 
   # Revenue chart — daily aggregation (~500ms-1s)
-  emit.call("revenue_data", Restaurant.dashboard_revenue_by_day)
+  emit.call("revenue_data", Restaurant.dashboard_revenue_by_day(days: [range_days * 2, 14].max))
 
   # Order status — simple GROUP BY (~200-400ms)
-  emit.call("order_status", Restaurant.dashboard_order_status)
+  emit.call("order_status", Restaurant.dashboard_order_status(days: range_days))
 
   # Hourly distribution — hour aggregation (~300-600ms)
-  emit.call("hourly_data", Restaurant.dashboard_hourly_distribution)
+  emit.call("hourly_data", Restaurant.dashboard_hourly_distribution(days: range_days))
 
   # Recent orders — JOIN with order_lines (~300-800ms)
-  emit.call("recent_orders", { orders: Restaurant.dashboard_recent_orders })
+  emit.call("recent_orders", { orders: Restaurant.dashboard_recent_orders(days: range_days) })
 
   # Top menu items — heaviest query (~1-3s)
   emit.call("top_items", { items: Restaurant.dashboard_top_menu_items })

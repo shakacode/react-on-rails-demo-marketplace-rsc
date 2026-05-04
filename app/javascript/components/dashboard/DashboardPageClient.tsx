@@ -9,6 +9,7 @@ import loadable from '@loadable/component';
 import type { DashboardRestaurant } from '../../types/dashboard';
 import DashboardHeader from './DashboardHeader';
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, TopItemsSkeleton } from './DashboardSkeletons';
+import { DashboardRangePicker } from './DashboardRangePicker';
 
 const AsyncDashboardContent = loadable(
   () => import(/* webpackChunkName: "dashboard-async" */ './AsyncDashboardContent'),
@@ -30,9 +31,10 @@ const AsyncDashboardContent = loadable(
 
 interface Props {
   restaurant: DashboardRestaurant;
+  range?: string;
 }
 
-export default function DashboardPageClient({ restaurant }: Props) {
+export default function DashboardPageClient({ restaurant, range = '7d' }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -42,6 +44,8 @@ export default function DashboardPageClient({ restaurant }: Props) {
         </p>
 
         <DashboardHeader restaurant={restaurant} />
+
+        <DashboardRangePicker range={range} />
 
         <AsyncDashboardContent restaurant={restaurant} />
 

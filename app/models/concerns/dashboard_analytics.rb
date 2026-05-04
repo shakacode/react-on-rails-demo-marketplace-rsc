@@ -15,11 +15,12 @@ module DashboardAnalytics
       [max_date - 90.days, max_date]
     end
 
-    # KPI statistics — scans orders for counts and sums
-    def dashboard_kpi_stats
+    # KPI statistics — scans orders for counts and sums.
+    # `days:` controls the look-back window and the period-over-period comparison.
+    def dashboard_kpi_stats(days: 7)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
-      prev_cutoff = cutoff - 7.days
+      cutoff = window_end - days.days
+      prev_cutoff = cutoff - days.days
 
       stats = Order.where(placed_at: cutoff..window_end)
                    .select(
@@ -55,9 +56,9 @@ module DashboardAnalytics
 
     # Daily revenue for area chart — GROUP BY day across all orders
     # With 10M rows: ~500ms-1s
-    def dashboard_revenue_by_day
+    def dashboard_revenue_by_day(days: 14)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 14.days
+      cutoff = window_end - days.days
 
       Order.where(placed_at: cutoff..window_end)
            .group("date_trunc('day', placed_at)::date")
@@ -73,9 +74,9 @@ module DashboardAnalytics
 
     # Order status distribution for donut chart
     # With 10M rows: ~200-400ms
-    def dashboard_order_status
+    def dashboard_order_status(days: 7)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
+      cutoff = window_end - days.days
 
       Order.where(placed_at: cutoff..window_end)
            .group(:status)
@@ -86,9 +87,9 @@ module DashboardAnalytics
 
     # Recent orders with item details — JOIN with order_lines + menu_items
     # Queries most recent 15 orders across all restaurants
-    def dashboard_recent_orders(limit: 15)
+    def dashboard_recent_orders(limit: 15, days: 7)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
+      cutoff = window_end - days.days
 
       Order.where(placed_at: cutoff..window_end)
            .includes(:restaurant, order_lines: :menu_item)
@@ -152,9 +153,9 @@ module DashboardAnalytics
 
     # Hourly order distribution — GROUP BY hour across all orders
     # With 10M rows: ~300-600ms
-    def dashboard_hourly_distribution
+    def dashboard_hourly_distribution(days: 7)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
+      cutoff = window_end - days.days
 
       Order.where(placed_at: cutoff..window_end)
            .group(Arel.sql("EXTRACT(hour FROM placed_at)::integer"))

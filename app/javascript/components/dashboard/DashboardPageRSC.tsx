@@ -27,13 +27,15 @@ import AsyncHourlyChartRSC from './AsyncHourlyChartRSC';
 import AsyncRecentOrdersRSC from './AsyncRecentOrdersRSC';
 import AsyncTopItemsRSC from './AsyncTopItemsRSC';
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, TopItemsSkeleton } from './DashboardSkeletons';
+import { DashboardRangePicker } from './DashboardRangePicker';
 
 interface Props {
   restaurant: DashboardRestaurant;
+  range?: string;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
-export default function DashboardPageRSC({ restaurant, getReactOnRailsAsyncProp }: Props) {
+export default function DashboardPageRSC({ restaurant, range = '7d', getReactOnRailsAsyncProp }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -44,6 +46,9 @@ export default function DashboardPageRSC({ restaurant, getReactOnRailsAsyncProp 
 
         {/* Header — renders IMMEDIATELY (no data dependencies) */}
         <DashboardHeader restaurant={restaurant} />
+
+        {/* Range picker — pure server-rendered HTML anchors (zero JS shipped) */}
+        <DashboardRangePicker range={range} />
 
         {/* Interactive filters — 'use client' island, hydrates fast (~3KB) */}
         <DashboardFilters

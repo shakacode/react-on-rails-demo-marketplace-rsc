@@ -30,6 +30,7 @@ import HourlyChart from './HourlyChart';
 import DashboardFilters from './DashboardFilters';
 import SortableOrdersTable from './SortableOrdersTable';
 import InteractiveTopItems from './InteractiveTopItems';
+import { DashboardRangePicker } from './DashboardRangePicker';
 
 interface Props {
   restaurant: DashboardRestaurant;
@@ -39,6 +40,7 @@ interface Props {
   recent_orders: RecentOrder[];
   top_items: TopMenuItem[];
   hourly_data: HourlyDataPoint[];
+  range?: string;
 }
 
 export default function DashboardPageSSR({
@@ -49,6 +51,7 @@ export default function DashboardPageSSR({
   recent_orders,
   top_items,
   hourly_data,
+  range = '7d',
 }: Props) {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState('7d');
@@ -74,6 +77,8 @@ export default function DashboardPageSSR({
         </p>
 
         <DashboardHeader restaurant={restaurant} />
+
+        <DashboardRangePicker range={range} />
 
         <DashboardFilters statuses={statuses} onStatusFilter={handleStatusFilter} onTimeRange={handleTimeRange} />
 
