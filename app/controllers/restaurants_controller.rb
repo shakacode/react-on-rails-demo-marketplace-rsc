@@ -58,7 +58,7 @@ class RestaurantsController < ApplicationController
         q: query,
       )
     end
-    scope.limit(12)
+    scope.limit(24)
   end
 
   # Top cuisines + cities by restaurant count, server-side. Used to render
