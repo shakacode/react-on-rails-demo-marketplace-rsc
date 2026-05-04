@@ -85,6 +85,27 @@ namespace :seed_images do
   desc "Pre-fetch + rewrite_db in one go."
   task localize: %i[prefetch rewrite_db]
 
+  desc "Re-apply the canonical product images defined in db/seed_scripts/*.rb to existing DB rows. Use to repair DB when seed_scripts paths change but products were already inserted (find_or_create_by skips updates)."
+  task repair_db: :environment do
+    require Rails.root.join("db/seed_scripts/product_seeder").to_s
+    require Rails.root.join("db/seed_scripts/search_product_seeder").to_s
+
+    all_attrs = ProductSeeder::PRODUCTS + SearchProductSeeder::ADDITIONAL_PRODUCTS
+    updated = 0
+    missing = 0
+    all_attrs.each do |attrs|
+      next unless attrs[:images]
+      prod = Product.find_by(sku: attrs[:sku])
+      if prod.nil?
+        missing += 1
+        next
+      end
+      prod.update_column(:images, attrs[:images])
+      updated += 1
+    end
+    puts "[seed_images] repair_db: updated=#{updated} sku_not_in_db=#{missing}"
+  end
+
   desc "Find any *.jpg in public/seed-images/ whose bytes are not a real JPEG (e.g. SVG saved with a .jpg extension)."
   task check_magic_bytes: :environment do
     bad = []
