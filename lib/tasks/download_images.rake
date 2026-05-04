@@ -13,7 +13,10 @@ namespace :seed_images do
       File.read(path).scan(%r{https?://[^\s'"]+\.unsplash\.com/[^\s'"]+})
     end.uniq
 
-    placeholder_src = Rails.root.join("public/seed-images/placeholder.svg")
+    # Use the real JPEG placeholder so the file's bytes match its `.jpg` extension.
+    # An SVG saved with a `.jpg` extension renders fine via the <img> tag in
+    # most browsers but Lighthouse/WebPageTest complain about MIME mismatch.
+    placeholder_src = Rails.root.join("public/seed-images/placeholder.jpg")
     products_dir = Rails.root.join("public/seed-images/products")
     FileUtils.mkdir_p(products_dir)
     FileUtils.mkdir_p(placeholder_src.dirname)
@@ -81,6 +84,22 @@ namespace :seed_images do
 
   desc "Pre-fetch + rewrite_db in one go."
   task localize: %i[prefetch rewrite_db]
+
+  desc "Find any *.jpg in public/seed-images/ whose bytes are not a real JPEG (e.g. SVG saved with a .jpg extension)."
+  task check_magic_bytes: :environment do
+    bad = []
+    Dir[Rails.root.join("public/seed-images/**/*.jpg")].each do |path|
+      bytes = File.binread(path, 3)
+      bad << path unless bytes && bytes.bytes == [0xFF, 0xD8, 0xFF]
+    end
+    if bad.empty?
+      puts "[seed_images] check_magic_bytes: all .jpg files start with FF D8 FF (valid JPEG)."
+    else
+      puts "[seed_images] check_magic_bytes: #{bad.size} non-JPEG files"
+      bad.each { |p| puts "  - #{p}" }
+      abort
+    end
+  end
 
   desc "Verify every local seed image referenced by the DB exists and is non-empty."
   task verify: :environment do
