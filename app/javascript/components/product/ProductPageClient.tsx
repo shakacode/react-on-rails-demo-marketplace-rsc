@@ -10,6 +10,8 @@ import { Product } from '../../types/product';
 import { ProductImageGallery } from './ProductImageGallery';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSection';
+import { Breadcrumb } from './Breadcrumb';
+import { buildProductCrumbs } from './productCrumbs';
 
 const AsyncProductContent = loadable(
   () => import('./AsyncProductContent'),
@@ -41,6 +43,8 @@ export default function ProductPageClient({ product }: Props) {
         <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-6">
           V2: Client Components — <code className="bg-white/60 px-1 rounded">@loadable/component</code> loads <code className="bg-white/60 px-1 rounded">AsyncProductContent</code> (reviews, charts, related products) after first paint via API calls.
         </p>
+
+        <Breadcrumb crumbs={buildProductCrumbs(product)} />
 
         {/* Hero section: Image gallery + Product info */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">

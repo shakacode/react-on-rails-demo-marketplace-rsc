@@ -7,14 +7,18 @@ import { RestaurantCardFooter } from '../restaurant/RestaurantCardFooter';
 import { CardWidgetsSkeleton } from '../shared/CardWidgetsSkeleton';
 import AsyncRestaurantWidgetsRSC from '../restaurant/AsyncRestaurantWidgetsRSC';
 import { RestaurantSearchBar } from './RestaurantSearchBar';
+import { RestaurantFacetLinks, type RestaurantFacets } from './RestaurantFacetLinks';
 
 interface Props {
   restaurants: Restaurant[];
   query?: string;
+  cuisine?: string;
+  city?: string;
+  facets?: RestaurantFacets;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
-export default async function SearchPageRSC({ restaurants, query = '', getReactOnRailsAsyncProp }: Props) {
+export default async function SearchPageRSC({ restaurants, query = '', cuisine = '', city = '', facets, getReactOnRailsAsyncProp }: Props) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-2">Restaurant Search</h1>
@@ -23,6 +27,8 @@ export default async function SearchPageRSC({ restaurants, query = '', getReactO
       </p>
 
       <RestaurantSearchBar initialQuery={query} />
+
+      {facets && <RestaurantFacetLinks facets={facets} query={query} cuisine={cuisine || undefined} city={city || undefined} />}
 
       {restaurants.length === 0 && (
         <div className="text-center py-16 text-gray-500">

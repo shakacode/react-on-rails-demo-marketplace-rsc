@@ -1,4 +1,10 @@
-<%= stream_react_component_with_async_props("SearchPageRSC", props: { restaurants: @restaurants, query: params[:q] || '' }, prerender: true) do |emit|
+<%= stream_react_component_with_async_props("SearchPageRSC", props: {
+  restaurants: @restaurants,
+  query: params[:q] || '',
+  cuisine: params[:cuisine] || '',
+  city: params[:city] || '',
+  facets: @facets,
+}, prerender: true) do |emit|
   @restaurants.each do |r|
     emit.call("restaurant_#{r.id}_widgets", {
       status: r.current_status,

@@ -7,6 +7,7 @@ import { RestaurantCardHeader } from '../restaurant/RestaurantCardHeader';
 import { RestaurantCardFooter } from '../restaurant/RestaurantCardFooter';
 import { CardWidgetsSkeleton } from '../shared/CardWidgetsSkeleton';
 import { RestaurantSearchBar } from './RestaurantSearchBar';
+import { RestaurantFacetLinks, type RestaurantFacets } from './RestaurantFacetLinks';
 
 const AsyncRestaurantWidgets = loadable(
   () => import('../restaurant/AsyncRestaurantWidgets'),
@@ -16,9 +17,12 @@ const AsyncRestaurantWidgets = loadable(
 interface Props {
   restaurants: Restaurant[];
   query?: string;
+  cuisine?: string;
+  city?: string;
+  facets?: RestaurantFacets;
 }
 
-export default function SearchPageClient({ restaurants, query = '' }: Props) {
+export default function SearchPageClient({ restaurants, query = '', cuisine = '', city = '', facets }: Props) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-2">Restaurant Search</h1>
@@ -27,6 +31,8 @@ export default function SearchPageClient({ restaurants, query = '' }: Props) {
       </p>
 
       <RestaurantSearchBar initialQuery={query} />
+
+      {facets && <RestaurantFacetLinks facets={facets} query={query} cuisine={cuisine || undefined} city={city || undefined} />}
 
       {restaurants.length === 0 && (
         <div className="text-center py-16 text-gray-500">

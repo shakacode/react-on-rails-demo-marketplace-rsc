@@ -76,6 +76,22 @@
     filters_applied << { type: 'price', value: "$#{sp[:price_min]} - $#{sp[:price_max]}" }
   end
 
+  empty_suggestions = nil
+  if serialized_products.empty?
+    empty_suggestions = {
+      top_categories: Product.group(:category)
+                            .order(Arel.sql("COUNT(*) DESC"))
+                            .limit(6)
+                            .pluck(Arel.sql("category, COUNT(*)"))
+                            .map { |name, count| { name: name, count: count } },
+      top_brands: Product.group(:brand)
+                        .order(Arel.sql("COUNT(*) DESC"))
+                        .limit(8)
+                        .pluck(Arel.sql("brand, COUNT(*)"))
+                        .map { |name, count| { name: name, count: count } },
+    }
+  end
+
   emit.call("search_results", {
     products: serialized_products,
     review_snippets: review_snippets,
@@ -90,7 +106,8 @@
       sort: sp[:sort] || 'relevance',
       total_results: total,
       filters_applied: filters_applied,
-    }
+    },
+    empty_suggestions: empty_suggestions,
   })
 
   # 2. Stream facet counts — expensive aggregation queries

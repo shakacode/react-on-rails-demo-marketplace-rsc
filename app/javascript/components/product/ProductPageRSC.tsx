@@ -24,6 +24,8 @@ import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';
 import AsyncRelatedProductsRSC from './AsyncRelatedProductsRSC';
 import { ProductDetailsSkeleton, ReviewStatsSkeleton, ReviewsSkeleton, RelatedProductsSkeleton } from './ProductSkeletons';
+import { Breadcrumb } from './Breadcrumb';
+import { buildProductCrumbs } from './productCrumbs';
 
 interface Props {
   product: Product;
@@ -38,6 +40,9 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
         <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-6">
           V3: RSC Streaming — marked + highlight.js + date-fns stay server-side, 0KB to client. Data streams progressively.
         </p>
+
+        {/* Breadcrumb — server-rendered HTML, never enters client bundle on RSC page */}
+        <Breadcrumb crumbs={buildProductCrumbs(product)} />
 
         {/* Hero section: Image gallery + Product info — renders IMMEDIATELY */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">

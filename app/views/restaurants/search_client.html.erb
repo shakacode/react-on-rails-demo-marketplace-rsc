@@ -1,6 +1,12 @@
 <% search_page = react_component_hash(
   "SearchPageClient",
-  props: { restaurants: @restaurants, query: params[:q] || '' },
+  props: {
+    restaurants: @restaurants,
+    query: params[:q] || '',
+    cuisine: params[:cuisine] || '',
+    city: params[:city] || '',
+    facets: @facets,
+  },
   prerender: true
 ) %>
 <% content_for :head do %>

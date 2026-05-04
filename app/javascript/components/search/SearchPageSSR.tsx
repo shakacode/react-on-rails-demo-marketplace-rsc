@@ -9,6 +9,7 @@ import { WaitTimeBadge } from '../restaurant/WaitTimeBadge';
 import { SpecialsList } from '../restaurant/SpecialsList';
 import { TrendingItems } from '../restaurant/TrendingItems';
 import { RestaurantSearchBar } from './RestaurantSearchBar';
+import { RestaurantFacetLinks, type RestaurantFacets } from './RestaurantFacetLinks';
 
 interface RestaurantData extends Restaurant {
   status: 'open' | 'closed' | 'custom_hours';
@@ -20,9 +21,12 @@ interface RestaurantData extends Restaurant {
 interface Props {
   restaurant_data: RestaurantData[];
   query?: string;
+  cuisine?: string;
+  city?: string;
+  facets?: RestaurantFacets;
 }
 
-export default function SearchPageSSR({ restaurant_data, query = '' }: Props) {
+export default function SearchPageSSR({ restaurant_data, query = '', cuisine = '', city = '', facets }: Props) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-2">Restaurant Search</h1>
@@ -31,6 +35,8 @@ export default function SearchPageSSR({ restaurant_data, query = '' }: Props) {
       </p>
 
       <RestaurantSearchBar initialQuery={query} />
+
+      {facets && <RestaurantFacetLinks facets={facets} query={query} cuisine={cuisine || undefined} city={city || undefined} />}
 
       {restaurant_data.length === 0 && (
         <div className="text-center py-16 text-gray-500">

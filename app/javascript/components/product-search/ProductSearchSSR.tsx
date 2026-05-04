@@ -17,6 +17,7 @@ import { SearchInput } from './SearchInput';
 import { PaginationControls } from './PaginationControls';
 import { ActiveFilterPills } from './ActiveFilterPills';
 import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
+import { EmptySearchSuggestions, type EmptyStateSuggestions } from './EmptySearchSuggestions';
 
 
 interface BrandHighlight {
@@ -39,6 +40,7 @@ interface Props {
   review_snippets: Record<number, ReviewSnippet[]>;
   popular_tags: PopularTag[];
   brand_highlights: BrandHighlight[];
+  empty_suggestions?: EmptyStateSuggestions | null;
 }
 
 export default function ProductSearchSSR({
@@ -50,6 +52,7 @@ export default function ProductSearchSSR({
   review_snippets,
   popular_tags,
   brand_highlights,
+  empty_suggestions,
 }: Props) {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [compareList, setCompareList] = useState<Set<number>>(new Set());
@@ -235,10 +238,18 @@ export default function ProductSearchSSR({
             />
 
             {products.length === 0 ? (
-              <div className="text-center py-16">
-                <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-                <p className="text-gray-500 mt-1">Try adjusting your search criteria</p>
-              </div>
+              empty_suggestions ? (
+                <EmptySearchSuggestions
+                  query={search_meta.query}
+                  hasActiveFilters={(search_meta.filters_applied || []).length > 0}
+                  suggestions={empty_suggestions}
+                />
+              ) : (
+                <div className="text-center py-16">
+                  <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+                  <p className="text-gray-500 mt-1">Try adjusting your search criteria</p>
+                </div>
+              )
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
