@@ -3,4 +3,5 @@
 class PagesController < ApplicationController
   def why_rsc; end
   def search_performance; end
+  def measure; end
 end

@@ -1,0 +1,141 @@
+<%
+  page_specs = [
+    ["Blog SSR",    "/blog/ssr",    "https://rsc.reactonrails.com/blog/ssr"],
+    ["Blog Client", "/blog/client", "https://rsc.reactonrails.com/blog/client"],
+    ["Blog RSC",    "/blog/rsc",    "https://rsc.reactonrails.com/blog/rsc"],
+    ["Product SSR",    "/product/ssr",    "https://rsc.reactonrails.com/product/ssr"],
+    ["Product Client", "/product/client", "https://rsc.reactonrails.com/product/client"],
+    ["Product RSC",    "/product/rsc",    "https://rsc.reactonrails.com/product/rsc"],
+    ["Product Search SSR",    "/product-search/ssr",    "https://rsc.reactonrails.com/product-search/ssr"],
+    ["Product Search Client", "/product-search/client", "https://rsc.reactonrails.com/product-search/client"],
+    ["Product Search RSC",    "/product-search/rsc",    "https://rsc.reactonrails.com/product-search/rsc"],
+    ["Analytics SSR",    "/analytics/ssr",    "https://rsc.reactonrails.com/analytics/ssr"],
+    ["Analytics Client", "/analytics/client", "https://rsc.reactonrails.com/analytics/client"],
+    ["Analytics RSC",    "/analytics/rsc",    "https://rsc.reactonrails.com/analytics/rsc"],
+  ]
+%>
+
+<section class="bg-slate-50 border-b border-slate-200 py-10">
+  <div class="max-w-5xl mx-auto px-4">
+    <span class="inline-block text-emerald-600 font-semibold text-xs uppercase tracking-wider mb-2">Measurement</span>
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-2">How to measure performance</h1>
+    <p class="text-slate-600 max-w-3xl">
+      Three independent ways to measure the SSR vs Client vs RSC variants in this demo. Pick whichever matches your audience: Lighthouse for the standard scorecard, the Puppeteer script in <code class="bg-slate-100 rounded px-1">scripts/measure-vitals.mjs</code> for headless A/B comparison, or PageSpeed Insights for deployed-URL field data.
+    </p>
+  </div>
+</section>
+
+<section class="py-12 bg-white border-b border-slate-200">
+  <div class="max-w-5xl mx-auto px-4 space-y-10">
+
+    <!-- Lighthouse via DevTools -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">1. Lighthouse in Chrome DevTools</h2>
+      <p class="text-sm text-slate-600 mb-4">Best for a single-page audit with the full diagnostics report (Performance + Best Practices + Accessibility + SEO).</p>
+      <ol class="list-decimal list-outside space-y-2 text-sm text-slate-700 ml-5">
+        <li>Open the page you want to measure in Chrome.</li>
+        <li>Open DevTools (<kbd class="bg-slate-100 border border-slate-300 rounded px-1 text-xs">Cmd</kbd>+<kbd class="bg-slate-100 border border-slate-300 rounded px-1 text-xs">Opt</kbd>+<kbd class="bg-slate-100 border border-slate-300 rounded px-1 text-xs">I</kbd> on macOS / <kbd class="bg-slate-100 border border-slate-300 rounded px-1 text-xs">F12</kbd> on Windows).</li>
+        <li>Go to the <strong>Lighthouse</strong> panel.</li>
+        <li>Pick <strong>Mobile</strong>, check <strong>Performance</strong>, leave <strong>Simulated throttling</strong> on, and click <strong>Analyze page load</strong>.</li>
+        <li>Compare the report against another variant (open the next URL in a fresh incognito tab; extensions skew results).</li>
+      </ol>
+      <p class="text-xs text-slate-500 mt-3">For a fair comparison, run each variant from a fresh incognito window so service-worker / cache state is identical.</p>
+    </div>
+
+    <!-- Lighthouse CLI -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">2. Lighthouse CLI (scripted, repeatable)</h2>
+      <p class="text-sm text-slate-600 mb-4">Use this when you need to log results, compare across commits, or run in CI.</p>
+      <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto"><code>npx -y lighthouse http://localhost:3000/blog/rsc \
+  --preset=desktop --only-categories=performance \
+  --output=html --output-path=./tmp/lighthouse-blog-rsc.html
+
+# Same command for /blog/ssr and /blog/client to compare.</code></pre>
+      <p class="text-xs text-slate-500 mt-3">Lighthouse CLI supports <code class="bg-slate-100 px-1 rounded">--throttling-method=devtools</code> for simulated throttling and <code class="bg-slate-100 px-1 rounded">--screenEmulation.mobile</code> for mobile profile.</p>
+    </div>
+
+    <!-- vitals script -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">3. Built-in <code class="bg-slate-100 px-1 rounded">pnpm vitals</code> (recommended for A/B)</h2>
+      <p class="text-sm text-slate-600 mb-4">Headless Chrome script that boots Puppeteer, captures FCP / LCP / TTFB / TBT / CLS / hydration / streaming / JS transfer + decoded for every variant, and prints a side-by-side table. Source: <code class="bg-slate-100 px-1 rounded">scripts/measure-vitals.mjs</code>.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Quick comparison</p>
+          <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto"><code>pnpm vitals:quick                      # 3 iters, no throttle
+pnpm vitals -- --throttle              # full benchmark, 4× CPU + Slow 3G
+pnpm vitals:compare                    # diff vs the last persisted run</code></pre>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Per-page family</p>
+          <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto"><code>pnpm vitals -- --pages product-ssr,product-client,product-rsc
+pnpm vitals -- --pages search-ssr,search-client,search-rsc
+pnpm vitals -- --pages dashboard-ssr,dashboard-client,dashboard-rsc</code></pre>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 mt-3">JSON output is written to <code class="bg-slate-100 px-1 rounded">.vitals-results/&lt;timestamp&gt;.json</code>. The full list of page keys lives in <code class="bg-slate-100 px-1 rounded">scripts/lib/constants.mjs</code>.</p>
+    </div>
+
+    <!-- PageSpeed -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">4. PageSpeed Insights (deployed only)</h2>
+      <p class="text-sm text-slate-600 mb-4">Lighthouse + Chrome UX Report (real-user field data) for the production deployment at <code class="bg-slate-100 px-1 rounded">rsc.reactonrails.com</code>. Use the deep links below.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+        <% page_specs.each do |label, _local, target_url| %>
+          <a href="https://pagespeed.web.dev/report?url=<%= CGI.escape(target_url) %>" target="_blank" rel="noopener" class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 hover:border-indigo-300 hover:bg-indigo-50/40 transition-colors">
+            <span class="font-medium text-slate-800"><%= label %></span>
+            <span class="text-xs text-indigo-600">PageSpeed &rarr;</span>
+          </a>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- WebPageTest -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">5. WebPageTest (filmstrip + waterfall)</h2>
+      <p class="text-sm text-slate-600 mb-4">Best when you want a video filmstrip showing the streaming difference between RSC and SSR side-by-side.</p>
+      <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto"><code># Open https://www.webpagetest.org/, paste URL, pick "Mobile - Slow 3G" location.
+# Or via CLI:
+npm i -g webpagetest
+webpagetest test https://rsc.reactonrails.com/blog/rsc \
+  --location Dulles:Chrome.3GSlow --runs 3</code></pre>
+    </div>
+
+    <!-- Routes table -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">All measurable routes</h2>
+      <p class="text-sm text-slate-600 mb-4">Open any of these directly. The <code class="bg-slate-100 px-1 rounded">?range=</code> and <code class="bg-slate-100 px-1 rounded">?status=</code> URL params on the dashboard re-run server queries, so you can also benchmark filtered views.</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border border-slate-200 rounded-lg">
+          <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
+            <tr>
+              <th class="text-left py-2 px-3">Page</th>
+              <th class="text-left py-2 px-3">Local</th>
+              <th class="text-left py-2 px-3">PageSpeed (deployed)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% page_specs.each do |label, local, deployed| %>
+              <tr class="border-t border-slate-100">
+                <td class="py-2 px-3 font-medium text-slate-800"><%= label %></td>
+                <td class="py-2 px-3"><a class="text-indigo-600 hover:underline" href="<%= local %>"><%= local %></a></td>
+                <td class="py-2 px-3"><a class="text-indigo-600 hover:underline" target="_blank" rel="noopener" href="https://pagespeed.web.dev/report?url=<%= CGI.escape(deployed) %>">PageSpeed &rarr;</a></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-3">Tips for credible numbers</h2>
+      <ul class="list-disc list-outside space-y-2 text-sm text-slate-700 ml-5">
+        <li>Run from a <strong>fresh incognito window</strong>; browser extensions can add hundreds of ms to TBT.</li>
+        <li>Throttle to mobile (4× CPU + Slow 3G). Ungated localhost numbers will look great on every variant.</li>
+        <li>Take the <strong>median of 5 runs</strong>, not a single run. Page-to-page variance is real.</li>
+        <li>Disable HTTP cache between runs (DevTools "Disable cache" or the <code class="bg-slate-100 px-1 rounded">--throttle</code> flag in <code class="bg-slate-100 px-1 rounded">pnpm vitals</code>).</li>
+        <li>Compare apples to apples: same warm/cold cache state, same network throttle, same window size.</li>
+      </ul>
+    </div>
+  </div>
+</section>
