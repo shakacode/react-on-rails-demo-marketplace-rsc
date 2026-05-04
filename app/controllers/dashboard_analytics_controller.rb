@@ -19,12 +19,12 @@ class DashboardAnalyticsController < ApplicationController
     days = ALLOWED_RANGES[@range]
 
     # Sequential queries — every one blocks the response
-    @kpi_stats = Restaurant.dashboard_kpi_stats(days: days)
-    @revenue_data = Restaurant.dashboard_revenue_by_day(days: [days * 2, 14].max)
+    @kpi_stats = Restaurant.dashboard_kpi_stats(days: days, status: @status)
+    @revenue_data = Restaurant.dashboard_revenue_by_day(days: [days * 2, 14].max, status: @status)
     @order_status = Restaurant.dashboard_order_status(days: days)
     @recent_orders = Restaurant.dashboard_recent_orders(days: days, status: @status)
     @top_items = Restaurant.dashboard_top_menu_items
-    @hourly_data = Restaurant.dashboard_hourly_distribution(days: days)
+    @hourly_data = Restaurant.dashboard_hourly_distribution(days: days, status: @status)
   end
 
   # V2: Client Components — send basic restaurant data, client fetches the rest

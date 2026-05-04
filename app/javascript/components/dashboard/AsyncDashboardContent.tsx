@@ -51,15 +51,19 @@ export default function AsyncDashboardContent({ restaurant, range = '7d', status
     const controller = new AbortController();
     const opts = { signal: controller.signal };
     const base = '/api/dashboard';
+    const qs = new URLSearchParams();
+    if (range) qs.set('range', range);
+    if (status) qs.set('status', status);
+    const suffix = qs.toString() ? `?${qs}` : '';
 
     // Fetch all data in parallel
     const [kpiRes, revenueRes, statusRes, ordersRes, itemsRes, hourlyRes] = await Promise.all([
-      fetch(`${base}/kpi_stats`, opts),
-      fetch(`${base}/revenue_data`, opts),
-      fetch(`${base}/order_status`, opts),
-      fetch(`${base}/recent_orders`, opts),
-      fetch(`${base}/top_menu_items`, opts),
-      fetch(`${base}/hourly_distribution`, opts),
+      fetch(`${base}/kpi_stats${suffix}`, opts),
+      fetch(`${base}/revenue_data${suffix}`, opts),
+      fetch(`${base}/order_status${suffix}`, opts),
+      fetch(`${base}/recent_orders${suffix}`, opts),
+      fetch(`${base}/top_menu_items${suffix}`, opts),
+      fetch(`${base}/hourly_distribution${suffix}`, opts),
     ]);
 
     const [kpi, revenue, status, orders, items, hourly] = await Promise.all([
@@ -81,7 +85,7 @@ export default function AsyncDashboardContent({ restaurant, range = '7d', status
     });
 
     return () => controller.abort();
-  }, [restaurant.id]);
+  }, [restaurant.id, range, status]);
 
   useEffect(() => {
     fetchData();
