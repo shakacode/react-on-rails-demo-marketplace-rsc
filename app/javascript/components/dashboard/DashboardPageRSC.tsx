@@ -32,10 +32,11 @@ import { DashboardRangePicker } from './DashboardRangePicker';
 interface Props {
   restaurant: DashboardRestaurant;
   range?: string;
+  status?: string | null;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
-export default function DashboardPageRSC({ restaurant, range = '7d', getReactOnRailsAsyncProp }: Props) {
+export default function DashboardPageRSC({ restaurant, range = '7d', status = null, getReactOnRailsAsyncProp }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -50,9 +51,12 @@ export default function DashboardPageRSC({ restaurant, range = '7d', getReactOnR
         {/* Range picker — pure server-rendered HTML anchors (zero JS shipped) */}
         <DashboardRangePicker range={range} />
 
-        {/* Interactive filters — 'use client' island, hydrates fast (~3KB) */}
+        {/* Status filter — server-rendered HTML anchors. Each click re-runs
+            the controller so the recent-orders query is scoped server-side. */}
         <DashboardFilters
           statuses={['completed', 'preparing', 'pending', 'ready']}
+          range={range}
+          status={status}
         />
 
         {/* KPI Stats — streams first (simple aggregation queries) */}

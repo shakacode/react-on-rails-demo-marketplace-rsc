@@ -87,12 +87,14 @@ module DashboardAnalytics
 
     # Recent orders with item details — JOIN with order_lines + menu_items
     # Queries most recent 15 orders across all restaurants
-    def dashboard_recent_orders(limit: 15, days: 7)
+    def dashboard_recent_orders(limit: 15, days: 7, status: nil)
       _, window_end = dashboard_data_window
       cutoff = window_end - days.days
 
-      Order.where(placed_at: cutoff..window_end)
-           .includes(:restaurant, order_lines: :menu_item)
+      scope = Order.where(placed_at: cutoff..window_end)
+      scope = scope.where(status: status) if status.present?
+
+      scope.includes(:restaurant, order_lines: :menu_item)
            .order(placed_at: :desc)
            .limit(limit)
            .map do |order|

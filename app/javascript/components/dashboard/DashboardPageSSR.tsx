@@ -12,7 +12,7 @@
 // Total extra JS: ~120KB+ sent to client for hydration.
 // Interactivity (sort, filter) only works after hydration completes.
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import type {
   DashboardRestaurant,
   KpiStats,
@@ -41,6 +41,7 @@ interface Props {
   top_items: TopMenuItem[];
   hourly_data: HourlyDataPoint[];
   range?: string;
+  status?: string | null;
 }
 
 export default function DashboardPageSSR({
@@ -52,21 +53,9 @@ export default function DashboardPageSSR({
   top_items,
   hourly_data,
   range = '7d',
+  status = null,
 }: Props) {
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState('7d');
-
-  const statuses = useMemo(() => {
-    return [...new Set(recent_orders.map(o => o.status))].sort();
-  }, [recent_orders]);
-
-  const handleStatusFilter = useCallback((status: string | null) => {
-    setStatusFilter(status);
-  }, []);
-
-  const handleTimeRange = useCallback((range: string) => {
-    setTimeRange(range);
-  }, []);
+  const statuses = useMemo(() => ['completed', 'preparing', 'pending', 'ready'], []);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -80,7 +69,7 @@ export default function DashboardPageSSR({
 
         <DashboardRangePicker range={range} />
 
-        <DashboardFilters statuses={statuses} onStatusFilter={handleStatusFilter} onTimeRange={handleTimeRange} />
+        <DashboardFilters statuses={statuses} range={range} status={status} />
 
         <div className="mb-6">
           <StatCards stats={kpi_stats} />
@@ -96,7 +85,7 @@ export default function DashboardPageSSR({
         </div>
 
         <div className="mb-6">
-          <SortableOrdersTable orders={recent_orders} statusFilter={statusFilter} />
+          <SortableOrdersTable orders={recent_orders} statusFilter={null} />
         </div>
 
         <div className="mb-6">

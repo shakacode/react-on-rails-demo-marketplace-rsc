@@ -2,7 +2,7 @@
   range_days = DashboardAnalyticsController::ALLOWED_RANGES[@range]
 %>
 <%= stream_react_component_with_async_props("DashboardPageRSC",
-    props: { restaurant: @restaurant_data, range: @range }, prerender: true) do |emit|
+    props: { restaurant: @restaurant_data, range: @range, status: @status }, prerender: true) do |emit|
 
   # Stream each section as its query completes — sequential execution
   # avoids PostgreSQL resource contention and ensures each query runs
@@ -22,7 +22,7 @@
   emit.call("hourly_data", Restaurant.dashboard_hourly_distribution(days: range_days))
 
   # Recent orders — JOIN with order_lines (~300-800ms)
-  emit.call("recent_orders", { orders: Restaurant.dashboard_recent_orders(days: range_days) })
+  emit.call("recent_orders", { orders: Restaurant.dashboard_recent_orders(days: range_days, status: @status) })
 
   # Top menu items — heaviest query (~1-3s)
   emit.call("top_items", { items: Restaurant.dashboard_top_menu_items })

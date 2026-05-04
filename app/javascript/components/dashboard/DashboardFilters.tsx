@@ -1,88 +1,54 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// No 'use client' — pure server component. Status pills are <a> links,
+// period selector lives in <DashboardRangePicker>. Each click reloads the
+// page with a new ?status=... param so the controller re-runs queries
+// scoped to that status. Zero client JS shipped.
+
+import React from 'react';
 
 interface DashboardFiltersProps {
   statuses: string[];
-  onStatusFilter?: (status: string | null) => void;
-  onTimeRange?: (range: string) => void;
+  range: string;
+  status?: string | null;
 }
 
-const TIME_RANGES = [
-  { label: '7d', value: '7d' },
-  { label: '14d', value: '14d' },
-  { label: '30d', value: '30d' },
-];
+function buildHref(params: Record<string, string | undefined | null>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value && value.length > 0) search.set(key, value);
+  }
+  const qs = search.toString();
+  return qs.length > 0 ? `?${qs}` : '?';
+}
 
-export default function DashboardFilters({ statuses, onStatusFilter, onTimeRange }: DashboardFiltersProps) {
-  const [activeRange, setActiveRange] = useState('7d');
-  const [activeStatus, setActiveStatus] = useState<string | null>(null);
-
-  // Mark as hydrated for TTI measurement
-  useEffect(() => {
-    const el = document.querySelector('[data-dashboard-filters]');
-    if (el) el.setAttribute('data-hydrated', 'true');
-  }, []);
-
-  const handleRangeClick = useCallback((range: string) => {
-    setActiveRange(range);
-    onTimeRange?.(range);
-  }, [onTimeRange]);
-
-  const handleStatusClick = useCallback((status: string | null) => {
-    setActiveStatus(status);
-    onStatusFilter?.(status);
-  }, [onStatusFilter]);
-
+export default function DashboardFilters({ statuses, range, status }: DashboardFiltersProps) {
   return (
     <div data-dashboard-filters className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        {/* Time Range Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-500 mr-1">Period:</span>
-          {TIME_RANGES.map(({ label, value }) => (
-            <button
-              key={value}
-              onClick={() => handleRangeClick(value)}
-              data-filter-btn="time"
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                activeRange === value
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Status Filter Pills */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-500 mr-1">Status:</span>
-          <button
-            onClick={() => handleStatusClick(null)}
-            data-filter-btn="status"
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              activeStatus === null
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          {statuses.map((status) => (
-            <button
-              key={status}
-              onClick={() => handleStatusClick(status)}
-              data-filter-btn="status"
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium text-gray-500 mr-1">Status:</span>
+        <a
+          href={buildHref({ range })}
+          aria-current={!status ? 'page' : undefined}
+          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+            !status ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          All
+        </a>
+        {statuses.map((s) => {
+          const active = status === s;
+          return (
+            <a
+              key={s}
+              href={buildHref({ range, status: s })}
+              aria-current={active ? 'page' : undefined}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors capitalize ${
-                activeStatus === status
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                active ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {status}
-            </button>
-          ))}
-        </div>
+              {s}
+            </a>
+          );
+        })}
       </div>
     </div>
   );

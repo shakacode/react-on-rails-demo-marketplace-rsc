@@ -32,9 +32,10 @@ const AsyncDashboardContent = loadable(
 interface Props {
   restaurant: DashboardRestaurant;
   range?: string;
+  status?: string | null;
 }
 
-export default function DashboardPageClient({ restaurant, range = '7d' }: Props) {
+export default function DashboardPageClient({ restaurant, range = '7d', status = null }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -47,7 +48,7 @@ export default function DashboardPageClient({ restaurant, range = '7d' }: Props)
 
         <DashboardRangePicker range={range} />
 
-        <AsyncDashboardContent restaurant={restaurant} />
+        <AsyncDashboardContent restaurant={restaurant} range={range} status={status} />
 
       </div>
     </div>
