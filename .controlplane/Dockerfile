@@ -19,8 +19,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pnpm
-RUN npm install -g pnpm@$PNPM_VERSION
+# Install pnpm and yarn (yarn is needed to "prepare" git-hosted packages
+# whose own scripts shell out to yarn — e.g. react-on-rails-rsc)
+RUN npm install -g pnpm@$PNPM_VERSION yarn
 
 # Install bundler
 RUN gem install bundler

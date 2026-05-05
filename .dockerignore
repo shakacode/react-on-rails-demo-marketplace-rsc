@@ -1,0 +1,41 @@
+# Build artefacts and host-only state — never copy into the image.
+# pnpm install runs inside the build with the right resolution; we must not
+# let the host's node_modules / .yalc / lockfile clobber it via `COPY . .`.
+node_modules
+.yalc
+yalc.lock
+
+# Git metadata
+.git
+.gitignore
+
+# Local build output (rebuilt inside the image)
+public/packs
+public/packs-test
+ssr-generated
+
+# Logs, tmp, OS junk
+log
+tmp
+.DS_Store
+._.DS_Store
+
+# Editor / tool state
+.idea
+.vscode
+.claude
+
+# Ruby/bundler local cache
+.bundle
+vendor/bundle
+
+# Rails secrets that should never end up in an image
+config/master.key
+config/credentials/*.key
+config/react_on_rails_pro_license.key
+.env
+.env.*
+!.env.example
+
+# Local dev process file we don't want in prod
+Procfile.dev*
