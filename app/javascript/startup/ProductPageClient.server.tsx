@@ -7,8 +7,9 @@ import { ChunkExtractor } from '@loadable/server';
 import ProductPageClient from '../components/product/ProductPageClient';
 
 const serverApp = (props: Record<string, unknown>, _railsContext: Record<string, unknown>) => {
+  // entrypoints: [] — see BlogPostClient.server.tsx for the rationale.
   const statsFile = path.resolve(__dirname, 'loadable-stats.json');
-  const extractor = new ChunkExtractor({ entrypoints: ['client-bundle'], statsFile });
+  const extractor = new ChunkExtractor({ entrypoints: [], statsFile });
 
   const componentHtml = renderToString(
     extractor.collectChunks(<ProductPageClient {...props as any} />)

@@ -7,9 +7,9 @@ import { ChunkExtractor } from '@loadable/server';
 import SearchPageClient from '../components/search/SearchPageClient';
 
 const serverApp = (props: Record<string, unknown>, _railsContext: Record<string, unknown>) => {
-  // React on Rails Pro copies loadable-stats.json to the same directory as server-bundle.js
+  // entrypoints: [] — see BlogPostClient.server.tsx for the rationale.
   const statsFile = path.resolve(__dirname, 'loadable-stats.json');
-  const extractor = new ChunkExtractor({ entrypoints: ['client-bundle'], statsFile });
+  const extractor = new ChunkExtractor({ entrypoints: [], statsFile });
 
   const componentHtml = renderToString(
     extractor.collectChunks(<SearchPageClient {...props as any} />)

@@ -7,8 +7,9 @@ import { ChunkExtractor } from '@loadable/server';
 import DashboardPageClient from '../components/dashboard/DashboardPageClient';
 
 const serverApp = (props: Record<string, unknown>, _railsContext: Record<string, unknown>) => {
+  // entrypoints: [] — see BlogPostClient.server.tsx for the rationale.
   const statsFile = path.resolve(__dirname, 'loadable-stats.json');
-  const extractor = new ChunkExtractor({ entrypoints: ['client-bundle'], statsFile });
+  const extractor = new ChunkExtractor({ entrypoints: [], statsFile });
 
   const componentHtml = renderToString(
     extractor.collectChunks(<DashboardPageClient {...props as any} />)

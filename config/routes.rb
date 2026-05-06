@@ -51,10 +51,6 @@ Rails.application.routes.draw do
   get '/analytics/client', to: 'dashboard_analytics#show_client'  # V2: Loadable components, client-side fetch
   get '/analytics/rsc', to: 'dashboard_analytics#show_rsc'        # V3: RSC streaming
 
-  # Dashboard route (Task 5)
-  get '/dashboard', to: 'dashboard#index'
-  get '/comparison', to: 'dashboard#comparison'
-
   # API endpoints (Task 2)
   namespace :api do
     resources :restaurants, only: [] do

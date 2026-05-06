@@ -66,7 +66,7 @@ export default function AsyncDashboardContent({ restaurant, range = '7d', status
       fetch(`${base}/hourly_distribution${suffix}`, opts),
     ]);
 
-    const [kpi, revenue, status, orders, items, hourly] = await Promise.all([
+    const [kpi, revenue, statusData, orders, items, hourly] = await Promise.all([
       kpiRes.json(),
       revenueRes.json(),
       statusRes.json(),
@@ -78,7 +78,7 @@ export default function AsyncDashboardContent({ restaurant, range = '7d', status
     setData({
       kpiStats: kpi.stats,
       revenueData: revenue.data,
-      orderStatus: status.data,
+      orderStatus: statusData.data,
       recentOrders: orders.orders,
       topItems: items.items,
       hourlyData: hourly.data,

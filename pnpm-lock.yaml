@@ -65,13 +65,13 @@ importers:
         version: 19.2.4(react@19.2.4)
       react-on-rails-pro:
         specifier: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro
-        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
+        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
       react-on-rails-pro-node-renderer:
         specifier: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro-node-renderer
         version: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro-node-renderer
       react-on-rails-rsc:
-        specifier: github:shakacode/react_on_rails_rsc#perf/rsc-revive-model-walk
-        version: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
+        specifier: github:shakacode/react_on_rails_rsc#update-rsc-19.0.3-fouc-runtime-chunk-fixes
+        version: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
       web-vitals:
         specifier: ^4.2.0
         version: 4.2.4
@@ -99,7 +99,7 @@ importers:
         version: 11.7.0
       '@tailwindcss/typography':
         specifier: ^0.5.19
-        version: 0.5.19(tailwindcss@3.4.19)
+        version: 0.5.19(tailwindcss@3.4.19(yaml@2.8.4))
       '@types/d3-array':
         specifier: ^3.2.2
         version: 3.2.2
@@ -186,7 +186,7 @@ importers:
         version: 0.2.7(@swc/core@1.15.21)(webpack@5.105.4)
       tailwindcss:
         specifier: ^3.4.19
-        version: 3.4.19
+        version: 3.4.19(yaml@2.8.4)
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
@@ -2036,6 +2036,7 @@ packages:
   basic-ftp@5.2.0:
     resolution: {integrity: sha512-VoMINM2rqJwJgfdHq6RiUudKt2BV+FY5ZFezP/ypmwayk68+NzzAQy4XXLlqsGD4MCzq3DrmNFD/uUmBJuGoXw==}
     engines: {node: '>=10.0.0'}
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   batch@0.6.1:
     resolution: {integrity: sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw==}
@@ -3930,7 +3931,7 @@ packages:
 
   react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro-node-renderer:
     resolution: {commit: ed307cb818f39e758873cca3c6ea263dedb24b37, path: react-on-rails-pro-node-renderer, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.5.1
+    version: 16.6.0
     peerDependencies:
       '@honeybadger-io/js': '>=4.0.0'
       '@sentry/node': '>=5.0.0 <11.0.0'
@@ -3945,7 +3946,7 @@ packages:
 
   react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro:
     resolution: {commit: ed307cb818f39e758873cca3c6ea263dedb24b37, path: react-on-rails-pro, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.5.1
+    version: 16.6.0
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       react: '>= 16'
@@ -3957,8 +3958,8 @@ packages:
       react-on-rails-rsc:
         optional: true
 
-  react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d:
-    resolution: {tarball: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d}
+  react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7:
+    resolution: {tarball: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7}
     version: 19.0.5-rc.1
     peerDependencies:
       react: ^19.0.3
@@ -3967,7 +3968,7 @@ packages:
 
   react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails:
     resolution: {commit: ed307cb818f39e758873cca3c6ea263dedb24b37, path: react-on-rails, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.5.1
+    version: 16.6.0
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -4651,6 +4652,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   vary@1.1.2:
@@ -4798,6 +4800,11 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
+
+  yaml@2.8.4:
+    resolution: {integrity: sha512-ml/JPOj9fOQK8RNnWojA67GbZ0ApXAUlN2UQclwv2eVgTgn7O9gg9o7paZWKMp4g0H3nTLtS9LVzhkpOFIKzog==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
 
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
@@ -6384,10 +6391,10 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
-  '@tailwindcss/typography@0.5.19(tailwindcss@3.4.19)':
+  '@tailwindcss/typography@0.5.19(tailwindcss@3.4.19(yaml@2.8.4))':
     dependencies:
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.4.19
+      tailwindcss: 3.4.19(yaml@2.8.4)
 
   '@tootallnate/quickjs-emscripten@0.23.0': {}
 
@@ -8752,12 +8759,13 @@ snapshots:
       '@csstools/utilities': 2.0.0(postcss@8.5.8)
       postcss: 8.5.8
 
-  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.8):
+  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.8)(yaml@2.8.4):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 1.21.7
       postcss: 8.5.8
+      yaml: 2.8.4
 
   postcss-loader@8.2.1(postcss@8.5.8)(typescript@5.9.3)(webpack@5.105.4):
     dependencies:
@@ -9061,15 +9069,15 @@ snapshots:
       lockfile: 1.0.4
       pino: 9.14.0
 
-  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
+  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-on-rails: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     optionalDependencies:
-      react-on-rails-rsc: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
+      react-on-rails-rsc: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
 
-  react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/67b27f08a66f96340db89c806dad476e3cf7d35d(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4):
+  react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
@@ -9584,7 +9592,7 @@ snapshots:
       '@swc/counter': 0.1.3
       webpack: 5.105.4(@swc/core@1.15.21)(webpack-cli@5.1.4)
 
-  tailwindcss@3.4.19:
+  tailwindcss@3.4.19(yaml@2.8.4):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -9603,7 +9611,7 @@ snapshots:
       postcss: 8.5.8
       postcss-import: 15.1.0(postcss@8.5.8)
       postcss-js: 4.1.0(postcss@8.5.8)
-      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.8)
+      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.8)(yaml@2.8.4)
       postcss-nested: 6.2.0(postcss@8.5.8)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.11
@@ -10017,6 +10025,9 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
+
+  yaml@2.8.4:
+    optional: true
 
   yargs-parser@21.1.1: {}
 

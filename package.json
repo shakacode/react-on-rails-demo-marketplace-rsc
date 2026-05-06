@@ -41,7 +41,7 @@
     "react-dom": "^19.0.0",
     "react-on-rails-pro": "github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro",
     "react-on-rails-pro-node-renderer": "github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro-node-renderer",
-    "react-on-rails-rsc": "github:shakacode/react_on_rails_rsc#perf/rsc-revive-model-walk",
+    "react-on-rails-rsc": "github:shakacode/react_on_rails_rsc#update-rsc-19.0.3-fouc-runtime-chunk-fixes",
     "web-vitals": "^4.2.0"
   },
   "pnpm": {
