@@ -1,956 +1,392 @@
-<% content_for :head do %>
-<style>
-  /* ── Scroll-reveal animations ── */
-  .reveal {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
+<%
+  # Per-feature data — every number on this page is sourced from one of the
+  # 24 Lighthouse reports under public/lighthouse-reports/. Numbers are loaded
+  # at request time from the JSON files so the page stays in lock-step with
+  # the artefacts under public/lighthouse-reports/.
+  #
+  # If you regenerate reports, refresh the page — no code change needed.
+  reports_dir = Rails.root.join("public/lighthouse-reports")
+  report_filename = ->(slug, variant, strategy) { "#{slug}_#{variant}-#{strategy}" }
+  report_url = ->(slug, variant, strategy) { lh_compare_url_for(slug, variant, strategy) }
+
+  load_report = ->(slug, variant, strategy) {
+    path = reports_dir.join("#{report_filename.(slug, variant, strategy)}.json")
+    return nil unless File.exist?(path)
+    j = JSON.parse(File.read(path))
+    a = j["audits"]
+    {
+      score: (j["categories"]["performance"]["score"] * 100).round,
+      fcp: a["first-contentful-paint"]["numericValue"].to_f,
+      lcp: a["largest-contentful-paint"]["numericValue"].to_f,
+      tbt: a["total-blocking-time"]["numericValue"].to_f,
+      cls: a["cumulative-layout-shift"]["numericValue"].to_f,
+      si: a["speed-index"]["numericValue"].to_f,
+      bootup: a["bootup-time"]["numericValue"].to_f,
+      transfer: a["total-byte-weight"]["numericValue"].to_f,
+    }
   }
 
-  /* ── Hero gradient ── */
-  .hero-gradient {
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #172554 100%);
-  }
-  .hero-glow {
-    background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(99, 102, 241, 0.18) 0%, transparent 70%);
-  }
+  features = [
+    { slug: "blog",           label: "Blog Post",         path: "/blog",           accent: "violet",   anchor: "blog",
+      summary: "Markdown-heavy article with code blocks. The SSR/Client variants ship marked + highlight.js + sanitize-html (~1 MB) to render markdown in the browser. RSC keeps the entire markdown stack server-side and ships only HTML." },
+    { slug: "product",        label: "Product Page",      path: "/product",        accent: "blue",     anchor: "product",
+      summary: "E-commerce page with product spec sheet, reviews, multi-currency pricing. SSR/Client variants run marked + highlight.js + sanitize-html + intl-messageformat in the browser. RSC pre-renders all of it server-side." },
+    { slug: "restaurant_1",   label: "Restaurant Detail", path: "/restaurant/1",   accent: "orange",   anchor: "restaurant",
+      summary: "Long-form bio, 80-item menu (each with markdown description + multi-currency price ladder), 40 review threads. The biggest content payload of the four — and that's exactly where RSC pays off." },
+    { slug: "product-search", label: "Product Search",    path: "/product-search", accent: "emerald",  anchor: "product-search",
+      summary: "Faceted search with filters and 4 independently streamed data sections. RSC's streaming-shell pattern lets the page render in stages." },
+  ]
 
-  /* ── Gradient text ── */
-  .gradient-text {
-    background: linear-gradient(135deg, #818cf8, #a78bfa, #f472b6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .gradient-text-green {
-    background: linear-gradient(135deg, #34d399, #6ee7b7, #a7f3d0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  fmt_ms  = ->(v) { v.nil? ? "—" : (v < 1000 ? "#{v.round} ms" : "#{(v/1000.0).round(2)} s") }
+  fmt_kb  = ->(v) { v.nil? ? "—" : (v >= 1024*1024 ? "#{(v/1024.0/1024).round(2)} MB" : "#{(v/1024.0).round} KB") }
+  diff_class = ->(rsc, ssr) { rsc.to_f < ssr.to_f ? "text-emerald-700" : (rsc.to_f > ssr.to_f ? "text-red-600" : "text-slate-500") }
 
-  /* ── Metric counter animation ── */
-  @keyframes count-up {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .metric-animate {
-    animation: count-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation-play-state: paused;
-    opacity: 0;
-  }
-  .visible .metric-animate { animation-play-state: running; }
-  .visible .metric-animate.delay-1 { animation-delay: 0.15s; }
-  .visible .metric-animate.delay-2 { animation-delay: 0.3s; }
-  .visible .metric-animate.delay-3 { animation-delay: 0.45s; }
+  # Pre-load all report data for the page
+  data = features.each_with_object({}) do |f, h|
+    h[f[:slug]] = {}
+    %w[ssr client rsc].each do |v|
+      h[f[:slug]][v] = {}
+      %w[desktop mobile].each do |s|
+        h[f[:slug]][v][s] = load_report.(f[:slug], v, s)
+      end
+    end
+  end
 
-  /* ── Bar grow animation ── */
-  @keyframes grow-width {
-    from { width: 0; }
-    to   { width: var(--bar-width); }
-  }
-  .bar-animate {
-    animation: grow-width 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation-play-state: paused;
-    width: 0;
-  }
-  .visible .bar-animate { animation-play-state: running; }
-  .visible .bar-animate.delay-1 { animation-delay: 0.2s; }
-  .visible .bar-animate.delay-2 { animation-delay: 0.4s; }
+  # Section helpers
+  score_color = ->(s) { s >= 90 ? "bg-emerald-100 text-emerald-800" : (s >= 50 ? "bg-amber-100 text-amber-800" : "bg-red-50 text-red-700") }
+%>
 
-  /* ── Timeline grow ── */
-  .timeline-bar {
-    transform-origin: left;
-    transform: scaleX(0);
-    animation: grow-bar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  .timeline-bar-delay-1 { animation-delay: 0.3s; }
-  .timeline-bar-delay-2 { animation-delay: 0.6s; }
-  .timeline-bar-delay-3 { animation-delay: 0.9s; }
-  .timeline-bar-delay-4 { animation-delay: 1.2s; }
-  @keyframes grow-bar {
-    to { transform: scaleX(1); }
-  }
-  @keyframes grow-line {
-    to { transform: scaleY(1); }
-  }
+<section class="bg-slate-900 text-white py-16 sm:py-20 lg:py-28 relative overflow-hidden" style="background-image:linear-gradient(to bottom, #0f172a, #1e1b4b, #0f172a)">
+  <div class="relative max-w-5xl mx-auto px-4 sm:px-6">
+    <span class="inline-block text-emerald-400 font-semibold text-xs uppercase tracking-[0.2em] mb-4">Performance Evidence</span>
+    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-5 leading-tight">
+      Every number,<br/>linked to the report that proves it.
+    </h1>
+    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl leading-relaxed mb-8">
+      24 Lighthouse runs across 4 demo features × 3 variants × 2 strategies. Mobile uses Slow 4G + 4× CPU throttling (PSI's standard preset); desktop uses an unthrottled 1350×940 viewport. Click any cell, any number, any chunk URL — they all open the underlying audit.
+    </p>
+    <div class="flex flex-wrap gap-3 text-sm">
+      <a href="/lighthouse-reports/index.html" class="inline-flex items-center gap-2 bg-white text-slate-900 font-semibold px-5 py-2.5 rounded-full hover:bg-slate-100 transition">
+        Browse all 24 reports
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="/lighthouse-reports/bundle-sizes.html" class="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-5 py-2.5 rounded-full hover:bg-white/20 transition">
+        Bundle-size breakdown
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
 
-  /* ── Streaming blocks ── */
-  .rsc-block-0 { animation: rsc-anim0 8s ease infinite; opacity: 0; }
-  .rsc-block-1 { animation: rsc-anim1 8s ease infinite; opacity: 0; }
-  .rsc-block-2 { animation: rsc-anim2 8s ease infinite; opacity: 0; }
-  .rsc-block-3 { animation: rsc-anim3 8s ease infinite; opacity: 0; }
-  @keyframes rsc-anim0 { 0%,4% { opacity:0; } 5%  { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
-  @keyframes rsc-anim1 { 0%,14%{ opacity:0; } 15% { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
-  @keyframes rsc-anim2 { 0%,29%{ opacity:0; } 30% { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
-  @keyframes rsc-anim3 { 0%,49%{ opacity:0; } 50% { opacity:1; } 90% { opacity:1; } 100% { opacity:0; } }
-  .ssr-skeleton { animation: ssr-shimmer 8s ease-in-out infinite; }
-  .ssr-content  { animation: ssr-appear  8s ease infinite; opacity: 0; }
-  @keyframes ssr-shimmer   { 0%,70% { opacity:0.3; } 71%,72% { opacity:0.5; } 73% { opacity:0.3; } }
-  @keyframes ssr-appear    { 0%,74% { opacity:0;   } 75%     { opacity:1;   } 95% { opacity:1;   } 100% { opacity:0; } }
-  .rsc-skel-0 { animation: rsc-sk0 8s ease infinite; }
-  .rsc-skel-1 { animation: rsc-sk1 8s ease infinite; }
-  .rsc-skel-2 { animation: rsc-sk2 8s ease infinite; }
-  .rsc-skel-3 { animation: rsc-sk3 8s ease infinite; }
-  @keyframes rsc-sk0 { 0%,4%  { opacity:1; } 5%  { opacity:0; } 100% { opacity:0; } }
-  @keyframes rsc-sk1 { 0%,14% { opacity:1; } 15% { opacity:0; } 100% { opacity:0; } }
-  @keyframes rsc-sk2 { 0%,29% { opacity:1; } 30% { opacity:0; } 100% { opacity:0; } }
-  @keyframes rsc-sk3 { 0%,49% { opacity:1; } 50% { opacity:0; } 100% { opacity:0; } }
+<!-- ════════════════════════════════════════════════════════════════
+     AT-A-GLANCE — every cell links to its LH report
+     ════════════════════════════════════════════════════════════════ -->
+<section class="py-14 sm:py-20 bg-slate-50">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <span class="inline-block text-emerald-600 font-semibold text-xs uppercase tracking-[0.2em] mb-3">At a Glance</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">Performance score, every page, every variant</h2>
+      <p class="text-slate-500 max-w-3xl mx-auto">Lighthouse <code class="bg-white border border-slate-200 px-1.5 py-0.5 rounded">categories.performance.score × 100</code>. Click any score to open that exact report.</p>
+    </div>
 
-  /* ── Floating particles ── */
-  @keyframes float-particle {
-    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
-    50%      { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
-  }
-  .particle {
-    animation: float-particle var(--duration, 4s) ease-in-out infinite;
-    animation-delay: var(--delay, 0s);
-  }
+    <div class="overflow-x-auto bg-white rounded-2xl border border-slate-200 shadow-sm">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 bg-slate-50">
+            <th class="text-left p-4 text-xs uppercase tracking-wider text-slate-600">Feature</th>
+            <th class="text-left p-4 text-xs uppercase tracking-wider text-slate-600">Strategy</th>
+            <th class="p-4 text-xs uppercase tracking-wider text-slate-600">SSR</th>
+            <th class="p-4 text-xs uppercase tracking-wider text-slate-600">Client</th>
+            <th class="p-4 text-xs uppercase tracking-wider text-slate-600">RSC</th>
+            <th class="p-4 text-xs uppercase tracking-wider text-slate-600">RSC vs SSR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% features.each do |f| %>
+            <% %w[desktop mobile].each_with_index do |s, idx| %>
+              <% ssr = data[f[:slug]]["ssr"][s]; cli = data[f[:slug]]["client"][s]; rsc = data[f[:slug]]["rsc"][s] %>
+              <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <% if idx == 0 %>
+                  <td rowspan="2" class="p-4 align-top">
+                    <div class="font-bold text-slate-900"><%= f[:label] %></div>
+                    <code class="text-xs text-slate-500"><%= f[:path] %></code>
+                  </td>
+                <% end %>
+                <td class="p-4 capitalize text-slate-700"><%= s %></td>
+                <td class="p-2 text-center">
+                  <a href="<%= report_url.(f[:slug], "ssr", s) %>" target="_blank" rel="noopener" class="inline-block px-3 py-1 rounded-md font-bold <%= score_color.(ssr[:score]) %> hover:opacity-80 transition">
+                    <%= ssr[:score] %>
+                  </a>
+                </td>
+                <td class="p-2 text-center">
+                  <a href="<%= report_url.(f[:slug], "client", s) %>" target="_blank" rel="noopener" class="inline-block px-3 py-1 rounded-md font-bold <%= score_color.(cli[:score]) %> hover:opacity-80 transition">
+                    <%= cli[:score] %>
+                  </a>
+                </td>
+                <td class="p-2 text-center">
+                  <a href="<%= report_url.(f[:slug], "rsc", s) %>" target="_blank" rel="noopener" class="inline-block px-3 py-1 rounded-md font-bold <%= score_color.(rsc[:score]) %> hover:opacity-80 transition">
+                    <%= rsc[:score] %>
+                  </a>
+                </td>
+                <td class="p-2 text-center font-semibold <%= rsc[:score] > ssr[:score] ? 'text-emerald-700' : (rsc[:score] < ssr[:score] ? 'text-red-600' : 'text-slate-500') %>">
+                  <%= rsc[:score] >= ssr[:score] ? "+" : "" %><%= rsc[:score] - ssr[:score] %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Color: <span class="px-1.5 rounded bg-emerald-100 text-emerald-800 font-semibold">≥ 90</span> &nbsp; <span class="px-1.5 rounded bg-amber-100 text-amber-800 font-semibold">50–89</span> &nbsp; <span class="px-1.5 rounded bg-red-100 text-red-800 font-semibold">&lt; 50</span></p>
+  </div>
+</section>
 
-  /* ── Pulse glow for metric cards ── */
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.2); }
-    50%      { box-shadow: 0 0 24px 4px rgba(99, 102, 241, 0.12); }
-  }
-  .metric-card:hover { animation: pulse-glow 2s ease-in-out infinite; }
+<!-- ════════════════════════════════════════════════════════════════
+     PER-FEATURE DEEP DIVES — Core Web Vitals + bundle composition
+     ════════════════════════════════════════════════════════════════ -->
+<% features.each_with_index do |f, idx| %>
+  <% bg = idx.even? ? "bg-white" : "bg-slate-50" %>
+  <% ssr_d = data[f[:slug]]["ssr"]["desktop"]; cli_d = data[f[:slug]]["client"]["desktop"]; rsc_d = data[f[:slug]]["rsc"]["desktop"] %>
+  <% ssr_m = data[f[:slug]]["ssr"]["mobile"];  cli_m = data[f[:slug]]["client"]["mobile"];  rsc_m = data[f[:slug]]["rsc"]["mobile"] %>
+  <% perf_delta = rsc_d[:score] - ssr_d[:score] %>
+  <% transfer_save = ssr_d[:transfer] - rsc_d[:transfer] %>
+  <% bootup_save = ssr_d[:bootup] - rsc_d[:bootup] %>
 
-  /* ── Sections ── */
-  .section-light { background: #ffffff; }
-  .section-muted { background: #f8fafc; }
-  .section-dark  { background: #0f172a; color: #e2e8f0; }
+  <section id="<%= f[:anchor] %>" class="<%= bg %> py-14 sm:py-20" style="scroll-margin-top:3rem">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="grid lg:grid-cols-3 gap-8 lg:gap-12 mb-10">
+        <div class="lg:col-span-2">
+          <span class="inline-block text-<%= f[:accent] %>-600 font-semibold text-xs uppercase tracking-[0.2em] mb-3">Demo <%= idx + 1 %> of <%= features.length %></span>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3"><%= f[:label] %></h2>
+          <p class="text-slate-600 leading-relaxed mb-4"><%= f[:summary] %></p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <a href="<%= f[:path] %>/ssr"    class="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-amber-700 hover:bg-amber-100">Open <%= f[:label] %> SSR →</a>
+            <a href="<%= f[:path] %>/client" class="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-blue-700 hover:bg-blue-100">Open Client →</a>
+            <a href="<%= f[:path] %>/rsc"    class="rounded-full bg-green-50 border border-green-200 px-3 py-1 text-green-700 font-semibold hover:bg-green-100">Open RSC →</a>
+            <a href="/lighthouse-reports/bundle-sizes.html#<%= f[:anchor] %>" class="rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-indigo-700 hover:bg-indigo-100">Bundle breakdown →</a>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <a href="<%= report_url.(f[:slug], "rsc", "desktop") %>" target="_blank" rel="noopener" class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center hover:shadow-md transition block">
+            <div class="text-2xl font-extrabold text-emerald-700"><%= perf_delta >= 0 ? "+" : "" %><%= perf_delta %></div>
+            <div class="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold mt-1">Perf delta</div>
+            <div class="text-[10px] text-slate-500"><%= ssr_d[:score] %>→<%= rsc_d[:score] %></div>
+          </a>
+          <a href="/lighthouse-reports/bundle-sizes.html#<%= f[:anchor] %>" class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-center hover:shadow-md transition block">
+            <div class="text-2xl font-extrabold text-indigo-700"><%= transfer_save > 0 ? "−" : "+" %><%= fmt_kb.(transfer_save.abs) %></div>
+            <div class="text-[10px] uppercase tracking-wider text-indigo-700 font-semibold mt-1">Transfer</div>
+            <div class="text-[10px] text-slate-500">vs SSR · click ↗</div>
+          </a>
+          <a href="<%= report_url.(f[:slug], "rsc", "desktop") %>" target="_blank" rel="noopener" class="bg-pink-50 border border-pink-200 rounded-xl p-4 text-center hover:shadow-md transition block">
+            <div class="text-2xl font-extrabold text-pink-700"><%= bootup_save > 0 ? "−" : "+" %><%= fmt_ms.(bootup_save.abs) %></div>
+            <div class="text-[10px] uppercase tracking-wider text-pink-700 font-semibold mt-1">Bootup</div>
+            <div class="text-[10px] text-slate-500">vs SSR · click ↗</div>
+          </a>
+        </div>
+      </div>
 
-  /* ── Wave divider ── */
-  .wave-divider { position: relative; margin-top: -1px; }
+      <div class="grid md:grid-cols-2 gap-6">
+        <% [["desktop", "Desktop · unthrottled", ssr_d, cli_d, rsc_d], ["mobile", "Mobile · Slow 4G + 4× CPU", ssr_m, cli_m, rsc_m]].each do |strategy, title, ssr, cli, rsc| %>
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 class="font-bold text-slate-900 mb-1"><%= title %></h3>
+            <p class="text-xs text-slate-500 mb-4">Tap any number to open the report — the same JSON Lighthouse generated for that exact run.</p>
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-xs text-slate-500 uppercase tracking-wider">
+                  <th class="text-left py-1.5"></th>
+                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "ssr", strategy) %>" target="_blank" rel="noopener" class="text-amber-700 hover:underline">SSR</a></th>
+                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "client", strategy) %>" target="_blank" rel="noopener" class="text-blue-700 hover:underline">Client</a></th>
+                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "rsc", strategy) %>" target="_blank" rel="noopener" class="text-emerald-700 hover:underline">RSC</a></th>
+                </tr>
+              </thead>
+              <tbody class="font-mono text-xs">
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Score</td>
+                  <td class="text-center py-1.5 font-bold"><%= ssr[:score] %></td>
+                  <td class="text-center py-1.5 font-bold"><%= cli[:score] %></td>
+                  <td class="text-center py-1.5 font-bold text-emerald-700"><%= rsc[:score] %></td>
+                </tr>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">FCP</td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(ssr[:fcp]) %></td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(cli[:fcp]) %></td>
+                  <td class="text-center py-1.5 <%= diff_class.(rsc[:fcp], ssr[:fcp]) %>"><%= fmt_ms.(rsc[:fcp]) %></td>
+                </tr>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">LCP</td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(ssr[:lcp]) %></td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(cli[:lcp]) %></td>
+                  <td class="text-center py-1.5 <%= diff_class.(rsc[:lcp], ssr[:lcp]) %>"><%= fmt_ms.(rsc[:lcp]) %></td>
+                </tr>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">TBT</td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(ssr[:tbt]) %></td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(cli[:tbt]) %></td>
+                  <td class="text-center py-1.5 <%= diff_class.(rsc[:tbt], ssr[:tbt]) %>"><%= fmt_ms.(rsc[:tbt]) %></td>
+                </tr>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Speed Index</td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(ssr[:si]) %></td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(cli[:si]) %></td>
+                  <td class="text-center py-1.5 <%= diff_class.(rsc[:si], ssr[:si]) %>"><%= fmt_ms.(rsc[:si]) %></td>
+                </tr>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Bootup</td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(ssr[:bootup]) %></td>
+                  <td class="text-center py-1.5"><%= fmt_ms.(cli[:bootup]) %></td>
+                  <td class="text-center py-1.5 <%= diff_class.(rsc[:bootup], ssr[:bootup]) %>"><%= fmt_ms.(rsc[:bootup]) %></td>
+                </tr>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Transfer</td>
+                  <td class="text-center py-1.5"><%= fmt_kb.(ssr[:transfer]) %></td>
+                  <td class="text-center py-1.5"><%= fmt_kb.(cli[:transfer]) %></td>
+                  <td class="text-center py-1.5 <%= diff_class.(rsc[:transfer], ssr[:transfer]) %>"><%= fmt_kb.(rsc[:transfer]) %></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
 
-  /* ── Code block ── */
-  .code-block {
-    background: #1e293b;
-    border-radius: 12px;
-    overflow: hidden;
-    font-size: 0.75rem;
-    line-height: 1.7;
-    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', ui-monospace, monospace;
-  }
-  @media (min-width: 640px) { .code-block { font-size: 0.875rem; } }
-  .code-block pre { margin: 0; padding: 1rem; overflow-x: auto; flex: 1; }
-  @media (min-width: 640px) { .code-block pre { padding: 1.5rem 1.75rem; } }
-  .code-header {
-    background: #334155;
-    padding: 0.5rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .syn-kw   { color: #c084fc; }
-  .syn-fn   { color: #67e8f9; }
-  .syn-str  { color: #86efac; }
-  .syn-cm   { color: #64748b; }
-  .syn-ty   { color: #fbbf24; }
-  .syn-op   { color: #94a3b8; }
-  .syn-prop { color: #f9a8d4; }
-  .syn-num  { color: #fbbf24; }
-  .syn-dir  { color: #fb923c; }
-
-  /* ── Comparison table ── */
-  .comparison-table th { background: #f1f5f9; font-weight: 600; text-align: left; }
-  .comparison-table thead th.ssr-col { background: #fef2f2; color: #b91c1c; }
-  .comparison-table thead th.rsc-col { background: #f0fdf4; color: #047857; }
-  .comparison-table td, .comparison-table th { padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-  .comparison-table tr:last-child td { border-bottom: none; }
-  .comparison-table .rsc-col   { background: #f0fdf4; }
-  .comparison-table .ssr-col   { background: #fef2f2; }
-  .comparison-table tbody tr:hover td { background-color: #f8fafc; transition: background-color 0.15s; }
-  .comparison-table tbody tr:hover td.ssr-col { background-color: #fef2f2; }
-  .comparison-table tbody tr:hover td.rsc-col { background-color: #ecfdf5; }
-
-  /* ── Accessibility ── */
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { transition: none; opacity: 1; transform: none; }
-    .timeline-bar { animation: none; transform: scaleX(1); }
-    .bar-animate { animation: none; width: var(--bar-width); }
-    .metric-animate { animation: none; opacity: 1; }
-    .particle { animation: none; opacity: 0.4; }
-    .ssr-skeleton { animation: none; opacity: 0; }
-    .ssr-content  { animation: none; opacity: 1; }
-    .rsc-block-0, .rsc-block-1, .rsc-block-2, .rsc-block-3 { animation: none; opacity: 1; }
-    .rsc-skel-0, .rsc-skel-1, .rsc-skel-2, .rsc-skel-3 { animation: none; opacity: 0; }
-  }
-</style>
+      <!-- Bundle composition bar — shows what each variant ships -->
+      <% rsc_pct = (rsc_d[:transfer].to_f / ssr_d[:transfer].to_f * 100).round %>
+      <a href="/lighthouse-reports/bundle-sizes.html#<%= f[:anchor] %>" class="block mt-6 bg-slate-50 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition p-5 group">
+        <div class="flex items-baseline justify-between mb-3">
+          <h3 class="font-bold text-slate-900 text-sm">What ships to the client (desktop)</h3>
+          <span class="text-xs text-indigo-600 group-hover:underline">Open per-chunk breakdown →</span>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-baseline justify-between mb-1">
+              <span class="text-xs font-medium text-amber-700">SSR</span>
+              <span class="text-xs font-bold text-amber-700"><%= fmt_kb.(ssr_d[:transfer]) %></span>
+            </div>
+            <div class="h-3 rounded-full bg-amber-200 w-full"></div>
+          </div>
+          <div>
+            <div class="flex items-baseline justify-between mb-1">
+              <span class="text-xs font-medium text-blue-700">Client</span>
+              <span class="text-xs font-bold text-blue-700"><%= fmt_kb.(cli_d[:transfer]) %></span>
+            </div>
+            <div class="h-3 rounded-full bg-blue-200" style="width: <%= (cli_d[:transfer].to_f / ssr_d[:transfer].to_f * 100).round %>%"></div>
+          </div>
+          <div>
+            <div class="flex items-baseline justify-between mb-1">
+              <span class="text-xs font-medium text-emerald-700">RSC</span>
+              <span class="text-xs font-bold text-emerald-700"><%= fmt_kb.(rsc_d[:transfer]) %> · <%= rsc_pct %>% of SSR</span>
+            </div>
+            <div class="h-3 rounded-full bg-emerald-400" style="width: <%= rsc_pct %>%"></div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
 <% end %>
 
 <!-- ════════════════════════════════════════════════════════════════
-     HERO
+     THE PATTERN — what RSC keeps server-only
      ════════════════════════════════════════════════════════════════ -->
-<section class="hero-gradient relative overflow-hidden">
-  <div class="hero-glow absolute inset-0"></div>
-
-  <!-- Floating particles -->
-  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <circle class="particle" cx="8%"  cy="18%" r="2"   fill="#818cf8" style="--duration:5s;--delay:0s;"/>
-    <circle class="particle" cx="88%" cy="12%" r="1.5" fill="#a78bfa" style="--duration:4s;--delay:1s;"/>
-    <circle class="particle" cx="72%" cy="78%" r="2"   fill="#6366f1" style="--duration:6s;--delay:0.5s;"/>
-    <circle class="particle" cx="22%" cy="72%" r="1.5" fill="#818cf8" style="--duration:4.5s;--delay:2s;"/>
-    <circle class="particle" cx="50%" cy="38%" r="1"   fill="#c4b5fd" style="--duration:3.5s;--delay:1.5s;"/>
-    <rect   class="particle" x="92%" y="58%" width="3" height="3" rx="0.5" fill="#818cf8" style="--duration:5.5s;--delay:0.8s;"/>
-    <rect   class="particle" x="14%" y="48%" width="2.5" height="2.5" rx="0.5" fill="#a78bfa" style="--duration:4.2s;--delay:2.5s;"/>
-  </svg>
-
-  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 text-center" style="padding-top: 5rem; padding-bottom: 5rem;">
-    <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 rounded-full px-4 py-1.5 mb-8">
-      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-      <span class="text-indigo-300 text-sm font-medium">React on Rails Pro</span>
+<section class="py-14 sm:py-20 bg-slate-900 text-white">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <span class="inline-block text-emerald-400 font-semibold text-xs uppercase tracking-[0.2em] mb-3">The Pattern</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold mb-3">What RSC keeps off the wire</h2>
+      <p class="text-slate-300 max-w-3xl mx-auto">Every claim below points at a concrete chunk in the bundle-size breakdown — the URL Lighthouse measured, with the exact bytes transferred.</p>
     </div>
-
-    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white tracking-tight" style="line-height: 1.3; margin-bottom: 1.5rem;">
-      From 2.5s to 1.9s FCP<br/>
-      <span class="gradient-text">81% Less JavaScript</span>
-    </h1>
-
-    <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed" style="margin-bottom: 2rem;">
-      The same product search page &mdash; built with traditional SSR and with React Server Components. Open both and compare.
-    </p>
-
-    <!-- Demo links -->
-    <div class="flex items-center justify-center gap-8" style="margin-bottom: 3.5rem;">
-      <a href="/product-search/rsc" class="inline-flex items-center gap-1.5 text-indigo-300 hover:text-white font-medium text-sm transition-colors">
-        Open RSC version <span aria-hidden="true">&rarr;</span>
-      </a>
-      <a href="/product-search/ssr" class="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-200 font-medium text-sm transition-colors">
-        Open SSR version <span aria-hidden="true">&rarr;</span>
-      </a>
-    </div>
-
-    <!-- Hero Stat Cards -->
-    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 text-left">
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-400 mb-2">22%</div>
-        <div class="text-sm font-semibold text-white mb-1">Faster FCP</div>
-        <div class="text-xs text-slate-400">2508ms &rarr; 1948ms</div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5">
+        <div class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">Markdown stack</div>
+        <div class="text-3xl font-extrabold mb-1">~1 MB</div>
+        <p class="text-sm text-slate-400 leading-relaxed mb-3">marked + highlight.js + sanitize-html — used for blog posts, product spec sheets, restaurant bios. RSC variants ship 0 KB of these.</p>
+        <a href="/lighthouse-reports/bundle-sizes.html#blog" class="text-xs text-emerald-400 hover:underline">See Blog SSR's <code>markdown-libs-…js</code> chunk →</a>
       </div>
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <div class="text-3xl sm:text-4xl font-extrabold text-indigo-400 mb-2">81%</div>
-        <div class="text-sm font-semibold text-white mb-1">Less JS Shipped</div>
-        <div class="text-xs text-slate-400">1332 KB &rarr; 258 KB</div>
+      <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5">
+        <div class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">Currency formatting</div>
+        <div class="text-3xl font-extrabold mb-1">~30 KB</div>
+        <p class="text-sm text-slate-400 leading-relaxed mb-3">intl-messageformat — used for the multi-currency price ladder in product + restaurant pages. Server formats once; client receives strings.</p>
+        <a href="/lighthouse-reports/bundle-sizes.html#product" class="text-xs text-emerald-400 hover:underline">See Product SSR's vendor chunks →</a>
       </div>
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <div class="text-3xl sm:text-4xl font-extrabold text-purple-400 mb-2">72%</div>
-        <div class="text-sm font-semibold text-white mb-1">Faster TBT</div>
-        <div class="text-xs text-slate-400">677ms &rarr; 189ms</div>
-      </div>
-      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <div class="text-3xl sm:text-4xl font-extrabold text-pink-400 mb-2">0 KB</div>
-        <div class="text-sm font-semibold text-white mb-1">Markdown Libs</div>
-        <div class="text-xs text-slate-400">Stays server-side</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Wave divider -->
-  <div class="wave-divider">
-    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
-      <path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#ffffff"/>
-    </svg>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════
-     SECTION 1: THE CHALLENGE
-     ════════════════════════════════════════════════════════════════ -->
-<section class="section-light py-14 sm:py-20 lg:py-28">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6">
-    <div class="reveal text-center mb-10 sm:mb-16">
-      <span class="inline-block text-red-500 font-semibold text-sm uppercase tracking-wider mb-3">The Problem</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Search Pages Are Heavy</h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        A typical e-commerce search page renders 24 product cards, each with images, ratings, pricing, descriptions with markdown, and review snippets. Traditional SSR ships everything &mdash; including rendering libraries &mdash; straight to the browser.
-      </p>
-    </div>
-
-    <!-- What SSR ships -->
-    <div class="reveal max-w-3xl mx-auto mb-10 sm:mb-16">
-      <div class="bg-slate-50 rounded-2xl p-5 sm:p-8 border border-slate-200">
-        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">What SSR Ships to the Browser</h3>
-        <div class="space-y-5">
-          <!-- Total bar -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-slate-700">Traditional SSR Bundle</span>
-              <span class="text-sm font-bold text-red-500">1,332 KB</span>
-            </div>
-            <div class="h-12 rounded-lg overflow-hidden bg-slate-200 flex">
-              <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:24%">
-                <span class="hidden sm:inline">markdown-libs</span><span class="sm:hidden">Libs</span>
-              </div>
-              <div class="h-full bg-orange-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:5%"></div>
-              <div class="h-full bg-amber-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:50%">
-                <span class="hidden sm:inline">React + React DOM + ReactOnRails</span><span class="sm:hidden">React</span>
-              </div>
-              <div class="h-full bg-yellow-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:21%">
-                <span class="hidden sm:inline">App Components</span><span class="sm:hidden">App</span>
-              </div>
-            </div>
-            <div class="flex gap-3 mt-2 text-xs text-slate-400 flex-wrap">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-red-400"></span> marked + highlight.js (321 KB gzip)</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-orange-400"></span> Search chunks</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span> React core (66 KB gzip)</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-500"></span> App code</span>
-            </div>
-          </div>
-          <!-- RSC bar -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-slate-700">With RSC &mdash; Client Bundle Only</span>
-              <span class="text-sm font-bold text-emerald-600">258 KB</span>
-            </div>
-            <div class="h-12 rounded-lg overflow-hidden bg-slate-200 flex">
-              <div class="bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--bar-width:19.4%;">
-                Interactive UI only
-              </div>
-            </div>
-            <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3v8" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/></svg>
-              Only <code class="syn-kw">'use client'</code> components ship to browser. Markdown, descriptions, reviews &rarr; <strong class="text-emerald-600 ml-0.5">server only, 0 KB to client</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- What RSC removes -->
-    <div class="reveal grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center">
-        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18M8 4h13v13M4 8v13h13"/></svg>
-        </div>
-        <div class="text-2xl font-extrabold text-red-500 mb-1">321 KB</div>
-        <div class="text-sm font-semibold text-slate-800">marked + highlight.js</div>
-        <div class="text-xs text-slate-500 mt-1">Removed from client</div>
-      </div>
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center">
-        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center mx-auto mb-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
-        </div>
-        <div class="text-2xl font-extrabold text-orange-500 mb-1">24 cards</div>
-        <div class="text-sm font-semibold text-slate-800">Zero-JS product cards</div>
-        <div class="text-xs text-slate-500 mt-1">Pure server-rendered HTML</div>
-      </div>
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center">
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        </div>
-        <div class="text-2xl font-extrabold text-emerald-500 mb-1">9 KB</div>
-        <div class="text-sm font-semibold text-slate-800">RSC client runtime</div>
-        <div class="text-xs text-slate-500 mt-1">Only addition vs SSR</div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════
-     SECTION 2: STREAMING VISUALIZATION
-     ════════════════════════════════════════════════════════════════ -->
-<section class="section-muted py-14 sm:py-20 lg:py-28">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6">
-    <div class="reveal text-center mb-10 sm:mb-16">
-      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Streaming</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">See the Difference</h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        SSR blocks until <em>all</em> data is ready. RSC streams the search shell instantly, then fills in results, filters, tags, and brands as each query resolves.
-      </p>
-    </div>
-
-    <!-- Streaming comparison -->
-    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- SSR -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-3 h-3 rounded-full bg-red-400"></div>
-          <span class="text-sm font-semibold text-slate-700">Traditional SSR</span>
-          <span class="text-xs text-slate-400 ml-auto">TTFB: 539ms</span>
-        </div>
-        <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="SSR: blank page for 2.5 seconds, then everything appears at once">
-          <!-- Page chrome -->
-          <rect x="8" y="8" width="284" height="224" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-          <!-- Search bar skeleton -->
-          <rect x="18" y="18" width="264" height="20" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <!-- Filter sidebar skeleton -->
-          <rect x="18" y="46" width="80" height="176" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <!-- Product grid skeletons (6 cards) -->
-          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <rect x="106" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <rect x="194" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <rect x="106" y="170" width="80" height="52" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <rect x="194" y="170" width="80" height="52" rx="4" fill="#e2e8f0" class="ssr-skeleton"/>
-          <!-- Content appears all at once -->
-          <rect x="18" y="18" width="264" height="20" rx="4" fill="#6366f1" class="ssr-content"/>
-          <text x="150" y="32" text-anchor="middle" fill="white" font-size="9" font-family="monospace" class="ssr-content">Search Bar + Sort</text>
-          <rect x="18"  y="46" width="80"  height="176" rx="4" fill="#8b5cf6" class="ssr-content"/>
-          <text x="58"  y="138" text-anchor="middle" fill="white" font-size="8" font-family="monospace" class="ssr-content">Filters</text>
-          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
-          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
-          <rect x="106" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
-          <rect x="194" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="ssr-content"/>
-          <rect x="106" y="170" width="80" height="52" rx="4" fill="#a78bfa" class="ssr-content"/>
-          <rect x="194" y="170" width="80" height="52" rx="4" fill="#a78bfa" class="ssr-content"/>
-          <text x="150" y="78"  text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
-          <text x="238" y="78"  text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
-          <text x="150" y="140" text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
-          <text x="238" y="140" text-anchor="middle" fill="white" font-size="7" font-family="monospace" class="ssr-content">Product</text>
-        </svg>
-        <div class="text-center mt-3">
-          <span class="text-xs font-bold text-red-500 font-mono">FCP: 2508ms &mdash; blank until all queries finish</span>
-        </div>
-      </div>
-
-      <!-- RSC -->
-      <div class="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm ring-1 ring-emerald-100">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
-          <span class="text-sm font-semibold text-slate-700">RSC + Streaming</span>
-          <span class="text-xs text-emerald-500 ml-auto">TTFB: 239ms</span>
-        </div>
-        <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC: search shell appears instantly, then products, filters, and extras stream in progressively">
-          <!-- Page chrome -->
-          <rect x="8" y="8" width="284" height="224" rx="8" fill="#f8fafc" stroke="#d1fae5" stroke-width="1.5"/>
-          <!-- Skeletons that fade out -->
-          <rect x="18" y="18" width="264" height="20" rx="4" fill="#e2e8f0" class="rsc-skel-0"/>
-          <rect x="18" y="46" width="80" height="130" rx="4" fill="#e2e8f0" class="rsc-skel-1"/>
-          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
-          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
-          <rect x="106" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
-          <rect x="194" y="108" width="80" height="54" rx="4" fill="#e2e8f0" class="rsc-skel-2"/>
-          <rect x="18"  y="184" width="80"  height="38" rx="4" fill="#e2e8f0" class="rsc-skel-3"/>
-          <rect x="106" y="170" width="168" height="52" rx="4" fill="#e2e8f0" class="rsc-skel-3"/>
-          <!-- Streamed content -->
-          <rect x="18" y="18" width="264" height="20" rx="4" fill="#6366f1" class="rsc-block-0"/>
-          <text x="150" y="32" text-anchor="middle" fill="white" font-size="9" font-family="monospace" font-weight="bold" class="rsc-block-0">Search Shell (instant)</text>
-          <rect x="18" y="46" width="80" height="130" rx="4" fill="#8b5cf6" class="rsc-block-1"/>
-          <text x="58" y="115" text-anchor="middle" fill="white" font-size="8" font-family="monospace" font-weight="bold" class="rsc-block-1">Facets</text>
-          <rect x="106" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
-          <rect x="194" y="46"  width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
-          <rect x="106" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
-          <rect x="194" y="108" width="80" height="54" rx="4" fill="#a78bfa" class="rsc-block-2"/>
-          <text x="150" y="78" text-anchor="middle" fill="white" font-size="7" font-family="monospace" font-weight="bold" class="rsc-block-2">Products stream</text>
-          <rect x="18"  y="184" width="80"  height="38" rx="4" fill="#34d399" class="rsc-block-3"/>
-          <text x="58"  y="207" text-anchor="middle" fill="white" font-size="7" font-family="monospace" font-weight="bold" class="rsc-block-3">Tags</text>
-          <rect x="106" y="170" width="168" height="52" rx="4" fill="#34d399" class="rsc-block-3"/>
-          <text x="190" y="200" text-anchor="middle" fill="white" font-size="7" font-family="monospace" font-weight="bold" class="rsc-block-3">Brand Highlights</text>
-        </svg>
-        <div class="text-center mt-3">
-          <span class="text-xs font-bold text-emerald-600 font-mono">FCP: 1948ms &mdash; shell streams immediately</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- The 4 async props -->
-    <div class="reveal max-w-4xl mx-auto">
-      <h3 class="text-center text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">4 Async Props, Streamed Independently</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
-          <div class="text-xs font-bold text-indigo-600 mb-2 font-mono">emit 1</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">search_results</div>
-          <div class="text-xs text-slate-500">24 products with descriptions, reviews, specs, and pagination</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-          <div class="text-xs font-bold text-purple-600 mb-2 font-mono">emit 2</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">facets</div>
-          <div class="text-xs text-slate-500">Category, brand, price range, and rating aggregations</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
-          <div class="text-xs font-bold text-emerald-600 mb-2 font-mono">emit 3</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">popular_tags</div>
-          <div class="text-xs text-slate-500">Top 20 tags across all matching products</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1 bg-pink-500"></div>
-          <div class="text-xs font-bold text-pink-600 mb-2 font-mono">emit 4</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">brand_highlights</div>
-          <div class="text-xs text-slate-500">Top 8 brands with counts and average ratings</div>
-        </div>
+      <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5">
+        <div class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">Component code</div>
+        <div class="text-3xl font-extrabold mb-1">~200–400 KB</div>
+        <p class="text-sm text-slate-400 leading-relaxed mb-3">SSR/Client variants ship the JS for every section that renders — hydration runs the same code in the browser. RSC ships only the components that need interactivity.</p>
+        <a href="/lighthouse-reports/bundle-sizes.html#restaurant" class="text-xs text-emerald-400 hover:underline">See Restaurant SSR's entry pack →</a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════
-     SECTION 3: THE CODE
+     METHODOLOGY
      ════════════════════════════════════════════════════════════════ -->
-<section class="section-light py-14 sm:py-20 lg:py-28">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6">
-    <div class="reveal text-center mb-10 sm:mb-16">
-      <span class="inline-block text-indigo-600 font-semibold text-sm uppercase tracking-wider mb-3">Implementation</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Elegant, Simple Code</h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        Rails streams data with <code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm text-indigo-600">emit.call</code>. React Server Components render each section as its data arrives. No API routes, no <code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm text-indigo-600">useEffect</code>, no loading state management.
-      </p>
+<section class="py-14 sm:py-20 bg-slate-50">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <span class="inline-block text-indigo-600 font-semibold text-xs uppercase tracking-[0.2em] mb-3">Methodology</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">How these numbers were measured</h2>
     </div>
 
-    <!-- Code: Rails view -->
-    <div class="reveal max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12" style="align-items: stretch;">
-      <div class="flex flex-col">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="w-3 h-3 rounded-full bg-red-500"></div>
-          <span class="text-sm font-semibold text-slate-600">Rails View &mdash; streams 4 independent data slices</span>
-        </div>
-        <div class="code-block shadow-lg flex-1 flex flex-col">
-          <div class="code-header">
-            <span class="code-dot" style="background:#f87171;"></span>
-            <span class="code-dot" style="background:#fbbf24;"></span>
-            <span class="code-dot" style="background:#34d399;"></span>
-            <span class="text-slate-400 text-xs ml-2 font-mono">search_rsc.html.erb</span>
-          </div>
-          <pre class="text-slate-300"><code><span class="syn-op">&lt;%=</span> <span class="syn-fn">stream_react_component_with_async_props</span><span class="syn-op">(</span>
-  <span class="syn-str">"ProductSearchRSC"</span><span class="syn-op">,</span>
-  <span class="syn-prop">props:</span> <span class="syn-op">{</span> <span class="syn-prop">query:</span> <span class="syn-fn">params</span><span class="syn-op">[:</span><span class="syn-str">q</span><span class="syn-op">]</span> <span class="syn-op">}</span>
-<span class="syn-op">)</span> <span class="syn-kw">do</span> <span class="syn-op">|</span><span class="syn-prop">emit</span><span class="syn-op">|</span>
-
-  <span class="syn-cm"># Each emit streams independently</span>
-  <span class="syn-cm"># Browser renders as data arrives</span>
-
-  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"search_results"</span><span class="syn-op">,</span> <span class="syn-fn">@results</span><span class="syn-op">)</span>
-  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"facets"</span><span class="syn-op">,</span>          <span class="syn-fn">@facets</span><span class="syn-op">)</span>
-  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"popular_tags"</span><span class="syn-op">,</span>    <span class="syn-fn">@tags</span><span class="syn-op">)</span>
-  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"brand_highlights"</span><span class="syn-op">,</span> <span class="syn-fn">@brands</span><span class="syn-op">)</span>
-
-<span class="syn-kw">end</span> <span class="syn-op">%&gt;</span></code></pre>
-        </div>
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="font-bold text-slate-900 mb-2">Tool</h3>
+        <p class="text-sm text-slate-600 mb-2">Lighthouse 12 — the same engine PageSpeed Insights uses. Each route was loaded fresh in headless Chromium; metrics are the standard <a href="https://web.dev/articles/performance-scoring" class="text-indigo-600 hover:underline" target="_blank" rel="noopener">Lighthouse v12 weights</a> applied to FCP, LCP, TBT, CLS, and Speed Index.</p>
       </div>
-
-      <div class="flex flex-col">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-          <span class="text-sm font-semibold text-slate-600">React Server Component &mdash; 0 KB to browser</span>
-        </div>
-        <div class="code-block shadow-lg flex-1 flex flex-col">
-          <div class="code-header">
-            <span class="code-dot" style="background:#f87171;"></span>
-            <span class="code-dot" style="background:#fbbf24;"></span>
-            <span class="code-dot" style="background:#34d399;"></span>
-            <span class="text-slate-400 text-xs ml-2 font-mono">AsyncSearchResultsRSC.tsx</span>
-          </div>
-          <pre class="text-slate-300"><code><span class="syn-cm">// This component runs on the server only.</span>
-<span class="syn-cm">// marked + highlight.js never ship to browser.</span>
-
-<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">renderMarkdown</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'../../utils/renderMarkdown'</span><span class="syn-op">;</span>
-
-<span class="syn-kw">export default async function</span> <span class="syn-fn">AsyncSearchResults</span><span class="syn-op">({</span>
-  <span class="syn-prop">getReactOnRailsAsyncProp</span>
-<span class="syn-op">}) {</span>
-  <span class="syn-kw">const</span> data <span class="syn-op">=</span> <span class="syn-kw">await</span> <span class="syn-fn">getReactOnRailsAsyncProp</span><span class="syn-op">(</span>
-    <span class="syn-str">'search_results'</span>
-  <span class="syn-op">);</span>
-
-  <span class="syn-kw">return</span> <span class="syn-op">(</span>
-    <span class="syn-ty">&lt;div</span> <span class="syn-prop">className</span><span class="syn-op">=</span><span class="syn-str">"grid grid-cols-3 gap-4"</span><span class="syn-ty">&gt;</span>
-      <span class="syn-op">{</span>data<span class="syn-op">.</span>products<span class="syn-op">.</span><span class="syn-fn">map</span><span class="syn-op">(</span>p <span class="syn-op">=&gt;</span>
-        <span class="syn-ty">&lt;ProductCard</span>
-          <span class="syn-prop">key</span><span class="syn-op">={</span>p<span class="syn-op">.</span>id<span class="syn-op">}</span>
-          <span class="syn-prop">product</span><span class="syn-op">={</span>p<span class="syn-op">}</span>
-          <span class="syn-cm">{/* HTML rendered on server */}</span>
-        <span class="syn-ty">/&gt;</span>
-      <span class="syn-op">)}</span>
-    <span class="syn-ty">&lt;/div&gt;</span>
-  <span class="syn-op">);</span>
-<span class="syn-op">}</span></code></pre>
-        </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="font-bold text-slate-900 mb-2">Conditions</h3>
+        <ul class="text-sm text-slate-600 space-y-1.5">
+          <li><strong>Mobile:</strong> Slow 4G simulation (1.6 Mbps down, 750 Kbps up, 150 ms RTT) + 4× CPU throttle. Same as PSI mobile.</li>
+          <li><strong>Desktop:</strong> 1350×940 viewport, no network throttle, 1× CPU. Same as PSI desktop.</li>
+        </ul>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="font-bold text-slate-900 mb-2">Pages were warmed</h3>
+        <p class="text-sm text-slate-600">Each route was hit twice via <code class="bg-slate-100 px-1 rounded">curl</code> before the audit ran, so the first-request DB cold-cache penalty was excluded. Lighthouse then performed its own load with a clean Chrome profile.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="font-bold text-slate-900 mb-2">Reproduce</h3>
+        <p class="text-sm text-slate-600 mb-2">Every report under <code class="bg-slate-100 px-1 rounded">/lighthouse-reports/</code> can be re-opened in <a href="https://googlechrome.github.io/lighthouse/viewer/" class="text-indigo-600 hover:underline" target="_blank" rel="noopener">Lighthouse Viewer</a> by uploading its JSON. After deploy, run any URL through <a href="https://pagespeed.web.dev/" class="text-indigo-600 hover:underline" target="_blank" rel="noopener">pagespeed.web.dev</a> to compare with field-condition equivalent.</p>
       </div>
     </div>
 
-    <!-- Suspense code -->
-    <div class="reveal max-w-3xl mx-auto mb-12">
-      <div class="code-block shadow-2xl shadow-slate-200/50">
-        <div class="code-header">
-          <span class="code-dot" style="background:#f87171;"></span>
-          <span class="code-dot" style="background:#fbbf24;"></span>
-          <span class="code-dot" style="background:#34d399;"></span>
-          <span class="text-slate-400 text-xs ml-2 font-mono">ProductSearchRSC.tsx &mdash; Root Server Component</span>
-        </div>
-        <pre class="text-slate-300"><code><span class="syn-cm">// No 'use client' &mdash; this is a server component</span>
-<span class="syn-kw">import</span> <span class="syn-op">{</span> <span class="syn-fn">Suspense</span> <span class="syn-op">}</span> <span class="syn-kw">from</span> <span class="syn-str">'react'</span><span class="syn-op">;</span>
-
-<span class="syn-kw">export default function</span> <span class="syn-fn">ProductSearchRSC</span><span class="syn-op">({</span> <span class="syn-prop">query</span><span class="syn-op">,</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}) {</span>
-  <span class="syn-kw">return</span> <span class="syn-op">(</span>
-    <span class="syn-ty">&lt;div&gt;</span>
-      <span class="syn-ty">&lt;SearchHeader</span> <span class="syn-prop">query</span><span class="syn-op">={</span>query<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span>  <span class="syn-cm">{/* Renders instantly */}</span>
-
-      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;ResultsSkeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
-        <span class="syn-ty">&lt;AsyncSearchResults</span>                <span class="syn-cm">{/* Streams when ready */}</span>
-          <span class="syn-prop">getReactOnRailsAsyncProp</span><span class="syn-op">={</span>getReactOnRailsAsyncProp<span class="syn-op">}</span>
-        <span class="syn-ty">/&gt;</span>
-      <span class="syn-ty">&lt;/Suspense&gt;</span>
-
-      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;FacetsSkeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
-        <span class="syn-ty">&lt;AsyncFacets ... /&gt;</span>                 <span class="syn-cm">{/* Independent stream */}</span>
-      <span class="syn-ty">&lt;/Suspense&gt;</span>
-
-      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;SidebarSkeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
-        <span class="syn-ty">&lt;AsyncSidebarExtras ... /&gt;</span>          <span class="syn-cm">{/* Tags + Brands */}</span>
-      <span class="syn-ty">&lt;/Suspense&gt;</span>
-    <span class="syn-ty">&lt;/div&gt;</span>
-  <span class="syn-op">);</span>
-<span class="syn-op">}</span></code></pre>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════
-     SECTION 4: FULL BENCHMARK TABLE
-     ════════════════════════════════════════════════════════════════ -->
-<section class="section-muted py-14 sm:py-20 lg:py-28">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6">
-    <div class="reveal text-center mb-10 sm:mb-16">
-      <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Benchmarks</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">The Numbers</h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        From <a href="/product-search/ssr" class="text-indigo-600 hover:underline">/product-search/ssr</a> vs <a href="/product-search/rsc" class="text-indigo-600 hover:underline">/product-search/rsc</a>. Measured with Puppeteer under throttled conditions: 4&times; CPU slowdown and Slow 3G network (1.6 Mbps, 150ms latency). Median of 5 runs after 2 warmup iterations.
-      </p>
-    </div>
-
-    <!-- How to reproduce -->
-    <div class="reveal max-w-4xl mx-auto mb-10">
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 10h14" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Reproduce these metrics locally
-        </h3>
-        <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-700">
-          <li>Boot the demo: <code class="bg-slate-100 px-1.5 py-0.5 rounded">bin/dev</code> (Rails on <code class="bg-slate-100 px-1.5 py-0.5 rounded">:3000</code>)</li>
-          <li>Run a quick comparison across <strong>blog</strong>, <strong>product</strong>, <strong>product-search</strong>, <strong>analytics</strong> (3 iterations, no throttle): <code class="bg-slate-100 px-1.5 py-0.5 rounded">pnpm vitals:quick</code></li>
-          <li>Full benchmark with throttling matching this page: <code class="bg-slate-100 px-1.5 py-0.5 rounded">pnpm vitals -- --throttle</code></li>
-          <li>Cross-version diff with persisted JSON: <code class="bg-slate-100 px-1.5 py-0.5 rounded">pnpm vitals:compare</code></li>
-        </ol>
-        <p class="text-xs text-slate-500 mt-3">Results are saved as JSON to <code class="bg-slate-100 px-1 py-0.5 rounded">.vitals-results/</code>. Each page key (<code class="bg-slate-100 px-1 py-0.5 rounded">ssr</code> = blog SSR, <code class="bg-slate-100 px-1 py-0.5 rounded">product-rsc</code>, etc.) maps to a route in <code class="bg-slate-100 px-1 py-0.5 rounded">scripts/lib/constants.mjs</code>.</p>
-      </div>
-    </div>
-
-    <!-- PageSpeed Insights links -->
-    <div class="reveal max-w-4xl mx-auto mb-12">
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#4f46e5" stroke-width="1.5"/><path d="M10 3v3M10 14v3M3 10h3M14 10h3" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Check on real-world tooling
-        </h3>
-        <p class="text-sm text-slate-600 mb-4">Run any of the deployed pages through Google PageSpeed Insights:</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          <% page_specs = [
-            ["Blog SSR",  "https://rsc.reactonrails.com/blog/ssr"],
-            ["Blog RSC",  "https://rsc.reactonrails.com/blog/rsc"],
-            ["Product SSR",  "https://rsc.reactonrails.com/product/ssr"],
-            ["Product RSC",  "https://rsc.reactonrails.com/product/rsc"],
-            ["Search SSR",  "https://rsc.reactonrails.com/product-search/ssr"],
-            ["Search RSC",  "https://rsc.reactonrails.com/product-search/rsc"],
-            ["Analytics SSR",  "https://rsc.reactonrails.com/analytics/ssr"],
-            ["Analytics RSC",  "https://rsc.reactonrails.com/analytics/rsc"],
-          ] %>
-          <% page_specs.each do |label, target_url| %>
-            <a href="https://pagespeed.web.dev/report?url=<%= CGI.escape(target_url) %>" target="_blank" rel="noopener" class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2 hover:border-indigo-300 hover:bg-indigo-50/40 transition-colors">
-              <span class="font-medium text-slate-800"><%= label %></span>
-              <span class="text-xs text-indigo-600">PageSpeed &rarr;</span>
-            </a>
+    <div class="mt-8 bg-white rounded-2xl border border-slate-200 p-5">
+      <h3 class="font-bold text-slate-900 mb-2">Data sources for this page</h3>
+      <p class="text-sm text-slate-600 mb-3">Numbers above are loaded at request time from the JSON files Lighthouse wrote. Click any of them to inspect the raw audit:</p>
+      <% short = { "blog" => "blog", "product" => "product", "restaurant_1" => "restaurant", "product-search" => "search" } %>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <% features.each do |f| %>
+          <% %w[desktop mobile].each do |s| %>
+            <% %w[ssr client rsc].each do |v| %>
+              <a href="<%= report_url.(f[:slug], v, s) %>" target="_blank" rel="noopener" class="rounded-md border border-slate-200 px-2 py-1.5 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/40 transition flex items-center justify-between">
+                <span class="truncate"><%= short[f[:slug]] %> · <%= v %></span>
+                <span class="text-slate-400 ml-1"><%= s == "desktop" ? "🖥" : "📱" %></span>
+              </a>
+            <% end %>
           <% end %>
-        </div>
-      </div>
-    </div>
-
-    <div class="reveal max-w-4xl mx-auto mb-12">
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="comparison-table w-full text-sm" style="min-width: 600px;">
-            <thead>
-              <tr>
-                <th class="text-slate-600" style="width:35%">Metric</th>
-                <th class="ssr-col text-red-700" style="width:25%">SSR</th>
-                <th class="rsc-col text-emerald-700" style="width:25%">RSC</th>
-                <th style="width:15%">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="font-semibold text-slate-800">
-                  First Contentful Paint
-                  <div class="text-xs text-slate-500 font-normal mt-1">When the first pixel renders</div>
-                </td>
-                <td class="ssr-col font-mono text-base">2,508 ms</td>
-                <td class="rsc-col font-mono text-base font-semibold">1,948 ms</td>
-                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 22%</span></td>
-              </tr>
-              <tr>
-                <td class="font-semibold text-slate-800">
-                  Largest Contentful Paint
-                  <div class="text-xs text-slate-500 font-normal mt-1">When the main content is visible</div>
-                </td>
-                <td class="ssr-col font-mono text-base">2,508 ms</td>
-                <td class="rsc-col font-mono text-base font-semibold">2,432 ms</td>
-                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 3%</span></td>
-              </tr>
-              <tr>
-                <td class="font-semibold text-slate-800">
-                  Time to First Byte
-                  <div class="text-xs text-slate-500 font-normal mt-1">Server response time</div>
-                </td>
-                <td class="ssr-col font-mono text-base">539 ms</td>
-                <td class="rsc-col font-mono text-base font-semibold">239 ms</td>
-                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 56%</span></td>
-              </tr>
-              <tr>
-                <td class="font-semibold text-slate-800">
-                  Total Blocking Time
-                  <div class="text-xs text-slate-500 font-normal mt-1">Main thread blocked (affects interactivity)</div>
-                </td>
-                <td class="ssr-col font-mono text-base">677 ms</td>
-                <td class="rsc-col font-mono text-base font-semibold">189 ms</td>
-                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 72%</span></td>
-              </tr>
-              <tr>
-                <td class="font-semibold text-slate-800">
-                  JS Transfer Size
-                  <div class="text-xs text-slate-500 font-normal mt-1">JavaScript shipped to browser</div>
-                </td>
-                <td class="ssr-col font-mono text-base">1,332 KB</td>
-                <td class="rsc-col font-mono text-base font-semibold">258 KB</td>
-                <td><span class="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-base"><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M6 2L2 6M6 2l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 81%</span></td>
-              </tr>
-              <tr>
-                <td class="font-semibold text-slate-800">
-                  Cumulative Layout Shift
-                  <div class="text-xs text-slate-500 font-normal mt-1">Visual stability</div>
-                </td>
-                <td class="ssr-col font-mono text-base">0.000</td>
-                <td class="rsc-col font-mono text-base font-semibold">0.000</td>
-                <td><span class="text-slate-400 text-xs">identical</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Across all pages -->
-    <div class="reveal max-w-4xl mx-auto">
-      <h3 class="text-center text-base sm:text-lg font-bold text-slate-700 uppercase tracking-wider mb-8">RSC Wins Across Every Page Type</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Blog</div>
-          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">92%</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">Faster hydration</div>
-          <div class="text-xs text-slate-500">8505ms &rarr; 701ms</div>
-        </div>
-        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Product</div>
-          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">27%</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
-          <div class="text-xs text-slate-500">2408ms &rarr; 1756ms</div>
-        </div>
-        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Search</div>
-          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">22%</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
-          <div class="text-xs text-slate-500">2508ms &rarr; 1948ms</div>
-        </div>
-        <div class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-all">
-          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Dashboard</div>
-          <div class="text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">80%</div>
-          <div class="text-sm font-semibold text-slate-800 mb-1">Faster FCP</div>
-          <div class="text-xs text-slate-500">7228ms &rarr; 1416ms</div>
-        </div>
+        <% end %>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════
-     SECTION 5: ARCHITECTURE DEEP DIVE
+     CHECK ON REAL TOOLING
      ════════════════════════════════════════════════════════════════ -->
-<section class="section-light py-14 sm:py-20 lg:py-28">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6">
-    <div class="reveal text-center mb-10 sm:mb-16">
-      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Architecture</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">What Stays on the Server</h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        RSC keeps heavy rendering work server-side. Only tiny interactive shells hydrate in the browser. Product cards, descriptions, and reviews are pure HTML &mdash; zero JavaScript.
-      </p>
+<section class="py-14 sm:py-20 bg-white">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <span class="inline-block text-purple-600 font-semibold text-xs uppercase tracking-[0.2em] mb-3">Verify Independently</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">Don't take our word for it</h2>
+      <p class="text-slate-500 max-w-2xl mx-auto">After the production deploy, run any of the deployed pages through external tooling. Lighthouse-scored numbers should track the local-build numbers above to within ±5 points (variance from network/CDN conditions).</p>
     </div>
-
-    <!-- Server vs Client split -->
-    <div class="reveal max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Server side -->
-      <div class="bg-slate-900 rounded-2xl p-7 sm:p-9 ring-1 ring-indigo-500/20">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-9 h-9 bg-indigo-500/15 rounded-lg flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#818cf8" stroke-width="1.5"/><path d="M6 20h8" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M10 16v4" stroke="#818cf8" stroke-width="1.5"/></svg>
-          </div>
-          <span class="text-indigo-400 font-semibold text-sm uppercase tracking-wider">Server Components</span>
-        </div>
-        <ul class="space-y-5">
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-white">Product cards (24)</div>
-              <div class="text-xs text-slate-300 mt-0.5">Images, prices, ratings, descriptions</div>
-            </div>
-          </li>
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-white">Markdown rendering</div>
-              <div class="text-xs text-slate-300 mt-0.5">marked + highlight.js (321 KB eliminated)</div>
-            </div>
-          </li>
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-white">Review snippets</div>
-              <div class="text-xs text-slate-300 mt-0.5">Star ratings, reviewer info, comments</div>
-            </div>
-          </li>
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-indigo-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-white">Tags &amp; brand highlights</div>
-              <div class="text-xs text-slate-300 mt-0.5">Aggregation badges, counts, avg ratings</div>
-            </div>
-          </li>
-        </ul>
-        <div class="mt-6 pt-5 border-t border-slate-700">
-          <div class="text-sm text-slate-300">Result: <strong class="text-indigo-300 text-base">Pure HTML, 0 KB JavaScript</strong></div>
-        </div>
-      </div>
-
-      <!-- Client side -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-7 sm:p-9 shadow-sm">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="14" height="18" rx="2" stroke="#34d399" stroke-width="1.5"/><circle cx="10" cy="15" r="1" fill="#34d399"/></svg>
-          </div>
-          <span class="text-emerald-600 font-semibold text-sm uppercase tracking-wider">Client Islands</span>
-          <span class="text-xs text-slate-400 ml-auto font-medium">~10 KB total</span>
-        </div>
-        <ul class="space-y-5">
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-slate-800">Sort dropdown</div>
-              <div class="text-xs text-slate-500 mt-0.5">onChange triggers re-sort</div>
-            </div>
-          </li>
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-slate-800">Filter sidebar</div>
-              <div class="text-xs text-slate-500 mt-0.5">Category, brand, price, rating toggles</div>
-            </div>
-          </li>
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-slate-800">Pagination</div>
-              <div class="text-xs text-slate-500 mt-0.5">Page navigation buttons</div>
-            </div>
-          </li>
-          <li class="flex items-start gap-3">
-            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 8l2 2 4-4" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-slate-800">Compare &amp; Add-to-Cart</div>
-              <div class="text-xs text-slate-500 mt-0.5">Interactive buttons per card</div>
-            </div>
-          </li>
-        </ul>
-        <div class="mt-6 pt-5 border-t border-slate-100">
-          <div class="text-sm text-slate-500">Result: <strong class="text-emerald-600 text-base">Only interactive shells hydrate</strong></div>
-        </div>
-      </div>
+    <div class="grid sm:grid-cols-2 gap-3 text-sm">
+      <% [
+        ["Blog SSR",    "https://rsc.reactonrails.com/blog/ssr"],
+        ["Blog RSC",    "https://rsc.reactonrails.com/blog/rsc"],
+        ["Product SSR", "https://rsc.reactonrails.com/product/ssr"],
+        ["Product RSC", "https://rsc.reactonrails.com/product/rsc"],
+        ["Restaurant Detail SSR", "https://rsc.reactonrails.com/restaurant/1/ssr"],
+        ["Restaurant Detail RSC", "https://rsc.reactonrails.com/restaurant/1/rsc"],
+        ["Product Search SSR", "https://rsc.reactonrails.com/product-search/ssr"],
+        ["Product Search RSC", "https://rsc.reactonrails.com/product-search/rsc"],
+      ].each do |label, target_url| %>
+        <a href="https://pagespeed.web.dev/report?url=<%= CGI.escape(target_url) %>" target="_blank" rel="noopener" class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 hover:border-indigo-300 hover:bg-indigo-50/40 transition">
+          <span class="font-medium text-slate-800"><%= label %></span>
+          <span class="text-xs text-indigo-600">PSI &rarr;</span>
+        </a>
+      <% end %>
     </div>
   </div>
 </section>
-
-<!-- ════════════════════════════════════════════════════════════════
-     SECTION 6: CTA
-     ════════════════════════════════════════════════════════════════ -->
-<!-- Wave divider into CTA -->
-<div class="wave-divider" style="background: #0f172a;">
-  <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block">
-    <path d="M0 0V30C240 60 480 60 720 30C960 0 1200 0 1440 30V0H0Z" fill="#ffffff"/>
-  </svg>
-</div>
-
-<section class="hero-gradient relative overflow-hidden py-20 sm:py-28 lg:py-36">
-  <div class="hero-glow absolute inset-0"></div>
-
-  <!-- Grid pattern -->
-  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <pattern id="cta-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-        <path d="M40 0H0V40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#cta-grid)"/>
-  </svg>
-
-  <div class="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-    <div class="reveal">
-      <h2 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
-        See the Difference<br/><span class="gradient-text">For Yourself</span>
-      </h2>
-      <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed">
-        Open both versions side by side. Throttle your network to Slow 3G. Watch RSC stream content progressively while SSR stalls.
-      </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="/product-search/rsc" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-semibold px-8 py-4 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
-          View RSC Search
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a href="/product-search/ssr" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-xl transition-all border border-white/20">
-          View SSR Search
-        </a>
-      </div>
-      <p class="text-xs text-slate-500 mt-12">
-        Powered by <a href="https://www.shakacode.com/react-on-rails-pro/" class="text-indigo-400 hover:underline">React on Rails Pro</a> &mdash; React Server Components for Ruby on Rails
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ── Scroll reveal observer ── -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-  document.querySelectorAll('.reveal').forEach(function(el) {
-    observer.observe(el);
-  });
-});
-</script>

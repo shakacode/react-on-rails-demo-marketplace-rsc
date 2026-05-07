@@ -12,6 +12,8 @@ import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSection';
 import { Breadcrumb } from './Breadcrumb';
 import { buildProductCrumbs } from './productCrumbs';
+import { ProductSpecSheet } from './ProductSpecSheet';
+import { buildProductSpecMarkdown } from './productSpecMarkdown';
 
 const AsyncProductContent = loadable(
   () => import('./AsyncProductContent'),
@@ -64,6 +66,12 @@ export default function ProductPageClient({ product }: Props) {
         {/* Lazy-loaded content (fetches data via API + loads heavy libraries) */}
         <AsyncProductContent product={product} />
 
+        {/* Long-form spec sheet (markdown) + multi-currency price ladder */}
+        <ProductSpecSheet
+          productName={product.name}
+          productPriceUsd={product.price}
+          specMarkdown={buildProductSpecMarkdown(product.name, product.sku)}
+        />
       </div>
     </div>
   );

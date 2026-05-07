@@ -1,0 +1,181 @@
+<%
+  feature_label = {
+    "blog"           => "Blog Post",
+    "product"        => "Product Page",
+    "restaurant_1"   => "Restaurant Detail",
+    "product-search" => "Product Search",
+  }
+  variant_label = { "ssr" => "SSR", "client" => "Client", "rsc" => "RSC" }
+  variant_color = { "ssr" => "amber", "client" => "blue", "rsc" => "emerald" }
+
+  fmt_ms = ->(v) { v < 1000 ? "#{v.round} ms" : "#{(v/1000.0).round(2)} s" }
+  fmt_kb = ->(v) { v >= 1024*1024 ? "#{(v/1024.0/1024).round(2)} MB" : "#{(v/1024.0).round} KB" }
+
+  # If left and right are the same variant (caller error) show a generic header.
+  same_feature  = @left_meta[:slug] == @right_meta[:slug]
+  same_strategy = @left_meta[:strategy] == @right_meta[:strategy]
+
+  feature_name = same_feature ? (feature_label[@feature_slug] || @feature_slug.titleize) : "Comparison"
+  strategy_name = same_strategy ? @strategy.capitalize : "Mixed"
+
+  # Compute deltas (right relative to left). Negative = right wins for time-based metrics.
+  delta = ->(metric) {
+    diff = @right_data[metric] - @left_data[metric]
+    pct  = @left_data[metric].zero? ? 0 : (diff * 100.0 / @left_data[metric]).round
+    [diff, pct]
+  }
+
+  # Build pair-selector buttons. For the same feature/strategy we expose all three
+  # interesting pairs: SSR↔RSC, Client↔RSC, SSR↔Client.
+  pairs = []
+  if same_feature && same_strategy
+    %w[ssr client].each do |v|
+      pairs << { left: "#{@feature_slug}_#{v}-#{@strategy}", right: "#{@feature_slug}_rsc-#{@strategy}", label: "#{variant_label[v]} vs RSC" }
+    end
+    pairs << { left: "#{@feature_slug}_ssr-#{@strategy}", right: "#{@feature_slug}_client-#{@strategy}", label: "SSR vs Client" }
+  end
+
+  current_pair_key = "#{@left}|#{@right}"
+
+  # Strategy switch URL (toggle desktop ↔ mobile, keep variant pair)
+  alt_strategy = @strategy == "desktop" ? "mobile" : "desktop"
+  alt_strategy_url = if same_feature && same_strategy
+    left_alt  = @left.sub(/-#{@strategy}\z/, "-#{alt_strategy}")
+    right_alt = @right.sub(/-#{@strategy}\z/, "-#{alt_strategy}")
+    "/lh-compare?left=#{left_alt}&right=#{right_alt}"
+  end
+%>
+
+<section class="bg-slate-900 text-white" style="background-image:linear-gradient(to bottom, #0f172a, #1e1b4b)">
+  <div class="max-w-7xl mx-auto px-4 py-7">
+    <div class="flex items-baseline gap-3 mb-2">
+      <span class="text-emerald-400 text-xs uppercase tracking-[0.18em] font-semibold">Lighthouse Compare</span>
+      <span class="text-slate-400 text-xs">·</span>
+      <a href="/lighthouse-reports/index.html" class="text-slate-300 text-xs hover:text-white">All 24 reports →</a>
+      <span class="text-slate-400 text-xs">·</span>
+      <a href="/search-performance" class="text-slate-300 text-xs hover:text-white">Performance evidence page →</a>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold leading-tight">
+      <%= feature_name %>
+      <span class="text-slate-400 mx-2">·</span>
+      <span class="text-amber-300"><%= variant_label[@left_meta[:variant]] || @left_meta[:variant] %></span>
+      <span class="text-slate-500 mx-1.5">vs</span>
+      <span class="text-emerald-300"><%= variant_label[@right_meta[:variant]] || @right_meta[:variant] %></span>
+      <span class="text-slate-400 mx-2">·</span>
+      <span class="text-slate-300"><%= strategy_name %></span>
+    </h1>
+
+    <% if pairs.any? %>
+      <div class="flex flex-wrap items-center gap-2 mt-4 text-xs">
+        <span class="text-slate-400 font-medium uppercase tracking-wider mr-1">Pair:</span>
+        <% pairs.each do |p| %>
+          <% active = "#{p[:left]}|#{p[:right]}" == current_pair_key %>
+          <a href="/lh-compare?left=<%= p[:left] %>&right=<%= p[:right] %>"
+             class="rounded-full px-3 py-1 border <%= active ? "bg-white text-slate-900 border-white font-semibold" : "border-white/30 text-white/80 hover:bg-white/10 hover:border-white/50" %>">
+            <%= p[:label] %>
+          </a>
+        <% end %>
+        <% if alt_strategy_url %>
+          <span class="text-slate-500 mx-2">·</span>
+          <a href="<%= alt_strategy_url %>" class="rounded-full px-3 py-1 border border-white/30 text-white/80 hover:bg-white/10 hover:border-white/50">
+            Switch to <%= alt_strategy %>
+          </a>
+        <% end %>
+        <span class="text-slate-500 mx-2">·</span>
+        <a href="/lh-compare?left=<%= @right %>&right=<%= @left %>" class="rounded-full px-3 py-1 border border-white/30 text-white/80 hover:bg-white/10 hover:border-white/50" title="Swap left ↔ right">
+          ⇄ Swap
+        </a>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<!-- Side-by-side metric strip -->
+<section class="bg-white border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-[10px] uppercase tracking-wider text-slate-500">
+            <th class="text-left py-2 pr-4">Metric</th>
+            <th class="py-2 px-3">
+              <span class="inline-block px-2 py-0.5 rounded bg-<%= variant_color[@left_meta[:variant]] %>-100 text-<%= variant_color[@left_meta[:variant]] %>-800 font-bold"><%= variant_label[@left_meta[:variant]] %></span>
+            </th>
+            <th class="py-2 px-3">
+              <span class="inline-block px-2 py-0.5 rounded bg-<%= variant_color[@right_meta[:variant]] %>-100 text-<%= variant_color[@right_meta[:variant]] %>-800 font-bold"><%= variant_label[@right_meta[:variant]] %></span>
+            </th>
+            <th class="py-2 px-3">Δ</th>
+            <th class="py-2 px-3 hidden sm:table-cell">Notes</th>
+          </tr>
+        </thead>
+        <tbody class="font-mono text-xs">
+          <% [
+            [:score,    "Performance score", ->(v){ v.to_s }, true],
+            [:fcp,      "First Contentful Paint",        fmt_ms,  false],
+            [:lcp,      "Largest Contentful Paint",      fmt_ms,  false],
+            [:tbt,      "Total Blocking Time",           fmt_ms,  false],
+            [:cls,      "Cumulative Layout Shift",       ->(v){ v.round(3).to_s }, false],
+            [:si,       "Speed Index",                   fmt_ms,  false],
+            [:bootup,   "Script Bootup",                 fmt_ms,  false],
+            [:transfer, "Total Transfer",                fmt_kb,  false],
+          ].each do |key, label, fmt, higher_better| %>
+            <% lv = @left_data[key]; rv = @right_data[key]
+               diff_pct = lv.zero? ? 0 : ((rv - lv) * 100.0 / lv).round
+               # For perf score & bigger-is-better metrics: positive Δ on right = good
+               # For everything else (times, transfer): negative Δ on right = good
+               right_better = higher_better ? rv > lv : rv < lv
+               same         = rv == lv
+               delta_class  = same ? "text-slate-400" : (right_better ? "text-emerald-700 font-semibold" : "text-red-600")
+            %>
+            <tr class="border-t border-slate-100">
+              <td class="py-1.5 pr-4 text-slate-700 font-sans"><%= label %></td>
+              <td class="py-1.5 px-3 text-slate-800"><%= fmt.call(lv) %></td>
+              <td class="py-1.5 px-3 text-slate-800"><%= fmt.call(rv) %></td>
+              <td class="py-1.5 px-3 <%= delta_class %>">
+                <%= diff_pct >= 0 ? "+" : "" %><%= diff_pct %>%
+              </td>
+              <td class="py-1.5 px-3 hidden sm:table-cell text-slate-500 font-sans">
+                <% if same %>
+                  identical
+                <% elsif right_better %>
+                  <%= variant_label[@right_meta[:variant]] %> wins
+                <% else %>
+                  <%= variant_label[@left_meta[:variant]] %> wins
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Side-by-side iframes -->
+<section class="bg-slate-100">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+    <% [
+      [@left,  @left_meta,  variant_color[@left_meta[:variant]]],
+      [@right, @right_meta, variant_color[@right_meta[:variant]]],
+    ].each do |basename, meta, color| %>
+      <div class="bg-white rounded-lg border border-slate-200 overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="inline-block px-2 py-0.5 rounded bg-<%= color %>-100 text-<%= color %>-800 font-bold"><%= variant_label[meta[:variant]] %></span>
+            <span class="text-slate-500"><%= meta[:strategy].capitalize %></span>
+            <span class="text-slate-300">·</span>
+            <code class="text-slate-500"><%= basename %></code>
+          </div>
+          <a href="/lighthouse-reports/<%= basename %>.html" target="_blank" rel="noopener" class="text-xs text-indigo-600 hover:underline">Open standalone ↗</a>
+        </div>
+        <iframe
+          src="/lighthouse-reports/<%= basename %>.html"
+          class="w-full"
+          style="height: calc(100vh - 80px); min-height: 700px; border: 0;"
+          loading="lazy"
+          title="Lighthouse report for <%= basename %>"
+        ></iframe>
+      </div>
+    <% end %>
+  </div>
+</section>

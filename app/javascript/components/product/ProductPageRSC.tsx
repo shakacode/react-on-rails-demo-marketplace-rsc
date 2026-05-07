@@ -26,6 +26,8 @@ import AsyncRelatedProductsRSC from './AsyncRelatedProductsRSC';
 import { ProductDetailsSkeleton, ReviewStatsSkeleton, ReviewsSkeleton, RelatedProductsSkeleton } from './ProductSkeletons';
 import { Breadcrumb } from './Breadcrumb';
 import { buildProductCrumbs } from './productCrumbs';
+import { ProductSpecSheet } from './ProductSpecSheetForServer';
+import { buildProductSpecMarkdown } from './productSpecMarkdown';
 
 interface Props {
   product: Product;
@@ -86,6 +88,13 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
           <AsyncRelatedProductsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
         </Suspense>
 
+        {/* Long-form spec sheet (markdown) + multi-currency price ladder.
+            Heavy markdown stack runs SERVER-SIDE only on this variant. */}
+        <ProductSpecSheet
+          productName={product.name}
+          productPriceUsd={product.price}
+          specMarkdown={buildProductSpecMarkdown(product.name, product.sku)}
+        />
       </div>
     </div>
   );

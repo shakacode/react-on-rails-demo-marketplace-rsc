@@ -6,19 +6,41 @@
     ["Product SSR",    "/product/ssr",    "https://rsc.reactonrails.com/product/ssr"],
     ["Product Client", "/product/client", "https://rsc.reactonrails.com/product/client"],
     ["Product RSC",    "/product/rsc",    "https://rsc.reactonrails.com/product/rsc"],
+    ["Restaurant Detail SSR",    "/restaurant/1/ssr",    "https://rsc.reactonrails.com/restaurant/1/ssr"],
+    ["Restaurant Detail Client", "/restaurant/1/client", "https://rsc.reactonrails.com/restaurant/1/client"],
+    ["Restaurant Detail RSC",    "/restaurant/1/rsc",    "https://rsc.reactonrails.com/restaurant/1/rsc"],
     ["Product Search SSR",    "/product-search/ssr",    "https://rsc.reactonrails.com/product-search/ssr"],
     ["Product Search Client", "/product-search/client", "https://rsc.reactonrails.com/product-search/client"],
     ["Product Search RSC",    "/product-search/rsc",    "https://rsc.reactonrails.com/product-search/rsc"],
-    ["Analytics SSR",    "/analytics/ssr",    "https://rsc.reactonrails.com/analytics/ssr"],
-    ["Analytics Client", "/analytics/client", "https://rsc.reactonrails.com/analytics/client"],
-    ["Analytics RSC",    "/analytics/rsc",    "https://rsc.reactonrails.com/analytics/rsc"],
   ]
 
-  scorecards = [
-    { label: "V1 — SSR",                 score: 82, color: "amber",   fcp: "0.9 s", lcp: "0.9 s", tbt: "370 ms", cls: "0", si: "1.0 s", report: "/lighthouse-reports/blog-ssr.html",    image: "/docs-screenshots/lighthouse-blog-ssr.png" },
-    { label: "V2 — Client (loadable)",   score: 76, color: "amber",   fcp: "1.2 s", lcp: "1.4 s", tbt: "370 ms", cls: "0", si: "1.2 s", report: "/lighthouse-reports/blog-client.html", image: "/docs-screenshots/lighthouse-blog-client.png" },
-    { label: "V3 — RSC streaming",       score: 97, color: "emerald", fcp: "0.8 s", lcp: "1.0 s", tbt: "0 ms",   cls: "0", si: "1.2 s", report: "/lighthouse-reports/blog-rsc.html",    image: "/docs-screenshots/lighthouse-blog-rsc.png" },
-  ]
+  reports_dir = Rails.root.join("public/lighthouse-reports")
+  load_lh = ->(slug, variant) {
+    path = reports_dir.join("#{slug}_#{variant}-desktop.json")
+    next nil unless File.exist?(path)
+    j = JSON.parse(File.read(path)); a = j["audits"]
+    fmt_ms = ->(v) { v < 1000 ? "#{v.round} ms" : "#{(v/1000.0).round(1)} s" }
+    {
+      score: (j["categories"]["performance"]["score"] * 100).round,
+      fcp: fmt_ms.(a["first-contentful-paint"]["numericValue"].to_f),
+      lcp: fmt_ms.(a["largest-contentful-paint"]["numericValue"].to_f),
+      tbt: fmt_ms.(a["total-blocking-time"]["numericValue"].to_f),
+      cls: a["cumulative-layout-shift"]["numericValue"].round(2).to_s,
+      si:  fmt_ms.(a["speed-index"]["numericValue"].to_f),
+    }
+  }
+
+  scorecards = %w[ssr client rsc].map do |v|
+    d = load_lh.("blog", v)
+    label = { "ssr" => "V1 — SSR", "client" => "V2 — Client (loadable)", "rsc" => "V3 — RSC streaming" }[v]
+    color = d[:score] >= 90 ? "emerald" : "amber"
+    {
+      label: label, score: d[:score], color: color,
+      fcp: d[:fcp], lcp: d[:lcp], tbt: d[:tbt], cls: d[:cls], si: d[:si],
+      report: lh_compare_url_for("blog", v, "desktop"),
+      image:  "/docs-screenshots/lighthouse-blog-#{v}.png",
+    }
+  end
 %>
 
 <section class="bg-gradient-to-b from-slate-50 to-white border-b border-slate-200">
