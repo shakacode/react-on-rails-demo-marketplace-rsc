@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Bundle-size evidence — LocalHub demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:system-ui,-apple-system,Segoe\ UI,Roboto,sans-serif;margin:0;background:#f8fafc;color:#0f172a;line-height:1.5}
+    .feature-bundle{scroll-margin-top:1.5rem;transition:box-shadow .3s,border-color .3s}
+    .feature-bundle:target{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.25),0 4px 18px rgba(15,23,42,.08)}
+    .page-head{padding:2rem 1.5rem;background:white;border-bottom:1px solid #e2e8f0}
+    .page-head .back{font-size:.85rem;color:#475569;text-decoration:none}
+    .page-head .back:hover{color:#1e293b;text-decoration:underline}
+    .page-head h1{margin:.5rem 0 .75rem;font-size:1.75rem}
+    .lede{max-width:60rem;color:#475569;font-size:.95rem;margin:0 0 .5rem}
+    .lede.small{font-size:.85rem}
+    .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
+    .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
+    table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
+    table.compact{font-size:.82rem}
+    th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}
+    th{background:#f8fafc;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+    .num{font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace;text-align:right}
+    .variant{font-size:.7rem;text-transform:uppercase;font-weight:700;letter-spacing:.06em;padding:.15rem .5rem;border-radius:.25rem;display:inline-block}
+    .variant.ssr   {background:#dbeafe;color:#1e40af}
+    .variant.client{background:#fef3c7;color:#92400e}
+    .variant.rsc   {background:#dcfce7;color:#14532d}
+    .score{display:inline-block;min-width:2.5rem;padding:.15rem .4rem;border-radius:.25rem;font-weight:700;text-align:center}
+    .score-good{background:#dcfce7;color:#14532d}
+    .score-mid{background:#fef3c7;color:#92400e}
+    .score-bad{background:#fee2e2;color:#991b1b}
+    a{color:#4f46e5;text-decoration:none}
+    a:hover{text-decoration:underline}
+    a.muted{color:#94a3b8;font-size:.78rem}
+    .feature-header{margin-bottom:1rem}
+    .feature-header .diff{margin:.5rem 0 0;color:#475569}
+    .bundle{margin-top:1rem;padding-top:1rem;border-top:1px dashed #e2e8f0}
+    .bundle-title{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;font-size:1rem;margin:0 0 .75rem}
+    .bundle-title .meta{color:#64748b;font-size:.85rem;font-weight:500}
+    .bundle-title .route{font-family:ui-monospace,monospace;color:#1e293b}
+    .bundle-title .report-link{margin-left:auto;font-size:.85rem}
+    .bundle-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:1.5rem}
+    @media (max-width:900px){.bundle-grid{grid-template-columns:1fr}}
+    code{font-family:ui-monospace,monospace;font-size:.82rem;color:#1e293b}
+    .tag{display:inline-block;font-size:.7rem;padding:.1rem .4rem;border-radius:.25rem;background:#f1f5f9;color:#475569;margin-left:.4rem}
+    .tag-good{background:#dcfce7;color:#14532d}
+    .tag-warn{background:#fef3c7;color:#92400e}
+    .tag-info{background:#e0e7ff;color:#3730a3}
+    footer{padding:1.5rem;color:#64748b;font-size:.85rem;text-align:center}
+  </style>
+</head><body>
+<header class="page-head">
+  <a href="/" class="back">← Back to demo</a>
+  <h1>Bundle-size evidence</h1>
+  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each script row links to the file Lighthouse measured.</p>
+  <p class="lede small">See also: <a href="index.html">all Lighthouse reports</a>.</p>
+</header>
+<article class="feature-bundle" id="blog">
+      <header class="feature-header">
+        <h2>Blog Post <code class="path">/blog</code></h2>
+        <p class="diff">RSC ships <strong>1.04 MB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
+      </header>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant ssr">SSR</span>
+        <span class="route">/blog/ssr</span>
+        <span class="meta">total transfer 1.41 MB</span>
+        <a class="report-link" href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop">SSR vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">24 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">5</td><td class="num">1.28 MB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/markdown-libs-f83407a69fd576a01881.js</code> <span class="tag tag-warn">marked + highlight.js</span></td><td class="num">1.07 MB</td></tr><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/generated/BlogPostSSR-f1c525e8d8a47a163547.js</code> <span class="tag tag-warn">SSR entry pack</span></td><td class="num">10 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant client">CLIENT</span>
+        <span class="route">/blog/client</span>
+        <span class="meta">total transfer 1.43 MB</span>
+        <a class="report-link" href="/lh-compare?left=blog_client-desktop&right=blog_rsc-desktop">CLIENT vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">24 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">8</td><td class="num">1.30 MB</td></tr><tr><td>Fetch</td><td class="num">1</td><td class="num">1 KB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/markdown-libs-f83407a69fd576a01881.js</code> <span class="tag tag-warn">marked + highlight.js</span></td><td class="num">1.07 MB</td></tr><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/client1-c0651ca9c53524407e38.js</code> </td><td class="num">10 KB</td></tr><tr><td><code>/packs/js/6308-03b9d37ac6b06f428496.js</code> <span class="tag tag-info">vendor</span></td><td class="num">9 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/client0-4fbde5805465783da24f.chunk.js</code> </td><td class="num">3 KB</td></tr><tr><td><code>/packs/js/generated/BlogPostClient-32d91b1ce93e109364c9.js</code> <span class="tag tag-warn">client entry pack</span></td><td class="num">1 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant rsc">RSC</span>
+        <span class="route">/blog/rsc</span>
+        <span class="meta">total transfer 386 KB</span>
+        <a class="report-link" href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop">SSR vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">29 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">9</td><td class="num">247 KB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/6091-b15f12a07d1c0603dc18.js</code> <span class="tag tag-info">RSC vendor</span></td><td class="num">27 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/client4-f1eb291325abef4ef9ad.chunk.js</code> </td><td class="num">2 KB</td></tr><tr><td><code>/packs/js/client3-ec8567e86b8f593469bb.chunk.js</code> </td><td class="num">2 KB</td></tr><tr><td><code>/packs/js/client7-293b0c9830dcce3d3376.chunk.js</code> </td><td class="num">2 KB</td></tr><tr><td><code>/packs/js/client6-0f6e99dc40d35ea0d3a0.chunk.js</code> </td><td class="num">2 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr><tr><td><code>/packs/js/generated/BlogPostRSC-015dd10e93e65816af23.js</code> <span class="tag tag-good">RSC entry pack</span></td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+    </article><article class="feature-bundle" id="product">
+      <header class="feature-header">
+        <h2>Product Page <code class="path">/product</code></h2>
+        <p class="diff">RSC ships <strong>1.35 MB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
+      </header>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant ssr">SSR</span>
+        <span class="route">/product/ssr</span>
+        <span class="meta">total transfer 1.98 MB</span>
+        <a class="report-link" href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop">SSR vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">16 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">10</td><td class="num">1.59 MB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/markdown-libs-f83407a69fd576a01881.js</code> <span class="tag tag-warn">marked + highlight.js</span></td><td class="num">1.07 MB</td></tr><tr><td><code>/packs/js/4728-865f19d2af64a3dd0189.js</code> </td><td class="num">238 KB</td></tr><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/9166-dacc2204dd70d5ac6296.js</code> </td><td class="num">34 KB</td></tr><tr><td><code>/packs/js/charting-libs-bdc0a1d4a1c340eebcf4.js</code> <span class="tag tag-warn">d3-* split chunk</span></td><td class="num">25 KB</td></tr><tr><td><code>/packs/js/393-2d2b5770414c5634e506.js</code> </td><td class="num">18 KB</td></tr><tr><td><code>/packs/js/599-6780bccaed306102fafd.js</code> </td><td class="num">9 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/generated/ProductPageSSR-08cd27ce2aa8738ca374.js</code> <span class="tag tag-warn">SSR entry pack</span></td><td class="num">3 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant client">CLIENT</span>
+        <span class="route">/product/client</span>
+        <span class="meta">total transfer 2.00 MB</span>
+        <a class="report-link" href="/lh-compare?left=product_client-desktop&right=product_rsc-desktop">CLIENT vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">12 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">12</td><td class="num">1.61 MB</td></tr><tr><td>Fetch</td><td class="num">3</td><td class="num">3 KB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/markdown-libs-f83407a69fd576a01881.js</code> <span class="tag tag-warn">marked + highlight.js</span></td><td class="num">1.07 MB</td></tr><tr><td><code>/packs/js/4728-865f19d2af64a3dd0189.js</code> </td><td class="num">238 KB</td></tr><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/9166-dacc2204dd70d5ac6296.js</code> </td><td class="num">34 KB</td></tr><tr><td><code>/packs/js/charting-libs-bdc0a1d4a1c340eebcf4.js</code> <span class="tag tag-warn">d3-* split chunk</span></td><td class="num">25 KB</td></tr><tr><td><code>/packs/js/393-2d2b5770414c5634e506.js</code> </td><td class="num">18 KB</td></tr><tr><td><code>/packs/js/6308-03b9d37ac6b06f428496.js</code> <span class="tag tag-info">vendor</span></td><td class="num">9 KB</td></tr><tr><td><code>/packs/js/599-6780bccaed306102fafd.js</code> </td><td class="num">9 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/AsyncProductContent-46926c2cce979792546e.chunk.js</code> </td><td class="num">4 KB</td></tr><tr><td><code>/packs/js/generated/ProductPageClient-4305a0120bcdf8f8d234.js</code> <span class="tag tag-warn">client entry pack</span></td><td class="num">3 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant rsc">RSC</span>
+        <span class="route">/product/rsc</span>
+        <span class="meta">total transfer 653 KB</span>
+        <a class="report-link" href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop">SSR vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">21 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">7</td><td class="num">247 KB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/6091-b15f12a07d1c0603dc18.js</code> <span class="tag tag-info">RSC vendor</span></td><td class="num">27 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/client8-6164ad635427b173bbb0.chunk.js</code> </td><td class="num">4 KB</td></tr><tr><td><code>/packs/js/client10-cac312e1f517e48fd8f3.chunk.js</code> </td><td class="num">3 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr><tr><td><code>/packs/js/generated/ProductPageRSC-dbbc86775d5e59f31134.js</code> <span class="tag tag-good">RSC entry pack</span></td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+    </article><article class="feature-bundle" id="restaurant">
+      <header class="feature-header">
+        <h2>Restaurant Detail <code class="path">/restaurant/1</code></h2>
+        <p class="diff">RSC ships <strong>1.24 MB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
+      </header>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant ssr">SSR</span>
+        <span class="route">/restaurant/1/ssr</span>
+        <span class="meta">total transfer 1.96 MB</span>
+        <a class="report-link" href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop">SSR vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">35 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">8</td><td class="num">1.56 MB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/markdown-libs-f83407a69fd576a01881.js</code> <span class="tag tag-warn">marked + highlight.js</span></td><td class="num">1.07 MB</td></tr><tr><td><code>/packs/js/4728-865f19d2af64a3dd0189.js</code> </td><td class="num">238 KB</td></tr><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/9166-dacc2204dd70d5ac6296.js</code> </td><td class="num">34 KB</td></tr><tr><td><code>/packs/js/3489-b802cccf820e73fecc8d.js</code> </td><td class="num">25 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/generated/RestaurantDetailSSR-b4059733d550b6f1e8cb.js</code> <span class="tag tag-warn">SSR entry pack</span></td><td class="num">2 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant client">CLIENT</span>
+        <span class="route">/restaurant/1/client</span>
+        <span class="meta">total transfer 1.95 MB</span>
+        <a class="report-link" href="/lh-compare?left=restaurant_1_client-desktop&right=restaurant_1_rsc-desktop">CLIENT vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">6 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">9</td><td class="num">1.57 MB</td></tr><tr><td>Fetch</td><td class="num">1</td><td class="num">11 KB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/markdown-libs-f83407a69fd576a01881.js</code> <span class="tag tag-warn">marked + highlight.js</span></td><td class="num">1.07 MB</td></tr><tr><td><code>/packs/js/4728-865f19d2af64a3dd0189.js</code> </td><td class="num">238 KB</td></tr><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/9166-dacc2204dd70d5ac6296.js</code> </td><td class="num">34 KB</td></tr><tr><td><code>/packs/js/3489-b802cccf820e73fecc8d.js</code> </td><td class="num">25 KB</td></tr><tr><td><code>/packs/js/6308-03b9d37ac6b06f428496.js</code> <span class="tag tag-info">vendor</span></td><td class="num">9 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/generated/RestaurantDetailClient-b5fbae0d9e5b6b0c6abf.js</code> <span class="tag tag-warn">client entry pack</span></td><td class="num">3 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+      <section class="bundle">
+      <h3 class="bundle-title">
+        <span class="variant rsc">RSC</span>
+        <span class="route">/restaurant/1/rsc</span>
+        <span class="meta">total transfer 736 KB</span>
+        <a class="report-link" href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop">SSR vs RSC side-by-side →</a>
+      </h3>
+      <div class="bundle-grid">
+        <div>
+          <h4>By resource type</h4>
+          <table class="compact"><thead><tr><th>Type</th><th>Count</th><th>Transferred</th></tr></thead><tbody><tr><td>Document</td><td class="num">1</td><td class="num">120 KB</td></tr><tr><td>Stylesheet</td><td class="num">2</td><td class="num">110 KB</td></tr><tr><td>Script</td><td class="num">5</td><td class="num">239 KB</td></tr><tr><td>Other</td><td class="num">1</td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+        <div>
+          <h4>Top scripts (transferred bytes)</h4>
+          <table class="compact"><thead><tr><th>Script</th><th>Size</th></tr></thead><tbody><tr><td><code>/packs/js/7161-aa808d730931a2418aee.js</code> <span class="tag tag-warn">react-on-rails-pro core</span></td><td class="num">205 KB</td></tr><tr><td><code>/packs/js/6091-b15f12a07d1c0603dc18.js</code> <span class="tag tag-info">RSC vendor</span></td><td class="num">27 KB</td></tr><tr><td><code>/packs/js/runtime-23cd0f73fbe7356448f9.js</code> <span class="tag">webpack runtime</span></td><td class="num">6 KB</td></tr><tr><td><code>/packs/js/client-bundle-e47fa61713ff2a953737.js</code> <span class="tag">app entry</span></td><td class="num">1 KB</td></tr><tr><td><code>/packs/js/generated/RestaurantDetailRSC-50f5023a6839e09150f7.js</code> <span class="tag tag-good">RSC entry pack</span></td><td class="num">0 KB</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+    </article>
+</body></html>

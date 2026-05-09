@@ -1,0 +1,28 @@
+<% page = react_component_hash(
+     "RestaurantDetailClient",
+     props: {
+       restaurant: {
+         id: @restaurant.id,
+         name: @restaurant.name,
+         cuisine_type: @restaurant.cuisine_type,
+         city: @restaurant.city,
+         state: @restaurant.state,
+         address: @restaurant.address,
+         phone: @restaurant.phone,
+         website: @restaurant.website,
+         image_url: @restaurant.image_url,
+         latitude: @restaurant.latitude.to_f,
+         longitude: @restaurant.longitude.to_f,
+         average_rating: @restaurant.average_rating.to_f,
+         review_count: @restaurant.review_count,
+         timezone: @restaurant.timezone,
+       },
+     },
+     prerender: true,
+   ) %>
+<% content_for :head do %>
+  <%= page["linkTags"] %>
+  <%= page["scriptTags"] %>
+  <%= page["styleTags"] %>
+<% end %>
+<%= page["componentHtml"] %>

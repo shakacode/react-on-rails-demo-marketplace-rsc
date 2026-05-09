@@ -18,6 +18,8 @@ import { ReviewsList } from './ReviewsList';
 import { RelatedProducts } from './RelatedProducts';
 import { Breadcrumb } from './Breadcrumb';
 import { buildProductCrumbs } from './productCrumbs';
+import { ProductSpecSheet } from './ProductSpecSheet';
+import { buildProductSpecMarkdown } from './productSpecMarkdown';
 
 interface Props {
   product: Product;
@@ -77,6 +79,14 @@ export default function ProductPageSSR({ product, reviews, review_stats, related
         {/* Related products */}
         <RelatedProducts products={related_products} />
 
+        {/* Long-form spec sheet (markdown) + multi-currency price ladder.
+            Heavy markdown stack runs both server-side (SSR) and client-side
+            (during hydration) on this variant. */}
+        <ProductSpecSheet
+          productName={product.name}
+          productPriceUsd={product.price}
+          specMarkdown={buildProductSpecMarkdown(product.name, product.sku)}
+        />
       </div>
     </div>
   );

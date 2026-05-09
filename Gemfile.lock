@@ -1,10 +1,10 @@
 GIT
   remote: https://github.com/shakacode/react_on_rails.git
-  revision: 03e7787ea0faaef7bcd44dd3b794352c7acbc54d
+  revision: 3d571c327af034c81af4a31e785841195a0a2b7d
   branch: upcoming-v16.3.0
   glob: react_on_rails/*.gemspec
   specs:
-    react_on_rails (16.5.1)
+    react_on_rails (16.6.0)
       addressable
       connection_pool
       execjs (~> 2.5)
@@ -14,20 +14,20 @@ GIT
 
 GIT
   remote: https://github.com/shakacode/react_on_rails.git
-  revision: 03e7787ea0faaef7bcd44dd3b794352c7acbc54d
+  revision: 3d571c327af034c81af4a31e785841195a0a2b7d
   branch: upcoming-v16.3.0
   glob: react_on_rails_pro/*.gemspec
   specs:
-    react_on_rails_pro (16.5.1)
+    react_on_rails_pro (16.6.0)
       addressable
       async (>= 2.29)
       connection_pool
       execjs (~> 2.9)
       http-2 (>= 1.1.1)
-      httpx (>= 1.7.0)
+      httpx (~> 1.5)
       jwt (~> 2.7)
       rainbow
-      react_on_rails (= 16.5.1)
+      react_on_rails (= 16.6.0)
 
 GEM
   remote: https://rubygems.org/

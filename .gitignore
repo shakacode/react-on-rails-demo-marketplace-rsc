@@ -119,3 +119,11 @@ test-*.js
 
 # MCP configuration
 .mcp.json
+.psi-key
+
+# Claude Code worktrees and session state
+.claude/
+
+# macOS extended attribute files
+._*
+

@@ -15,11 +15,12 @@ Rails.application.routes.draw do
   get '/rsc' => 'home#rsc'
   get '/why-rsc' => 'pages#why_rsc'
   get '/measure' => 'pages#measure'
+  get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
 
-  # Search routes — three versions of the same page
-  get '/search/ssr', to: 'restaurants#search_ssr'       # V1: All data fetched on server, returned at once
-  get '/search/client', to: 'restaurants#search_client'  # V2: Loadable components, client-side fetch
-  get '/search/rsc', to: 'restaurants#search_rsc'        # V3: RSC streaming
+  # Restaurant detail page — three versions for the markdown-heavy detail view
+  get '/restaurant/:id/ssr', to: 'restaurants#show_ssr', as: :restaurant_show_ssr
+  get '/restaurant/:id/client', to: 'restaurants#show_client', as: :restaurant_show_client
+  get '/restaurant/:id/rsc', to: 'restaurants#show_rsc', as: :restaurant_show_rsc
 
   # Product page routes — three versions demonstrating e-commerce RSC gains
   get '/product/ssr', to: 'products#show_ssr'        # V1: All data fetched on server, returned at once
@@ -46,24 +47,13 @@ Rails.application.routes.draw do
   get '/blog/rsc-step4', to: 'blog#post_rsc_step4'
   get '/blog/rsc-step5', to: 'blog#post_rsc_step5'
 
-  # Dashboard analytics routes — three versions demonstrating streaming + chart library gains
-  get '/analytics/ssr', to: 'dashboard_analytics#show_ssr'      # V1: All data fetched on server, returned at once
-  get '/analytics/client', to: 'dashboard_analytics#show_client'  # V2: Loadable components, client-side fetch
-  get '/analytics/rsc', to: 'dashboard_analytics#show_rsc'        # V3: RSC streaming
-
-  # Dashboard route (Task 5)
-  get '/dashboard', to: 'dashboard#index'
-  get '/comparison', to: 'dashboard#comparison'
 
   # API endpoints (Task 2)
   namespace :api do
     resources :restaurants, only: [] do
       member do
-        get :status
-        get :wait_time
-        get :specials
-        get :trending
-        get :rating
+        # Used by /restaurant/:id/client variant
+        get :detail
       end
     end
 
@@ -79,16 +69,6 @@ Rails.application.routes.draw do
     get 'product_search/results', to: 'product_search#results'
     get 'product_search/facets', to: 'product_search#facets'
     post 'product_search/review_snippets', to: 'product_search#review_snippets'
-
-    # Dashboard analytics API (global — aggregates all restaurants)
-    scope 'dashboard', controller: 'dashboard' do
-      get :kpi_stats
-      get :revenue_data
-      get :order_status
-      get :recent_orders
-      get :top_menu_items
-      get :hourly_distribution
-    end
 
     resources :blog_posts, only: [] do
       member do

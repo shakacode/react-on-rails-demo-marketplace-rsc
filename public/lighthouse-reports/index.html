@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Lighthouse evidence — LocalHub demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:system-ui,-apple-system,Segoe\ UI,Roboto,sans-serif;margin:0;background:#f8fafc;color:#0f172a;line-height:1.5}
+    .feature-bundle{scroll-margin-top:1.5rem;transition:box-shadow .3s,border-color .3s}
+    .feature-bundle:target{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.25),0 4px 18px rgba(15,23,42,.08)}
+    .page-head{padding:2rem 1.5rem;background:white;border-bottom:1px solid #e2e8f0}
+    .page-head .back{font-size:.85rem;color:#475569;text-decoration:none}
+    .page-head .back:hover{color:#1e293b;text-decoration:underline}
+    .page-head h1{margin:.5rem 0 .75rem;font-size:1.75rem}
+    .lede{max-width:60rem;color:#475569;font-size:.95rem;margin:0 0 .5rem}
+    .lede.small{font-size:.85rem}
+    .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
+    .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
+    table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
+    table.compact{font-size:.82rem}
+    th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}
+    th{background:#f8fafc;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+    .num{font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace;text-align:right}
+    .variant{font-size:.7rem;text-transform:uppercase;font-weight:700;letter-spacing:.06em;padding:.15rem .5rem;border-radius:.25rem;display:inline-block}
+    .variant.ssr   {background:#dbeafe;color:#1e40af}
+    .variant.client{background:#fef3c7;color:#92400e}
+    .variant.rsc   {background:#dcfce7;color:#14532d}
+    .score{display:inline-block;min-width:2.5rem;padding:.15rem .4rem;border-radius:.25rem;font-weight:700;text-align:center}
+    .score-good{background:#dcfce7;color:#14532d}
+    .score-mid{background:#fef3c7;color:#92400e}
+    .score-bad{background:#fee2e2;color:#991b1b}
+    a{color:#4f46e5;text-decoration:none}
+    a:hover{text-decoration:underline}
+    a.muted{color:#94a3b8;font-size:.78rem}
+    .feature-header{margin-bottom:1rem}
+    .feature-header .diff{margin:.5rem 0 0;color:#475569}
+    .bundle{margin-top:1rem;padding-top:1rem;border-top:1px dashed #e2e8f0}
+    .bundle-title{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;font-size:1rem;margin:0 0 .75rem}
+    .bundle-title .meta{color:#64748b;font-size:.85rem;font-weight:500}
+    .bundle-title .route{font-family:ui-monospace,monospace;color:#1e293b}
+    .bundle-title .report-link{margin-left:auto;font-size:.85rem}
+    .bundle-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:1.5rem}
+    @media (max-width:900px){.bundle-grid{grid-template-columns:1fr}}
+    code{font-family:ui-monospace,monospace;font-size:.82rem;color:#1e293b}
+    .tag{display:inline-block;font-size:.7rem;padding:.1rem .4rem;border-radius:.25rem;background:#f1f5f9;color:#475569;margin-left:.4rem}
+    .tag-good{background:#dcfce7;color:#14532d}
+    .tag-warn{background:#fef3c7;color:#92400e}
+    .tag-info{background:#e0e7ff;color:#3730a3}
+    footer{padding:1.5rem;color:#64748b;font-size:.85rem;text-align:center}
+  </style>
+</head><body>
+<header class="page-head">
+  <a href="/" class="back">← Back to demo</a>
+  <h1>Lighthouse evidence</h1>
+  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics.</p>
+  <p class="lede small">See also: <a href="bundle-sizes.html">bundle-size breakdown</a> — what each variant ships to the browser, and why the RSC variants ship less.</p>
+</header>
+<section class="feature">
+      <h2>Blog Post <span class="path">(/blog)</span></h2>
+      <table>
+        <thead>
+          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+        </thead>
+        <tbody><tr>
+          <td class="variant ssr">SSR</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop" style="color:inherit;text-decoration:none">72</a></span></td>
+          <td class="num">414 ms</td>
+          <td class="num">414 ms</td>
+          <td class="num">953 ms</td>
+          <td class="num">1.06 s</td>
+          <td class="num">1.41 MB</td>
+          <td><a href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop">SSR vs RSC ↗</a> · <a href="blog_ssr-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant ssr">SSR</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-bad"><a href="/lh-compare?left=blog_ssr-mobile&right=blog_rsc-mobile" style="color:inherit;text-decoration:none">40</a></span></td>
+          <td class="num">7.80 s</td>
+          <td class="num">7.80 s</td>
+          <td class="num">748 ms</td>
+          <td class="num">4.29 s</td>
+          <td class="num">1.41 MB</td>
+          <td><a href="/lh-compare?left=blog_ssr-mobile&right=blog_rsc-mobile">SSR vs RSC ↗</a> · <a href="blog_ssr-mobile.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant client">CLIENT</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_client-desktop&right=blog_rsc-desktop" style="color:inherit;text-decoration:none">78</a></span></td>
+          <td class="num">1.37 s</td>
+          <td class="num">1.37 s</td>
+          <td class="num">316 ms</td>
+          <td class="num">1.01 s</td>
+          <td class="num">1.43 MB</td>
+          <td><a href="/lh-compare?left=blog_client-desktop&right=blog_rsc-desktop">CLIENT vs RSC ↗</a> · <a href="blog_client-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant client">CLIENT</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_client-mobile&right=blog_rsc-mobile" style="color:inherit;text-decoration:none">57</a></span></td>
+          <td class="num">8.80 s</td>
+          <td class="num">8.80 s</td>
+          <td class="num">0 ms</td>
+          <td class="num">4.67 s</td>
+          <td class="num">1.43 MB</td>
+          <td><a href="/lh-compare?left=blog_client-mobile&right=blog_rsc-mobile">CLIENT vs RSC ↗</a> · <a href="blog_client-mobile.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant rsc">RSC</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-good"><a href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop" style="color:inherit;text-decoration:none">100</a></span></td>
+          <td class="num">593 ms</td>
+          <td class="num">698 ms</td>
+          <td class="num">0 ms</td>
+          <td class="num">62 ms</td>
+          <td class="num">386 KB</td>
+          <td><a href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop">SSR vs RSC ↗</a> · <a href="blog_rsc-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant rsc">RSC</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_ssr-mobile&right=blog_rsc-mobile" style="color:inherit;text-decoration:none">88</a></span></td>
+          <td class="num">2.97 s</td>
+          <td class="num">3.12 s</td>
+          <td class="num">71 ms</td>
+          <td class="num">215 ms</td>
+          <td class="num">386 KB</td>
+          <td><a href="/lh-compare?left=blog_ssr-mobile&right=blog_rsc-mobile">SSR vs RSC ↗</a> · <a href="blog_rsc-mobile.html" class="muted">solo</a></td>
+        </tr></tbody>
+      </table>
+    </section><section class="feature">
+      <h2>Product Page <span class="path">(/product)</span></h2>
+      <table>
+        <thead>
+          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+        </thead>
+        <tbody><tr>
+          <td class="variant ssr">SSR</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop" style="color:inherit;text-decoration:none">80</a></span></td>
+          <td class="num">1.87 s</td>
+          <td class="num">2.07 s</td>
+          <td class="num">0 ms</td>
+          <td class="num">246 ms</td>
+          <td class="num">1.98 MB</td>
+          <td><a href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop">SSR vs RSC ↗</a> · <a href="product_ssr-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant ssr">SSR</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-bad"><a href="/lh-compare?left=product_ssr-mobile&right=product_rsc-mobile" style="color:inherit;text-decoration:none">49</a></span></td>
+          <td class="num">3.52 s</td>
+          <td class="num">11.32 s</td>
+          <td class="num">751 ms</td>
+          <td class="num">1.04 s</td>
+          <td class="num">1.98 MB</td>
+          <td><a href="/lh-compare?left=product_ssr-mobile&right=product_rsc-mobile">SSR vs RSC ↗</a> · <a href="product_ssr-mobile.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant client">CLIENT</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=product_client-desktop&right=product_rsc-desktop" style="color:inherit;text-decoration:none">83</a></span></td>
+          <td class="num">1.66 s</td>
+          <td class="num">2.06 s</td>
+          <td class="num">0 ms</td>
+          <td class="num">247 ms</td>
+          <td class="num">2.00 MB</td>
+          <td><a href="/lh-compare?left=product_client-desktop&right=product_rsc-desktop">CLIENT vs RSC ↗</a> · <a href="product_client-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant client">CLIENT</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-bad"><a href="/lh-compare?left=product_client-mobile&right=product_rsc-mobile" style="color:inherit;text-decoration:none">47</a></span></td>
+          <td class="num">3.57 s</td>
+          <td class="num">11.77 s</td>
+          <td class="num">884 ms</td>
+          <td class="num">1.27 s</td>
+          <td class="num">2.00 MB</td>
+          <td><a href="/lh-compare?left=product_client-mobile&right=product_rsc-mobile">CLIENT vs RSC ↗</a> · <a href="product_client-mobile.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant rsc">RSC</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-good"><a href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop" style="color:inherit;text-decoration:none">98</a></span></td>
+          <td class="num">640 ms</td>
+          <td class="num">1.05 s</td>
+          <td class="num">0 ms</td>
+          <td class="num">64 ms</td>
+          <td class="num">653 KB</td>
+          <td><a href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop">SSR vs RSC ↗</a> · <a href="product_rsc-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant rsc">RSC</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=product_ssr-mobile&right=product_rsc-mobile" style="color:inherit;text-decoration:none">79</a></span></td>
+          <td class="num">2.95 s</td>
+          <td class="num">4.52 s</td>
+          <td class="num">21 ms</td>
+          <td class="num">296 ms</td>
+          <td class="num">652 KB</td>
+          <td><a href="/lh-compare?left=product_ssr-mobile&right=product_rsc-mobile">SSR vs RSC ↗</a> · <a href="product_rsc-mobile.html" class="muted">solo</a></td>
+        </tr></tbody>
+      </table>
+    </section><section class="feature">
+      <h2>Restaurant Detail <span class="path">(/restaurant/1)</span></h2>
+      <table>
+        <thead>
+          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+        </thead>
+        <tbody><tr>
+          <td class="variant ssr">SSR</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop" style="color:inherit;text-decoration:none">77</a></span></td>
+          <td class="num">711 ms</td>
+          <td class="num">2.33 s</td>
+          <td class="num">270 ms</td>
+          <td class="num">383 ms</td>
+          <td class="num">1.96 MB</td>
+          <td><a href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop">SSR vs RSC ↗</a> · <a href="restaurant_1_ssr-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant ssr">SSR</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_ssr-mobile&right=restaurant_1_rsc-mobile" style="color:inherit;text-decoration:none">56</a></span></td>
+          <td class="num">10.31 s</td>
+          <td class="num">11.51 s</td>
+          <td class="num">50 ms</td>
+          <td class="num">1.33 s</td>
+          <td class="num">1.90 MB</td>
+          <td><a href="/lh-compare?left=restaurant_1_ssr-mobile&right=restaurant_1_rsc-mobile">SSR vs RSC ↗</a> · <a href="restaurant_1_ssr-mobile.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant client">CLIENT</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_client-desktop&right=restaurant_1_rsc-desktop" style="color:inherit;text-decoration:none">82</a></span></td>
+          <td class="num">1.58 s</td>
+          <td class="num">2.02 s</td>
+          <td class="num">116 ms</td>
+          <td class="num">342 ms</td>
+          <td class="num">1.95 MB</td>
+          <td><a href="/lh-compare?left=restaurant_1_client-desktop&right=restaurant_1_rsc-desktop">CLIENT vs RSC ↗</a> · <a href="restaurant_1_client-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant client">CLIENT</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-bad"><a href="/lh-compare?left=restaurant_1_client-mobile&right=restaurant_1_rsc-mobile" style="color:inherit;text-decoration:none">41</a></span></td>
+          <td class="num">3.27 s</td>
+          <td class="num">11.17 s</td>
+          <td class="num">1.96 s</td>
+          <td class="num">1.91 s</td>
+          <td class="num">1.90 MB</td>
+          <td><a href="/lh-compare?left=restaurant_1_client-mobile&right=restaurant_1_rsc-mobile">CLIENT vs RSC ↗</a> · <a href="restaurant_1_client-mobile.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant rsc">RSC</td>
+          <td>desktop</td>
+          <td class="num"><span class="score score-good"><a href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop" style="color:inherit;text-decoration:none">96</a></span></td>
+          <td class="num">670 ms</td>
+          <td class="num">1.35 s</td>
+          <td class="num">0 ms</td>
+          <td class="num">107 ms</td>
+          <td class="num">736 KB</td>
+          <td><a href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop">SSR vs RSC ↗</a> · <a href="restaurant_1_rsc-desktop.html" class="muted">solo</a></td>
+        </tr><tr>
+          <td class="variant rsc">RSC</td>
+          <td>mobile</td>
+          <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_ssr-mobile&right=restaurant_1_rsc-mobile" style="color:inherit;text-decoration:none">74</a></span></td>
+          <td class="num">3.54 s</td>
+          <td class="num">4.81 s</td>
+          <td class="num">89 ms</td>
+          <td class="num">417 ms</td>
+          <td class="num">676 KB</td>
+          <td><a href="/lh-compare?left=restaurant_1_ssr-mobile&right=restaurant_1_rsc-mobile">SSR vs RSC ↗</a> · <a href="restaurant_1_rsc-mobile.html" class="muted">solo</a></td>
+        </tr></tbody>
+      </table>
+    </section><section class="feature">
+      <h2>Product Search <span class="path">(/product-search)</span></h2>
+      <table>
+        <thead>
+          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+<footer><p>Reports generated against the local docker image (<code>lhd:lean</code>) on port 3040. Same artefact as the production deployment — re-run any URL through <a href="https://pagespeed.web.dev/">pagespeed.web.dev</a> after deploy for field-condition equivalent.</p></footer>
+</body></html>

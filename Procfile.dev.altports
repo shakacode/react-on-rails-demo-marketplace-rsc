@@ -1,0 +1,5 @@
+web: bundle exec rails server -p 3100
+webpack: bin/shakapacker-dev-server
+rails-server-assets: HMR=true SERVER_BUNDLE_ONLY=yes bin/shakapacker --watch
+rails-rsc-assets: HMR=true RSC_BUNDLE_ONLY=yes bin/shakapacker --watch
+renderer: node node-renderer.js
