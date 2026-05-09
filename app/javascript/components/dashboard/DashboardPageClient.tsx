@@ -9,7 +9,7 @@ import loadable from '@loadable/component';
 import type { DashboardRestaurant } from '../../types/dashboard';
 import DashboardHeader from './DashboardHeader';
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, TopItemsSkeleton } from './DashboardSkeletons';
-import { INPOverlay } from '../blog/INPOverlay';
+import { DashboardRangePicker } from './DashboardRangePicker';
 
 const AsyncDashboardContent = loadable(
   () => import(/* webpackChunkName: "dashboard-async" */ './AsyncDashboardContent'),
@@ -31,22 +31,25 @@ const AsyncDashboardContent = loadable(
 
 interface Props {
   restaurant: DashboardRestaurant;
+  range?: string;
+  status?: string | null;
 }
 
-export default function DashboardPageClient({ restaurant }: Props) {
+export default function DashboardPageClient({ restaurant, range = '7d', status = null }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6">
         {/* Version indicator */}
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-6">
-          V2: Client Rendering — Shell renders fast, data fetched via 6 API calls. d3 + date-fns loaded client-side (~115KB).
+          V2: Client Rendering — <code className="bg-white/60 px-1 rounded">@loadable/component</code> loads <code className="bg-white/60 px-1 rounded">AsyncDashboardContent</code> (d3 + date-fns ~115KB) in a deferred chunk; widgets then fetch data via 6 API calls.
         </p>
 
         <DashboardHeader restaurant={restaurant} />
 
-        <AsyncDashboardContent restaurant={restaurant} />
+        <DashboardRangePicker range={range} />
 
-        <INPOverlay />
+        <AsyncDashboardContent restaurant={restaurant} range={range} status={status} />
+
       </div>
     </div>
   );

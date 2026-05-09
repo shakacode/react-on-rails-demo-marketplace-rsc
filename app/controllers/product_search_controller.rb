@@ -20,6 +20,7 @@ class ProductSearchController < ApplicationController
     @review_snippets = load_review_snippets(@products_data[:products].map { |p| p[:id] }, per_product: 2)
     @popular_tags = load_popular_tags
     @brand_highlights = load_brand_highlights
+    @empty_state_suggestions = empty_state_suggestions if @products_data[:products].empty?
   end
 
   # V2: Client Components — send minimal data, client fetches rest via API
@@ -190,5 +191,23 @@ class ProductSearchController < ApplicationController
           avg_rating: b.avg_rating.to_f.round(1)
         }
       end
+  end
+
+  # Server-computed suggestions surfaced when the current search returns 0 results.
+  # Computed against the WHOLE catalog (not the empty filtered scope) so the
+  # user always has somewhere to land.
+  def empty_state_suggestions
+    {
+      top_categories: Product.group(:category)
+                            .order(Arel.sql("COUNT(*) DESC"))
+                            .limit(6)
+                            .pluck(Arel.sql("category, COUNT(*)"))
+                            .map { |name, count| { name: name, count: count } },
+      top_brands: Product.group(:brand)
+                        .order(Arel.sql("COUNT(*) DESC"))
+                        .limit(8)
+                        .pluck(Arel.sql("brand, COUNT(*)"))
+                        .map { |name, count| { name: name, count: count } },
+    }
   end
 end

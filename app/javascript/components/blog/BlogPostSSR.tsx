@@ -9,7 +9,6 @@ import { BookmarkShareBar } from './BookmarkShareBar';
 import { TableOfContents } from './TableOfContents';
 import { ReadingModeToggle } from './ReadingModeToggle';
 import { InteractiveSection } from './InteractiveSection';
-import { INPOverlay } from './INPOverlay';
 
 interface Props {
   post: BlogPost;
@@ -42,7 +41,6 @@ export default function BlogPostSSR({ post, related_posts }: Props) {
 
       <RelatedPosts posts={related_posts} />
 
-      <INPOverlay />
     </div>
   );
 }

@@ -15,14 +15,20 @@ module DashboardAnalytics
       [max_date - 90.days, max_date]
     end
 
-    # KPI statistics — scans orders for counts and sums
-    def dashboard_kpi_stats
+    # KPI statistics — scans orders for counts and sums.
+    # `days:` controls the look-back window and the period-over-period comparison.
+    # `status:` optionally narrows to a single order status.
+    def dashboard_kpi_stats(days: 7, status: nil)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
-      prev_cutoff = cutoff - 7.days
+      cutoff = window_end - days.days
+      prev_cutoff = cutoff - days.days
 
-      stats = Order.where(placed_at: cutoff..window_end)
-                   .select(
+      base = Order.where(placed_at: cutoff..window_end)
+      base = base.where(status: status) if status.present?
+      prev_base = Order.where(placed_at: prev_cutoff..cutoff)
+      prev_base = prev_base.where(status: status) if status.present?
+
+      stats = base.select(
                      "COUNT(*) as total_orders",
                      "COALESCE(SUM(total_price), 0) as total_revenue",
                      "COALESCE(AVG(total_price), 0) as avg_order_value",
@@ -30,8 +36,7 @@ module DashboardAnalytics
                      "COUNT(*) FILTER (WHERE is_delivery = true) as delivery_orders"
                    ).take
 
-      prev_stats = Order.where(placed_at: prev_cutoff..cutoff)
-                        .select(
+      prev_stats = prev_base.select(
                           "COUNT(*) as total_orders",
                           "COALESCE(SUM(total_price), 0) as total_revenue",
                           "COALESCE(AVG(total_price), 0) as avg_order_value",
@@ -55,12 +60,13 @@ module DashboardAnalytics
 
     # Daily revenue for area chart — GROUP BY day across all orders
     # With 10M rows: ~500ms-1s
-    def dashboard_revenue_by_day
+    def dashboard_revenue_by_day(days: 14, status: nil)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 14.days
+      cutoff = window_end - days.days
 
-      Order.where(placed_at: cutoff..window_end)
-           .group("date_trunc('day', placed_at)::date")
+      scope = Order.where(placed_at: cutoff..window_end)
+      scope = scope.where(status: status) if status.present?
+      scope.group("date_trunc('day', placed_at)::date")
            .order(Arel.sql("date_trunc('day', placed_at)::date"))
            .pluck(
              Arel.sql("date_trunc('day', placed_at)::date"),
@@ -73,9 +79,9 @@ module DashboardAnalytics
 
     # Order status distribution for donut chart
     # With 10M rows: ~200-400ms
-    def dashboard_order_status
+    def dashboard_order_status(days: 7)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
+      cutoff = window_end - days.days
 
       Order.where(placed_at: cutoff..window_end)
            .group(:status)
@@ -86,12 +92,14 @@ module DashboardAnalytics
 
     # Recent orders with item details — JOIN with order_lines + menu_items
     # Queries most recent 15 orders across all restaurants
-    def dashboard_recent_orders(limit: 15)
+    def dashboard_recent_orders(limit: 15, days: 7, status: nil)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
+      cutoff = window_end - days.days
 
-      Order.where(placed_at: cutoff..window_end)
-           .includes(:restaurant, order_lines: :menu_item)
+      scope = Order.where(placed_at: cutoff..window_end)
+      scope = scope.where(status: status) if status.present?
+
+      scope.includes(:restaurant, order_lines: :menu_item)
            .order(placed_at: :desc)
            .limit(limit)
            .map do |order|
@@ -152,12 +160,13 @@ module DashboardAnalytics
 
     # Hourly order distribution — GROUP BY hour across all orders
     # With 10M rows: ~300-600ms
-    def dashboard_hourly_distribution
+    def dashboard_hourly_distribution(days: 7, status: nil)
       _, window_end = dashboard_data_window
-      cutoff = window_end - 7.days
+      cutoff = window_end - days.days
 
-      Order.where(placed_at: cutoff..window_end)
-           .group(Arel.sql("EXTRACT(hour FROM placed_at)::integer"))
+      scope = Order.where(placed_at: cutoff..window_end)
+      scope = scope.where(status: status) if status.present?
+      scope.group(Arel.sql("EXTRACT(hour FROM placed_at)::integer"))
            .order(Arel.sql("EXTRACT(hour FROM placed_at)::integer"))
            .pluck(
              Arel.sql("EXTRACT(hour FROM placed_at)::integer"),

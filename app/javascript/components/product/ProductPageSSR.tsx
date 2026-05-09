@@ -16,7 +16,8 @@ import { ProductSpecs } from './ProductSpecs';
 import { ReviewDistributionChart } from './ReviewDistributionChart';
 import { ReviewsList } from './ReviewsList';
 import { RelatedProducts } from './RelatedProducts';
-import { INPOverlay } from '../blog/INPOverlay';
+import { Breadcrumb } from './Breadcrumb';
+import { buildProductCrumbs } from './productCrumbs';
 
 interface Props {
   product: Product;
@@ -33,6 +34,8 @@ export default function ProductPageSSR({ product, reviews, review_stats, related
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-6">
           V1: Full SSR — marked + highlight.js + date-fns (400KB+) shipped to client for hydration. All data blocks initial response.
         </p>
+
+        <Breadcrumb crumbs={buildProductCrumbs(product)} />
 
         {/* Hero section: Image gallery + Product info */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
@@ -74,7 +77,6 @@ export default function ProductPageSSR({ product, reviews, review_stats, related
         {/* Related products */}
         <RelatedProducts products={related_products} />
 
-        <INPOverlay />
       </div>
     </div>
   );

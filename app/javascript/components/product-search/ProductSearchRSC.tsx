@@ -78,7 +78,7 @@ export default function ProductSearchRSC({ search_params, getReactOnRailsAsyncPr
           <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-[140px] space-y-4">
               <Suspense fallback={<FilterSidebarSkeleton />}>
-                <AsyncFacetsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
+                <AsyncFacetsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} searchParams={search_params} />
               </Suspense>
 
               {/* Popular tags + Brand highlights stream as separate async props */}

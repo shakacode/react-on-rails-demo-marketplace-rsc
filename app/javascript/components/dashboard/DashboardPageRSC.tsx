@@ -12,7 +12,6 @@
 //   - DashboardFilters (~3KB) — time range + status filter buttons
 //   - SortableOrdersTable (~4KB) — click-to-sort columns
 //   - InteractiveTopItems (~3KB) — category filter buttons
-//   - INPOverlay (~2KB) — interaction monitoring
 //
 // Total client JS: ~12KB interactive components vs ~120KB+ for SSR/Client (d3+date-fns+components)
 // Plus: streaming means shell appears in <50ms instead of waiting for ALL queries.
@@ -28,15 +27,16 @@ import AsyncHourlyChartRSC from './AsyncHourlyChartRSC';
 import AsyncRecentOrdersRSC from './AsyncRecentOrdersRSC';
 import AsyncTopItemsRSC from './AsyncTopItemsRSC';
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, TopItemsSkeleton } from './DashboardSkeletons';
-// INPOverlay removed from RSC page — its chunk group pulls in charting-libs
-// import { INPOverlay } from '../blog/INPOverlay';
+import { DashboardRangePicker } from './DashboardRangePicker';
 
 interface Props {
   restaurant: DashboardRestaurant;
+  range?: string;
+  status?: string | null;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
-export default function DashboardPageRSC({ restaurant, getReactOnRailsAsyncProp }: Props) {
+export default function DashboardPageRSC({ restaurant, range = '7d', status = null, getReactOnRailsAsyncProp }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -48,9 +48,15 @@ export default function DashboardPageRSC({ restaurant, getReactOnRailsAsyncProp 
         {/* Header — renders IMMEDIATELY (no data dependencies) */}
         <DashboardHeader restaurant={restaurant} />
 
-        {/* Interactive filters — 'use client' island, hydrates fast (~3KB) */}
+        {/* Range picker — pure server-rendered HTML anchors (zero JS shipped) */}
+        <DashboardRangePicker range={range} />
+
+        {/* Status filter — server-rendered HTML anchors. Each click re-runs
+            the controller so the recent-orders query is scoped server-side. */}
         <DashboardFilters
           statuses={['completed', 'preparing', 'pending', 'ready']}
+          range={range}
+          status={status}
         />
 
         {/* KPI Stats — streams first (simple aggregation queries) */}

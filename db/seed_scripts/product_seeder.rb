@@ -140,11 +140,11 @@ class ProductSeeder
       brand: 'ProSound',
       sku: 'PS-EX1-BLK',
       images: [
-        { url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop', alt: 'ProSound Elite X1 - Front view', position: 0 },
-        { url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&h=800&fit=crop', alt: 'ProSound Elite X1 - Side view', position: 1 },
-        { url: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop', alt: 'ProSound Elite X1 - On desk', position: 2 },
-        { url: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&h=800&fit=crop', alt: 'ProSound Elite X1 - Lifestyle', position: 3 },
-        { url: 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800&h=800&fit=crop', alt: 'ProSound Elite X1 - Detail', position: 4 }
+        { url: '/seed-images/products/prod-8c9dd58ee973.jpg', alt: 'ProSound Elite X1 - Front view', position: 0 },
+        { url: '/seed-images/products/prod-5b41d7bf90c5.jpg', alt: 'ProSound Elite X1 - Side view', position: 1 },
+        { url: '/seed-images/products/prod-373176361650.jpg', alt: 'ProSound Elite X1 - On desk', position: 2 },
+        { url: '/seed-images/products/prod-5f57261d29af.jpg', alt: 'ProSound Elite X1 - Lifestyle', position: 3 },
+        { url: '/seed-images/products/prod-099d1fe16bd0.jpg', alt: 'ProSound Elite X1 - Detail', position: 4 }
       ],
       specs: {
         'Driver Size' => '50mm Bio-cellulose',
@@ -186,7 +186,7 @@ class ProductSeeder
       brand: 'ProSound',
       sku: 'PS-SF-BLK',
       images: [
-        { url: 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800&h=800&fit=crop', alt: 'ProSound Sport Flex Earbuds', position: 0 }
+        { url: '/seed-images/products/prod-523f15e2c426.jpg', alt: 'ProSound Sport Flex Earbuds', position: 0 }
       ],
       specs: { 'Type' => 'True Wireless', 'Battery' => '8 + 24 hours', 'Water Resistance' => 'IP67' },
       features: ['IP67 water resistance', 'Secure-fit ear hooks', '32-hour total battery life'],
@@ -203,7 +203,7 @@ class ProductSeeder
       brand: 'ProSound',
       sku: 'PS-SMP-SLV',
       images: [
-        { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=800&fit=crop', alt: 'ProSound Studio Monitor Pro', position: 0 }
+        { url: '/seed-images/products/prod-52359cc7abd1.jpg', alt: 'ProSound Studio Monitor Pro', position: 0 }
       ],
       specs: { 'Type' => 'Over-ear Wired', 'Driver' => '53mm Beryllium', 'Impedance' => '64 ohm' },
       features: ['Flat frequency response', 'Replaceable ear pads', 'Detachable cable system'],
@@ -220,7 +220,7 @@ class ProductSeeder
       brand: 'AudioTech',
       sku: 'AT-BMP500',
       images: [
-        { url: 'https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=800&h=800&fit=crop', alt: 'AudioTech BassMax Pro 500', position: 0 }
+        { url: '/seed-images/products/prod-79f42823aa46.jpg', alt: 'AudioTech BassMax Pro 500', position: 0 }
       ],
       specs: { 'Type' => 'Over-ear Wireless', 'Driver' => '45mm Dynamic', 'Battery' => '35 hours' },
       features: ['BassMax technology', '35-hour battery life', 'Foldable design'],
@@ -237,7 +237,7 @@ class ProductSeeder
       brand: 'SoundWave',
       sku: 'SW-CL700',
       images: [
-        { url: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=800&h=800&fit=crop', alt: 'SoundWave Clarity 700', position: 0 }
+        { url: '/seed-images/products/prod-897b3f7d34a4.jpg', alt: 'SoundWave Clarity 700', position: 0 }
       ],
       specs: { 'Type' => 'Over-ear Wireless', 'Driver' => '40mm Graphene', 'Battery' => '45 hours' },
       features: ['Advanced ANC', '45-hour battery', 'Graphene drivers'],
@@ -254,7 +254,7 @@ class ProductSeeder
       brand: 'ProSound',
       sku: 'PS-TCP',
       images: [
-        { url: 'https://images.unsplash.com/photo-1585298723682-7115561c51b7?w=800&h=800&fit=crop', alt: 'ProSound Travel Case', position: 0 }
+        { url: '/seed-images/products/prod-d77aabc54975.jpg', alt: 'ProSound Travel Case', position: 0 }
       ],
       specs: { 'Material' => 'EVA Hard Shell', 'Interior' => 'Memory Foam', 'Weight' => '180g' },
       features: ['Hard-shell protection', 'Memory foam interior', 'Cable storage pocket'],
@@ -271,7 +271,7 @@ class ProductSeeder
       brand: 'ProSound',
       sku: 'PS-DAC-C',
       images: [
-        { url: 'https://images.unsplash.com/photo-1558089687-f282ffcbc126?w=800&h=800&fit=crop', alt: 'ProSound USB-C DAC', position: 0 }
+        { url: '/seed-images/products/prod-0e6fd53f4bff.jpg', alt: 'ProSound USB-C DAC', position: 0 }
       ],
       specs: { 'DAC Chip' => 'ESS ES9281AC', 'Output' => '3.5mm', 'Resolution' => '32-bit/384kHz' },
       features: ['Hi-res audio decoding', 'Ultra-portable design', 'Low power consumption'],
@@ -288,7 +288,7 @@ class ProductSeeder
       brand: 'NovaBeat',
       sku: 'NB-PANC',
       images: [
-        { url: 'https://images.unsplash.com/photo-1577174881658-0f30ed549adc?w=800&h=800&fit=crop', alt: 'NovaBeat Pulse ANC', position: 0 }
+        { url: '/seed-images/products/prod-09144710e68e.jpg', alt: 'NovaBeat Pulse ANC', position: 0 }
       ],
       specs: { 'Type' => 'Over-ear Wireless', 'Driver' => '40mm', 'Battery' => '30 hours' },
       features: ['Adaptive ANC', '30-hour battery', 'Available in 6 colors'],
@@ -305,7 +305,7 @@ class ProductSeeder
       brand: 'ProSound',
       sku: 'PS-REP-ELT',
       images: [
-        { url: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=800&h=800&fit=crop', alt: 'ProSound Replacement Ear Pads', position: 0 }
+        { url: '/seed-images/products/prod-5ab161943b85.jpg', alt: 'ProSound Replacement Ear Pads', position: 0 }
       ],
       specs: { 'Material' => 'Protein Leather', 'Foam' => 'Memory Foam', 'Compatibility' => 'Elite X1, X2' },
       features: ['Premium protein leather', 'Memory foam cushioning', 'Easy snap-on installation'],
@@ -322,7 +322,7 @@ class ProductSeeder
       brand: 'AudioTech',
       sku: 'AT-SP360',
       images: [
-        { url: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&h=800&fit=crop', alt: 'AudioTech SurroundPro 360', position: 0 }
+        { url: '/seed-images/products/prod-2eee751108e3.jpg', alt: 'AudioTech SurroundPro 360', position: 0 }
       ],
       specs: { 'Type' => 'Over-ear Gaming', 'Driver' => '50mm Neodymium', 'Surround' => '7.1 Virtual' },
       features: ['7.1 virtual surround', 'Detachable boom mic', 'RGB lighting effects'],

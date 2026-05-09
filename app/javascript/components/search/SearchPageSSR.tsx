@@ -8,6 +8,8 @@ import { StatusBadge } from '../restaurant/StatusBadge';
 import { WaitTimeBadge } from '../restaurant/WaitTimeBadge';
 import { SpecialsList } from '../restaurant/SpecialsList';
 import { TrendingItems } from '../restaurant/TrendingItems';
+import { RestaurantSearchBar } from './RestaurantSearchBar';
+import { RestaurantFacetLinks, type RestaurantFacets } from './RestaurantFacetLinks';
 
 interface RestaurantData extends Restaurant {
   status: 'open' | 'closed' | 'custom_hours';
@@ -18,13 +20,30 @@ interface RestaurantData extends Restaurant {
 
 interface Props {
   restaurant_data: RestaurantData[];
+  query?: string;
+  cuisine?: string;
+  city?: string;
+  facets?: RestaurantFacets;
 }
 
-export default function SearchPageSSR({ restaurant_data }: Props) {
+export default function SearchPageSSR({ restaurant_data, query = '', cuisine = '', city = '', facets }: Props) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-2">Restaurant Search</h1>
-      <p className="text-sm text-gray-500 mb-6">V1: Full Server SSR — All data fetched on server sequentially</p>
+      <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mb-4">
+        V1: Full Server SSR — All restaurant data fetched on server sequentially
+      </p>
+
+      <RestaurantSearchBar initialQuery={query} />
+
+      {facets && <RestaurantFacetLinks facets={facets} query={query} cuisine={cuisine || undefined} city={city || undefined} />}
+
+      {restaurant_data.length === 0 && (
+        <div className="text-center py-16 text-gray-500">
+          <p className="font-medium text-gray-800 mb-1">No restaurants match this search.</p>
+          <p className="text-sm">Try a different name, cuisine, or city.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {restaurant_data.map((restaurant) => (

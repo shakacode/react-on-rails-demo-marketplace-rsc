@@ -613,8 +613,54 @@
       <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Benchmarks</span>
       <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">The Numbers</h2>
       <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        Measured with Puppeteer under throttled conditions: 4&times; CPU slowdown and Slow 3G network (1.6 Mbps, 150ms latency). Median of 5 runs after 2 warmup iterations.
+        From <a href="/product-search/ssr" class="text-indigo-600 hover:underline">/product-search/ssr</a> vs <a href="/product-search/rsc" class="text-indigo-600 hover:underline">/product-search/rsc</a>. Measured with Puppeteer under throttled conditions: 4&times; CPU slowdown and Slow 3G network (1.6 Mbps, 150ms latency). Median of 5 runs after 2 warmup iterations.
       </p>
+    </div>
+
+    <!-- How to reproduce -->
+    <div class="reveal max-w-4xl mx-auto mb-10">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 10h14" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Reproduce these metrics locally
+        </h3>
+        <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-700">
+          <li>Boot the demo: <code class="bg-slate-100 px-1.5 py-0.5 rounded">bin/dev</code> (Rails on <code class="bg-slate-100 px-1.5 py-0.5 rounded">:3000</code>)</li>
+          <li>Run a quick comparison across <strong>blog</strong>, <strong>product</strong>, <strong>product-search</strong>, <strong>analytics</strong> (3 iterations, no throttle): <code class="bg-slate-100 px-1.5 py-0.5 rounded">pnpm vitals:quick</code></li>
+          <li>Full benchmark with throttling matching this page: <code class="bg-slate-100 px-1.5 py-0.5 rounded">pnpm vitals -- --throttle</code></li>
+          <li>Cross-version diff with persisted JSON: <code class="bg-slate-100 px-1.5 py-0.5 rounded">pnpm vitals:compare</code></li>
+        </ol>
+        <p class="text-xs text-slate-500 mt-3">Results are saved as JSON to <code class="bg-slate-100 px-1 py-0.5 rounded">.vitals-results/</code>. Each page key (<code class="bg-slate-100 px-1 py-0.5 rounded">ssr</code> = blog SSR, <code class="bg-slate-100 px-1 py-0.5 rounded">product-rsc</code>, etc.) maps to a route in <code class="bg-slate-100 px-1 py-0.5 rounded">scripts/lib/constants.mjs</code>.</p>
+      </div>
+    </div>
+
+    <!-- PageSpeed Insights links -->
+    <div class="reveal max-w-4xl mx-auto mb-12">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#4f46e5" stroke-width="1.5"/><path d="M10 3v3M10 14v3M3 10h3M14 10h3" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Check on real-world tooling
+        </h3>
+        <p class="text-sm text-slate-600 mb-4">Run any of the deployed pages through Google PageSpeed Insights:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          <% page_specs = [
+            ["Blog SSR",  "https://rsc.reactonrails.com/blog/ssr"],
+            ["Blog RSC",  "https://rsc.reactonrails.com/blog/rsc"],
+            ["Product SSR",  "https://rsc.reactonrails.com/product/ssr"],
+            ["Product RSC",  "https://rsc.reactonrails.com/product/rsc"],
+            ["Search SSR",  "https://rsc.reactonrails.com/product-search/ssr"],
+            ["Search RSC",  "https://rsc.reactonrails.com/product-search/rsc"],
+            ["Analytics SSR",  "https://rsc.reactonrails.com/analytics/ssr"],
+            ["Analytics RSC",  "https://rsc.reactonrails.com/analytics/rsc"],
+          ] %>
+          <% page_specs.each do |label, target_url| %>
+            <a href="https://pagespeed.web.dev/report?url=<%= CGI.escape(target_url) %>" target="_blank" rel="noopener" class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2 hover:border-indigo-300 hover:bg-indigo-50/40 transition-colors">
+              <span class="font-medium text-slate-800"><%= label %></span>
+              <span class="text-xs text-indigo-600">PageSpeed &rarr;</span>
+            </a>
+          <% end %>
+        </div>
+      </div>
     </div>
 
     <div class="reveal max-w-4xl mx-auto mb-12">

@@ -6,7 +6,8 @@ class BlogData
     title: "Migrating to React Server Components with React on Rails",
     author: "ShakaCode Team",
     date: "2025-06-15",
-    reading_time: "18 min read",
+    # reading_time computed at runtime in `find_post`; this stub is overwritten there.
+    reading_time: nil,
     tags: %w[react-on-rails rsc streaming migration],
     excerpt: "A complete guide to migrating your React on Rails application from traditional client-side rendering to React Server Components with streaming.",
     toc_entries: [
@@ -798,12 +799,22 @@ The key mental model: **server components are the default, client components are
   ].freeze
 
   def self.find_post(id)
-    return MAIN_POST if id.to_i == MAIN_POST[:id]
+    return nil unless id.to_i == MAIN_POST[:id]
 
-    nil
+    MAIN_POST.merge(reading_time: reading_time_label(MAIN_POST[:content]))
   end
 
   def self.related_posts(exclude_id)
     RELATED_POSTS.reject { |p| p[:id] == exclude_id.to_i }
+  end
+
+  # Server-side reading-time estimate. Computed from the markdown body so it
+  # stays accurate when the content changes; never shipped to the browser.
+  WORDS_PER_MINUTE = 230
+
+  def self.reading_time_label(content)
+    word_count = content.to_s.scan(/\w+/).size
+    minutes = [(word_count.to_f / WORDS_PER_MINUTE).ceil, 1].max
+    "#{minutes} min read (#{word_count.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} words)"
   end
 end

@@ -16,6 +16,8 @@ import { SortBar } from './SortBar';
 import { SearchInput } from './SearchInput';
 import { PaginationControls } from './PaginationControls';
 import { ActiveFilterPills } from './ActiveFilterPills';
+import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
+import { EmptySearchSuggestions, type EmptyStateSuggestions } from './EmptySearchSuggestions';
 
 
 interface BrandHighlight {
@@ -38,6 +40,7 @@ interface Props {
   review_snippets: Record<number, ReviewSnippet[]>;
   popular_tags: PopularTag[];
   brand_highlights: BrandHighlight[];
+  empty_suggestions?: EmptyStateSuggestions | null;
 }
 
 export default function ProductSearchSSR({
@@ -49,9 +52,8 @@ export default function ProductSearchSSR({
   review_snippets,
   popular_tags,
   brand_highlights,
+  empty_suggestions,
 }: Props) {
-  const [currentSort, setCurrentSort] = useState(search_meta.sort);
-  const [currentPage, setCurrentPage] = useState(pagination.current_page);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [compareList, setCompareList] = useState<Set<number>>(new Set());
 
@@ -61,8 +63,39 @@ export default function ProductSearchSSR({
     label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace('_', ' '),
   }));
 
-  const handleFilterChange = useCallback(() => {
-    // In real app: would update URL params and re-fetch
+  const handleSearch = useCallback((q: string) => {
+    applySearchParams({ q: q || undefined });
+  }, []);
+
+  const handleSortChange = useCallback((sort: string) => {
+    applySearchParams({ sort });
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    applySearchParams({ page: String(page) });
+  }, []);
+
+  const handleFilterChange = useCallback((filters: Record<string, string | undefined>) => {
+    applySearchParams(filters as SearchParamUpdates);
+  }, []);
+
+  const handleRemoveFilter = useCallback((type: string) => {
+    if (type === 'price') {
+      applySearchParams({ price_min: undefined, price_max: undefined });
+    } else {
+      applySearchParams({ [type as 'category']: undefined });
+    }
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    applySearchParams({
+      category: undefined,
+      brand: undefined,
+      min_rating: undefined,
+      in_stock: undefined,
+      price_min: undefined,
+      price_max: undefined,
+    });
   }, []);
 
   const handleTagClick = useCallback((tag: string) => {
@@ -96,7 +129,7 @@ export default function ProductSearchSSR({
           </div>
           <SearchInput
             initialQuery={search_meta.query}
-            onSearch={() => {}}
+            onSearch={handleSearch}
           />
         </div>
       </header>
@@ -128,8 +161,8 @@ export default function ProductSearchSSR({
         {/* Active filter pills */}
         <ActiveFilterPills
           filters={activeFiltersList}
-          onRemoveFilter={() => {}}
-          onClearAll={() => {}}
+          onRemoveFilter={handleRemoveFilter}
+          onClearAll={handleClearAllFilters}
         />
 
         <div className="flex gap-6">
@@ -138,7 +171,12 @@ export default function ProductSearchSSR({
             <div className="sticky top-[140px] space-y-4">
               <FilterSidebar
                 facets={facets}
-                activeFilters={{}}
+                activeFilters={{
+                  category: search_meta.filters_applied?.find((f) => f.type === 'category')?.value,
+                  brand: search_meta.filters_applied?.find((f) => f.type === 'brand')?.value,
+                  min_rating: search_meta.filters_applied?.find((f) => f.type === 'min_rating')?.value?.replace('+', ''),
+                  in_stock: search_meta.filters_applied?.find((f) => f.type === 'in_stock') ? 'true' : undefined,
+                }}
                 onFilterChange={handleFilterChange}
               />
 
@@ -194,16 +232,24 @@ export default function ProductSearchSSR({
           {/* Results */}
           <div className="flex-1 min-w-0">
             <SortBar
-              currentSort={currentSort}
+              currentSort={search_meta.sort}
               totalResults={search_meta.total_results}
-              onSortChange={setCurrentSort}
+              onSortChange={handleSortChange}
             />
 
             {products.length === 0 ? (
-              <div className="text-center py-16">
-                <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-                <p className="text-gray-500 mt-1">Try adjusting your search criteria</p>
-              </div>
+              empty_suggestions ? (
+                <EmptySearchSuggestions
+                  query={search_meta.query}
+                  hasActiveFilters={(search_meta.filters_applied || []).length > 0}
+                  suggestions={empty_suggestions}
+                />
+              ) : (
+                <div className="text-center py-16">
+                  <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+                  <p className="text-gray-500 mt-1">Try adjusting your search criteria</p>
+                </div>
+              )
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -227,7 +273,7 @@ export default function ProductSearchSSR({
 
                 <PaginationControls
                   pagination={pagination}
-                  onPageChange={setCurrentPage}
+                  onPageChange={handlePageChange}
                 />
               </>
             )}

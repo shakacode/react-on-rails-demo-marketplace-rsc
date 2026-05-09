@@ -3,7 +3,7 @@
 // Client-side data fetcher — loads all dashboard data via API calls
 // d3 + date-fns + interactive components are loaded as part of this async chunk
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import type {
   DashboardRestaurant,
   KpiStats,
@@ -24,6 +24,8 @@ import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, TopItemsSkeleton } fro
 
 interface Props {
   restaurant: DashboardRestaurant;
+  range?: string;
+  status?: string | null;
 }
 
 interface DashboardData {
@@ -35,7 +37,7 @@ interface DashboardData {
   hourlyData: HourlyDataPoint[] | null;
 }
 
-export default function AsyncDashboardContent({ restaurant }: Props) {
+export default function AsyncDashboardContent({ restaurant, range = '7d', status = null }: Props) {
   const [data, setData] = useState<DashboardData>({
     kpiStats: null,
     revenueData: null,
@@ -44,22 +46,24 @@ export default function AsyncDashboardContent({ restaurant }: Props) {
     topItems: null,
     hourlyData: null,
   });
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState('7d');
 
   const fetchData = useCallback(async () => {
     const controller = new AbortController();
     const opts = { signal: controller.signal };
     const base = '/api/dashboard';
+    const qs = new URLSearchParams();
+    if (range) qs.set('range', range);
+    if (status) qs.set('status', status);
+    const suffix = qs.toString() ? `?${qs}` : '';
 
     // Fetch all data in parallel
     const [kpiRes, revenueRes, statusRes, ordersRes, itemsRes, hourlyRes] = await Promise.all([
-      fetch(`${base}/kpi_stats`, opts),
-      fetch(`${base}/revenue_data`, opts),
-      fetch(`${base}/order_status`, opts),
-      fetch(`${base}/recent_orders`, opts),
-      fetch(`${base}/top_menu_items`, opts),
-      fetch(`${base}/hourly_distribution`, opts),
+      fetch(`${base}/kpi_stats${suffix}`, opts),
+      fetch(`${base}/revenue_data${suffix}`, opts),
+      fetch(`${base}/order_status${suffix}`, opts),
+      fetch(`${base}/recent_orders${suffix}`, opts),
+      fetch(`${base}/top_menu_items${suffix}`, opts),
+      fetch(`${base}/hourly_distribution${suffix}`, opts),
     ]);
 
     const [kpi, revenue, status, orders, items, hourly] = await Promise.all([
@@ -81,30 +85,19 @@ export default function AsyncDashboardContent({ restaurant }: Props) {
     });
 
     return () => controller.abort();
-  }, [restaurant.id]);
+  }, [restaurant.id, range, status]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const statuses = useMemo(() => {
-    if (!data.recentOrders) return [];
-    return [...new Set(data.recentOrders.map(o => o.status))].sort();
-  }, [data.recentOrders]);
-
-  const handleStatusFilter = useCallback((status: string | null) => {
-    setStatusFilter(status);
-  }, []);
-
-  const handleTimeRange = useCallback((range: string) => {
-    setTimeRange(range);
-  }, []);
-
   return (
     <div className="space-y-6">
-      {data.recentOrders ? (
-        <DashboardFilters statuses={statuses} onStatusFilter={handleStatusFilter} onTimeRange={handleTimeRange} />
-      ) : null}
+      <DashboardFilters
+        statuses={['completed', 'preparing', 'pending', 'ready']}
+        range={range}
+        status={status}
+      />
 
       {data.kpiStats ? <StatCards stats={data.kpiStats} /> : <StatCardsSkeleton />}
 
@@ -128,7 +121,7 @@ export default function AsyncDashboardContent({ restaurant }: Props) {
       </div>
 
       {data.recentOrders ? (
-        <SortableOrdersTable orders={data.recentOrders} statusFilter={statusFilter} />
+        <SortableOrdersTable orders={data.recentOrders} statusFilter={null} />
       ) : (
         <TableSkeleton />
       )}

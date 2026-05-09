@@ -7,13 +7,13 @@ class SmallSeeder
     start_time = Time.now
 
     # Small dataset - just enough to test functionality
-    BaseSeeder.seed_restaurants(count: 100)
+    BaseSeeder.seed_restaurants(count: 500)
     BaseSeeder.seed_hours
     BaseSeeder.seed_special_hours
-    BaseSeeder.seed_reviews(count: 500)
-    BaseSeeder.seed_menu_items(count: 300)
-    BaseSeeder.seed_promotions(count: 50)
-    BaseSeeder.seed_orders(count: 1_000)
+    BaseSeeder.seed_reviews(count: 5_000)
+    BaseSeeder.seed_menu_items(count: 2_000)
+    BaseSeeder.seed_promotions(count: 250)
+    BaseSeeder.seed_orders(count: 10_000)
     BaseSeeder.seed_order_lines
 
     elapsed = ((Time.now - start_time) / 60).round(2)

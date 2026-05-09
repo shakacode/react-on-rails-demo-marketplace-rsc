@@ -1,1 +1,7 @@
-<%= react_component("SearchPageSSR", props: { restaurant_data: @restaurant_data }, prerender: true) %>
+<%= react_component("SearchPageSSR", props: {
+  restaurant_data: @restaurant_data,
+  query: params[:q] || '',
+  cuisine: params[:cuisine] || '',
+  city: params[:city] || '',
+  facets: @facets
+}, prerender: true) %>

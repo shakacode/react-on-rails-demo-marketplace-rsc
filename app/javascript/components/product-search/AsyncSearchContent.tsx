@@ -3,7 +3,7 @@
 // V2: Async content loader — fetches search results, facets, and review snippets via API.
 // This component + all rendering libraries are loaded in an async chunk.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { SearchProduct, Facets, Pagination as PaginationType, ReviewSnippet, SearchParams } from './types';
 import { SearchResultCard } from './SearchResultCard';
 import { FilterSidebar } from './FilterSidebar';
@@ -11,6 +11,7 @@ import { SortBar } from './SortBar';
 import { PaginationControls } from './PaginationControls';
 import { ResultsGridSkeleton } from './SearchSkeletons';
 import { FilterSidebarSkeleton } from './SearchSkeletons';
+import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
 
 interface Props {
   searchParams: SearchParams;
@@ -88,8 +89,15 @@ export default function AsyncSearchContent({ searchParams }: Props) {
           {facets ? (
             <FilterSidebar
               facets={facets}
-              activeFilters={{}}
-              onFilterChange={() => {}}
+              activeFilters={{
+                category: searchParams.category,
+                brand: searchParams.brand,
+                min_rating: searchParams.min_rating,
+                in_stock: searchParams.in_stock,
+                price_min: searchParams.price_min,
+                price_max: searchParams.price_max,
+              }}
+              onFilterChange={(filters) => applySearchParams(filters as SearchParamUpdates)}
             />
           ) : (
             <FilterSidebarSkeleton />
@@ -106,7 +114,7 @@ export default function AsyncSearchContent({ searchParams }: Props) {
             <SortBar
               currentSort={sort}
               totalResults={totalResults}
-              onSortChange={setSort}
+              onSortChange={(next) => applySearchParams({ sort: next })}
             />
 
             {products.length === 0 ? (
@@ -131,7 +139,7 @@ export default function AsyncSearchContent({ searchParams }: Props) {
                 {pagination && (
                   <PaginationControls
                     pagination={pagination}
-                    onPageChange={() => {}}
+                    onPageChange={(page) => applySearchParams({ page: String(page) })}
                   />
                 )}
               </>
