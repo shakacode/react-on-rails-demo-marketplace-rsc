@@ -45,20 +45,21 @@
       });
     </script>
     <header class="border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
-        <div>
+      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="min-w-0 xl:flex-1">
           <a href="/" class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">React on Rails Demo</a>
           <p class="mt-1 text-lg font-semibold text-slate-900">LocalHub Marketplace Demo</p>
           <p class="text-sm text-slate-600">Open-source SSR, client, and RSC comparisons built with React on Rails.</p>
         </div>
-        <nav class="flex flex-wrap gap-2 text-sm font-medium">
-          <%= link_to 'Home', '/', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
-          <%= link_to 'Why RSC', '/why-rsc', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
-          <%= link_to 'Measure', '/measure', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
-          <%= link_to 'Source', source_code_path, class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
-          <%= link_to 'Contributing', contributing_guide_path, class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
-          <%= link_to 'Issues', project_issues_path, class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
-          <%= link_to 'Docs', 'https://reactonrails.com/docs', class: 'rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+        <nav class="flex flex-wrap gap-2 text-sm font-medium xl:flex-nowrap xl:justify-end">
+          <% nav_link_classes = 'whitespace-nowrap rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+          <%= link_to 'Home', '/', class: nav_link_classes %>
+          <%= link_to 'Why RSC', '/why-rsc', class: nav_link_classes %>
+          <%= link_to 'Measure', '/measure', class: nav_link_classes %>
+          <%= link_to 'Source', source_code_path, class: nav_link_classes %>
+          <%= link_to 'Contributing', contributing_guide_path, class: nav_link_classes %>
+          <%= link_to 'Issues', project_issues_path, class: nav_link_classes %>
+          <%= link_to 'Docs', 'https://reactonrails.com/docs', class: nav_link_classes %>
         </nav>
       </div>
     </header>
