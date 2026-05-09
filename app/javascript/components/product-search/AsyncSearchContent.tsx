@@ -12,6 +12,7 @@ import { PaginationControls } from './PaginationControls';
 import { ResultsGridSkeleton } from './SearchSkeletons';
 import { FilterSidebarSkeleton } from './SearchSkeletons';
 import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
+import { appendDelay } from '../../utils/delayParam';
 
 interface Props {
   searchParams: SearchParams;
@@ -46,8 +47,8 @@ export default function AsyncSearchContent({ searchParams }: Props) {
 
         // Fetch results and facets in parallel
         const [resultsRes, facetsRes] = await Promise.all([
-          fetch(`/api/product_search/results?${qs}`, { signal: controller.signal }),
-          fetch(`/api/product_search/facets?${qs}`, { signal: controller.signal }),
+          fetch(appendDelay(`/api/product_search/results?${qs}`), { signal: controller.signal }),
+          fetch(appendDelay(`/api/product_search/facets?${qs}`), { signal: controller.signal }),
         ]);
 
         const resultsData = await resultsRes.json();
@@ -61,7 +62,7 @@ export default function AsyncSearchContent({ searchParams }: Props) {
         // Fetch review snippets after results arrive
         if (resultsData.products.length > 0) {
           const productIds = resultsData.products.map((p: SearchProduct) => p.id);
-          const snippetsRes = await fetch('/api/product_search/review_snippets', {
+          const snippetsRes = await fetch(appendDelay('/api/product_search/review_snippets'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ product_ids: productIds }),
