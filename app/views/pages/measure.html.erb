@@ -165,22 +165,86 @@
           <h3 class="text-lg font-bold text-slate-900">Built-in <code class="bg-slate-100 px-1.5 py-0.5 rounded text-base">pnpm vitals</code></h3>
           <span class="ml-auto text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">Recommended</span>
         </div>
-        <p class="text-sm text-slate-600 mb-4">Headless Chrome (Puppeteer) script that captures FCP / LCP / TTFB / TBT / CLS / hydration / streaming / JS transfer + decoded for every variant and prints a side-by-side table. Source: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs">scripts/measure-vitals.mjs</code>.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p class="text-sm text-slate-600 mb-4">Headless Chrome (Puppeteer) script that captures FCP / LCP / TTFB / TBT / CLS / hydration / streaming / JS transfer + decoded for every variant and prints a side-by-side table. <strong>Best option for stable, reproducible benchmarks</strong> — eliminates CDN and network variance that affects PageSpeed.</p>
+
+        <!-- Setup instructions -->
+        <div class="bg-slate-50 rounded-xl p-4 mb-5 border border-slate-200">
+          <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-3">Setup — clone &amp; build production</p>
+          <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code># Clone the repo
+git clone https://github.com/shakacode/react-on-rails-demo-marketplace-rsc.git
+cd react-on-rails-demo-marketplace-rsc
+
+# Install dependencies
+bundle install && pnpm install
+
+# Build production assets
+NODE_ENV=production bin/shakapacker --mode production
+
+# Start node renderer (background)
+NODE_ENV=production node node-renderer.js &
+
+# Start Rails in production mode
+RAILS_ENV=production RAILS_SERVE_STATIC_FILES=true \
+  SECRET_KEY_BASE=dummy_secret_key_base_for_testing_1234567890abcdef \
+  bundle exec rails server -p 3000</code></pre>
+          <p class="text-xs text-slate-500 mt-2"><code class="bg-slate-100 px-1 rounded">RAILS_SERVE_STATIC_FILES=true</code> required for local prod — otherwise Rails won't serve CSS/JS.</p>
+        </div>
+
+        <!-- Running benchmarks -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
-            <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-2">Quick comparison</p>
-            <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code>pnpm vitals:quick
-pnpm vitals -- --throttle
-pnpm vitals:compare</code></pre>
+            <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-2">Desktop (no throttle)</p>
+            <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code># Quick run (3 iterations, 1 warmup)
+pnpm vitals:quick
+
+# Full run (7 iterations, 2 warmup)
+pnpm vitals
+
+# Specific pages only
+pnpm vitals -- --pages blog-ssr,blog-rsc</code></pre>
+            <p class="text-xs text-slate-500 mt-2">Desktop mode = no CPU/network throttle. Fast but doesn't reveal streaming advantage.</p>
           </div>
           <div>
-            <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-2">Per-page family</p>
-            <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code>pnpm vitals -- --pages product-ssr,product-client,product-rsc
-pnpm vitals -- --pages search-ssr,search-client,search-rsc
-pnpm vitals -- --pages dashboard-ssr,dashboard-client,dashboard-rsc</code></pre>
+            <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-2">Mobile (throttled) — matches PSI</p>
+            <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code># 4x CPU slowdown + Slow 3G network
+pnpm vitals -- --throttle
+
+# Quick + throttled
+pnpm vitals:quick -- --throttle
+
+# Throttled specific pages
+pnpm vitals -- --throttle --pages blog-ssr,blog-rsc</code></pre>
+            <p class="text-xs text-slate-500 mt-2"><code class="bg-slate-100 px-1 rounded">--throttle</code> = 4x CPU slowdown + Slow 3G. Matches PageSpeed Insights mobile conditions.</p>
           </div>
         </div>
-        <p class="text-xs text-slate-500 mt-3">JSON output written to <code class="bg-slate-100 px-1 rounded">.vitals-results/&lt;timestamp&gt;.json</code>. Page keys live in <code class="bg-slate-100 px-1 rounded">scripts/lib/constants.mjs</code>.</p>
+
+        <!-- Additional options -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-2">Compare before/after</p>
+            <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code># Run baseline, save with label
+pnpm vitals -- --throttle --label before
+
+# Make changes, run again
+pnpm vitals -- --throttle --label after
+
+# Compare side-by-side
+pnpm vitals:compare -- \
+  .vitals-results/*-before.json \
+  .vitals-results/*-after.json</code></pre>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-700 uppercase tracking-[0.14em] mb-2">All available page keys</p>
+            <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed"><code>blog-ssr, blog-client, blog-rsc
+product-ssr, product-client, product-rsc
+search-ssr, search-client, search-rsc
+restaurant-ssr, restaurant-client, restaurant-rsc
+dashboard-ssr, dashboard-client, dashboard-rsc</code></pre>
+            <p class="text-xs text-slate-500 mt-2">Full list in <code class="bg-slate-100 px-1 rounded">scripts/lib/constants.mjs</code></p>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-500 mt-4">JSON output: <code class="bg-slate-100 px-1 rounded">.vitals-results/&lt;timestamp&gt;.json</code>. Source: <code class="bg-slate-100 px-1 rounded">scripts/measure-vitals.mjs</code>.</p>
       </div>
 
       <!-- 4. PageSpeed -->
@@ -190,6 +254,10 @@ pnpm vitals -- --pages dashboard-ssr,dashboard-client,dashboard-rsc</code></pre>
           <h3 class="text-lg font-bold text-slate-900">PageSpeed Insights</h3>
         </div>
         <p class="text-sm text-slate-600 mb-3">Lighthouse + Chrome UX Report (real-user field data) for the production deployment at <code class="bg-slate-100 px-1 rounded text-xs">rsc.reactonrails.com</code>. Deep links by route are in the table further down the page.</p>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3 text-xs text-red-800">
+          <p class="font-semibold mb-1">PageSpeed results can vary significantly for demo sites</p>
+          <p>PSI scores depend on CDN cache state, server warmup, and Google infrastructure variance. For low-traffic demo sites like this one, we observed 18-32 point variance between runs. <strong>For stable, reproducible benchmarks, use <code class="bg-red-100 rounded px-1">pnpm vitals -- --throttle</code> against a local production build instead.</strong> Local benchmarks with throttling match PSI conditions (4x CPU slowdown) but eliminate network/CDN variance.</p>
+        </div>
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-xs text-amber-800">
           <p class="font-semibold mb-1">Important: warm up each page before running PageSpeed</p>
           <p>Visit the page URL in your browser first (or <code class="bg-amber-100 rounded px-1">curl</code> it) to prime server caches. Cold-start times can inflate metrics by several seconds. Desktop links below include <code class="bg-amber-100 rounded px-1">?delay=50</code> to simulate production-level DB load — PageSpeed does not throttle CPU or network on desktop, so without the delay all three variants score nearly identically.</p>

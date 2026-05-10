@@ -120,7 +120,7 @@
             [:score,    "Performance score", ->(v){ v.to_s }, true],
             [:fcp,      "First Contentful Paint",        fmt_ms,  false],
             [:lcp,      "Largest Contentful Paint",      fmt_ms,  false],
-            [:tbt,      "Total Blocking Time",           fmt_ms,  false],
+            [:tbt,      "Total Blocking Time ★",         fmt_ms,  false],
             [:cls,      "Cumulative Layout Shift",       ->(v){ v.round(3).to_s }, false],
             [:si,       "Speed Index",                   fmt_ms,  false],
             [:bootup,   "Script Bootup",                 fmt_ms,  false],
@@ -154,6 +154,7 @@
           <% end %>
         </tbody>
       </table>
+      <p class="text-xs text-slate-500 mt-3">★ TBT is the highest-weighted Lighthouse metric at <strong class="text-purple-700">30%</strong> of the performance score (LCP 25%, CLS 25%, FCP 10%, SI 10%).</p>
     </div>
   </div>
 </section>
