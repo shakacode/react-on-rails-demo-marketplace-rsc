@@ -10,6 +10,7 @@ import { BioSection } from './BioSection';
 import { MenuSection } from './MenuSection';
 import { ReviewsSection } from './ReviewsSection';
 import { SidebarSection } from './SidebarSection';
+import { appendDelay } from '../../utils/delayParam';
 
 interface ClientProps {
   restaurant: RestaurantDetailProps['restaurant'];
@@ -23,7 +24,7 @@ export default function RestaurantDetailClient({ restaurant }: ClientProps) {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/restaurants/${restaurant.id}/detail`, { signal: controller.signal })
+    fetch(appendDelay(`/api/restaurants/${restaurant.id}/detail`), { signal: controller.signal })
       .then((r) => r.json())
       .then((d: RestaurantDetailProps) => setData(d))
       .catch(() => undefined);

@@ -164,7 +164,7 @@
       <span class="inline-block text-indigo-600 font-semibold text-sm uppercase tracking-wider mb-3">Performance</span>
       <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Real Numbers, Not Promises</h2>
       <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        Measured locally with Lighthouse 12 — same engine PageSpeed Insights uses. Mobile = Slow 4G + 4× CPU throttle; desktop = unthrottled. Every figure on this page links to the raw report.
+        Measured via PageSpeed Insights API (Lighthouse 12 engine) on mobile &mdash; Slow 4G + 4× CPU throttle, the conditions most users face. Transfer sizes are compressed (gzip/brotli). Every figure links to the raw report.
       </p>
       <p class="mt-3 text-sm">
         <a href="/lighthouse-reports/index.html" class="text-indigo-600 font-semibold hover:underline">Open all 24 Lighthouse reports →</a>
@@ -177,36 +177,36 @@
          Cards are <a> elements (no nested anchors) so the whole tile is clickable. -->
     <div class="reveal grid grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto mb-12">
 
-      <!-- Perf score gain — Blog mobile (most dramatic) -->
+      <!-- Perf score gain — Blog mobile -->
       <a href="<%= lh_compare_url_for("blog", "rsc", "mobile") %>" class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-emerald-300 hover:shadow-md transition-all block group">
-        <div class="metric-animate text-3xl sm:text-4xl font-extrabold text-emerald-600 mb-2">+48</div>
+        <div class="metric-animate text-3xl sm:text-4xl font-extrabold text-emerald-600 mb-2">+25</div>
         <div class="text-sm font-semibold text-slate-800 mb-1">Perf score</div>
-        <div class="text-xs text-slate-500">SSR 40 &rarr; <span class="text-emerald-700 font-semibold">RSC 88</span></div>
-        <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-emerald-600">Blog · mobile · LH report ↗</div>
+        <div class="text-xs text-slate-500">SSR 72 &rarr; <span class="text-emerald-700 font-semibold">RSC 97</span></div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-emerald-600">Blog · mobile ↗</div>
       </a>
 
       <!-- Less transfer — Blog (bundle-size evidence) -->
       <a href="/lighthouse-reports/bundle-sizes.html#blog" class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 hover:shadow-md transition-all block group">
-        <div class="metric-animate delay-1 text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">−73%</div>
+        <div class="metric-animate delay-1 text-3xl sm:text-4xl font-extrabold text-indigo-600 mb-2">−70%</div>
         <div class="text-sm font-semibold text-slate-800 mb-1">Less transfer</div>
-        <div class="text-xs text-slate-500">1.41 MB &rarr; <span class="text-indigo-700 font-semibold">386 KB</span></div>
+        <div class="text-xs text-slate-500">419 KB &rarr; <span class="text-indigo-700 font-semibold">128 KB</span></div>
         <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-indigo-600">Blog · bundle breakdown ↗</div>
       </a>
 
       <!-- Lower TBT — Blog mobile -->
       <a href="<%= lh_compare_url_for("blog", "rsc", "mobile") %>" class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-purple-300 hover:shadow-md transition-all block group">
-        <div class="metric-animate delay-2 text-3xl sm:text-4xl font-extrabold text-purple-600 mb-2">−90%</div>
+        <div class="metric-animate delay-2 text-3xl sm:text-4xl font-extrabold text-purple-600 mb-2">−100%</div>
         <div class="text-sm font-semibold text-slate-800 mb-1">Lower TBT</div>
-        <div class="text-xs text-slate-500">748 ms &rarr; <span class="text-purple-700 font-semibold">71 ms</span></div>
-        <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-purple-600">Blog · mobile · LH report ↗</div>
+        <div class="text-xs text-slate-500">1,947 ms &rarr; <span class="text-purple-700 font-semibold">0 ms</span></div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-purple-600">Blog · mobile ↗</div>
       </a>
 
-      <!-- Less script bootup — Blog desktop -->
-      <a href="<%= lh_compare_url_for("blog", "rsc", "desktop") %>" class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-pink-300 hover:shadow-md transition-all block group">
-        <div class="metric-animate delay-3 text-3xl sm:text-4xl font-extrabold text-pink-600 mb-2">−94%</div>
+      <!-- Less script bootup — Blog mobile -->
+      <a href="<%= lh_compare_url_for("blog", "rsc", "mobile") %>" class="metric-card bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-pink-300 hover:shadow-md transition-all block group">
+        <div class="metric-animate delay-3 text-3xl sm:text-4xl font-extrabold text-pink-600 mb-2">−97%</div>
         <div class="text-sm font-semibold text-slate-800 mb-1">Less bootup</div>
-        <div class="text-xs text-slate-500">1.06 s &rarr; <span class="text-pink-700 font-semibold">62 ms</span></div>
-        <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-pink-600">Blog · desktop · LH report ↗</div>
+        <div class="text-xs text-slate-500">2.00 s &rarr; <span class="text-pink-700 font-semibold">63 ms</span></div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 mt-1.5 group-hover:text-pink-600">Blog · mobile ↗</div>
       </a>
     </div>
 
@@ -217,21 +217,21 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-slate-700">Blog Post · SSR variant</span>
-              <span class="text-sm font-bold text-red-500">1.41 MB transferred</span>
+              <span class="text-sm font-bold text-red-500">419 KB transferred</span>
             </div>
             <div class="h-10 rounded-lg overflow-hidden bg-slate-200 flex">
-              <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:74%"><span class="hidden sm:inline">marked + highlight.js (1.07 MB)</span><span class="sm:hidden">marked + highlight</span></div>
-              <div class="h-full bg-amber-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:14%"><span class="hidden sm:inline">RoR core (205 KB)</span><span class="sm:hidden">RoR</span></div>
+              <div class="h-full bg-red-400 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:74%"><span class="hidden sm:inline">marked + highlight.js</span><span class="sm:hidden">marked + highlight</span></div>
+              <div class="h-full bg-amber-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:14%"><span class="hidden sm:inline">RoR core</span><span class="sm:hidden">RoR</span></div>
               <div class="h-full bg-yellow-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden whitespace-nowrap px-1" style="width:12%"><span class="hidden sm:inline">app + entries</span></div>
             </div>
           </div>
           <div>
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-slate-700">Blog Post · RSC variant</span>
-              <span class="text-sm font-bold text-emerald-600">386 KB transferred</span>
+              <span class="text-sm font-bold text-emerald-600">128 KB transferred</span>
             </div>
             <div class="h-10 rounded-lg overflow-hidden bg-slate-200 flex">
-              <div class="bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--bar-width:27%;">Interactive UI only</div>
+              <div class="bar-animate h-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold whitespace-nowrap px-3" style="--bar-width:31%;">Interactive UI only</div>
             </div>
             <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3v8" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -308,16 +308,16 @@
       <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Live Demo</span>
       <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">See It In Action</h2>
       <p class="text-lg text-slate-500 max-w-3xl mx-auto">
-        Four page types, each built three ways &mdash; SSR, Client, and RSC &mdash; ordered by the perf gain RSC delivers on desktop.
+        Four page types, each built three ways &mdash; SSR, Client, and RSC &mdash; ordered by the perf gain RSC delivers on mobile.
       </p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
-      <!-- 1) Blog Post — biggest desktop perf gain (+28 points). Markdown libs
+      <!-- 1) Blog Post — biggest mobile perf gain (+25 points). Markdown libs
            stay server-side on RSC; SSR/Client variants ship marked + highlight.js. -->
       <%= render partial: "demo_card", locals: {
         title: "Blog Post",
-        description: "Markdown-heavy article with code blocks. RSC keeps marked + highlight.js (~1 MB compressed) entirely server-side. Desktop perf gain: +28 (72→100).",
+        description: "Markdown-heavy article with code blocks. RSC keeps marked + highlight.js entirely server-side. Mobile perf gain: +25 (72→97).",
         base_path: "/blog",
         icon_bg: "bg-violet-100",
         icon_svg: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="2" stroke="#7c3aed" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -325,11 +325,11 @@
         bundle_anchor: "blog",
       } %>
 
-      <!-- 2) Product Page — +18 perf. Markdown spec sheet + multi-currency
+      <!-- 2) Product Page — +25 mobile perf. Markdown spec sheet + multi-currency
            pricing stay server-side on RSC. -->
       <%= render partial: "demo_card", locals: {
         title: "Product Page",
-        description: "E-commerce page with markdown spec sheet, reviews, multi-currency pricing. Desktop perf gain: +18 (80→98) — 1.34 MB less to the client.",
+        description: "E-commerce page with markdown spec sheet, reviews, multi-currency pricing. Mobile perf gain: +25 (73→98) — 404 KB less transfer.",
         base_path: "/product",
         icon_bg: "bg-blue-100",
         icon_svg: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="10" rx="2" stroke="#2563eb" stroke-width="1.5"/><path d="M7 5V3a3 3 0 0 1 6 0v2" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -337,10 +337,10 @@
         bundle_anchor: "product",
       } %>
 
-      <!-- 3) Restaurant Detail — +19 perf. Long markdown + 80 items + 40 reviews. -->
+      <!-- 3) Restaurant Detail — +13 mobile perf. Long markdown + 80 items + 40 reviews. -->
       <%= render partial: "demo_card", locals: {
         title: "Restaurant Detail",
-        description: "Long-form bio, 80-item menu, 40 reviews — all rendered server-side on RSC. Desktop perf gain: +19 (77→96), 1.27 MB less transfer.",
+        description: "Long-form bio, 80-item menu, 40 reviews — all rendered server-side on RSC. Mobile perf gain: +13 (75→88), 378 KB less transfer.",
         base_path: "/restaurant/1",
         icon_bg: "bg-orange-100",
         icon_svg: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 3v14M5 8c0-2 3-2 3 0v9" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round"/><path d="M13 3l-1 6h2l-1 6v3" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -348,10 +348,10 @@
         bundle_anchor: "restaurant",
       } %>
 
-      <!-- 4) Product Search — +14 perf, 1.08 MB less transfer on RSC. -->
+      <!-- 4) Product Search — +1 mobile perf, 299 KB less transfer on RSC. -->
       <%= render partial: "demo_card", locals: {
         title: "Product Search",
-        description: "Faceted search with filters, pagination, and 4 independently streamed data sections. Desktop perf gain: +14 (85→99), 1.08 MB less transfer.",
+        description: "Faceted search with filters, pagination, and 4 independently streamed data sections. Mobile perf gain: +1 (98→99), 299 KB less transfer.",
         base_path: "/product-search",
         icon_bg: "bg-emerald-100",
         icon_svg: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5" stroke="#059669" stroke-width="1.5"/><path d="M13 13l4 4" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -379,27 +379,27 @@
     <!-- RSC wins across page types — every number links to the LH or bundle-size evidence -->
     <div class="reveal max-w-4xl mx-auto">
       <h3 class="text-center text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">RSC Wins Across Every Page Type</h3>
-      <p class="text-center text-xs text-slate-500 mb-6">Lighthouse desktop, no throttling. Click any card for the underlying report.</p>
+      <p class="text-center text-xs text-slate-500 mb-6">Lighthouse mobile · Slow 4G + 4× CPU throttle. Click any card for the underlying report.</p>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <a href="<%= lh_compare_url_for("blog", "rsc", "desktop") %>" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">+28</div>
+        <a href="<%= lh_compare_url_for("blog", "rsc", "mobile") %>" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">+25</div>
           <div class="text-xs font-semibold text-slate-800">Perf score gain</div>
-          <div class="text-xs text-slate-400 mt-1">Blog · 72 → 100</div>
+          <div class="text-xs text-slate-400 mt-1">Blog · 72 → 97</div>
         </a>
-        <a href="<%= lh_compare_url_for("product", "rsc", "desktop") %>" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">+18</div>
+        <a href="<%= lh_compare_url_for("product", "rsc", "mobile") %>" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">+25</div>
           <div class="text-xs font-semibold text-slate-800">Perf score gain</div>
-          <div class="text-xs text-slate-400 mt-1">Product · 80 → 98</div>
+          <div class="text-xs text-slate-400 mt-1">Product · 73 → 98</div>
         </a>
         <a href="/lighthouse-reports/bundle-sizes.html#product" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">−1.34 MB</div>
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">−404 KB</div>
           <div class="text-xs font-semibold text-slate-800">Less to the client</div>
           <div class="text-xs text-slate-400 mt-1">Product · bundle ↗</div>
         </a>
-        <a href="<%= lh_compare_url_for("blog", "rsc", "desktop") %>" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
-          <div class="text-2xl font-extrabold text-indigo-600 mb-1">−1.00 s</div>
+        <a href="<%= lh_compare_url_for("blog", "rsc", "mobile") %>" class="bg-white border border-slate-200 rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-md transition-all block">
+          <div class="text-2xl font-extrabold text-indigo-600 mb-1">−1.93 s</div>
           <div class="text-xs font-semibold text-slate-800">Less script bootup</div>
-          <div class="text-xs text-slate-400 mt-1">Blog · 1.06s → 62ms</div>
+          <div class="text-xs text-slate-400 mt-1">Blog · 2.00s → 63ms</div>
         </a>
       </div>
     </div>

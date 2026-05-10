@@ -22,7 +22,7 @@ const FEATURES = [
   { slug: 'blog',           label: 'Blog Post',         path: '/blog'           },
   { slug: 'product',        label: 'Product Page',      path: '/product'        },
   { slug: 'restaurant_1',   label: 'Restaurant Detail', path: '/restaurant/1'   },
-  { slug: 'product_search', label: 'Product Search',    path: '/product-search' },
+  { slug: 'product-search', label: 'Product Search',    path: '/product-search' },
 ];
 const VARIANTS  = ['ssr', 'client', 'rsc'];
 const STRATEGIES = ['desktop', 'mobile'];
@@ -143,7 +143,7 @@ function buildBundles(rows) {
       const row = rows.find((x) => x.feature.slug === f.slug && x.variant === v && x.strategy === 'desktop');
       if (!row) continue;
       const reqs = row.m.requests || [];
-      const hostReqs = reqs.filter((r) => /localhost:3040/.test(r.url));
+      const hostReqs = reqs.filter((r) => /rsc\.reactonrails\.com/.test(r.url));
       const byType = {};
       for (const r of hostReqs) {
         const t = r.resourceType || 'Other';

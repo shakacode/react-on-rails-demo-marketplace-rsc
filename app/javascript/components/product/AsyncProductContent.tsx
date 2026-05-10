@@ -13,6 +13,7 @@ import { ReviewDistributionChart } from './ReviewDistributionChart';
 import { ReviewsList } from './ReviewsList';
 import { RelatedProducts } from './RelatedProducts';
 import { ReviewStatsSkeleton, ReviewsSkeleton, RelatedProductsSkeleton } from './ProductSkeletons';
+import { appendDelay } from '../../utils/delayParam';
 
 interface Props {
   product: Product;
@@ -27,17 +28,17 @@ export default function AsyncProductContent({ product }: Props) {
     const controller = new AbortController();
     const opts = { signal: controller.signal };
 
-    fetch(`/api/products/${product.id}/review_stats`, opts)
+    fetch(appendDelay(`/api/products/${product.id}/review_stats`), opts)
       .then((r) => r.json())
       .then(setReviewStats)
       .catch(() => {});
 
-    fetch(`/api/products/${product.id}/reviews`, opts)
+    fetch(appendDelay(`/api/products/${product.id}/reviews`), opts)
       .then((r) => r.json())
       .then((data) => setReviews(data.reviews))
       .catch(() => {});
 
-    fetch(`/api/products/${product.id}/related_products`, opts)
+    fetch(appendDelay(`/api/products/${product.id}/related_products`), opts)
       .then((r) => r.json())
       .then((data) => setRelatedProducts(data.products))
       .catch(() => {});

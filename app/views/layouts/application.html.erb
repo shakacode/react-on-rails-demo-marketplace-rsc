@@ -65,6 +65,14 @@
       </div>
     </header>
 
+    <% if params[:delay].present? %>
+      <div class="bg-amber-500 text-white text-center text-sm font-medium py-1.5 px-4">
+        Artificial DB delay active: <strong><%= params[:delay] %> ms</strong> per query &mdash;
+        simulating real-world production load.
+        <a href="<%= request.path %>" class="underline ml-1">Remove delay</a>
+      </div>
+    <% end %>
+
     <main>
       <%= yield %>
     </main>

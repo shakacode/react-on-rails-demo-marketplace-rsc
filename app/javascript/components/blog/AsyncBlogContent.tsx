@@ -5,6 +5,7 @@ import { RelatedPost } from '../../types/blog';
 import { renderMarkdown } from '../../utils/renderMarkdown';
 import { RelatedPosts } from './RelatedPosts';
 import { RelatedPostsSkeleton } from './RelatedPostsSkeleton';
+import { appendDelay } from '../../utils/delayParam';
 
 interface Props {
   postId: number;
@@ -19,7 +20,7 @@ export default function AsyncBlogContent({ postId, content }: Props) {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch(`/api/blog_posts/${postId}/related_posts`, { signal: controller.signal })
+    fetch(appendDelay(`/api/blog_posts/${postId}/related_posts`), { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => setRelatedPosts(data.posts))
       .catch(() => {});
