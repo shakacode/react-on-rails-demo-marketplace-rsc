@@ -2,13 +2,14 @@
   <div class="flex gap-3">
     <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
     <div class="text-sm text-amber-900">
-      <p class="font-semibold mb-1">Lighthouse reports captured with 50 ms artificial DB delay per query</p>
+      <p class="font-semibold mb-1">Desktop reports use 50 ms artificial DB delay to emulate real-world load</p>
       <p class="text-amber-800 leading-relaxed">
         This demo app is small and fast — under normal conditions all three rendering strategies score similarly on desktop.
         PageSpeed Insights does not throttle CPU or network on desktop, so it cannot surface the performance differences
         that matter in production. Adding <code class="bg-amber-100 rounded px-1 py-0.5 text-xs font-mono">?delay=50</code> to every
         page injects a 50 ms sleep after each database query, simulating the heavier queries and higher latency of a real-world application.
-        This makes the RSC streaming advantage clearly visible in Lighthouse scores.
+        This makes the RSC streaming advantage clearly visible in Lighthouse scores. The 50 ms delay emulates typical database latency
+        and API response times seen in production applications under load.
       </p>
     </div>
   </div>
