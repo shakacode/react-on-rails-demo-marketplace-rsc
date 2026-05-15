@@ -63,6 +63,28 @@ function htmlEscape(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function appUrl(feature, variant, strategy = 'desktop') {
+  return `${feature.path}/${variant}${strategy === 'desktop' ? '?delay=50' : ''}`;
+}
+
+function variantLabel(variant) {
+  return variant === 'client' ? 'Client' : variant.toUpperCase();
+}
+
+function strategyLabel(strategy) {
+  return strategy === 'desktop' ? 'Desktop' : 'Mobile';
+}
+
+function appLinks(feature, strategies = STRATEGIES) {
+  return `<div class="app-links">
+    <span>Apps:</span>
+    ${strategies.map((strategy) => `<div class="app-link-row">
+      <span class="app-strategy">${strategyLabel(strategy)}</span>
+      ${VARIANTS.map((v) => `<a class="app-link ${v}" href="${htmlEscape(appUrl(feature, v, strategy))}">${variantLabel(v)}</a>`).join('\n      ')}
+    </div>`).join('\n    ')}
+  </div>`;
+}
+
 // ───────── PAGE 1: index.html ─────────
 function buildIndex() {
   const rows = [];
@@ -102,7 +124,10 @@ function buildIndex() {
       })
     ).join('');
     return `<section class="feature">
-      <h2>${f.label} <span class="path">(${f.path})</span></h2>
+      <div class="feature-title">
+        <h2>${f.label} <span class="path">(${f.path})</span></h2>
+        ${appLinks(f)}
+      </div>
       <table>
         <thead>
           <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
@@ -122,7 +147,7 @@ function buildIndex() {
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Lighthouse evidence</h1>
-  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics.</p>
+  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics, or use the app links to inspect the measured variants.</p>
   <p class="lede small">See also: <a href="bundle-sizes.html">bundle-size breakdown</a> — what each variant ships to the browser, and why the RSC variants ship less.</p>
 </header>
 ${featureBlocks}
@@ -164,6 +189,7 @@ function buildBundles(rows) {
   }
 
   function pageBlock(p) {
+    const route = appUrl(p.feature, p.variant, 'desktop');
     const itemRows = (Object.entries(p.byType)).map(([t, info]) =>
       `<tr><td>${t}</td><td class="num">${info.count}</td><td class="num">${kb(info.transferSize)}</td></tr>`
     ).join('');
@@ -177,7 +203,7 @@ function buildBundles(rows) {
     return `<section class="bundle">
       <h3 class="bundle-title">
         <span class="variant ${p.variant}">${p.variant.toUpperCase()}</span>
-        <span class="route">${p.feature.path}/${p.variant}</span>
+        <a class="route" href="${htmlEscape(route)}">${htmlEscape(route)}</a>
         <span class="meta">total transfer ${kb(p.totalTransfer)}</span>
         <a class="report-link" href="${p.compareUrl}">${p.variant === 'rsc' ? 'SSR vs RSC' : p.variant.toUpperCase() + ' vs RSC'} side-by-side →</a>
       </h3>
@@ -209,7 +235,10 @@ function buildBundles(rows) {
     const delta = rsc.totalTransfer - ssr.totalTransfer;
     return `<article class="feature-bundle" id="${anchorFor(f)}">
       <header class="feature-header">
-        <h2>${f.label} <code class="path">${f.path}</code></h2>
+        <div class="feature-title">
+          <h2>${f.label} <code class="path">${f.path}</code></h2>
+          ${appLinks(f, ['desktop'])}
+        </div>
         <p class="diff">RSC ships <strong>${sign(delta)}${kb(Math.abs(delta))}</strong> ${delta < 0 ? 'less' : 'more'} than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       ${pageBlock(ssr)}
@@ -228,7 +257,7 @@ function buildBundles(rows) {
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Bundle-size evidence</h1>
-  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each script row links to the file Lighthouse measured.</p>
+  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each route label opens the measured desktop app variant, and each script row links to the file Lighthouse measured.</p>
   <p class="lede small">See also: <a href="index.html">all Lighthouse reports</a>.</p>
 </header>
 ${featureBlocks}
@@ -266,6 +295,15 @@ function commonCss() {
     .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
     .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
+    .feature-title{display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin:0 0 .75rem}
+    .feature-title h2{margin:0}
+    .app-links{display:flex;align-items:flex-start;gap:.35rem .5rem;flex-wrap:wrap;color:#64748b;font-size:.78rem;font-weight:600}
+    .app-link-row{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+    .app-strategy{color:#94a3b8;min-width:3.75rem}
+    .app-link{display:inline-block;padding:.12rem .45rem;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc}
+    .app-link.ssr{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+    .app-link.client{background:#fffbeb;border-color:#fde68a;color:#92400e}
+    .app-link.rsc{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
     table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
     table.compact{font-size:.82rem}
     th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}

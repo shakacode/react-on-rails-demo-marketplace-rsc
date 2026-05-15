@@ -18,6 +18,15 @@
     .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
     .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
+    .feature-title{display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin:0 0 .75rem}
+    .feature-title h2{margin:0}
+    .app-links{display:flex;align-items:flex-start;gap:.35rem .5rem;flex-wrap:wrap;color:#64748b;font-size:.78rem;font-weight:600}
+    .app-link-row{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+    .app-strategy{color:#94a3b8;min-width:3.75rem}
+    .app-link{display:inline-block;padding:.12rem .45rem;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc}
+    .app-link.ssr{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+    .app-link.client{background:#fffbeb;border-color:#fde68a;color:#92400e}
+    .app-link.rsc{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
     table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
     table.compact{font-size:.82rem}
     th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}
@@ -54,18 +63,29 @@
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Bundle-size evidence</h1>
-  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each script row links to the file Lighthouse measured.</p>
+  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each route label opens the measured desktop app variant, and each script row links to the file Lighthouse measured.</p>
   <p class="lede small">See also: <a href="index.html">all Lighthouse reports</a>.</p>
 </header>
 <article class="feature-bundle" id="blog">
       <header class="feature-header">
-        <h2>Blog Post <code class="path">/blog</code></h2>
+        <div class="feature-title">
+          <h2>Blog Post <code class="path">/blog</code></h2>
+          <div class="app-links">
+    <span>Apps:</span>
+    <div class="app-link-row">
+      <span class="app-strategy">Desktop</span>
+      <a class="app-link ssr" href="/blog/ssr?delay=50">SSR</a>
+      <a class="app-link client" href="/blog/client?delay=50">Client</a>
+      <a class="app-link rsc" href="/blog/rsc?delay=50">RSC</a>
+    </div>
+  </div>
+        </div>
         <p class="diff">RSC ships <strong>291 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant ssr">SSR</span>
-        <span class="route">/blog/ssr</span>
+        <a class="route" href="/blog/ssr?delay=50">/blog/ssr?delay=50</a>
         <span class="meta">total transfer 419 KB</span>
         <a class="report-link" href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -83,7 +103,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant client">CLIENT</span>
-        <span class="route">/blog/client</span>
+        <a class="route" href="/blog/client?delay=50">/blog/client?delay=50</a>
         <span class="meta">total transfer 427 KB</span>
         <a class="report-link" href="/lh-compare?left=blog_client-desktop&right=blog_rsc-desktop">CLIENT vs RSC side-by-side →</a>
       </h3>
@@ -101,7 +121,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant rsc">RSC</span>
-        <span class="route">/blog/rsc</span>
+        <a class="route" href="/blog/rsc?delay=50">/blog/rsc?delay=50</a>
         <span class="meta">total transfer 128 KB</span>
         <a class="report-link" href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -118,13 +138,24 @@
     </section>
     </article><article class="feature-bundle" id="product">
       <header class="feature-header">
-        <h2>Product Page <code class="path">/product</code></h2>
+        <div class="feature-title">
+          <h2>Product Page <code class="path">/product</code></h2>
+          <div class="app-links">
+    <span>Apps:</span>
+    <div class="app-link-row">
+      <span class="app-strategy">Desktop</span>
+      <a class="app-link ssr" href="/product/ssr?delay=50">SSR</a>
+      <a class="app-link client" href="/product/client?delay=50">Client</a>
+      <a class="app-link rsc" href="/product/rsc?delay=50">RSC</a>
+    </div>
+  </div>
+        </div>
         <p class="diff">RSC ships <strong>404 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant ssr">SSR</span>
-        <span class="route">/product/ssr</span>
+        <a class="route" href="/product/ssr?delay=50">/product/ssr?delay=50</a>
         <span class="meta">total transfer 801 KB</span>
         <a class="report-link" href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -142,7 +173,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant client">CLIENT</span>
-        <span class="route">/product/client</span>
+        <a class="route" href="/product/client?delay=50">/product/client?delay=50</a>
         <span class="meta">total transfer 809 KB</span>
         <a class="report-link" href="/lh-compare?left=product_client-desktop&right=product_rsc-desktop">CLIENT vs RSC side-by-side →</a>
       </h3>
@@ -160,7 +191,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant rsc">RSC</span>
-        <span class="route">/product/rsc</span>
+        <a class="route" href="/product/rsc?delay=50">/product/rsc?delay=50</a>
         <span class="meta">total transfer 397 KB</span>
         <a class="report-link" href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -177,13 +208,24 @@
     </section>
     </article><article class="feature-bundle" id="restaurant">
       <header class="feature-header">
-        <h2>Restaurant Detail <code class="path">/restaurant/1</code></h2>
+        <div class="feature-title">
+          <h2>Restaurant Detail <code class="path">/restaurant/1</code></h2>
+          <div class="app-links">
+    <span>Apps:</span>
+    <div class="app-link-row">
+      <span class="app-strategy">Desktop</span>
+      <a class="app-link ssr" href="/restaurant/1/ssr?delay=50">SSR</a>
+      <a class="app-link client" href="/restaurant/1/client?delay=50">Client</a>
+      <a class="app-link rsc" href="/restaurant/1/rsc?delay=50">RSC</a>
+    </div>
+  </div>
+        </div>
         <p class="diff">RSC ships <strong>367 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant ssr">SSR</span>
-        <span class="route">/restaurant/1/ssr</span>
+        <a class="route" href="/restaurant/1/ssr?delay=50">/restaurant/1/ssr?delay=50</a>
         <span class="meta">total transfer 791 KB</span>
         <a class="report-link" href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -201,7 +243,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant client">CLIENT</span>
-        <span class="route">/restaurant/1/client</span>
+        <a class="route" href="/restaurant/1/client?delay=50">/restaurant/1/client?delay=50</a>
         <span class="meta">total transfer 782 KB</span>
         <a class="report-link" href="/lh-compare?left=restaurant_1_client-desktop&right=restaurant_1_rsc-desktop">CLIENT vs RSC side-by-side →</a>
       </h3>
@@ -219,7 +261,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant rsc">RSC</span>
-        <span class="route">/restaurant/1/rsc</span>
+        <a class="route" href="/restaurant/1/rsc?delay=50">/restaurant/1/rsc?delay=50</a>
         <span class="meta">total transfer 425 KB</span>
         <a class="report-link" href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -236,13 +278,24 @@
     </section>
     </article><article class="feature-bundle" id="product-search">
       <header class="feature-header">
-        <h2>Product Search <code class="path">/product-search</code></h2>
+        <div class="feature-title">
+          <h2>Product Search <code class="path">/product-search</code></h2>
+          <div class="app-links">
+    <span>Apps:</span>
+    <div class="app-link-row">
+      <span class="app-strategy">Desktop</span>
+      <a class="app-link ssr" href="/product-search/ssr?delay=50">SSR</a>
+      <a class="app-link client" href="/product-search/client?delay=50">Client</a>
+      <a class="app-link rsc" href="/product-search/rsc?delay=50">RSC</a>
+    </div>
+  </div>
+        </div>
         <p class="diff">RSC ships <strong>300 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant ssr">SSR</span>
-        <span class="route">/product-search/ssr</span>
+        <a class="route" href="/product-search/ssr?delay=50">/product-search/ssr?delay=50</a>
         <span class="meta">total transfer 790 KB</span>
         <a class="report-link" href="/lh-compare?left=product-search_ssr-desktop&right=product-search_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
@@ -260,7 +313,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant client">CLIENT</span>
-        <span class="route">/product-search/client</span>
+        <a class="route" href="/product-search/client?delay=50">/product-search/client?delay=50</a>
         <span class="meta">total transfer 790 KB</span>
         <a class="report-link" href="/lh-compare?left=product-search_client-desktop&right=product-search_rsc-desktop">CLIENT vs RSC side-by-side →</a>
       </h3>
@@ -278,7 +331,7 @@
       <section class="bundle">
       <h3 class="bundle-title">
         <span class="variant rsc">RSC</span>
-        <span class="route">/product-search/rsc</span>
+        <a class="route" href="/product-search/rsc?delay=50">/product-search/rsc?delay=50</a>
         <span class="meta">total transfer 490 KB</span>
         <a class="report-link" href="/lh-compare?left=product-search_ssr-desktop&right=product-search_rsc-desktop">SSR vs RSC side-by-side →</a>
       </h3>
