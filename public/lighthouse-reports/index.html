@@ -18,15 +18,10 @@
     .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
     .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
-    .feature-title{display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin:0 0 .75rem}
-    .feature-title h2{margin:0}
-    .app-links{display:flex;align-items:flex-start;gap:.35rem .5rem;flex-wrap:wrap;color:#64748b;font-size:.78rem;font-weight:600}
-    .app-link-row{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
-    .app-strategy{color:#94a3b8;min-width:3.75rem}
-    .app-link{display:inline-block;padding:.12rem .45rem;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc}
-    .app-link.ssr{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
-    .app-link.client{background:#fffbeb;border-color:#fde68a;color:#92400e}
-    .app-link.rsc{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+    .app-inline{font-size:.78rem;font-weight:600}
+    .app-inline.ssr{color:#1d4ed8}
+    .app-inline.client{color:#92400e}
+    .app-inline.rsc{color:#047857}
     table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
     table.compact{font-size:.82rem}
     th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}
@@ -63,35 +58,19 @@
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Lighthouse evidence</h1>
-  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics, or use the app links to inspect the measured variants.</p>
+  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics, or use its app link to inspect the measured variant.</p>
   <p class="lede small">See also: <a href="bundle-sizes.html">bundle-size breakdown</a> — what each variant ships to the browser, and why the RSC variants ship less.</p>
 </header>
 <section class="feature">
-      <div class="feature-title">
-        <h2>Blog Post <span class="path">(/blog)</span></h2>
-        <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/blog/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/blog/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/blog/rsc?delay=50">RSC</a>
-    </div>
-    <div class="app-link-row">
-      <span class="app-strategy">Mobile</span>
-      <a class="app-link ssr" href="/blog/ssr">SSR</a>
-      <a class="app-link client" href="/blog/client">Client</a>
-      <a class="app-link rsc" href="/blog/rsc">RSC</a>
-    </div>
-  </div>
-      </div>
+      <h2>Blog Post <span class="path">(/blog)</span></h2>
       <table>
         <thead>
-          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+          <tr><th>Variant</th><th>Strategy</th><th>App</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
         </thead>
         <tbody><tr>
           <td class="variant ssr">SSR</td>
           <td>desktop</td>
+          <td><a class="app-inline ssr" href="/blog/ssr?delay=50">SSR app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop" style="color:inherit;text-decoration:none">70</a></span></td>
           <td class="num">793 ms</td>
           <td class="num">793 ms</td>
@@ -102,6 +81,7 @@
         </tr><tr>
           <td class="variant ssr">SSR</td>
           <td>mobile</td>
+          <td><a class="app-inline ssr" href="/blog/ssr">SSR app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_ssr-mobile&right=blog_rsc-mobile" style="color:inherit;text-decoration:none">72</a></span></td>
           <td class="num">1.43 s</td>
           <td class="num">1.43 s</td>
@@ -112,6 +92,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>desktop</td>
+          <td><a class="app-inline client" href="/blog/client?delay=50">Client app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_client-desktop&right=blog_rsc-desktop" style="color:inherit;text-decoration:none">70</a></span></td>
           <td class="num">701 ms</td>
           <td class="num">701 ms</td>
@@ -122,6 +103,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>mobile</td>
+          <td><a class="app-inline client" href="/blog/client">Client app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=blog_client-mobile&right=blog_rsc-mobile" style="color:inherit;text-decoration:none">72</a></span></td>
           <td class="num">1.42 s</td>
           <td class="num">1.42 s</td>
@@ -132,6 +114,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>desktop</td>
+          <td><a class="app-inline rsc" href="/blog/rsc?delay=50">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop" style="color:inherit;text-decoration:none">99</a></span></td>
           <td class="num">385 ms</td>
           <td class="num">413 ms</td>
@@ -142,6 +125,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>mobile</td>
+          <td><a class="app-inline rsc" href="/blog/rsc">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=blog_ssr-mobile&right=blog_rsc-mobile" style="color:inherit;text-decoration:none">97</a></span></td>
           <td class="num">1.40 s</td>
           <td class="num">1.46 s</td>
@@ -152,31 +136,15 @@
         </tr></tbody>
       </table>
     </section><section class="feature">
-      <div class="feature-title">
-        <h2>Product Page <span class="path">(/product)</span></h2>
-        <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/product/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/product/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/product/rsc?delay=50">RSC</a>
-    </div>
-    <div class="app-link-row">
-      <span class="app-strategy">Mobile</span>
-      <a class="app-link ssr" href="/product/ssr">SSR</a>
-      <a class="app-link client" href="/product/client">Client</a>
-      <a class="app-link rsc" href="/product/rsc">RSC</a>
-    </div>
-  </div>
-      </div>
+      <h2>Product Page <span class="path">(/product)</span></h2>
       <table>
         <thead>
-          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+          <tr><th>Variant</th><th>Strategy</th><th>App</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
         </thead>
         <tbody><tr>
           <td class="variant ssr">SSR</td>
           <td>desktop</td>
+          <td><a class="app-inline ssr" href="/product/ssr?delay=50">SSR app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop" style="color:inherit;text-decoration:none">99</a></span></td>
           <td class="num">391 ms</td>
           <td class="num">682 ms</td>
@@ -187,6 +155,7 @@
         </tr><tr>
           <td class="variant ssr">SSR</td>
           <td>mobile</td>
+          <td><a class="app-inline ssr" href="/product/ssr">SSR app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=product_ssr-mobile&right=product_rsc-mobile" style="color:inherit;text-decoration:none">73</a></span></td>
           <td class="num">3.71 s</td>
           <td class="num">4.98 s</td>
@@ -197,6 +166,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>desktop</td>
+          <td><a class="app-inline client" href="/product/client?delay=50">Client app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product_client-desktop&right=product_rsc-desktop" style="color:inherit;text-decoration:none">100</a></span></td>
           <td class="num">458 ms</td>
           <td class="num">583 ms</td>
@@ -207,6 +177,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>mobile</td>
+          <td><a class="app-inline client" href="/product/client">Client app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product_client-mobile&right=product_rsc-mobile" style="color:inherit;text-decoration:none">98</a></span></td>
           <td class="num">1.24 s</td>
           <td class="num">2.11 s</td>
@@ -217,6 +188,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>desktop</td>
+          <td><a class="app-inline rsc" href="/product/rsc?delay=50">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product_ssr-desktop&right=product_rsc-desktop" style="color:inherit;text-decoration:none">100</a></span></td>
           <td class="num">373 ms</td>
           <td class="num">563 ms</td>
@@ -227,6 +199,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>mobile</td>
+          <td><a class="app-inline rsc" href="/product/rsc">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product_ssr-mobile&right=product_rsc-mobile" style="color:inherit;text-decoration:none">98</a></span></td>
           <td class="num">1.42 s</td>
           <td class="num">2.25 s</td>
@@ -237,31 +210,15 @@
         </tr></tbody>
       </table>
     </section><section class="feature">
-      <div class="feature-title">
-        <h2>Restaurant Detail <span class="path">(/restaurant/1)</span></h2>
-        <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/restaurant/1/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/restaurant/1/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/restaurant/1/rsc?delay=50">RSC</a>
-    </div>
-    <div class="app-link-row">
-      <span class="app-strategy">Mobile</span>
-      <a class="app-link ssr" href="/restaurant/1/ssr">SSR</a>
-      <a class="app-link client" href="/restaurant/1/client">Client</a>
-      <a class="app-link rsc" href="/restaurant/1/rsc">RSC</a>
-    </div>
-  </div>
-      </div>
+      <h2>Restaurant Detail <span class="path">(/restaurant/1)</span></h2>
       <table>
         <thead>
-          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+          <tr><th>Variant</th><th>Strategy</th><th>App</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
         </thead>
         <tbody><tr>
           <td class="variant ssr">SSR</td>
           <td>desktop</td>
+          <td><a class="app-inline ssr" href="/restaurant/1/ssr?delay=50">SSR app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop" style="color:inherit;text-decoration:none">84</a></span></td>
           <td class="num">337 ms</td>
           <td class="num">956 ms</td>
@@ -272,6 +229,7 @@
         </tr><tr>
           <td class="variant ssr">SSR</td>
           <td>mobile</td>
+          <td><a class="app-inline ssr" href="/restaurant/1/ssr">SSR app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_ssr-mobile&right=restaurant_1_rsc-mobile" style="color:inherit;text-decoration:none">75</a></span></td>
           <td class="num">1.35 s</td>
           <td class="num">4.67 s</td>
@@ -282,6 +240,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>desktop</td>
+          <td><a class="app-inline client" href="/restaurant/1/client?delay=50">Client app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_client-desktop&right=restaurant_1_rsc-desktop" style="color:inherit;text-decoration:none">83</a></span></td>
           <td class="num">414 ms</td>
           <td class="num">1.19 s</td>
@@ -292,6 +251,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>mobile</td>
+          <td><a class="app-inline client" href="/restaurant/1/client">Client app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_client-mobile&right=restaurant_1_rsc-mobile" style="color:inherit;text-decoration:none">66</a></span></td>
           <td class="num">3.73 s</td>
           <td class="num">5.41 s</td>
@@ -302,6 +262,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>desktop</td>
+          <td><a class="app-inline rsc" href="/restaurant/1/rsc?delay=50">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=restaurant_1_ssr-desktop&right=restaurant_1_rsc-desktop" style="color:inherit;text-decoration:none">98</a></span></td>
           <td class="num">441 ms</td>
           <td class="num">912 ms</td>
@@ -312,6 +273,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>mobile</td>
+          <td><a class="app-inline rsc" href="/restaurant/1/rsc">RSC app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=restaurant_1_ssr-mobile&right=restaurant_1_rsc-mobile" style="color:inherit;text-decoration:none">88</a></span></td>
           <td class="num">1.27 s</td>
           <td class="num">3.33 s</td>
@@ -322,31 +284,15 @@
         </tr></tbody>
       </table>
     </section><section class="feature">
-      <div class="feature-title">
-        <h2>Product Search <span class="path">(/product-search)</span></h2>
-        <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/product-search/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/product-search/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/product-search/rsc?delay=50">RSC</a>
-    </div>
-    <div class="app-link-row">
-      <span class="app-strategy">Mobile</span>
-      <a class="app-link ssr" href="/product-search/ssr">SSR</a>
-      <a class="app-link client" href="/product-search/client">Client</a>
-      <a class="app-link rsc" href="/product-search/rsc">RSC</a>
-    </div>
-  </div>
-      </div>
+      <h2>Product Search <span class="path">(/product-search)</span></h2>
       <table>
         <thead>
-          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+          <tr><th>Variant</th><th>Strategy</th><th>App</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
         </thead>
         <tbody><tr>
           <td class="variant ssr">SSR</td>
           <td>desktop</td>
+          <td><a class="app-inline ssr" href="/product-search/ssr?delay=50">SSR app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product-search_ssr-desktop&right=product-search_rsc-desktop" style="color:inherit;text-decoration:none">96</a></span></td>
           <td class="num">626 ms</td>
           <td class="num">847 ms</td>
@@ -357,6 +303,7 @@
         </tr><tr>
           <td class="variant ssr">SSR</td>
           <td>mobile</td>
+          <td><a class="app-inline ssr" href="/product-search/ssr">SSR app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product-search_ssr-mobile&right=product-search_rsc-mobile" style="color:inherit;text-decoration:none">98</a></span></td>
           <td class="num">1.27 s</td>
           <td class="num">1.81 s</td>
@@ -367,6 +314,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>desktop</td>
+          <td><a class="app-inline client" href="/product-search/client?delay=50">Client app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product-search_client-desktop&right=product-search_rsc-desktop" style="color:inherit;text-decoration:none">97</a></span></td>
           <td class="num">672 ms</td>
           <td class="num">948 ms</td>
@@ -377,6 +325,7 @@
         </tr><tr>
           <td class="variant client">CLIENT</td>
           <td>mobile</td>
+          <td><a class="app-inline client" href="/product-search/client">Client app ↗</a></td>
           <td class="num"><span class="score score-mid"><a href="/lh-compare?left=product-search_client-mobile&right=product-search_rsc-mobile" style="color:inherit;text-decoration:none">78</a></span></td>
           <td class="num">1.42 s</td>
           <td class="num">4.19 s</td>
@@ -387,6 +336,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>desktop</td>
+          <td><a class="app-inline rsc" href="/product-search/rsc?delay=50">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product-search_ssr-desktop&right=product-search_rsc-desktop" style="color:inherit;text-decoration:none">98</a></span></td>
           <td class="num">382 ms</td>
           <td class="num">475 ms</td>
@@ -397,6 +347,7 @@
         </tr><tr>
           <td class="variant rsc">RSC</td>
           <td>mobile</td>
+          <td><a class="app-inline rsc" href="/product-search/rsc">RSC app ↗</a></td>
           <td class="num"><span class="score score-good"><a href="/lh-compare?left=product-search_ssr-mobile&right=product-search_rsc-mobile" style="color:inherit;text-decoration:none">99</a></span></td>
           <td class="num">1.40 s</td>
           <td class="num">2.02 s</td>

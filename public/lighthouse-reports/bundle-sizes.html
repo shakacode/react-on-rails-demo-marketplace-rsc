@@ -18,15 +18,10 @@
     .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
     .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
-    .feature-title{display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin:0 0 .75rem}
-    .feature-title h2{margin:0}
-    .app-links{display:flex;align-items:flex-start;gap:.35rem .5rem;flex-wrap:wrap;color:#64748b;font-size:.78rem;font-weight:600}
-    .app-link-row{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
-    .app-strategy{color:#94a3b8;min-width:3.75rem}
-    .app-link{display:inline-block;padding:.12rem .45rem;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc}
-    .app-link.ssr{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
-    .app-link.client{background:#fffbeb;border-color:#fde68a;color:#92400e}
-    .app-link.rsc{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+    .app-inline{font-size:.78rem;font-weight:600}
+    .app-inline.ssr{color:#1d4ed8}
+    .app-inline.client{color:#92400e}
+    .app-inline.rsc{color:#047857}
     table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
     table.compact{font-size:.82rem}
     th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}
@@ -68,18 +63,7 @@
 </header>
 <article class="feature-bundle" id="blog">
       <header class="feature-header">
-        <div class="feature-title">
-          <h2>Blog Post <code class="path">/blog</code></h2>
-          <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/blog/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/blog/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/blog/rsc?delay=50">RSC</a>
-    </div>
-  </div>
-        </div>
+        <h2>Blog Post <code class="path">/blog</code></h2>
         <p class="diff">RSC ships <strong>291 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
@@ -138,18 +122,7 @@
     </section>
     </article><article class="feature-bundle" id="product">
       <header class="feature-header">
-        <div class="feature-title">
-          <h2>Product Page <code class="path">/product</code></h2>
-          <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/product/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/product/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/product/rsc?delay=50">RSC</a>
-    </div>
-  </div>
-        </div>
+        <h2>Product Page <code class="path">/product</code></h2>
         <p class="diff">RSC ships <strong>404 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
@@ -208,18 +181,7 @@
     </section>
     </article><article class="feature-bundle" id="restaurant">
       <header class="feature-header">
-        <div class="feature-title">
-          <h2>Restaurant Detail <code class="path">/restaurant/1</code></h2>
-          <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/restaurant/1/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/restaurant/1/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/restaurant/1/rsc?delay=50">RSC</a>
-    </div>
-  </div>
-        </div>
+        <h2>Restaurant Detail <code class="path">/restaurant/1</code></h2>
         <p class="diff">RSC ships <strong>367 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">
@@ -278,18 +240,7 @@
     </section>
     </article><article class="feature-bundle" id="product-search">
       <header class="feature-header">
-        <div class="feature-title">
-          <h2>Product Search <code class="path">/product-search</code></h2>
-          <div class="app-links">
-    <span>Apps:</span>
-    <div class="app-link-row">
-      <span class="app-strategy">Desktop</span>
-      <a class="app-link ssr" href="/product-search/ssr?delay=50">SSR</a>
-      <a class="app-link client" href="/product-search/client?delay=50">Client</a>
-      <a class="app-link rsc" href="/product-search/rsc?delay=50">RSC</a>
-    </div>
-  </div>
-        </div>
+        <h2>Product Search <code class="path">/product-search</code></h2>
         <p class="diff">RSC ships <strong>300 KB</strong> less than SSR &mdash; click a chunk URL in any table below to inspect it directly.</p>
       </header>
       <section class="bundle">

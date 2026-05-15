@@ -80,14 +80,14 @@
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════
-     AT-A-GLANCE — scores link to LH reports; feature links open apps
+     AT-A-GLANCE — scores link to LH reports; strategy links open apps
      ════════════════════════════════════════════════════════════════ -->
 <section class="py-14 sm:py-20 bg-slate-50">
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="text-center mb-10">
       <span class="inline-block text-emerald-600 font-semibold text-xs uppercase tracking-[0.2em] mb-3">At a Glance</span>
       <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">Performance score, every page, every variant</h2>
-      <p class="text-slate-500 max-w-3xl mx-auto">Lighthouse <code class="bg-white border border-slate-200 px-1.5 py-0.5 rounded">categories.performance.score × 100</code>. Click any score to open that exact report; use feature links to open the app variants.</p>
+      <p class="text-slate-500 max-w-3xl mx-auto">Lighthouse <code class="bg-white border border-slate-200 px-1.5 py-0.5 rounded">categories.performance.score × 100</code>. Click any score to open that exact report; use strategy links to open the measured app variants.</p>
     </div>
 
     <div class="overflow-x-auto bg-white rounded-2xl border border-slate-200 shadow-sm">
@@ -111,21 +111,18 @@
                   <td rowspan="2" class="p-4 align-top">
                     <div class="font-bold text-slate-900"><%= f[:label] %></div>
                     <code class="text-xs text-slate-500"><%= f[:path] %></code>
-                    <div class="mt-2 space-y-1 text-[11px] font-semibold">
-                      <% %w[desktop mobile].each do |strategy| %>
-                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span class="w-12 text-slate-400 font-medium"><%= strategy.capitalize %></span>
-                          <a href="<%= app_url.(f, "ssr", strategy) %>" class="text-amber-700 hover:underline">SSR</a>
-                          <span class="text-slate-300">·</span>
-                          <a href="<%= app_url.(f, "client", strategy) %>" class="text-blue-700 hover:underline">Client</a>
-                          <span class="text-slate-300">·</span>
-                          <a href="<%= app_url.(f, "rsc", strategy) %>" class="text-emerald-700 hover:underline">RSC</a>
-                        </div>
-                      <% end %>
-                    </div>
                   </td>
                 <% end %>
-                <td class="p-4 capitalize text-slate-700"><%= s %></td>
+                <td class="p-4 text-slate-700">
+                  <div class="font-medium capitalize"><%= s %></div>
+                  <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold">
+                    <a href="<%= app_url.(f, "ssr", s) %>" class="text-amber-700 hover:underline">SSR</a>
+                    <span class="text-slate-300">·</span>
+                    <a href="<%= app_url.(f, "client", s) %>" class="text-blue-700 hover:underline">Client</a>
+                    <span class="text-slate-300">·</span>
+                    <a href="<%= app_url.(f, "rsc", s) %>" class="text-emerald-700 hover:underline">RSC</a>
+                  </div>
+                </td>
                 <td class="p-2 text-center">
                   <a href="<%= report_url.(f[:slug], "ssr", s) %>" target="_blank" rel="noopener" class="inline-block px-3 py-1 rounded-md font-bold <%= score_color.(ssr[:score]) %> hover:opacity-80 transition">
                     <%= ssr[:score] %>
