@@ -81,6 +81,6 @@ class PagesController < ApplicationController
     path = uri.path.empty? ? "/" : uri.path
     uri.query ? "#{path}?#{uri.query}" : path
   rescue URI::InvalidURIError
-    raw_url
+    nil
   end
 end
