@@ -63,6 +63,14 @@ function htmlEscape(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function appUrl(feature, variant, strategy = 'desktop') {
+  return `${feature.path}/${variant}${strategy === 'desktop' ? '?delay=50' : ''}`;
+}
+
+function variantLabel(variant) {
+  return variant === 'client' ? 'Client' : variant.toUpperCase();
+}
+
 // ───────── PAGE 1: index.html ─────────
 function buildIndex() {
   const rows = [];
@@ -88,9 +96,11 @@ function buildIndex() {
         const compareUrl = v === 'rsc'
           ? `/lh-compare?left=${f.slug}_ssr-${s}&right=${row.safe}`
           : `/lh-compare?left=${row.safe}&right=${f.slug}_rsc-${s}`;
+        const measuredAppUrl = appUrl(f, v, s);
         return `<tr>
           <td class="variant ${v}">${v.toUpperCase()}</td>
           <td>${s}</td>
+          <td><a class="app-inline ${v}" href="${htmlEscape(measuredAppUrl)}">${variantLabel(v)} app ↗</a></td>
           <td class="num"><span class="score score-${scoreColor(m.score)}"><a href="${compareUrl}" style="color:inherit;text-decoration:none">${m.score}</a></span></td>
           <td class="num">${ms(m.fcp)}</td>
           <td class="num">${ms(m.lcp)}</td>
@@ -105,7 +115,7 @@ function buildIndex() {
       <h2>${f.label} <span class="path">(${f.path})</span></h2>
       <table>
         <thead>
-          <tr><th>Variant</th><th>Strategy</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
+          <tr><th>Variant</th><th>Strategy</th><th>App</th><th>Perf</th><th>FCP</th><th>LCP</th><th>TBT</th><th>Bootup</th><th>Transfer</th><th>Report</th></tr>
         </thead>
         <tbody>${tableRows}</tbody>
       </table>
@@ -122,7 +132,7 @@ function buildIndex() {
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Lighthouse evidence</h1>
-  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics.</p>
+  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics, or use its app link to inspect the measured variant.</p>
   <p class="lede small">See also: <a href="bundle-sizes.html">bundle-size breakdown</a> — what each variant ships to the browser, and why the RSC variants ship less.</p>
 </header>
 ${featureBlocks}
@@ -164,6 +174,7 @@ function buildBundles(rows) {
   }
 
   function pageBlock(p) {
+    const route = appUrl(p.feature, p.variant, 'desktop');
     const itemRows = (Object.entries(p.byType)).map(([t, info]) =>
       `<tr><td>${t}</td><td class="num">${info.count}</td><td class="num">${kb(info.transferSize)}</td></tr>`
     ).join('');
@@ -177,7 +188,7 @@ function buildBundles(rows) {
     return `<section class="bundle">
       <h3 class="bundle-title">
         <span class="variant ${p.variant}">${p.variant.toUpperCase()}</span>
-        <span class="route">${p.feature.path}/${p.variant}</span>
+        <a class="route" href="${htmlEscape(route)}">${htmlEscape(route)}</a>
         <span class="meta">total transfer ${kb(p.totalTransfer)}</span>
         <a class="report-link" href="${p.compareUrl}">${p.variant === 'rsc' ? 'SSR vs RSC' : p.variant.toUpperCase() + ' vs RSC'} side-by-side →</a>
       </h3>
@@ -228,7 +239,7 @@ function buildBundles(rows) {
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Bundle-size evidence</h1>
-  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each script row links to the file Lighthouse measured.</p>
+  <p class="lede">Every "X MB less to the client" claim on the marketing pages is rooted in this table. The numbers come from the Lighthouse network-request audit: real bytes transferred over the wire (compressed where applicable). Each route label opens the measured desktop app variant, and each script row links to the file Lighthouse measured.</p>
   <p class="lede small">See also: <a href="index.html">all Lighthouse reports</a>.</p>
 </header>
 ${featureBlocks}
@@ -266,6 +277,10 @@ function commonCss() {
     .feature, .feature-bundle{padding:1.5rem;max-width:88rem;margin:1.5rem auto;background:white;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .feature h2, .feature-bundle h2{margin:0 0 .75rem;font-size:1.2rem}
     .feature h2 .path, .feature-bundle code.path{font-family:ui-monospace,monospace;color:#94a3b8;font-weight:400;font-size:.85rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem}
+    .app-inline{font-size:.78rem;font-weight:600}
+    .app-inline.ssr{color:#1d4ed8}
+    .app-inline.client{color:#92400e}
+    .app-inline.rsc{color:#047857}
     table{width:100%;border-collapse:collapse;font-size:.9rem;margin:0}
     table.compact{font-size:.82rem}
     th,td{padding:.4rem .6rem;text-align:left;border-bottom:1px solid #f1f5f9;vertical-align:top}

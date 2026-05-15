@@ -8,6 +8,7 @@
   reports_dir = Rails.root.join("public/lighthouse-reports")
   report_filename = ->(slug, variant, strategy) { "#{slug}_#{variant}-#{strategy}" }
   report_url = ->(slug, variant, strategy) { lh_compare_url_for(slug, variant, strategy) }
+  app_url = ->(feature, variant, strategy) { "#{feature[:path]}/#{variant}#{strategy == "desktop" ? "?delay=50" : ""}" }
 
   load_report = ->(slug, variant, strategy) {
     path = reports_dir.join("#{report_filename.(slug, variant, strategy)}.json")
@@ -79,14 +80,14 @@
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════
-     AT-A-GLANCE — every cell links to its LH report
+     AT-A-GLANCE — scores link to LH reports; strategy links open apps
      ════════════════════════════════════════════════════════════════ -->
 <section class="py-14 sm:py-20 bg-slate-50">
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="text-center mb-10">
       <span class="inline-block text-emerald-600 font-semibold text-xs uppercase tracking-[0.2em] mb-3">At a Glance</span>
       <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">Performance score, every page, every variant</h2>
-      <p class="text-slate-500 max-w-3xl mx-auto">Lighthouse <code class="bg-white border border-slate-200 px-1.5 py-0.5 rounded">categories.performance.score × 100</code>. Click any score to open that exact report.</p>
+      <p class="text-slate-500 max-w-3xl mx-auto">Lighthouse <code class="bg-white border border-slate-200 px-1.5 py-0.5 rounded">categories.performance.score × 100</code>. Click any score to open that exact report; use strategy links to open the measured app variants.</p>
     </div>
 
     <div class="overflow-x-auto bg-white rounded-2xl border border-slate-200 shadow-sm">
@@ -112,7 +113,16 @@
                     <code class="text-xs text-slate-500"><%= f[:path] %></code>
                   </td>
                 <% end %>
-                <td class="p-4 capitalize text-slate-700"><%= s %></td>
+                <td class="p-4 text-slate-700">
+                  <div class="font-medium capitalize"><%= s %></div>
+                  <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold">
+                    <a href="<%= app_url.(f, "ssr", s) %>" class="text-blue-700 hover:underline">SSR</a>
+                    <span class="text-slate-300">·</span>
+                    <a href="<%= app_url.(f, "client", s) %>" class="text-amber-700 hover:underline">Client</a>
+                    <span class="text-slate-300">·</span>
+                    <a href="<%= app_url.(f, "rsc", s) %>" class="text-emerald-700 hover:underline">RSC</a>
+                  </div>
+                </td>
                 <td class="p-2 text-center">
                   <a href="<%= report_url.(f[:slug], "ssr", s) %>" target="_blank" rel="noopener" class="inline-block px-3 py-1 rounded-md font-bold <%= score_color.(ssr[:score]) %> hover:opacity-80 transition">
                     <%= ssr[:score] %>
@@ -205,8 +215,8 @@
           <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3"><%= f[:label] %></h2>
           <p class="text-slate-600 leading-relaxed mb-4"><%= f[:summary] %></p>
           <div class="flex flex-wrap gap-2 text-xs">
-            <a href="<%= f[:path] %>/ssr"    class="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-amber-700 hover:bg-amber-100">Open <%= f[:label] %> SSR →</a>
-            <a href="<%= f[:path] %>/client" class="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-blue-700 hover:bg-blue-100">Open Client →</a>
+            <a href="<%= f[:path] %>/ssr"    class="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-blue-700 hover:bg-blue-100">Open <%= f[:label] %> SSR →</a>
+            <a href="<%= f[:path] %>/client" class="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-amber-700 hover:bg-amber-100">Open Client →</a>
             <a href="<%= f[:path] %>/rsc"    class="rounded-full bg-green-50 border border-green-200 px-3 py-1 text-green-700 font-semibold hover:bg-green-100">Open RSC →</a>
             <a href="/lighthouse-reports/bundle-sizes.html#<%= f[:anchor] %>" class="rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-indigo-700 hover:bg-indigo-100">Bundle breakdown →</a>
           </div>
@@ -239,8 +249,8 @@
               <thead>
                 <tr class="text-xs text-slate-500 uppercase tracking-wider">
                   <th class="text-left py-1.5"></th>
-                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "ssr", strategy) %>" target="_blank" rel="noopener" class="text-amber-700 hover:underline">SSR</a></th>
-                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "client", strategy) %>" target="_blank" rel="noopener" class="text-blue-700 hover:underline">Client</a></th>
+                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "ssr", strategy) %>" target="_blank" rel="noopener" class="text-blue-700 hover:underline">SSR</a></th>
+                  <th class="py-1.5"><a href="<%= report_url.(f[:slug], "client", strategy) %>" target="_blank" rel="noopener" class="text-amber-700 hover:underline">Client</a></th>
                   <th class="py-1.5"><a href="<%= report_url.(f[:slug], "rsc", strategy) %>" target="_blank" rel="noopener" class="text-emerald-700 hover:underline">RSC</a></th>
                 </tr>
               </thead>
@@ -296,17 +306,17 @@
         <div class="space-y-3">
           <div>
             <div class="flex items-baseline justify-between mb-1">
-              <span class="text-xs font-medium text-amber-700">SSR</span>
-              <span class="text-xs font-bold text-amber-700"><%= fmt_kb.(ssr_d[:transfer]) %></span>
+              <span class="text-xs font-medium text-blue-700">SSR</span>
+              <span class="text-xs font-bold text-blue-700"><%= fmt_kb.(ssr_d[:transfer]) %></span>
             </div>
-            <div class="h-3 rounded-full bg-amber-200 w-full"></div>
+            <div class="h-3 rounded-full bg-blue-200 w-full"></div>
           </div>
           <div>
             <div class="flex items-baseline justify-between mb-1">
-              <span class="text-xs font-medium text-blue-700">Client</span>
-              <span class="text-xs font-bold text-blue-700"><%= fmt_kb.(cli_d[:transfer]) %></span>
+              <span class="text-xs font-medium text-amber-700">Client</span>
+              <span class="text-xs font-bold text-amber-700"><%= fmt_kb.(cli_d[:transfer]) %></span>
             </div>
-            <div class="h-3 rounded-full bg-blue-200" style="width: <%= (cli_d[:transfer].to_f / ssr_d[:transfer].to_f * 100).round %>%"></div>
+            <div class="h-3 rounded-full bg-amber-200" style="width: <%= (cli_d[:transfer].to_f / ssr_d[:transfer].to_f * 100).round %>%"></div>
           </div>
           <div>
             <div class="flex items-baseline justify-between mb-1">
