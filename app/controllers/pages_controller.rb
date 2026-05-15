@@ -27,9 +27,16 @@ class PagesController < ApplicationController
     @feature_slug = @left_meta[:slug]
     @strategy     = @left_meta[:strategy]
 
+    # Seed from the two reports already parsed in load_report above; only the
+    # remaining variant (if any) still needs its JSON read.
     @app_urls = { @left => @left_data[:app_url], @right => @right_data[:app_url] }
     if @left_meta[:slug] == @right_meta[:slug] && @left_meta[:strategy] == @right_meta[:strategy]
-      @app_urls.merge!(app_urls_for(@feature_slug, @strategy))
+      %w[ssr client rsc].each do |variant|
+        basename = "#{@feature_slug}_#{variant}-#{@strategy}"
+        next if @app_urls.key?(basename) || !valid_report?(basename)
+
+        @app_urls[basename] = app_url_for_report(basename)
+      end
     end
   end
 
@@ -59,13 +66,6 @@ class PagesController < ApplicationController
       transfer:  a["total-byte-weight"]["numericValue"].to_f,
       app_url:   app_url_from_report(j),
     }
-  end
-
-  def app_urls_for(slug, strategy)
-    %w[ssr client rsc].each_with_object({}) do |variant, urls|
-      basename = "#{slug}_#{variant}-#{strategy}"
-      urls[basename] = app_url_for_report(basename) if valid_report?(basename)
-    end
   end
 
   def app_url_for_report(name)
