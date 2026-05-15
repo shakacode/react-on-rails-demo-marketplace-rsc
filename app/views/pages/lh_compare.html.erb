@@ -28,11 +28,18 @@
   # Build pair-selector buttons. For the same feature/strategy we expose all three
   # interesting pairs: SSR↔RSC, Client↔RSC, SSR↔Client.
   pairs = []
+  app_links = []
   if same_feature && same_strategy
     %w[ssr client].each do |v|
       pairs << { left: "#{@feature_slug}_#{v}-#{@strategy}", right: "#{@feature_slug}_rsc-#{@strategy}", label: "#{variant_label[v]} vs RSC" }
     end
     pairs << { left: "#{@feature_slug}_ssr-#{@strategy}", right: "#{@feature_slug}_client-#{@strategy}", label: "SSR vs Client" }
+
+    %w[ssr client rsc].each do |v|
+      basename = "#{@feature_slug}_#{v}-#{@strategy}"
+      app_url = @app_urls[basename]
+      app_links << { basename: basename, url: app_url, label: "#{variant_label[v]} app" } if app_url
+    end
   end
 
   current_pair_key = "#{@left}|#{@right}"
@@ -85,6 +92,19 @@
         <a href="/lh-compare?left=<%= @right %>&right=<%= @left %>" class="rounded-full px-3 py-1 border border-white/30 text-white/80 hover:bg-white/10 hover:border-white/50" title="Swap left ↔ right">
           ⇄ Swap
         </a>
+      </div>
+    <% end %>
+
+    <% if app_links.any? %>
+      <div class="flex flex-wrap items-center gap-2 mt-3 text-xs">
+        <span class="text-slate-400 font-medium uppercase tracking-wider mr-1">Apps:</span>
+        <% app_links.each do |app| %>
+          <% active = [@left, @right].include?(app[:basename]) %>
+          <a href="<%= app[:url] %>" target="_blank" rel="noopener"
+             class="rounded-full px-3 py-1 border <%= active ? "bg-white/15 border-white text-white font-semibold" : "border-white/30 text-white/80 hover:bg-white/10 hover:border-white/50" %>">
+            <%= app[:label] %> ↗
+          </a>
+        <% end %>
       </div>
     <% end %>
   </div>
@@ -174,7 +194,12 @@
             <span class="text-slate-300">·</span>
             <code class="text-slate-500"><%= basename %></code>
           </div>
-          <a href="/lighthouse-reports/<%= basename %>.html" target="_blank" rel="noopener" class="text-xs text-indigo-600 hover:underline">Open standalone ↗</a>
+          <div class="flex items-center gap-3">
+            <% if @app_urls[basename] %>
+              <a href="<%= @app_urls[basename] %>" target="_blank" rel="noopener" class="text-xs text-emerald-700 hover:underline">Open app ↗</a>
+            <% end %>
+            <a href="/lighthouse-reports/<%= basename %>.html" target="_blank" rel="noopener" class="text-xs text-indigo-600 hover:underline">Open standalone ↗</a>
+          </div>
         </div>
         <iframe
           src="/lighthouse-reports/<%= basename %>.html"
