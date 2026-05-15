@@ -87,9 +87,6 @@ module RORPStreamLeakFix
       # Both HTTPX::Response and HTTPX::ErrorResponse implement #finished?
       # (ErrorResponse is always finished). Re-emitting :refuse on either
       # would overwrite the terminal response with a synthetic cancel error.
-      # Both HTTPX::Response and HTTPX::ErrorResponse implement #finished?
-      # (ErrorResponse is always finished). Re-emitting :refuse on either
-      # would overwrite the terminal response with a synthetic cancel error.
       return if resp.respond_to?(:finished?) && resp.finished?
 
       req.emit(:refuse, :cancel)
