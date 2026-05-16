@@ -1,40 +1,62 @@
 # frozen_string_literal: true
 
 # TEMPORARY MONKEY-PATCH for shakacode/react_on_rails#3295
+# Delete this file once the upstream fix ships in a release.
 #
-# Mirrors the upstream sketch in ror-v16.3.0-wt1 (CancellableAsyncBarrier
-# + StreamRequest#cancel + on_cancel registration in consumer_stream_async),
-# but implemented as Rails-app-side prepends so we don't need a gem fork.
-# Delete this file once the upstream PR ships in a release.
+# ── The bug ────────────────────────────────────────────────────────────────
+# On client disconnect, ReactOnRailsPro abandons the in-flight streaming
+# request to the node renderer. The killed/abandoned producer fiber never
+# tells HTTPX it's done, so the h2 connection never returns to the pool's
+# idle list. After `renderer_http_pool_size` (default 10) leaks, every later
+# streaming render dies with `HTTPX::PoolTimeoutError` (~10s) until restart.
 #
-# Why this is needed: ReactOnRailsPro's streaming-render path never tells
-# HTTPX "I'm done with this stream" when the consumer fiber is interrupted
-# (client disconnect, Async::Barrier#stop). The h2 stream stays in flight,
-# its connection never returns to the pool's idle list,
-# `@origin_counters[origin]` grows by 1 per leak. After
-# `renderer_http_pool_size` (default 10) such leaks every later streaming
-# render dies with `HTTPX::PoolTimeoutError` in ~10s until Rails restart.
+# ── Why surgical per-stream cancel does NOT work ───────────────────────────
+# `request.emit(:refuse, :cancel)` (HTTPX's internal cancel channel) only
+# works safely if performed by the one fiber that owns the connection's
+# event loop, with that loop NOT running. In ReactOnRailsPro every available
+# trigger fails that condition:
+#   • from the writer fiber (barrier.stop): another fiber is mid-`consume`
+#     on the shared h2 connection → its Connection counters / h2 parser
+#     stream-table desync → HTTPX raises
+#     "connection corrupted, aborted after looping for a while", and every
+#     later render that reuses that pooled connection 500s.
+#   • from the producer fiber: it only regains control at a chunk boundary,
+#     and the gem's own `return false if response.stream.closed?` is a
+#     non-local return that ALSO rips through `@session.request`
+#     mid-HTTPX-frame — same corruption.
+# Both were reproduced locally and observed in prod (deploying the
+# emit(:refuse) version produced 99 "connection corrupted" / 0
+# PoolTimeoutError). A single-stream cancel from outside the connection's
+# own settled event loop is fundamentally unsafe on a shared multiplexed
+# connection.
 #
-# How we fix it: when the writer fiber catches ClientDisconnected and calls
-# `@async_barrier.stop`, we run a per-stream cancel callback FIRST that
-# issues `request.emit(:refuse, :cancel)` on each in-flight HTTPX
-# StreamResponse. That sends RST_STREAM, the renderer closes its side,
-# HTTPX's selector returns, the producer fiber's queued Async::Stop
-# delivers, and `barrier.wait` returns instead of deadlocking. The pool
-# slot is reclaimed immediately because `on_stream_refuse` synchronously
-# decrements `Connection#@inflight`.
+# ── The fix ────────────────────────────────────────────────────────────────
+# Don't surgically cancel one stream. On client-disconnect cancel, tear the
+# whole HTTPX session down cleanly via `ReactOnRailsPro::Request.reset_connection`
+# (mutex-guarded: build a fresh session, swap it in, close the old one). A
+# full session swap-and-close has NO partial cross-fiber state to desync →
+# it never corrupts, and closing the old connections releases every leaked
+# slot. The next render opens a fresh session with an empty pool.
+#
+# Reset bursts are coalesced by session identity: each stream remembers the
+# session it was created on; cancel only resets if that session is still the
+# active one (a sibling cancel may have already rotated it).
+#
+# Trade-off: concurrent in-flight renders on a session that gets reset die
+# and must be retried. For this demo (~1-2 disconnects/day, low concurrency)
+# that's negligible. This is a temporary demo workaround, not a general fix
+# (the real fix belongs in HTTPX/ReactOnRailsPro — see issue #3295).
 
 require "react_on_rails_pro/stream_request"
 require "react_on_rails_pro/concerns/stream"
 
 module RORPStreamLeakFix
-  # Mixin applied to the per-request @async_barrier via .extend (so we
-  # don't touch Async::Barrier globally). Adds on_cancel/stop callbacks.
+  # Extended onto each request's @async_barrier via .extend. Adds on_cancel
+  # + a stop override that fires callbacks synchronously (from the writer
+  # fiber) before the real Async::Barrier#stop.
   module CancellableBarrierMixin
     def on_cancel(&block)
       if @rorp_cancelled
-        # Stop already fired — invoke immediately so a late-registering
-        # producer fiber still gets its stream cancelled.
         begin
           block.call
         rescue StandardError => e
@@ -60,15 +82,15 @@ module RORPStreamLeakFix
     end
   end
 
-  # StreamRequest: capture the HTTPX::StreamResponse when @request_executor
-  # returns it, and expose a cancel method that releases the HTTPX pool
-  # slot via `request.emit(:refuse, :cancel)` (the same channel HTTPX's
-  # gRPC plugin uses for client-side cancellation).
   module StreamRequestPatch
     def initialize(&request_block)
       wrapped = lambda do |send_bundle, barrier|
         sr = request_block.call(send_bundle, barrier)
-        @rorp_stream_response = sr if sr
+        if sr
+          @rorp_stream_response = sr
+          # Which HTTPX session this stream is bound to (for reset coalescing).
+          @rorp_session = ReactOnRailsPro::Request.instance_variable_get(:@connection)
+        end
         sr
       end
       super(&wrapped)
@@ -78,36 +100,35 @@ module RORPStreamLeakFix
       sr = @rorp_stream_response
       return unless sr
 
-      @rorp_stream_response = nil  # idempotent
+      @rorp_stream_response = nil # idempotent
 
       req = sr.respond_to?(:request) ? sr.request : nil
       return unless req
 
       resp = req.response
-      # Both HTTPX::Response and HTTPX::ErrorResponse implement #finished?
-      # (ErrorResponse is always finished). Re-emitting :refuse on either
-      # would overwrite the terminal response with a synthetic cancel error.
+      # Render finished on its own → slot already returned, nothing to do.
+      # (Both HTTPX::Response and HTTPX::ErrorResponse implement #finished?.)
       return if resp.respond_to?(:finished?) && resp.finished?
 
-      req.emit(:refuse, :cancel)
+      # Coalesce reset bursts: only reset if THIS stream's session is still
+      # the active one. If a sibling cancel already rotated it, the current
+      # session is fresh and uninvolved — leave it alone.
+      current = ReactOnRailsPro::Request.instance_variable_get(:@connection)
+      return if @rorp_session && current && !current.equal?(@rorp_session)
+
+      Rails.logger.info { "[RORPStreamLeakFix] resetting HTTPX session to release abandoned RSC stream" } if defined?(Rails.logger)
+      ReactOnRailsPro::Request.reset_connection
     rescue StandardError => e
       Rails.logger.warn { "[RORPStreamLeakFix] cancel error: #{e.class}: #{e.message}" } if defined?(Rails.logger)
     end
   end
 
-  # StreamDecorator: forward cancel to the wrapped component.
   module StreamDecoratorPatch
     def cancel
       @component.cancel if @component.respond_to?(:cancel)
     end
   end
 
-  # ReactOnRailsProHelper#consumer_stream_async: wrap the caller's block
-  # so that immediately after the stream is yielded, we register an
-  # on_cancel callback that will free its HTTPX resources if the barrier
-  # is stopped. We also extend @async_barrier with our CancellableBarrierMixin
-  # on entry. This way we don't need to duplicate the body of
-  # consumer_stream_async — super does the rest.
   module ConsumerStreamAsyncPatch
     def consumer_stream_async(on_complete:, &original_block)
       barrier = @async_barrier
@@ -133,14 +154,11 @@ end
 ReactOnRailsPro::StreamRequest.prepend(RORPStreamLeakFix::StreamRequestPatch)
 ReactOnRailsPro::StreamDecorator.prepend(RORPStreamLeakFix::StreamDecoratorPatch)
 
-# ReactOnRailsProHelper is an ActionView helper that Rails autoloads lazily
-# from the gem's `app/helpers/`. The constant may not exist yet at initializer
-# time, so defer the prepend to `to_prepare` (which runs after Rails has
-# wired up engines in both prod and dev-reload modes).
+# ReactOnRailsProHelper is autoloaded lazily; defer the prepend.
 Rails.application.config.to_prepare do
   unless ReactOnRailsProHelper.include?(RORPStreamLeakFix::ConsumerStreamAsyncPatch)
     ReactOnRailsProHelper.prepend(RORPStreamLeakFix::ConsumerStreamAsyncPatch)
   end
 end
 
-Rails.logger.info { "[RORPStreamLeakFix] monkey-patch active (issue shakacode/react_on_rails#3295)" } if defined?(Rails.logger)
+Rails.logger.info { "[RORPStreamLeakFix] reset-connection monkey-patch active (issue shakacode/react_on_rails#3295)" } if defined?(Rails.logger)
