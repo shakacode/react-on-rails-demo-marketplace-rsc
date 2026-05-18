@@ -267,13 +267,13 @@
     </div>
 
     <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
-      React Server Components<br/>
-      <span class="gradient-text">Change Everything</span>
+      Deliver Faster Pages<br/>
+      <span class="gradient-text">Without Rebuilding Your App</span>
     </h1>
 
     <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-14 leading-relaxed">
-      Smaller bundles. Instant pages. Simpler code.<br class="hidden sm:block"/>
-      Ship less JavaScript, load pages faster, and write components that just make sense.
+      Faster load times. Higher engagement. Lower development costs.<br class="hidden sm:block"/>
+      React Server Components improve the metrics that drive conversions, SEO, and team velocity.
     </p>
 
     <!-- Hero SVG: Traditional vs RSC Timeline -->
@@ -377,9 +377,9 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="reveal text-center mb-10 sm:mb-16">
       <span class="inline-block text-indigo-600 font-semibold text-sm uppercase tracking-wider mb-3">Performance</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Lighter Apps, Faster Loads</h2>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Faster Pages, Higher Conversions</h2>
       <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        Server Components run once on the server and send only HTML. Heavy libraries never reach the browser &mdash; zero JavaScript, zero cost.
+        Your pages load faster because heavy processing happens on the server instead of your users' phones and laptops. Less code to download means faster pages and better Google performance scores.
       </p>
     </div>
 
@@ -391,7 +391,7 @@
           <!-- Traditional bundle -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-slate-700">Traditional Client Bundle</span>
+              <span class="text-sm font-medium text-slate-700">Traditional Approach &mdash; Your Users Download Everything</span>
               <span class="text-sm font-bold text-red-500">450 KB</span>
             </div>
             <div class="h-11 rounded-lg overflow-hidden bg-slate-200 flex">
@@ -404,7 +404,7 @@
           <!-- RSC bundle -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-slate-700">With React Server Components</span>
+              <span class="text-sm font-medium text-slate-700">RSC Approach &mdash; Only Interactive Elements Reach the Browser</span>
               <span class="text-sm font-bold text-emerald-600">~170 KB</span>
             </div>
             <div class="h-11 rounded-lg overflow-hidden bg-slate-200 flex">
@@ -485,6 +485,11 @@
       </div>
     </div>
 
+    <!-- Business context callout -->
+    <div class="reveal max-w-5xl mx-auto mb-10 sm:mb-16 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
+      <p class="text-sm text-slate-700"><strong class="text-indigo-700">What this means:</strong> Your team writes less code, and your users download zero JavaScript for content rendering &mdash; the server handles it all. The result is faster pages, better Google performance scores, and lower bandwidth costs.</p>
+    </div>
+
     <!-- Metrics Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       <a href="https://frigade.com/blog/bundle-size-reduction-with-rsc-and-frigade" target="_blank" rel="noopener" class="reveal metric-card bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-300 transition-all group">
@@ -522,9 +527,9 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="reveal text-center mb-10 sm:mb-16">
       <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Streaming</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Instant Pages, No Waiting</h2>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Users See Content Immediately</h2>
       <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        Traditional SSR waits for <em>all</em> data before sending <em>any</em> HTML. With RSC streaming, the shell renders instantly and content streams in as each query resolves.
+        Traditional rendering makes users stare at a blank page until everything is ready. RSC shows the page layout immediately and fills in content as it becomes available &mdash; users see progress, not emptiness.
       </p>
     </div>
 
@@ -618,29 +623,29 @@
         <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 3v14" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-1">Shell-First Rendering</h3>
-        <p class="text-sm text-slate-500">Layout, navigation, and structure appear in milliseconds. Data-heavy sections show elegant skeletons that swap to real content as data arrives.</p>
+        <h3 class="font-bold text-slate-900 mb-1">Instant Page Layout</h3>
+        <p class="text-sm text-slate-500">Layout, navigation, and structure appear in milliseconds. Users can orient themselves immediately while content-heavy sections load in the background.</p>
       </div>
       <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
         <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-1">Priority-Based Streaming</h3>
-        <p class="text-sm text-slate-500">Fast queries (200ms) render first. Slow aggregations (2-3s) stream in later. Users see real progress, not a frozen screen.</p>
+        <h3 class="font-bold text-slate-900 mb-1">Fastest Content First</h3>
+        <p class="text-sm text-slate-500">The most important content renders first. Slower sections stream in independently. Users see real progress, not a frozen screen.</p>
       </div>
       <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
         <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10a5 5 0 1 1 10 0 5 5 0 0 1-10 0z" stroke="#7c3aed" stroke-width="2"/><path d="M10 7v3l2 1.5" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-1">No &ldquo;Slowest Query Wins&rdquo;</h3>
-        <p class="text-sm text-slate-500">Each Suspense boundary is independent. A slow recommendation engine doesn&rsquo;t block the product details from rendering.</p>
+        <h3 class="font-bold text-slate-900 mb-1">Slow Data Doesn't Block Fast Content</h3>
+        <p class="text-sm text-slate-500">Each page section loads independently. A slow recommendation engine doesn&rsquo;t block the product details from appearing.</p>
       </div>
       <div class="reveal bg-white rounded-2xl border border-slate-200 p-6">
         <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8 4l4 6-4 6" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-1">Selective Hydration</h3>
-        <p class="text-sm text-slate-500">Users interact with already-hydrated sections while others stream. React even prioritizes hydrating the component being clicked.</p>
+        <h3 class="font-bold text-slate-900 mb-1">Interactive Elements Work Immediately</h3>
+        <p class="text-sm text-slate-500">Users can tap buttons and fill forms in sections that are already loaded while other content continues streaming in.</p>
       </div>
     </div>
 
@@ -669,10 +674,9 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="reveal text-center mb-10 sm:mb-16">
       <span class="inline-block text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">RSC vs @loadable/component</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Beyond Code Splitting</h2>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Complete Content in Every Page Load</h2>
       <p class="text-lg text-slate-500 max-w-3xl mx-auto">
-        <code class="bg-slate-100 px-2 py-0.5 rounded text-sm">@loadable/component</code> defers <em>when</em> JavaScript loads.
-        RSC <strong>eliminates</strong> it entirely. The difference between &ldquo;load this later&rdquo; and &ldquo;never load this at all.&rdquo;
+        Traditional lazy loading leaves gaps in your initial page &mdash; content only appears after JavaScript runs. RSC delivers 100% complete pages on the first load, fully visible to search engines and immediately usable by your customers.
       </p>
     </div>
 
@@ -765,27 +769,27 @@
         </thead>
         <tbody>
           <tr>
-            <td class="font-semibold text-slate-700">JS to client</td>
+            <td class="font-semibold text-slate-700">JavaScript sent to users</td>
             <td class="loadable-col text-slate-600">Full component code in lazy chunks &mdash; <strong>deferred, not eliminated</strong></td>
             <td class="rsc-col text-slate-600"><strong class="text-emerald-700">Zero</strong> for server components &mdash; truly eliminated</td>
           </tr>
           <tr>
-            <td class="font-semibold text-slate-700">Hydration</td>
+            <td class="font-semibold text-slate-700">Processing needed in browser</td>
             <td class="loadable-col text-slate-600">Required for <strong>every</strong> component, including lazy ones after chunks load</td>
             <td class="rsc-col text-slate-600">Only for interactive <code class="bg-emerald-100 px-1 rounded text-xs">'use client'</code> components</td>
           </tr>
           <tr>
-            <td class="font-semibold text-slate-700">Setup</td>
+            <td class="font-semibold text-slate-700">Implementation complexity</td>
             <td class="loadable-col text-slate-600">5 packages + webpack plugin + SWC/Babel plugin + ChunkExtractor + loadableReady</td>
             <td class="rsc-col text-slate-600">Add <code class="bg-emerald-100 px-1 rounded text-xs">'use client'</code> to interactive components. Done.</td>
           </tr>
           <tr>
-            <td class="font-semibold text-slate-700">Code splitting</td>
+            <td class="font-semibold text-slate-700">Optimization approach</td>
             <td class="loadable-col text-slate-600">Manual &mdash; wrap each import with <code class="bg-orange-100 px-1 rounded text-xs">loadable()</code></td>
             <td class="rsc-col text-slate-600"><strong class="text-emerald-700">Automatic</strong> at every client component boundary</td>
           </tr>
           <tr>
-            <td class="font-semibold text-slate-700">SEO</td>
+            <td class="font-semibold text-slate-700">Search engine visibility</td>
             <td class="loadable-col text-slate-600">Lazy content absent from initial HTML &mdash; depends on Google&rsquo;s JS rendering queue</td>
             <td class="rsc-col text-slate-600"><strong class="text-emerald-700">All content</strong> in initial HTML &mdash; indexed on first crawl</td>
           </tr>
@@ -817,9 +821,9 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="reveal text-center mb-10 sm:mb-16">
       <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Developer Experience</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Simpler Code, Faster Development</h2>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Faster Development, Lower Engineering Costs</h2>
       <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-        Replace the <code class="bg-slate-200 px-2 py-0.5 rounded text-sm">useEffect</code> boilerplate with plain async functions. No state management. No cleanup. No stale closures.
+        Your developers write dramatically less code &mdash; fewer lines means fewer bugs, faster feature delivery, and lower maintenance costs.
       </p>
     </div>
 
@@ -893,28 +897,33 @@
       </div>
     </div>
 
+    <!-- Business context callout -->
+    <div class="reveal max-w-5xl mx-auto mb-10 sm:mb-16 bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+      <p class="text-sm text-slate-700"><strong class="text-emerald-700">What this means:</strong> 20 lines of complex code becomes 5 lines of straightforward code. That translates directly to faster feature delivery, fewer production bugs, and lower ongoing maintenance costs for your engineering team.</p>
+    </div>
+
     <!-- DX Benefits Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
       <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
         <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h7" stroke="#059669" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-2">No API Endpoints</h3>
+        <h3 class="font-bold text-slate-900 mb-2">Simpler Architecture</h3>
         <p class="text-sm text-slate-500">Server components access data directly. No REST routes, no GraphQL schemas, no fetch libraries.</p>
       </div>
       <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
         <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-2">No Waterfalls</h3>
-        <p class="text-sm text-slate-500">Parent and child components fetch data in parallel on the server with near-zero latency.</p>
+        <h3 class="font-bold text-slate-900 mb-2">No Data Loading Bottlenecks</h3>
+        <p class="text-sm text-slate-500">Data loads in parallel on the server with near-zero latency &mdash; no sequential request chains slowing down your pages.</p>
       </div>
       <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
         <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#059669" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="#059669" stroke-width="2"/></svg>
         </div>
-        <h3 class="font-bold text-slate-900 mb-2">No Memoization</h3>
-        <p class="text-sm text-slate-500">Server components render once, never re-render. No useMemo, useCallback, or dependency arrays.</p>
+        <h3 class="font-bold text-slate-900 mb-2">Less Code to Maintain</h3>
+        <p class="text-sm text-slate-500">Server components render once and never re-render. Entire categories of performance optimization code become unnecessary.</p>
       </div>
     </div>
   </div>
@@ -955,15 +964,15 @@
         <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="#818cf8" stroke-width="1.5"/><path d="M7 7h6M7 10h4M7 13h5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">No Migration Needed</h3>
-        <p class="text-sm text-slate-400">No rewrite to Next.js or any Node framework. Adopt RSC incrementally.</p>
+        <h3 class="font-bold text-white mb-2">Protect Your Existing Investment</h3>
+        <p class="text-sm text-slate-400">No rewrite to Next.js or any Node framework. Adopt RSC incrementally without disrupting your team.</p>
       </div>
       <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
         <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#818cf8" stroke-width="1.5"/><path d="M10 6v4l2.5 2.5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">Your Ruby Ecosystem</h3>
-        <p class="text-sm text-slate-400">Devise, Pundit, ActiveRecord, Sidekiq &mdash; RSC works alongside your entire Rails stack.</p>
+        <h3 class="font-bold text-white mb-2">Works With Your Entire Stack</h3>
+        <p class="text-sm text-slate-400">Devise, Pundit, ActiveRecord, Sidekiq &mdash; RSC works alongside every gem and tool your team already relies on.</p>
       </div>
       <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
         <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
@@ -983,9 +992,9 @@
   <div class="hero-glow absolute inset-0"></div>
   <div class="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
     <div class="reveal">
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-6">Ready for Faster Pages and Happier Users?</h2>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-6">Ready to Deliver Faster Pages?</h2>
       <p class="text-lg sm:text-xl text-slate-300 mb-12 max-w-xl mx-auto leading-relaxed">
-        Upgrade to React on Rails Pro and bring the full power of React Server Components to your Rails application.
+        Faster pages, better SEO, lower engineering costs &mdash; without re-platforming your Rails app.
       </p>
       <div class="flex flex-col sm:flex-row justify-center gap-4">
         <a href="https://www.shakacode.com/react-on-rails-pro/" class="inline-flex items-center justify-center bg-white text-slate-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">

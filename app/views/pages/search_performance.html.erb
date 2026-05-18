@@ -29,13 +29,13 @@
 
   features = [
     { slug: "blog",           label: "Blog Post",         path: "/blog",           accent: "violet",   anchor: "blog",
-      summary: "Markdown-heavy article with code blocks. The SSR/Client variants ship marked + highlight.js + sanitize-html (~1 MB) to render markdown in the browser. RSC keeps the entire markdown stack server-side and ships only HTML." },
+      summary: "Markdown-heavy article with code blocks. Traditional approaches force the user's browser to download ~1 MB of processing libraries. RSC does that processing on the server and only sends the finished result &mdash; dramatically less data for users to download." },
     { slug: "product",        label: "Product Page",      path: "/product",        accent: "blue",     anchor: "product",
-      summary: "E-commerce page with product spec sheet, reviews, multi-currency pricing. SSR/Client variants run marked + highlight.js + sanitize-html + intl-messageformat in the browser. RSC pre-renders all of it server-side." },
+      summary: "E-commerce page with product specs, reviews, and multi-currency pricing. Traditional approaches run heavy formatting libraries in the user's browser. RSC pre-renders everything server-side, sending only the finished page." },
     { slug: "restaurant_1",   label: "Restaurant Detail", path: "/restaurant/1",   accent: "orange",   anchor: "restaurant",
-      summary: "Long-form bio, 80-item menu (each with markdown description + multi-currency price ladder), 40 review threads. The biggest content payload of the four — and that's exactly where RSC pays off." },
+      summary: "Long-form bio, 80-item menu with descriptions and pricing, 40 review threads. The largest content payload of the four pages &mdash; and exactly where RSC's server-side processing advantage is most visible." },
     { slug: "product-search", label: "Product Search",    path: "/product-search", accent: "emerald",  anchor: "product-search",
-      summary: "Faceted search with filters and 4 independently streamed data sections. RSC's streaming-shell pattern lets the page render in stages." },
+      summary: "Faceted search with filters and 4 independently loaded data sections. RSC renders the page progressively so users see results faster instead of waiting for everything to load." },
   ]
 
   fmt_ms  = ->(v) { v.nil? ? "—" : (v < 1000 ? "#{v.round} ms" : "#{(v/1000.0).round(2)} s") }
@@ -64,7 +64,7 @@
       Every number,<br/>linked to the report that proves it.
     </h1>
     <p class="text-lg sm:text-xl text-slate-300 max-w-3xl leading-relaxed mb-8">
-      24 Lighthouse runs across 4 demo features × 3 variants × 2 strategies. Mobile uses Slow 4G + 4× CPU throttling (PSI's standard preset); desktop uses an unthrottled 1350×940 viewport. Click any cell, any number, any chunk URL — they all open the underlying audit.
+      24 independent performance audits across every page type. Mobile uses real-world slow network conditions; desktop uses standard browser settings. Every number links to its source report &mdash; nothing is cherry-picked.
     </p>
     <div class="flex flex-wrap gap-3 text-sm">
       <a href="/lighthouse-reports/index.html" class="inline-flex items-center gap-2 bg-white text-slate-900 font-semibold px-5 py-2.5 rounded-full hover:bg-slate-100 transition">
@@ -158,9 +158,9 @@
           </div>
         </div>
         <div class="flex-1">
-          <h3 class="font-bold text-slate-900 text-lg mb-2">TBT is the single highest-weighted Lighthouse metric</h3>
+          <h3 class="font-bold text-slate-900 text-lg mb-2">Blocking Time has the biggest impact on Google's performance score</h3>
           <p class="text-sm text-slate-600 mb-3">
-            Total Blocking Time contributes <strong class="text-purple-700">30%</strong> to the Lighthouse performance score — more than any other metric. This is why RSC pages often score higher even when LCP and FCP are similar: less JavaScript means dramatically lower TBT.
+            It measures how long users wait before they can tap, scroll, or type &mdash; and it accounts for <strong class="text-purple-700">30%</strong> of the score, more than any other metric. This is why RSC pages often score higher even when other metrics are similar: less JavaScript means users can interact almost immediately.
           </p>
           <div class="flex flex-wrap gap-3 text-xs">
             <div class="flex items-center gap-1.5">
@@ -260,32 +260,32 @@
                   <td class="text-center py-1.5 font-bold"><%= cli[:score] %></td>
                   <td class="text-center py-1.5 font-bold text-emerald-700"><%= rsc[:score] %></td>
                 </tr>
-                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">FCP</td>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">FCP <span class="text-slate-400 text-[10px]">(first paint)</span></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(ssr[:fcp]) %></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(cli[:fcp]) %></td>
                   <td class="text-center py-1.5 <%= diff_class.(rsc[:fcp], ssr[:fcp]) %>"><%= fmt_ms.(rsc[:fcp]) %></td>
                 </tr>
-                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">LCP</td>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">LCP <span class="text-slate-400 text-[10px]">(main content visible)</span></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(ssr[:lcp]) %></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(cli[:lcp]) %></td>
                   <td class="text-center py-1.5 <%= diff_class.(rsc[:lcp], ssr[:lcp]) %>"><%= fmt_ms.(rsc[:lcp]) %></td>
                 </tr>
-                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">TBT</td>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">TBT <span class="text-slate-400 text-[10px]">(blocking time)</span></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(ssr[:tbt]) %></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(cli[:tbt]) %></td>
                   <td class="text-center py-1.5 <%= diff_class.(rsc[:tbt], ssr[:tbt]) %>"><%= fmt_ms.(rsc[:tbt]) %></td>
                 </tr>
-                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Speed Index</td>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Speed Index <span class="text-slate-400 text-[10px]">(perceived speed)</span></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(ssr[:si]) %></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(cli[:si]) %></td>
                   <td class="text-center py-1.5 <%= diff_class.(rsc[:si], ssr[:si]) %>"><%= fmt_ms.(rsc[:si]) %></td>
                 </tr>
-                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Bootup</td>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Bootup <span class="text-slate-400 text-[10px]">(JS processing)</span></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(ssr[:bootup]) %></td>
                   <td class="text-center py-1.5"><%= fmt_ms.(cli[:bootup]) %></td>
                   <td class="text-center py-1.5 <%= diff_class.(rsc[:bootup], ssr[:bootup]) %>"><%= fmt_ms.(rsc[:bootup]) %></td>
                 </tr>
-                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Transfer</td>
+                <tr class="border-t border-slate-100"><td class="py-1.5 text-slate-600 font-sans">Transfer <span class="text-slate-400 text-[10px]">(data to user)</span></td>
                   <td class="text-center py-1.5"><%= fmt_kb.(ssr[:transfer]) %></td>
                   <td class="text-center py-1.5"><%= fmt_kb.(cli[:transfer]) %></td>
                   <td class="text-center py-1.5 <%= diff_class.(rsc[:transfer], ssr[:transfer]) %>"><%= fmt_kb.(rsc[:transfer]) %></td>
@@ -338,26 +338,26 @@
   <div class="max-w-5xl mx-auto px-4 sm:px-6">
     <div class="text-center mb-10">
       <span class="inline-block text-emerald-400 font-semibold text-xs uppercase tracking-[0.2em] mb-3">The Pattern</span>
-      <h2 class="text-3xl sm:text-4xl font-extrabold mb-3">What RSC keeps off the wire</h2>
-      <p class="text-slate-300 max-w-3xl mx-auto">Every claim below points at a concrete chunk in the bundle-size breakdown — the URL Lighthouse measured, with the exact bytes transferred.</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold mb-3">What your users no longer have to download</h2>
+      <p class="text-slate-300 max-w-3xl mx-auto">Every number below links to the actual bundle evidence &mdash; the real bytes that RSC removes from what users' browsers must process.</p>
     </div>
     <div class="grid md:grid-cols-3 gap-5">
       <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5">
         <div class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">Markdown stack</div>
         <div class="text-3xl font-extrabold mb-1">~1 MB</div>
-        <p class="text-sm text-slate-400 leading-relaxed mb-3">marked + highlight.js + sanitize-html — used for blog posts, product spec sheets, restaurant bios. RSC variants ship 0 KB of these.</p>
+        <p class="text-sm text-slate-400 leading-relaxed mb-3">Content formatting libraries used for blog posts, product specs, and restaurant bios. RSC processes them on the server &mdash; users download none of this.</p>
         <a href="/lighthouse-reports/bundle-sizes.html#blog" class="text-xs text-emerald-400 hover:underline">See Blog SSR's <code>markdown-libs-…js</code> chunk →</a>
       </div>
       <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5">
         <div class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">Currency formatting</div>
         <div class="text-3xl font-extrabold mb-1">~30 KB</div>
-        <p class="text-sm text-slate-400 leading-relaxed mb-3">intl-messageformat — used for the multi-currency price ladder in product + restaurant pages. Server formats once; client receives strings.</p>
+        <p class="text-sm text-slate-400 leading-relaxed mb-3">Price formatting libraries for multi-currency displays in product and restaurant pages. The server formats prices once; users receive ready-to-display text.</p>
         <a href="/lighthouse-reports/bundle-sizes.html#product" class="text-xs text-emerald-400 hover:underline">See Product SSR's vendor chunks →</a>
       </div>
       <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5">
         <div class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">Component code</div>
         <div class="text-3xl font-extrabold mb-1">~200–400 KB</div>
-        <p class="text-sm text-slate-400 leading-relaxed mb-3">SSR/Client variants ship the JS for every section that renders — hydration runs the same code in the browser. RSC ships only the components that need interactivity.</p>
+        <p class="text-sm text-slate-400 leading-relaxed mb-3">Traditional approaches send the rendering code for every page section to the browser. RSC only sends the code for elements that need to be interactive &mdash; buttons, forms, and dynamic UI.</p>
         <a href="/lighthouse-reports/bundle-sizes.html#restaurant" class="text-xs text-emerald-400 hover:underline">See Restaurant SSR's entry pack →</a>
       </div>
     </div>

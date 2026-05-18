@@ -165,16 +165,16 @@
                 <% if same %>
                   identical
                 <% elsif right_better %>
-                  <%= variant_label[@right_meta[:variant]] %> wins
+                  <%= variant_label[@right_meta[:variant]] %> wins<% if key == :tbt %> &mdash; users can interact sooner<% elsif key == :lcp %> &mdash; main content visible faster<% elsif key == :fcp %> &mdash; first content appears sooner<% elsif key == :transfer %> &mdash; less data for users to download<% elsif key == :si %> &mdash; page appears to load faster<% elsif key == :score %> &mdash; better overall Google performance<% end %>
                 <% else %>
-                  <%= variant_label[@left_meta[:variant]] %> wins
+                  <%= variant_label[@left_meta[:variant]] %> wins<% if key == :tbt %> &mdash; users can interact sooner<% elsif key == :lcp %> &mdash; main content visible faster<% elsif key == :fcp %> &mdash; first content appears sooner<% elsif key == :transfer %> &mdash; less data for users to download<% elsif key == :si %> &mdash; page appears to load faster<% elsif key == :score %> &mdash; better overall Google performance<% end %>
                 <% end %>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-      <p class="text-xs text-slate-500 mt-3">★ TBT is the highest-weighted Lighthouse metric at <strong class="text-purple-700">30%</strong> of the performance score (LCP 25%, CLS 25%, FCP 10%, SI 10%).</p>
+      <p class="text-xs text-slate-500 mt-3">★ Blocking Time has the biggest impact on Google's performance score (<strong class="text-purple-700">30%</strong>) &mdash; it measures how long users wait before they can tap, scroll, or type (LCP 25%, CLS 25%, FCP 10%, SI 10%).</p>
     </div>
   </div>
 </section>
