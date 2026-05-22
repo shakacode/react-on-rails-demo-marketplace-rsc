@@ -4,7 +4,7 @@ GIT
   branch: upcoming-v16.3.0
   glob: react_on_rails/*.gemspec
   specs:
-    react_on_rails (16.6.0)
+    react_on_rails (16.7.0.rc.0)
       addressable
       connection_pool
       execjs (~> 2.5)
@@ -18,7 +18,7 @@ GIT
   branch: upcoming-v16.3.0
   glob: react_on_rails_pro/*.gemspec
   specs:
-    react_on_rails_pro (16.6.0)
+    react_on_rails_pro (16.7.0.rc.0)
       addressable
       async (>= 2.29)
       connection_pool
@@ -27,7 +27,7 @@ GIT
       httpx (~> 1.5)
       jwt (~> 2.7)
       rainbow
-      react_on_rails (= 16.6.0)
+      react_on_rails (= 16.7.0.rc.0)
 
 GEM
   remote: https://rubygems.org/
