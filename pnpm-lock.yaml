@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  react-on-rails: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails
+  react-on-rails: github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails
   shakapacker: 9.5.0
 
 importers:
@@ -70,11 +70,11 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
       react-on-rails-pro:
-        specifier: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro
-        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
+        specifier: github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro
+        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4)
       react-on-rails-pro-node-renderer:
-        specifier: github:shakacode/react-on-rails-builds#upcoming-v16.3.0&path:react-on-rails-pro-node-renderer
-        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro-node-renderer
+        specifier: github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro-node-renderer
+        version: git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro-node-renderer
       react-on-rails-rsc:
         specifier: github:shakacode/react_on_rails_rsc#update-rsc-19.0.3-fouc-runtime-chunk-fixes
         version: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
@@ -4009,24 +4009,51 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro-node-renderer:
-    resolution: {commit: ed307cb818f39e758873cca3c6ea263dedb24b37, path: react-on-rails-pro-node-renderer, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.6.0
+  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro-node-renderer:
+    resolution: {commit: 57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3, path: react-on-rails-pro-node-renderer, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
+    version: 16.7.0-rc.2
     peerDependencies:
+      '@fastify/otel': '>=0.18.0 <1.0.0'
       '@honeybadger-io/js': '>=4.0.0'
+      '@opentelemetry/api': '>=1.9.0 <2.0.0'
+      '@opentelemetry/exporter-trace-otlp-http': '>=0.214.0 <1.0.0'
+      '@opentelemetry/instrumentation': '>=0.214.0 <1.0.0'
+      '@opentelemetry/instrumentation-http': '>=0.214.0 <1.0.0'
+      '@opentelemetry/resources': '>=2.0.0 <3.0.0'
+      '@opentelemetry/sdk-trace-base': '>=2.0.0 <3.0.0'
+      '@opentelemetry/sdk-trace-node': '>=2.0.0 <3.0.0'
+      '@opentelemetry/semantic-conventions': '>=1.36.0 <2.0.0'
       '@sentry/node': '>=5.0.0 <11.0.0'
       '@sentry/tracing': '>=5.0.0'
     peerDependenciesMeta:
+      '@fastify/otel':
+        optional: true
       '@honeybadger-io/js':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@opentelemetry/exporter-trace-otlp-http':
+        optional: true
+      '@opentelemetry/instrumentation':
+        optional: true
+      '@opentelemetry/instrumentation-http':
+        optional: true
+      '@opentelemetry/resources':
+        optional: true
+      '@opentelemetry/sdk-trace-base':
+        optional: true
+      '@opentelemetry/sdk-trace-node':
+        optional: true
+      '@opentelemetry/semantic-conventions':
         optional: true
       '@sentry/node':
         optional: true
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro:
-    resolution: {commit: ed307cb818f39e758873cca3c6ea263dedb24b37, path: react-on-rails-pro, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.6.0
+  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro:
+    resolution: {commit: 57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3, path: react-on-rails-pro, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
+    version: 16.7.0-rc.2
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       react: '>= 16'
@@ -4046,9 +4073,9 @@ packages:
       react-dom: ^19.0.3
       webpack: ^5.59.0
 
-  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails:
-    resolution: {commit: ed307cb818f39e758873cca3c6ea263dedb24b37, path: react-on-rails, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
-    version: 16.6.0
+  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails:
+    resolution: {commit: 57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3, path: react-on-rails, repo: git@github.com:shakacode/react-on-rails-builds.git, type: git}
+    version: 16.7.0-rc.2
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -9228,7 +9255,7 @@ snapshots:
 
   react-is@16.13.1: {}
 
-  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro-node-renderer:
+  react-on-rails-pro-node-renderer@git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro-node-renderer:
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
@@ -9238,11 +9265,11 @@ snapshots:
       lockfile: 1.0.4
       pino: 9.14.0
 
-  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
+  react-on-rails-pro@git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro(react-dom@19.2.4(react@19.2.4))(react-on-rails-rsc@https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-on-rails: git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-on-rails: git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     optionalDependencies:
       react-on-rails-rsc: https://codeload.github.com/shakacode/react_on_rails_rsc/tar.gz/98cf92f0f6e792c5390640c550977713d7183dc7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
 
@@ -9255,7 +9282,7 @@ snapshots:
       webpack: 5.105.4(@swc/core@1.15.21)(webpack-cli@5.1.4)
       webpack-sources: 3.3.4
 
-  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#ed307cb818f39e758873cca3c6ea263dedb24b37&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-on-rails@git+https://git@github.com:shakacode/react-on-rails-builds.git#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)

@@ -18,12 +18,11 @@ gem 'stimulus-rails'
 
 # React on Rails
 gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git',
-                       branch: 'upcoming-v16.3.0',
+                       branch: 'main',
                        glob: 'react_on_rails/*.gemspec'
 gem 'react_on_rails_pro', git: 'https://github.com/shakacode/react_on_rails.git',
-                            branch: 'upcoming-v16.3.0',
+                            branch: 'main',
                             glob: 'react_on_rails_pro/*.gemspec'
-gem 'httpx', '~> 1.7'
 
 # Shakapacker for webpack integration
 gem 'shakapacker', '~> 9.5'
