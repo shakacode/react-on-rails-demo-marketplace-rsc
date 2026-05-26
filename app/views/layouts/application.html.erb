@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>LocalHub Demo</title>
+    <title>React on Rails Pro — RSC Demo</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta charset="utf-8">
     <%= csrf_meta_tags %>
@@ -45,24 +45,45 @@
         }
       });
     </script>
-    <header class="border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 xl:flex-row xl:items-center xl:justify-between">
-        <div class="min-w-0 xl:flex-1">
-          <a href="/" class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">React on Rails Demo</a>
-          <p class="mt-1 text-lg font-semibold text-slate-900">LocalHub Marketplace Demo</p>
-          <p class="text-sm text-slate-600">Open-source SSR, client, and RSC comparisons built with React on Rails.</p>
-        </div>
-        <nav class="flex flex-wrap gap-2 text-sm font-medium xl:flex-nowrap xl:justify-end">
-          <% nav_link_classes = 'whitespace-nowrap rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
+    <header class="border-b border-slate-200 bg-white/95 backdrop-blur" style="position:relative;">
+      <div class="mx-auto max-w-7xl px-4" style="display:flex;align-items:center;justify-content:space-between;height:3.5rem;">
+        <a href="/" style="text-decoration:none;display:flex;align-items:baseline;gap:0.5rem;min-width:0;">
+          <span class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500" style="white-space:nowrap;">React on Rails</span>
+          <span class="text-base font-semibold text-slate-900" style="white-space:nowrap;">Performance Demo</span>
+        </a>
+        <!-- Desktop nav -->
+        <nav id="desktop-nav" style="display:flex;gap:0.35rem;align-items:center;">
+          <% nav_link_classes = 'whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 text-sm font-medium' %>
           <%= link_to 'Home', '/', class: nav_link_classes %>
-          <%= link_to 'Why RSC', '/why-rsc', class: nav_link_classes %>
-          <%= link_to 'Measure', '/measure', class: nav_link_classes %>
+          <%= link_to 'Why It\'s Faster', '/why-rsc', class: nav_link_classes %>
+          <%= link_to 'Verify Performance', '/measure', class: nav_link_classes %>
           <%= link_to 'Source', source_code_path, class: nav_link_classes %>
           <%= link_to 'Contributing', contributing_guide_path, class: nav_link_classes %>
           <%= link_to 'Issues', project_issues_path, class: nav_link_classes %>
           <%= link_to 'Docs', 'https://reactonrails.com/docs', class: nav_link_classes %>
         </nav>
+        <!-- Mobile hamburger -->
+        <button id="mobile-menu-btn" onclick="document.getElementById('mobile-nav').style.display = document.getElementById('mobile-nav').style.display === 'flex' ? 'none' : 'flex'" style="display:none;background:none;border:none;cursor:pointer;padding:0.5rem;" aria-label="Menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
       </div>
+      <!-- Mobile nav dropdown -->
+      <nav id="mobile-nav" style="display:none;flex-direction:column;gap:0.25rem;padding:0.75rem 1rem 1rem;border-top:1px solid #e2e8f0;background:white;">
+        <% mobile_link_classes = 'block rounded-lg px-4 py-2.5 text-slate-700 font-medium text-sm transition hover:bg-slate-100' %>
+        <%= link_to 'Home', '/', class: mobile_link_classes %>
+        <%= link_to 'Why It\'s Faster', '/why-rsc', class: mobile_link_classes %>
+        <%= link_to 'Verify Performance', '/measure', class: mobile_link_classes %>
+        <%= link_to 'Source', source_code_path, class: mobile_link_classes %>
+        <%= link_to 'Contributing', contributing_guide_path, class: mobile_link_classes %>
+        <%= link_to 'Issues', project_issues_path, class: mobile_link_classes %>
+        <%= link_to 'Docs', 'https://reactonrails.com/docs', class: mobile_link_classes %>
+      </nav>
+      <style>
+        @media (max-width: 1023px) {
+          #desktop-nav { display: none !important; }
+          #mobile-menu-btn { display: block !important; }
+        }
+      </style>
     </header>
 
     <% if params[:delay].present? %>
