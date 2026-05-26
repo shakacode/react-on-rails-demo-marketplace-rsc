@@ -91,6 +91,18 @@
     box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
   }
 
+  /* ── Hero stat grid responsive ── */
+  .hero-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-width: 52rem;
+    margin: 0 auto 2.5rem;
+  }
+  @media (max-width: 767px) {
+    .hero-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  }
+
   /* ── Accessibility: reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
     .reveal { transition: none; opacity: 1; transform: none; }
@@ -130,12 +142,32 @@
       <span class="gradient-text">2x Faster</span>
     </h1>
 
-    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-4 leading-relaxed">
-      React Server Components cut page load times in half, reduce JavaScript bundles by 70%, and eliminate user wait time &mdash; without touching your Rails backend.
-    </p>
-    <p class="text-base text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+    <p class="text-base text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
       ShakaCode built the first framework to bring RSC to Ruby on Rails. We can help you upgrade.
     </p>
+
+    <div class="hero-stats-grid">
+      <div style="text-align:center;padding:1.25rem 0.75rem;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:1rem;">
+        <div style="font-size:2.25rem;font-weight:900;color:#818cf8;line-height:1;margin-bottom:0.5rem;">2×</div>
+        <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-bottom:0.25rem;">Faster Page Loads</div>
+        <div style="font-size:0.65rem;color:#94a3b8;">RSC cuts load times in half</div>
+      </div>
+      <div style="text-align:center;padding:1.25rem 0.75rem;background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.2);border-radius:1rem;">
+        <div style="font-size:2.25rem;font-weight:900;color:#f472b6;line-height:1;margin-bottom:0.5rem;">0 ms</div>
+        <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-bottom:0.25rem;">Wait to Interact</div>
+        <div style="font-size:0.65rem;color:#94a3b8;">Users can tap and scroll instantly</div>
+      </div>
+      <div style="text-align:center;padding:1.25rem 0.75rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:1rem;">
+        <div style="font-size:2.25rem;font-weight:900;color:#34d399;line-height:1;margin-bottom:0.5rem;">24%</div>
+        <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-bottom:0.25rem;">Less Abandonment</div>
+        <div style="font-size:0.65rem;color:#94a3b8;">Users stay on fast pages</div>
+      </div>
+      <div style="text-align:center;padding:1.25rem 0.75rem;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:1rem;">
+        <div style="font-size:2.25rem;font-weight:900;color:#38bdf8;line-height:1;margin-bottom:0.5rem;">SEO</div>
+        <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-bottom:0.25rem;">Higher Rankings</div>
+        <div style="font-size:0.65rem;color:#94a3b8;">Google ranks fast sites higher</div>
+      </div>
+    </div>
 
     <div class="flex flex-col sm:flex-row justify-center gap-4 mb-6">
       <a href="#demos" class="inline-flex items-center justify-center bg-white text-slate-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
