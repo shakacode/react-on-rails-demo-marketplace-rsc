@@ -16,12 +16,12 @@ gem 'importmap-rails'
 gem 'turbo-rails'
 gem 'stimulus-rails'
 
-# React on Rails (async-http transport branch)
+# React on Rails
 gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git',
-                       branch: 'feat/async-http-with-async-props',
+                       branch: 'main',
                        glob: 'react_on_rails/*.gemspec'
 gem 'react_on_rails_pro', git: 'https://github.com/shakacode/react_on_rails.git',
-                            branch: 'feat/async-http-with-async-props',
+                            branch: 'main',
                             glob: 'react_on_rails_pro/*.gemspec'
 
 # Shakapacker for webpack integration
