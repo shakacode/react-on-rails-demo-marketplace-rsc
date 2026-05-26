@@ -50,11 +50,7 @@
         <div class="min-w-0 xl:flex-1">
           <a href="/" class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">React on Rails Demo</a>
           <p class="mt-1 text-lg font-semibold text-slate-900">RSC Performance Demo</p>
-          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;">
-            <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:9999px;padding:0.2rem 0.65rem;"><strong style="color:#059669;">24%</strong> less abandonment</span>
-            <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:9999px;padding:0.2rem 0.65rem;"><strong style="color:#4f46e5;">70%</strong> less JavaScript</span>
-            <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:9999px;padding:0.2rem 0.65rem;"><strong style="color:#7c3aed;">0 ms</strong> blocking time</span>
-          </div>
+          <p class="text-sm text-slate-600">See how React Server Components deliver faster pages for your Rails app.</p>
         </div>
         <nav class="flex flex-wrap gap-2 text-sm font-medium xl:flex-nowrap xl:justify-end">
           <% nav_link_classes = 'whitespace-nowrap rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100' %>
@@ -68,6 +64,29 @@
         </nav>
       </div>
     </header>
+
+    <!-- Impact stats banner -->
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);padding:1.25rem 1rem;">
+      <div style="max-width:72rem;margin:0 auto;display:flex;justify-content:center;gap:3rem;flex-wrap:wrap;align-items:center;">
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:900;color:#34d399;line-height:1;">24%</div>
+          <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-top:0.15rem;">Less User Abandonment</div>
+          <div style="font-size:0.65rem;color:#94a3b8;margin-top:0.15rem;max-width:13rem;">Users are 24% less likely to leave when pages pass Core Web Vitals</div>
+        </div>
+        <div style="width:1px;height:3rem;background:rgba(255,255,255,0.15);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:900;color:#818cf8;line-height:1;">70%</div>
+          <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-top:0.15rem;">Less JavaScript Downloaded</div>
+          <div style="font-size:0.65rem;color:#94a3b8;margin-top:0.15rem;max-width:13rem;">Your users download 70% less code &mdash; pages load faster on every device</div>
+        </div>
+        <div style="width:1px;height:3rem;background:rgba(255,255,255,0.15);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:900;color:#c4b5fd;line-height:1;">0 ms</div>
+          <div style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-top:0.15rem;">Wait to Interact</div>
+          <div style="font-size:0.65rem;color:#94a3b8;margin-top:0.15rem;max-width:13rem;">Zero blocking time &mdash; users can tap, scroll, and type the moment content appears</div>
+        </div>
+      </div>
+    </div>
 
     <% if params[:delay].present? %>
       <div class="bg-amber-500 text-white text-center text-sm font-medium py-1.5 px-4">
