@@ -342,6 +342,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, demo guardrails, deplo
 
 - React 19 Server Components: https://react.dev/blog/2024/12/19/react-19
 - react-on-rails: https://github.com/shakacode/react_on_rails
+- React on Rails Starter with TanStack: https://github.com/shakacode/react-on-rails-starter-tanstack - a companion Rails 8 starter for building production apps with React on Rails Pro and TanStack.
 - Web Vitals: https://web.dev/vitals/
 - Streaming HTML: https://web.dev/rendering-on-the-web/
 
