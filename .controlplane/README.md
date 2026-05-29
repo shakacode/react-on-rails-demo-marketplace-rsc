@@ -68,6 +68,86 @@ cpflow deploy-image -a react-server-components-demo --run-release-phase
 cpflow run 'rails db:seed' -a react-server-components-demo
 ```
 
+### Review apps
+
+This repo uses the generated Control Plane Flow GitHub Actions wrappers pinned
+to `shakacode/control-plane-flow@v5.0.4`.
+
+Review app names are built from the prefix
+`react-server-components-demo-review`, so pull request 123 deploys as:
+
+```text
+react-server-components-demo-review-123
+```
+
+Comment on a pull request with exactly one command:
+
+```text
++review-app-deploy
++review-app-delete
++review-app-help
+```
+
+`+review-app-deploy` creates the review app if needed, builds and deploys the
+PR image, runs the `rails db:migrate` release phase, and comments with the
+review URL. After the first deploy request, later pushes to the same PR
+automatically redeploy the review app. `+review-app-delete` deletes the review
+app, and deletion also runs when the PR closes. Stale review apps are cleaned up
+nightly by `.github/workflows/cpflow-cleanup-stale-review-apps.yml`.
+
+Configure these GitHub repository secrets before enabling review app deploys:
+
+| Name | Required | Notes |
+| --- | --- | --- |
+| `CPLN_TOKEN_STAGING` | Yes | Control Plane service-account token for `shakacode-open-source-examples-staging`. |
+| `DOCKER_BUILD_SSH_KEY` | Yes for this repo | SSH key that can read the private `shakacode/react-on-rails-builds` dependency during Docker builds. |
+| `DOCKER_BUILD_EXTRA_ARGS` | Optional | Newline-delimited extra Docker build tokens if the build needs additional `--build-arg` or `--secret` values. |
+
+No review-app repository variables are required while
+`.controlplane/controlplane.yml` has exactly one review app entry with
+`match_if_app_name_starts_with: true`; cpflow infers the app prefix and staging
+org from that config. Optional overrides are `CPLN_ORG_STAGING`,
+`REVIEW_APP_PREFIX`, and `PRIMARY_WORKLOAD`.
+
+The review apps reuse the Control Plane secret dictionary named
+`react-server-components-demo-secrets`. Confirm it has values for:
+
+```text
+DATABASE_URL
+SECRET_KEY_BASE
+RENDERER_PASSWORD
+REACT_ON_RAILS_PRO_LICENSE
+```
+
+Because `DATABASE_URL` points at an external database secret, review app deletion
+does not run `rails db:drop`. Add a per-review-app database template before
+introducing destructive database cleanup hooks.
+
+### Generated staging and production workflows
+
+`cpflow generate-github-actions` also creates staging and production wrappers.
+The staging wrapper runs on pushes to `main` and `master`, so configure these
+repository settings before merging the workflow, or edit the branch filter for
+your rollout branch:
+
+| Name | Type | Value for this repo |
+| --- | --- | --- |
+| `CPLN_TOKEN_STAGING` | Repository secret | Token for `shakacode-open-source-examples-staging`. |
+| `STAGING_APP_NAME` | Repository variable | `react-server-components-demo` |
+| `CPLN_ORG_STAGING` | Repository variable | `shakacode-open-source-examples-staging` |
+| `DOCKER_BUILD_SSH_KEY` | Repository secret | SSH key for private build dependencies. |
+
+The generated production promotion workflow is manual. Before using it, create
+a protected GitHub Environment named `production`, require reviewers, enable
+prevent self-review, and store `CPLN_TOKEN_PRODUCTION` as an environment secret
+rather than a repository secret.
+
+Validate generated wrapper changes locally with:
+
+```bash
+bin/test-cpflow-github-flow ruby -S cpflow
+```
+
 ### Subsequent deploys
 ```bash
 cpflow build-image -a react-server-components-demo
