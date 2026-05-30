@@ -1,0 +1,151 @@
+name: RSC + Rspack E2E gate
+
+# Proves an Rspack production build of the demo renders AND hydrates every RSC
+# route at runtime — the only trustworthy proof that Rspack + RSC works (build
+# success and manifest parity are not enough; see react_on_rails#3488).
+#
+# Option A: build the React on Rails Pro packages and react-on-rails-rsc from
+# source checkouts, link them via yalc, then run scripts/verify-rsc-e2e.sh.
+#
+# NOTE: first-run CI iteration is expected (Postgres wiring, yalc/pnpm interplay,
+# Puppeteer Chromium, exact Pro build commands). The orchestration in
+# scripts/verify-rsc-e2e.sh is the verified core; this workflow is the CI wiring.
+
+on:
+  pull_request:
+    # Cost control: the Pro build is heavy (~40 min). Only run when something
+    # that affects the Rspack/RSC build or the gate itself changes. Broaden as
+    # needed once the gate is green.
+    paths:
+      - 'config/rspack/**'
+      - 'config/webpack/**'
+      - 'scripts/verify-rsc-e2e.sh'
+      - 'scripts/check-rsc-chunks.mjs'
+      - '.verify-routes.js'
+      - 'node-renderer.js'
+      - 'package.json'
+      - '.github/workflows/rsc-rspack-e2e.yml'
+  workflow_dispatch:
+    inputs:
+      # workflow_dispatch is maintainer-only (requires write access), so these
+      # refs are trusted. They are passed only to actions/checkout `ref:` (not a
+      # shell), never interpolated into a run: command.
+      ror_ref:
+        description: shakacode/react_on_rails ref (Pro packages). Empty = default branch.
+        required: false
+        default: ''
+      rsc_ref:
+        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = default branch.
+        required: false
+        default: ''
+
+# Least privilege: this job only needs to read code (it builds + links packages
+# locally and runs a browser check; it never writes to the repo).
+permissions:
+  contents: read
+
+concurrency:
+  group: rsc-rspack-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Rails runs in its default (development) env serving the production Rspack
+      # build — this matches the manually-verified #72 recipe.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432
+      SHAKAPACKER_ASSETS_BUNDLER: rspack
+
+    steps:
+      - name: Checkout demo
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install yalc
+        run: npm install -g yalc
+
+      # ── Option A: build the RoR Pro packages from a source checkout ──────────
+      - name: Checkout react_on_rails (Pro packages)
+        uses: actions/checkout@v4
+        with:
+          repository: shakacode/react_on_rails
+          ref: ${{ github.event.inputs.ror_ref }}
+          path: .pkgsrc/ror
+
+      - name: Build + yalc publish Pro packages
+        working-directory: .pkgsrc/ror
+        run: |
+          pnpm install --frozen-lockfile=false
+          pnpm --filter react-on-rails run build
+          pnpm --filter react-on-rails-pro run build
+          pnpm --filter react-on-rails-pro-node-renderer run build
+          ( cd packages/react-on-rails && yalc publish )
+          ( cd packages/react-on-rails-pro && yalc publish )
+          ( cd packages/react-on-rails-pro-node-renderer && yalc publish )
+
+      - name: Checkout react_on_rails_rsc (RSCRspackPlugin)
+        uses: actions/checkout@v4
+        with:
+          repository: shakacode/react_on_rails_rsc
+          ref: ${{ github.event.inputs.rsc_ref }}
+          path: .pkgsrc/rsc
+
+      - name: Build + yalc publish react-on-rails-rsc
+        working-directory: .pkgsrc/rsc
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build
+          yalc publish
+
+      # ── Link the freshly-built packages into the demo (matches #72 setup) ────
+      - name: Link packages + install
+        run: |
+          yalc add react-on-rails-pro react-on-rails-pro-node-renderer react-on-rails-rsc
+          pnpm install --frozen-lockfile=false
+
+      - name: Install Chromium for Puppeteer
+        run: npx puppeteer browsers install chrome
+
+      - name: Run RSC + Rspack E2E gate
+        run: ./scripts/verify-rsc-e2e.sh
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsc-e2e-logs
+          path: |
+            tmp/renderer.log
+            tmp/rails.log
+          if-no-files-found: ignore
