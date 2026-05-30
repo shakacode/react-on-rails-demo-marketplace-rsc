@@ -118,11 +118,19 @@ jobs:
           ( cd packages/react-on-rails-pro-node-renderer && yalc publish )
 
       - name: Checkout react_on_rails_rsc (RSCRspackPlugin)
-        uses: actions/checkout@v4
-        with:
-          repository: shakacode/react_on_rails_rsc
-          ref: ${{ github.event.inputs.rsc_ref }}
-          path: .pkgsrc/rsc
+        # Manual clone (public repo, anonymous) so any branch/PR ref can be
+        # tested. actions/checkout can't fetch a non-default ref of another repo
+        # with the default GITHUB_TOKEN. RSC_REF comes from env (not inlined into
+        # the shell) and is maintainer-only (workflow_dispatch).
+        env:
+          RSC_REF: ${{ github.event.inputs.rsc_ref }}
+        run: |
+          if [ -n "$RSC_REF" ]; then
+            git clone --depth 1 --branch "$RSC_REF" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
+          else
+            git clone --depth 1 https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
+          fi
+          echo "react_on_rails_rsc @ $(git -C .pkgsrc/rsc rev-parse --short HEAD)"
 
       - name: Build + yalc publish react-on-rails-rsc
         working-directory: .pkgsrc/rsc
