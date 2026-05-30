@@ -16,3 +16,11 @@ apps:
     setup_app_templates:
       - app
       - rails
+
+  react-server-components-demo-review:
+    <<: *common
+    match_if_app_name_starts_with: true
+    release_script: rails db:migrate
+    setup_app_templates:
+      - app
+      - rails
