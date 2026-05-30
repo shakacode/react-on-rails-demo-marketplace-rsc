@@ -135,16 +135,13 @@ jobs:
       # ── Link the freshly-built packages into the demo (matches #72 setup) ────
       - name: Link packages + install
         run: |
-          # Link all four RoR packages from the local builds. The demo normally
-          # pins these to the private shakacode/react-on-rails-builds repo, which
-          # CI cannot fetch — yalc overrides those git deps with what we just
-          # built (including react-on-rails, which react-on-rails-pro needs via
-          # workspace:*).
+          # The demo pins all RoR packages to the private
+          # shakacode/react-on-rails-builds repo (unfetchable in CI) two ways:
+          # direct deps AND a pnpm.overrides entry. yalc populates .yalc/* and
+          # rewrites the direct deps; we then repoint pnpm.overrides at the same
+          # local builds so nothing resolves back to the private git repo.
           yalc add react-on-rails react-on-rails-pro react-on-rails-pro-node-renderer react-on-rails-rsc
-          # The committed lockfile pins the RoR packages to the private
-          # react-on-rails-builds git repo and pnpm fetches it eagerly even with
-          # --no-frozen-lockfile. Drop it so resolution comes purely from the
-          # yalc-rewritten package.json (all file:.yalc, no git).
+          node -e 'const fs=require("fs"),p=JSON.parse(fs.readFileSync("package.json","utf8")),P={"react-on-rails":"file:.yalc/react-on-rails","react-on-rails-pro":"file:.yalc/react-on-rails-pro","react-on-rails-pro-node-renderer":"file:.yalc/react-on-rails-pro-node-renderer","react-on-rails-rsc":"file:.yalc/react-on-rails-rsc"};for(const s of ["dependencies","devDependencies"])if(p[s])for(const k in P)if(p[s][k])p[s][k]=P[k];p.pnpm=p.pnpm||{};p.pnpm.overrides=Object.assign({},p.pnpm.overrides,P);fs.writeFileSync("package.json",JSON.stringify(p,null,2));'
           rm -f pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
