@@ -141,6 +141,11 @@ jobs:
           # built (including react-on-rails, which react-on-rails-pro needs via
           # workspace:*).
           yalc add react-on-rails react-on-rails-pro react-on-rails-pro-node-renderer react-on-rails-rsc
+          # The committed lockfile pins the RoR packages to the private
+          # react-on-rails-builds git repo and pnpm fetches it eagerly even with
+          # --no-frozen-lockfile. Drop it so resolution comes purely from the
+          # yalc-rewritten package.json (all file:.yalc, no git).
+          rm -f pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
       - name: Install Chromium for Puppeteer
