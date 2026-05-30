@@ -135,8 +135,13 @@ jobs:
       # ── Link the freshly-built packages into the demo (matches #72 setup) ────
       - name: Link packages + install
         run: |
-          yalc add react-on-rails-pro react-on-rails-pro-node-renderer react-on-rails-rsc
-          pnpm install --frozen-lockfile=false
+          # Link all four RoR packages from the local builds. The demo normally
+          # pins these to the private shakacode/react-on-rails-builds repo, which
+          # CI cannot fetch — yalc overrides those git deps with what we just
+          # built (including react-on-rails, which react-on-rails-pro needs via
+          # workspace:*).
+          yalc add react-on-rails react-on-rails-pro react-on-rails-pro-node-renderer react-on-rails-rsc
+          pnpm install --no-frozen-lockfile
 
       - name: Install Chromium for Puppeteer
         run: npx puppeteer browsers install chrome
