@@ -80,6 +80,12 @@ bundle exec rails server -p "$RAILS_PORT" > tmp/rails.log 2>&1 &
 rails_pid=$!
 wait_for_port "$RAILS_PORT" "Rails"
 
+# Scope the gate to the RSC client-boundary routes (the #72 verified set). The
+# SSR/client variants and /search,/analytics routes have unrelated data/route
+# issues (404/500 without seed data) that are out of scope for an RSC-rendering
+# gate. Override with RSC_ROUTES if the demo's RSC routes change.
+export ROUTES="${RSC_ROUTES:-/rsc,/product/rsc,/product-search/rsc,/blog/rsc,/blog/rsc-simple,/blog/rsc-step1,/blog/rsc-step1b,/blog/rsc-step1c,/blog/rsc-step2,/blog/rsc-step3,/blog/rsc-step4,/blog/rsc-step5}"
+
 # .verify-routes.js opens each route, waits for the hydration window, captures
 # console/page errors and classified React hydration codes, and exits non-zero
 # if any route fails to render or hydrate cleanly.
