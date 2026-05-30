@@ -72,6 +72,8 @@ jobs:
       # build — this matches the manually-verified #72 recipe.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432
       SHAKAPACKER_ASSETS_BUNDLER: rspack
+      # Let corepack auto-download the pnpm/yarn version each repo pins, no prompt.
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
 
     steps:
       - name: Checkout demo
@@ -87,9 +89,11 @@ jobs:
         with:
           node-version: 22
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      # corepack respects each repo's `packageManager` field, so the demo
+      # (pnpm 9.x), react_on_rails (pnpm 10.x) and react_on_rails_rsc (yarn) each
+      # get the right tool version without a global pin conflict.
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Install yalc
         run: npm install -g yalc
