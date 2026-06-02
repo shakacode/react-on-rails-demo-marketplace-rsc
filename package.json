@@ -43,17 +43,17 @@
     "marked-highlight": "^2.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-on-rails-pro": "github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro",
-    "react-on-rails-pro-node-renderer": "github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails-pro-node-renderer",
-    "react-on-rails-rsc": "file:.yalc/react-on-rails-rsc",
+    "react-on-rails-pro": "17.0.0-rc.0",
+    "react-on-rails-pro-node-renderer": "17.0.0-rc.0",
+    "react-on-rails-rsc": "19.0.5-rc.3",
     "sanitize-html": "^2.17.3",
     "simple-statistics": "^7.8.9",
     "web-vitals": "^4.2.0"
   },
   "pnpm": {
     "overrides": {
-      "react-on-rails": "github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails",
-      "shakapacker": "9.5.0"
+      "react-on-rails": "17.0.0-rc.0",
+      "shakapacker": "10.1.0"
     }
   },
   "devDependencies": {
@@ -95,7 +95,7 @@
     "rspack-manifest-plugin": "^5.2.1",
     "sass": "^1.71.0",
     "sass-loader": "^14.1.0",
-    "shakapacker": "^9.5",
+    "shakapacker": "10.1.0",
     "style-loader": "^3.3.0",
     "swc-loader": "^0.2.6",
     "tailwindcss": "^3.4.19",

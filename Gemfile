@@ -17,15 +17,11 @@ gem 'turbo-rails'
 gem 'stimulus-rails'
 
 # React on Rails
-gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git',
-                       branch: 'main',
-                       glob: 'react_on_rails/*.gemspec'
-gem 'react_on_rails_pro', git: 'https://github.com/shakacode/react_on_rails.git',
-                            branch: 'main',
-                            glob: 'react_on_rails_pro/*.gemspec'
+gem 'react_on_rails', '17.0.0.rc.0'
+gem 'react_on_rails_pro', '17.0.0.rc.0'
 
 # Shakapacker for webpack integration
-gem 'shakapacker', '~> 9.5'
+gem 'shakapacker', '10.1.0'
 
 # JSON handling
 gem 'jbuilder'
