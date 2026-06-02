@@ -22,6 +22,9 @@ spec:
       value: '2'
     - name: RENDERER_URL
       value: http://localhost:3800
+    # Review apps run pull request code. Values mounted through cpln://secret
+    # become readable by that code after the workload starts, so this dictionary
+    # must contain review-safe database, renderer, and license values.
     - name: SECRET_KEY_BASE
       value: cpln://secret/react-server-components-demo-secrets.SECRET_KEY_BASE
     - name: DATABASE_URL

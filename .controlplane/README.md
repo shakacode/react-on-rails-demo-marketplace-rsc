@@ -95,12 +95,18 @@ automatically redeploy the review app. `+review-app-delete` deletes the review
 app, and deletion also runs when the PR closes. Stale review apps are cleaned up
 nightly by `.github/workflows/cpflow-cleanup-stale-review-apps.yml`.
 
+In public repositories, generated review-app deploys skip fork PR heads because
+Docker builds use repository secrets. If a forked change needs a review app,
+first move the reviewed change to a trusted branch in this repository. Review
+apps still run pull request code, so same-repository PRs can read any secret
+mounted into the workload.
+
 Configure these GitHub repository secrets before enabling review app deploys:
 
 | Name | Required | Notes |
 | --- | --- | --- |
-| `CPLN_TOKEN_STAGING` | Yes | Control Plane service-account token for `shakacode-open-source-examples-staging`. |
-| `DOCKER_BUILD_SSH_KEY` | Yes for this repo | SSH key that can read the private `shakacode/react-on-rails-builds` dependency during Docker builds. |
+| `CPLN_TOKEN_STAGING` | Yes | Staging/review Control Plane service-account token for `shakacode-open-source-examples-staging`; it must not access production resources. |
+| `DOCKER_BUILD_SSH_KEY` | Yes for this repo | Read-only, revocable deploy key that can read the private `shakacode/react-on-rails-builds` dependency during Docker builds. Do not use a personal SSH key. |
 | `DOCKER_BUILD_EXTRA_ARGS` | Optional | Newline-delimited extra Docker build tokens if the build needs additional `--build-arg` or `--secret` values. |
 
 No review-app repository variables are required while
@@ -118,6 +124,13 @@ SECRET_KEY_BASE
 RENDERER_PASSWORD
 REACT_ON_RAILS_PRO_LICENSE
 ```
+
+Because these values are mounted into workloads that run pull request code, keep
+this dictionary review-safe: use a disposable database, review-only renderer
+credentials, and a Pro license value that is acceptable for review-app exposure.
+Do not point review apps at production or long-lived staging secret
+dictionaries. `cpln://secret/...` protects the value in Control Plane
+configuration, but the value is readable by app code after it is mounted.
 
 Because `DATABASE_URL` points at an external database secret, review app deletion
 does not run `rails db:drop`. Add a per-review-app database template before
