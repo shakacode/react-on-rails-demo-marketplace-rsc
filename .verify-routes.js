@@ -7,7 +7,7 @@
 const puppeteer = require('puppeteer');
 
 const BASE = process.env.BASE_URL || 'http://localhost:3010';
-const ROUTES = [
+const DEFAULT_ROUTES = [
   '/',
   '/why-rsc',
   '/measure',
@@ -21,6 +21,12 @@ const ROUTES = [
   '/blog/rsc-step2', '/blog/rsc-step3', '/blog/rsc-step4', '/blog/rsc-step5',
   '/analytics/ssr', '/analytics/client', '/analytics/rsc',
 ];
+
+// A harness can scope the run to a subset (e.g. just the RSC client-boundary
+// routes) via a comma-separated ROUTES env var; default is the full list above.
+const ROUTES = process.env.ROUTES
+  ? process.env.ROUTES.split(',').map((r) => r.trim()).filter(Boolean)
+  : DEFAULT_ROUTES;
 
 // React minified-error codes that mean a hydration mismatch
 const HYDRATION_ERROR_CODES = new Set(['418', '419', '420', '421', '422', '423', '425']);
