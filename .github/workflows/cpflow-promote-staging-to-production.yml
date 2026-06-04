@@ -18,19 +18,14 @@ env:
   # most Rails cold boots (asset precompile + db:migrate + workload readiness).
   HEALTH_CHECK_RETRIES: ${{ vars.HEALTH_CHECK_RETRIES || '24' }}
   HEALTH_CHECK_INTERVAL: ${{ vars.HEALTH_CHECK_INTERVAL || '15' }}
-  # Space-separated list of HTTP statuses considered healthy. The default accepts 301/302
-  # because `curl` is invoked without `-L`, so a root `/` that redirects to a login page
-  # (common for Rails apps that auth-gate `/`) would otherwise be reported as unhealthy
-  # despite the workload itself being up.
+  # Space-separated list of HTTP statuses considered healthy. The pinned cpflow
+  # health action curls Control Plane's workload endpoint; this app's root and
+  # `/up` health endpoint are both expected to return 200.
   #
-  # Strongly recommended: configure the health check to hit this app's `/up`
-  # endpoint and set HEALTH_CHECK_ACCEPTED_STATUSES to `"200"` in repository
-  # variables before production promotions. The 301/302 default trades
-  # correctness for ergonomics: a maintenance-mode redirect or an auth-gate
-  # redirect to a login page can pass this check even when the underlying app is
-  # broken. Override via the HEALTH_CHECK_ACCEPTED_STATUSES repo variable to
-  # tighten this for apps that expose a dedicated health endpoint.
-  HEALTH_CHECK_ACCEPTED_STATUSES: ${{ vars.HEALTH_CHECK_ACCEPTED_STATUSES || '200 301 302' }}
+  # If this app later auth-gates `/` with redirects, update the cpflow health
+  # action to support a path input and point it at `/up` rather than widening
+  # this accepted-status list.
+  HEALTH_CHECK_ACCEPTED_STATUSES: ${{ vars.HEALTH_CHECK_ACCEPTED_STATUSES || '200' }}
   COPY_IMAGE_RETRIES: ${{ vars.COPY_IMAGE_RETRIES || '3' }}
   COPY_IMAGE_RETRY_INTERVAL: ${{ vars.COPY_IMAGE_RETRY_INTERVAL || '20' }}
   ROLLBACK_READINESS_RETRIES: ${{ vars.ROLLBACK_READINESS_RETRIES || '24' }}
