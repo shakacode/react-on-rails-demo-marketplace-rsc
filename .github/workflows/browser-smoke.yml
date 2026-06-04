@@ -105,7 +105,7 @@ jobs:
               rails_ready=true
             fi
 
-            if curl -sS --max-time 1 -o /dev/null "http://127.0.0.1:${RENDERER_PORT}/"; then
+            if (: >"/dev/tcp/127.0.0.1/${RENDERER_PORT}") 2>/dev/null; then
               renderer_ready=true
             fi
 

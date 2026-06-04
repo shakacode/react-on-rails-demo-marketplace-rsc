@@ -21,6 +21,8 @@ apps:
   react-server-components-demo-review:
     <<: *common
     match_if_app_name_starts_with: true
+    # release_script intentionally omitted: review apps share the persistent
+    # demo DB. Migrating here would mutate schema for other review apps.
     secrets_name: react-server-components-demo-secrets
     secrets_policy_name: react-server-components-demo-secrets-policy
     # Primary app secret settings above make new review apps use the persistent
