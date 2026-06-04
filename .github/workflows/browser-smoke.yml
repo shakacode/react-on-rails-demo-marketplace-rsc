@@ -12,6 +12,7 @@ permissions:
 jobs:
   browser-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -80,6 +81,14 @@ jobs:
           NODE_ENV: production
           RENDERER_PORT: 3800
         run: |
+          keep_servers=false
+          renderer_pid=""
+          rails_pid=""
+          trap 'if [[ "${keep_servers}" != "true" ]]; then
+            [[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
+            [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true
+          fi' EXIT
+
           node node-renderer.js > /tmp/marketplace-renderer.log 2>&1 &
           renderer_pid=$!
           bundle exec rails server -b 127.0.0.1 -p 3010 > /tmp/marketplace-rails.log 2>&1 &
@@ -110,6 +119,7 @@ jobs:
             fi
 
             if [[ "$rails_ready" == "true" && "$renderer_ready" == "true" ]]; then
+              keep_servers=true
               exit 0
             fi
 
@@ -125,3 +135,11 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3010
         run: pnpm smoke:routes
+
+      - name: Dump server logs on failure
+        if: failure()
+        run: |
+          echo "=== Rails log ==="
+          cat /tmp/marketplace-rails.log || true
+          echo "=== Node renderer log ==="
+          cat /tmp/marketplace-renderer.log || true

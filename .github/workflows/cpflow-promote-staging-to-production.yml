@@ -567,6 +567,7 @@ jobs:
           echo "image=${production_image}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy image to production
+        id: deploy
         env:
           PRODUCTION_APP_NAME: ${{ vars.PRODUCTION_APP_NAME }}
           CPLN_ORG_PRODUCTION: ${{ steps.cpln-orgs.outputs.production }}
@@ -598,7 +599,8 @@ jobs:
           accepted_statuses: ${{ env.HEALTH_CHECK_ACCEPTED_STATUSES }}
 
       - name: Roll back on failure
-        if: failure() && steps.capture-current.outcome == 'success'
+        id: rollback
+        if: failure() && steps.capture-current.outcome == 'success' && steps.deploy.outcome != 'skipped'
         env:
           ROLLBACK_STATE: ${{ steps.capture-current.outputs.rollback_state }}
           PRODUCTION_APP_NAME: ${{ vars.PRODUCTION_APP_NAME }}
@@ -660,7 +662,7 @@ jobs:
           fi
 
       - name: Wait for rollback readiness
-        if: failure() && steps.capture-current.outcome == 'success'
+        if: failure() && steps.capture-current.outcome == 'success' && steps.rollback.outcome == 'success'
         env:
           ROLLBACK_STATE: ${{ steps.capture-current.outputs.rollback_state }}
           PRODUCTION_APP_NAME: ${{ vars.PRODUCTION_APP_NAME }}
