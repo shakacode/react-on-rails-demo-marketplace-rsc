@@ -65,9 +65,7 @@ jobs:
           cache: pnpm
 
       - name: Install JavaScript dependencies
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Install Chromium for Puppeteer
         run: npx puppeteer browsers install chrome
