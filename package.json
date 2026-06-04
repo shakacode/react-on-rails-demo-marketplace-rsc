@@ -52,6 +52,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@ungap/structured-clone": "1.3.1",
       "react-on-rails": "github:shakacode/react-on-rails-builds#57727588410aefc8fb0dd8b3fb3aa89eb99ff6e3&path:react-on-rails",
       "shakapacker": "9.5.0"
     }
