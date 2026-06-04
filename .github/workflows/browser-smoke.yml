@@ -16,7 +16,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -60,6 +60,9 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
 
+      - name: Install Chromium for Puppeteer
+        run: npx puppeteer browsers install chrome
+
       - name: Generate smoke credentials
         shell: bash
         run: |
@@ -76,25 +79,24 @@ jobs:
       - name: Build production assets
         run: bin/build-production
 
-      - name: Start browser-smoke servers
+      - name: Smoke real routes in Chromium
         shell: bash
         env:
+          BASE_URL: http://127.0.0.1:3010
           NODE_ENV: production
           RENDERER_PORT: 3800
         run: |
-          keep_servers=false
           renderer_pid=""
           rails_pid=""
-          trap 'if [[ "${keep_servers}" != "true" ]]; then
-            [[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
-            [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true
-          fi' EXIT
+          trap '[[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
+            [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true' EXIT
 
           node node-renderer.js > /tmp/marketplace-renderer.log 2>&1 &
           renderer_pid=$!
           bundle exec rails server -b 127.0.0.1 -p 3010 > /tmp/marketplace-rails.log 2>&1 &
           rails_pid=$!
 
+          ready=false
           for _ in {1..60}; do
             if ! kill -0 "$renderer_pid" 2>/dev/null; then
               echo "Node renderer exited before becoming ready"
@@ -120,25 +122,21 @@ jobs:
             fi
 
             if [[ "$rails_ready" == "true" && "$renderer_ready" == "true" ]]; then
-              keep_servers=true
-              exit 0
+              ready=true
+              break
             fi
 
             sleep 1
           done
 
-          echo "Rails and Node renderer did not become ready in time"
-          cat /tmp/marketplace-renderer.log
-          cat /tmp/marketplace-rails.log
-          exit 1
+          if [[ "$ready" != "true" ]]; then
+            echo "Rails and Node renderer did not become ready in time"
+            cat /tmp/marketplace-renderer.log
+            cat /tmp/marketplace-rails.log
+            exit 1
+          fi
 
-      - name: Install Chromium for Puppeteer
-        run: npx puppeteer browsers install chrome
-
-      - name: Smoke real routes in Chromium
-        env:
-          BASE_URL: http://127.0.0.1:3010
-        run: pnpm smoke:routes
+          pnpm smoke:routes
 
       - name: Dump server logs on failure
         if: failure()
