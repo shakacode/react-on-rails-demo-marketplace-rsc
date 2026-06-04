@@ -42,6 +42,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f
         with:
+          # This repo tracks Ruby in mise.toml, not .ruby-version.
           ruby-version: "3.3.0"
           bundler-cache: true
 
@@ -130,6 +131,9 @@ jobs:
           cat /tmp/marketplace-renderer.log
           cat /tmp/marketplace-rails.log
           exit 1
+
+      - name: Install Chromium for Puppeteer
+        run: npx puppeteer browsers install chrome
 
       - name: Smoke real routes in Chromium
         env:
