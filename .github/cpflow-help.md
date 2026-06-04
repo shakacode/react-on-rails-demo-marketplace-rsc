@@ -70,6 +70,12 @@ Review apps are temporary and are created by the `+review-app-deploy` workflow,
 but staging and production are persistent apps and should be bootstrapped
 explicitly.
 
+This repo intentionally sets `secrets_name:
+react-server-components-demo-secrets` for both staging and review apps. That
+keeps `{{APP_SECRETS}}` in `.controlplane/templates/app.yml` aligned with the
+secret policy that `setup-app` creates or reuses, so review app workloads get
+resolved secret values instead of literal `cpln://secret/...` strings.
+
 Production promotion is part of the generated flow, but keep it protected:
 
 | Name | Where | Notes |
@@ -132,7 +138,7 @@ Most apps do not need these:
 | Name | Notes |
 | --- | --- |
 | `DOCKER_BUILD_EXTRA_ARGS` | Newline-delimited extra Docker build tokens. |
-| `DOCKER_BUILD_SSH_KEY` | Read-only, revocable deploy key for Docker builds that fetch private dependencies. Do not use a personal SSH key. |
+| `DOCKER_BUILD_SSH_KEY` | Optional read-only, revocable deploy key for Docker builds that fetch private dependencies. Do not use a personal SSH key. |
 | `DOCKER_BUILD_SSH_KNOWN_HOSTS` | SSH known_hosts entries when SSH build hosts are not GitHub.com. |
 | `REVIEW_APP_DEPLOYING_ICON_URL` | Cosmetic custom image URL for the animated deploying icon. Set to `none` to use the text fallback icon. |
 | `STAGING_APP_BRANCH` | Custom staging branch. The branch must also appear in `cpflow-deploy-staging.yml`'s push filter. |

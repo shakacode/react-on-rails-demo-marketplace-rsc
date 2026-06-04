@@ -1,10 +1,10 @@
 GIT
   remote: https://github.com/shakacode/react_on_rails.git
-  revision: 6a9fbf938ef6f9db66913fa0c1ae581b4191e2ed
-  branch: main
+  revision: 41e46ce7cc4b39048332ae60facda79256d7486d
+  tag: v17.0.0.rc.0
   glob: react_on_rails/*.gemspec
   specs:
-    react_on_rails (16.7.0.rc.2)
+    react_on_rails (17.0.0.rc.0)
       addressable
       connection_pool
       execjs (~> 2.5)
@@ -14,11 +14,11 @@ GIT
 
 GIT
   remote: https://github.com/shakacode/react_on_rails.git
-  revision: 6a9fbf938ef6f9db66913fa0c1ae581b4191e2ed
-  branch: main
+  revision: 41e46ce7cc4b39048332ae60facda79256d7486d
+  tag: v17.0.0.rc.0
   glob: react_on_rails_pro/*.gemspec
   specs:
-    react_on_rails_pro (16.7.0.rc.2)
+    react_on_rails_pro (17.0.0.rc.0)
       addressable
       async (>= 2.29)
       async-http (~> 0.95)
@@ -26,7 +26,7 @@ GIT
       io-endpoint (~> 0.17.0)
       jwt (>= 2.5, < 4)
       rainbow
-      react_on_rails (= 16.7.0.rc.2)
+      react_on_rails (= 17.0.0.rc.0)
 
 GEM
   remote: https://rubygems.org/
@@ -382,7 +382,7 @@ GEM
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
     semantic_range (3.1.1)
-    shakapacker (9.5.0)
+    shakapacker (10.1.0)
       activesupport (>= 5.2)
       package_json
       rack-proxy (>= 0.6.1)
@@ -458,7 +458,7 @@ DEPENDENCIES
   rubocop-rails
   rubocop-rspec
   selenium-webdriver
-  shakapacker (~> 9.5)
+  shakapacker (= 10.1.0)
   sprockets-rails
   stimulus-rails
   turbo-rails

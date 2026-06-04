@@ -4,9 +4,10 @@
 
 **Build:**
 ```bash
-DOCKER_BUILDKIT=1 docker build --ssh default -f .controlplane/Dockerfile -t react-server-components-demo .
+DOCKER_BUILDKIT=1 docker build -f .controlplane/Dockerfile -t react-server-components-demo .
 ```
-`--ssh default` is required because `pnpm install` needs to clone the private repo [shakacode/react-on-rails-builds](https://github.com/shakacode/react-on-rails-builds) which contains pre-built packages (`react-on-rails`, `react-on-rails-pro`, `react-on-rails-pro-node-renderer`) from the unreleased `upcoming-v16.3.0` branch of React on Rails. This flag temporarily forwards your local SSH agent into the Docker build step so git can authenticate with GitHub — the keys are never stored in the image.
+The React on Rails packages are installed from published npm releases and
+public GitHub sources, so Docker builds do not need SSH forwarding.
 
 **Migrate & seed:**
 ```bash
@@ -108,7 +109,7 @@ Configure these GitHub repository secrets before enabling review app deploys:
 | Name | Required | Notes |
 | --- | --- | --- |
 | `CPLN_TOKEN_STAGING` | Yes | Staging/review Control Plane service-account token for `shakacode-open-source-examples-staging`; it must not access production resources. |
-| `DOCKER_BUILD_SSH_KEY` | Yes for this repo | Read-only, revocable deploy key that can read the private `shakacode/react-on-rails-builds` dependency during Docker builds. Do not use a personal SSH key. |
+| `DOCKER_BUILD_SSH_KEY` | Optional | Only needed if future Docker builds add private GitHub dependencies; if used, make it read-only and revocable. Do not use a personal SSH key. |
 | `DOCKER_BUILD_EXTRA_ARGS` | Optional | Newline-delimited extra Docker build tokens if the build needs additional `--build-arg` or `--secret` values. |
 
 No review-app repository variables are required while
@@ -118,7 +119,10 @@ org from that config. Optional overrides are `CPLN_ORG_STAGING`,
 `REVIEW_APP_PREFIX`, and `PRIMARY_WORKLOAD`.
 
 The review apps reuse the Control Plane secret dictionary named
-`react-server-components-demo-secrets`. Confirm it has values for:
+`react-server-components-demo-secrets`. Both app entries set `secrets_name` to
+this dictionary so `cpflow setup-app` binds each workload identity to the
+matching secret policy, and the app template references it through
+`{{APP_SECRETS}}`. Confirm the dictionary has values for:
 
 ```text
 DATABASE_URL
@@ -133,6 +137,10 @@ credentials, and a Pro license value that is acceptable for review-app exposure.
 Do not point review apps at production or long-lived staging secret
 dictionaries. `cpln://secret/...` protects the value in Control Plane
 configuration, but the value is readable by app code after it is mounted.
+If you change the secret dictionary name, update `secrets_name` in
+`.controlplane/controlplane.yml` rather than hardcoding a different dictionary
+in the template; otherwise Control Plane will leave unresolved `cpln://secret`
+URIs in the container environment.
 
 Because `DATABASE_URL` points at an external database secret, review app deletion
 does not run `rails db:drop`. Add a per-review-app database template before
@@ -150,7 +158,7 @@ your rollout branch:
 | `CPLN_TOKEN_STAGING` | Repository secret | Token for `shakacode-open-source-examples-staging`. |
 | `STAGING_APP_NAME` | Repository variable | `react-server-components-demo` |
 | `CPLN_ORG_STAGING` | Repository variable | `shakacode-open-source-examples-staging` |
-| `DOCKER_BUILD_SSH_KEY` | Repository secret | SSH key for private build dependencies. |
+| `DOCKER_BUILD_SSH_KEY` | Repository secret | Optional read-only SSH key for private build dependencies. |
 
 The generated production promotion workflow is manual. Before using it, create
 a protected GitHub Environment named `production`, require reviewers, enable

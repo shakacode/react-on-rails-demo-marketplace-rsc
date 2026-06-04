@@ -1,6 +1,7 @@
 const { RSCWebpackPlugin } = require('react-on-rails-rsc/WebpackPlugin');
 const LoadablePlugin = require('@loadable/webpack-plugin');
 const commonWebpackConfig = require('./commonWebpackConfig');
+const rscClientReferenceOptions = require('./rscClientReferences');
 
 const isHMR = process.env.HMR;
 
@@ -47,7 +48,7 @@ const configureClient = () => {
   // client config is going to try to load chunks.
   delete clientConfig.entry['server-bundle'];
 
-  clientConfig.plugins.push(new RSCWebpackPlugin({ isServer: false }));
+  clientConfig.plugins.push(new RSCWebpackPlugin({ isServer: false, ...rscClientReferenceOptions }));
 
   if (!isHMR) {
     clientConfig.plugins.unshift(new LoadablePlugin({ filename: 'loadable-stats.json', writeToDisk: true }));

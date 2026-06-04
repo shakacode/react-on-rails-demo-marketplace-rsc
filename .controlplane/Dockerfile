@@ -38,11 +38,9 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle config set without 'development test' && \
     bundle install --jobs=4 --retry=3
 
-# Install Node packages (SSH needed for private GitHub repos)
+# Install Node packages
 COPY package.json pnpm-lock.yaml .npmrc ./
-RUN --mount=type=ssh \
-    mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts && \
-    pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy app source
 COPY . .
