@@ -6,7 +6,7 @@
 
 **Architecture:** Reuse the existing `.controlplane/` deployment scaffold, add one review-app prefix config entry, generate upstream `cpflow-*` GitHub Actions wrappers, and document the operator commands and repository settings. The app continues to use the existing `rails` workload and Control Plane templates.
 
-**Tech Stack:** Rails 7.1, React on Rails, Control Plane, `cpflow` 5.0.4, GitHub Actions.
+**Tech Stack:** Rails 7.1, React on Rails, Control Plane, `cpflow` 5.1.1, GitHub Actions.
 
 ---
 
@@ -59,7 +59,7 @@ Expected: `ok`
 
 Run: `ruby -S cpflow generate-github-actions`
 
-Expected: generated files are created and wrapper `uses:` refs point at `v5.0.4`.
+Expected: generated files are created and wrapper `uses:` refs point at `v5.1.1`.
 
 - [ ] **Step 2: Run generated validation**
 

@@ -21,8 +21,15 @@ apps:
   react-server-components-demo-review:
     <<: *common
     match_if_app_name_starts_with: true
-    release_script: rails db:migrate
     secrets_name: react-server-components-demo-secrets
+    secrets_policy_name: react-server-components-demo-secrets-policy
+    # Primary app secret settings above make new review apps use the persistent
+    # demo dictionary. The shared grant lets cpflow 5.1 repair existing review
+    # app identities on deploy-image.
+    shared_secret_grants:
+      - name: app_secrets
+        secret_name: react-server-components-demo-secrets
+        policy_name: react-server-components-demo-secrets-policy
     setup_app_templates:
       - app
       - rails
