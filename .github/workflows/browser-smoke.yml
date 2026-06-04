@@ -78,6 +78,8 @@ jobs:
           {
             echo "SECRET_KEY_BASE=$(openssl rand -hex 64)"
             echo "RENDERER_PASSWORD=$(openssl rand -hex 32)"
+            # RAILS_MASTER_KEY is intentionally not set: the smoke app reads no
+            # Rails.application.credentials keys; all secrets come from env vars.
           } >> "$GITHUB_ENV"
 
       - name: Prepare database
