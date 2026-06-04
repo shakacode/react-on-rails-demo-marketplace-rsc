@@ -39,11 +39,20 @@ jobs:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev
 
+      - name: Write Ruby version file
+        shell: bash
+        run: |
+          ruby_version="$(awk -F'"' '/^[[:space:]]*ruby[[:space:]]*=/ { print $2; exit }' mise.toml)"
+          if [[ -z "${ruby_version}" ]]; then
+            echo "::error::Could not read Ruby version from mise.toml"
+            exit 1
+          fi
+          printf '%s\n' "${ruby_version}" > .ruby-version
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f
         with:
-          # This repo tracks Ruby in mise.toml, not .ruby-version.
-          ruby-version: "3.3.0"
+          ruby-version-file: .ruby-version
           bundler-cache: true
 
       - name: Set up pnpm
@@ -52,7 +61,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
-          node-version: 22
+          node-version-file: .node-version
           cache: pnpm
 
       - name: Install JavaScript dependencies

@@ -663,7 +663,7 @@ jobs:
           fi
 
       - name: Wait for rollback readiness
-        if: failure() && steps.capture-current.outcome == 'success' && steps.rollback.outcome == 'success'
+        if: failure() && steps.capture-current.outcome == 'success' && (steps.rollback.outcome == 'success' || steps.rollback.outcome == 'failure')
         env:
           ROLLBACK_STATE: ${{ steps.capture-current.outputs.rollback_state }}
           PRODUCTION_APP_NAME: ${{ vars.PRODUCTION_APP_NAME }}
@@ -679,7 +679,7 @@ jobs:
           # linearly with the number of workloads. Each per-workload retry
           # loop runs in a backgrounded subshell that writes its final state
           # to a status file; the parent waits for all of them before
-          # aggregating warnings, keeping output ordered and deterministic.
+          # aggregating failures, keeping output ordered and deterministic.
           status_dir="$(mktemp -d)"
           trap 'rm -rf "${status_dir}"' EXIT
 
@@ -723,19 +723,27 @@ jobs:
             wait "${pid}" || true
           done
 
+          readiness_failures=0
           for workload_name in "${workloads[@]}"; do
             [[ -n "${workload_name}" ]] || continue
             status_name="${workload_name//\//_}"
             status_file="${status_dir}/${status_name}"
             if [[ ! -f "${status_file}" ]] || [[ "$(<"${status_file}")" != "ready" ]]; then
               echo "::error::Workload '${workload_name}' did not report ready after rollback."
+              readiness_failures=$((readiness_failures + 1))
             fi
           done
+
+          if [[ "${readiness_failures}" -gt 0 ]]; then
+            exit 1
+          fi
 
       - name: Promotion summary
         if: always()
         env:
           HEALTHY: ${{ steps.health-check.outputs.healthy }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          ROLLBACK_OUTCOME: ${{ steps.rollback.outcome }}
           PREVIOUS_IMAGE: ${{ steps.capture-current.outputs.current_image }}
           PREVIOUS_VERSION: ${{ steps.capture-current.outputs.current_version }}
           COPIED_IMAGE: ${{ steps.copy-image.outputs.image }}
@@ -755,7 +763,15 @@ jobs:
               echo
               echo "Previous image: \`${PREVIOUS_IMAGE}\`"
               echo "Previous version: ${PREVIOUS_VERSION}"
-              echo "Rolled back to image: \`${PREVIOUS_IMAGE}\`"
+              if [[ "${ROLLBACK_OUTCOME}" == "success" ]]; then
+                echo "Rolled back to image: \`${PREVIOUS_IMAGE}\`"
+              elif [[ "${ROLLBACK_OUTCOME}" == "failure" ]]; then
+                echo "Rollback attempted but did not fully complete; inspect rollback logs."
+              elif [[ "${DEPLOY_OUTCOME}" == "success" ]]; then
+                echo "Rollback was not run; inspect deploy and health-check logs."
+              else
+                echo "Rollback was not run because deployment failed before the production deploy step."
+              fi
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
