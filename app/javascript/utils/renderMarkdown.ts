@@ -1,6 +1,7 @@
 import { Marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js';
+import sanitizeHtml from 'sanitize-html';
 
 const marked = new Marked(
   markedHighlight({
@@ -15,5 +16,29 @@ const marked = new Marked(
 );
 
 export function renderMarkdown(content: string): string {
-  return marked.parse(content) as string;
+  const html = marked.parse(content) as string;
+
+  return sanitizeHtml(html, {
+    allowedTags: [
+      ...sanitizeHtml.defaults.allowedTags,
+      'del',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'img',
+      'pre',
+      'span',
+    ],
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      a: ['href', 'name', 'target', 'rel'],
+      code: ['class'],
+      img: ['src', 'srcset', 'alt', 'title', 'width', 'height', 'loading'],
+      pre: ['class'],
+      span: ['class'],
+    },
+  });
 }
