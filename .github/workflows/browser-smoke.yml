@@ -65,18 +65,45 @@ jobs:
         shell: bash
         env:
           NODE_ENV: production
+          RENDERER_PORT: 3800
         run: |
           node node-renderer.js > /tmp/marketplace-renderer.log 2>&1 &
+          renderer_pid=$!
           bundle exec rails server -b 127.0.0.1 -p 3010 > /tmp/marketplace-rails.log 2>&1 &
+          rails_pid=$!
 
           for _ in {1..60}; do
+            if ! kill -0 "$renderer_pid" 2>/dev/null; then
+              echo "Node renderer exited before becoming ready"
+              cat /tmp/marketplace-renderer.log
+              exit 1
+            fi
+
+            if ! kill -0 "$rails_pid" 2>/dev/null; then
+              echo "Rails exited before becoming ready"
+              cat /tmp/marketplace-rails.log
+              exit 1
+            fi
+
+            rails_ready=false
+            renderer_ready=false
+
             if curl -fsS http://127.0.0.1:3010/up >/dev/null; then
+              rails_ready=true
+            fi
+
+            if curl -sS --max-time 1 -o /dev/null "http://127.0.0.1:${RENDERER_PORT}/"; then
+              renderer_ready=true
+            fi
+
+            if [[ "$rails_ready" == "true" && "$renderer_ready" == "true" ]]; then
               exit 0
             fi
+
             sleep 1
           done
 
-          echo "Rails did not become ready in time"
+          echo "Rails and Node renderer did not become ready in time"
           cat /tmp/marketplace-renderer.log
           cat /tmp/marketplace-rails.log
           exit 1
