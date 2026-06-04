@@ -241,6 +241,11 @@
     .rsc-skel-0, .rsc-skel-1, .rsc-skel-2, .rsc-skel-3 { animation: none; opacity: 0; }
   }
 </style>
+<noscript>
+  <style>
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  </style>
+</noscript>
 <% end %>
 
 <!-- ════════════════════════════════════════════════════════════════
@@ -381,6 +386,67 @@
       <p class="text-lg text-slate-500 max-w-2xl mx-auto">
         Your pages load faster because heavy processing happens on the server instead of your users' phones and laptops. Less code to download means faster pages and better Google performance scores.
       </p>
+    </div>
+
+    <!-- What Gets Sent to the Browser -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Traditional: everything ships -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <span class="text-sm font-semibold text-slate-700">Traditional &mdash; What Ships to Browser</span>
+        </div>
+        <svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Traditional: server sends large JS bundle with app code, markdown library, chart library, and date utils all included">
+          <!-- Server -->
+          <rect x="10" y="10" width="80" height="40" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <text x="50" y="35" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">Server</text>
+          <!-- Arrow (thick = heavy payload) -->
+          <rect x="100" y="22" width="80" height="16" rx="4" fill="#fecaca"/>
+          <text x="140" y="34" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace" font-weight="bold">450 KB JS</text>
+          <!-- Browser -->
+          <rect x="190" y="10" width="80" height="40" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <text x="230" y="35" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">Browser</text>
+          <!-- What's inside the bundle -->
+          <text x="10" y="75" fill="#64748b" font-size="9" font-family="monospace" font-weight="bold">JS bundle contains:</text>
+          <rect x="10" y="82" width="260" height="18" rx="4" fill="#ef4444" opacity="0.15"/>
+          <text x="140" y="95" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">App components + hooks + state (170 KB)</text>
+          <rect x="10" y="104" width="260" height="18" rx="4" fill="#f97316" opacity="0.15"/>
+          <text x="140" y="117" text-anchor="middle" fill="#c2410c" font-size="8" font-family="monospace">marked + highlight.js (240 KB)</text>
+          <rect x="10" y="126" width="260" height="18" rx="4" fill="#eab308" opacity="0.15"/>
+          <text x="140" y="139" text-anchor="middle" fill="#a16207" font-size="8" font-family="monospace">d3 charts + date-fns (40 KB)</text>
+          <text x="140" y="168" text-anchor="middle" fill="#ef4444" font-size="10" font-family="monospace" font-weight="bold">Everything ships to every user</text>
+        </svg>
+      </div>
+
+      <!-- RSC: minimal ships -->
+      <div class="bg-white rounded-2xl border border-emerald-200 p-5 sm:p-6 shadow-sm ring-1 ring-emerald-100">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-semibold text-slate-700">RSC &mdash; What Ships to Browser</span>
+        </div>
+        <svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC: server sends only tiny JS for interactive components, heavy libraries stay on the server">
+          <!-- Server -->
+          <rect x="10" y="10" width="80" height="40" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+          <text x="50" y="35" text-anchor="middle" fill="#166534" font-size="10" font-family="monospace">Server</text>
+          <!-- Arrow (thin = light payload) -->
+          <rect x="100" y="25" width="80" height="10" rx="4" fill="#bbf7d0"/>
+          <text x="140" y="34" text-anchor="middle" fill="#166534" font-size="8" font-family="monospace" font-weight="bold">~8 KB JS</text>
+          <!-- Browser -->
+          <rect x="190" y="10" width="80" height="40" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+          <text x="230" y="35" text-anchor="middle" fill="#166534" font-size="10" font-family="monospace">Browser</text>
+          <!-- What ships -->
+          <text x="10" y="75" fill="#166534" font-size="9" font-family="monospace" font-weight="bold">JS bundle contains:</text>
+          <rect x="10" y="82" width="120" height="18" rx="4" fill="#34d399" opacity="0.15"/>
+          <text x="70" y="95" text-anchor="middle" fill="#166534" font-size="8" font-family="monospace">Interactive UI (~8 KB)</text>
+          <!-- What stays on server -->
+          <text x="10" y="120" fill="#64748b" font-size="9" font-family="monospace" font-weight="bold">Stays on server (0 KB):</text>
+          <rect x="10" y="127" width="260" height="14" rx="3" fill="#e2e8f0"/>
+          <text x="140" y="138" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="monospace">marked + highlight.js (240 KB) &#10005;</text>
+          <rect x="10" y="144" width="260" height="14" rx="3" fill="#e2e8f0"/>
+          <text x="140" y="155" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="monospace">d3 + date-fns (40 KB) &#10005;</text>
+          <text x="140" y="175" text-anchor="middle" fill="#059669" font-size="10" font-family="monospace" font-weight="bold">Only interactive code ships</text>
+        </svg>
+      </div>
     </div>
 
     <!-- Bundle Size Comparison SVG -->
@@ -588,6 +654,74 @@
           <text x="217" y="150" text-anchor="middle" fill="white" font-size="10" font-family="monospace" font-weight="bold" class="rsc-block-3">Reviews (1.5s)</text>
           <!-- Label -->
           <text x="150" y="202" text-anchor="middle" fill="#059669" font-size="11" font-family="monospace" font-weight="bold">Streams in one by one</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Data Fetching: Waterfall vs Parallel -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Client: waterfall -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <span class="text-sm font-semibold text-slate-700">Client-Side Fetching</span>
+        </div>
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Client-side: browser makes sequential API calls creating a waterfall where each request waits for the previous one">
+          <text x="0" y="14" fill="#64748b" font-size="9" font-family="monospace" font-weight="bold">Browser makes 4 sequential API calls:</text>
+          <!-- Request waterfall bars -->
+          <text x="0" y="38" fill="#94a3b8" font-size="9" font-family="monospace">fetch(/product)</text>
+          <rect x="110" y="26" width="50" height="14" rx="3" fill="#ef4444" opacity="0.8"/>
+          <text x="0" y="60" fill="#94a3b8" font-size="9" font-family="monospace">fetch(/details)</text>
+          <rect x="160" y="48" width="50" height="14" rx="3" fill="#f97316" opacity="0.8"/>
+          <text x="0" y="82" fill="#94a3b8" font-size="9" font-family="monospace">fetch(/reviews)</text>
+          <rect x="210" y="70" width="60" height="14" rx="3" fill="#eab308" opacity="0.8"/>
+          <text x="0" y="104" fill="#94a3b8" font-size="9" font-family="monospace">fetch(/related)</text>
+          <rect x="160" y="92" width="70" height="14" rx="3" fill="#f87171" opacity="0.8"/>
+          <!-- Waterfall connectors -->
+          <line x1="160" y1="40" x2="160" y2="48" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+          <line x1="210" y1="62" x2="210" y2="70" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+          <!-- Problems -->
+          <text x="0" y="130" fill="#64748b" font-size="8" font-family="monospace" font-weight="bold">Problems:</text>
+          <circle cx="8" cy="143" r="3" fill="#ef4444"/>
+          <text x="16" y="147" fill="#64748b" font-size="8" font-family="monospace">Each request has network latency</text>
+          <circle cx="8" cy="160" r="3" fill="#ef4444"/>
+          <text x="16" y="164" fill="#64748b" font-size="8" font-family="monospace">Some requests depend on previous</text>
+          <circle cx="8" cy="177" r="3" fill="#ef4444"/>
+          <text x="16" y="181" fill="#64748b" font-size="8" font-family="monospace">4 round trips browser &harr; server</text>
+          <text x="140" y="198" text-anchor="middle" fill="#ef4444" font-size="10" font-family="monospace" font-weight="bold">~800ms+ of network waterfalls</text>
+        </svg>
+      </div>
+
+      <!-- RSC: server-side parallel -->
+      <div class="bg-white rounded-2xl border border-emerald-200 p-5 sm:p-6 shadow-sm ring-1 ring-emerald-100">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-semibold text-slate-700">RSC Server-Side Streaming</span>
+        </div>
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC: Rails fetches all data server-side with near-zero latency and streams results progressively to the browser">
+          <text x="0" y="14" fill="#166534" font-size="9" font-family="monospace" font-weight="bold">Rails streams data from local DB:</text>
+          <!-- Parallel server-side queries -->
+          <text x="0" y="38" fill="#94a3b8" font-size="9" font-family="monospace">emit(product)</text>
+          <rect x="110" y="26" width="30" height="14" rx="3" fill="#34d399" opacity="0.8"/>
+          <text x="144" y="38" fill="#34d399" font-size="7" font-family="monospace">1ms</text>
+          <text x="0" y="60" fill="#94a3b8" font-size="9" font-family="monospace">emit(details)</text>
+          <rect x="110" y="48" width="35" height="14" rx="3" fill="#6366f1" opacity="0.8"/>
+          <text x="149" y="60" fill="#6366f1" font-size="7" font-family="monospace">3ms</text>
+          <text x="0" y="82" fill="#94a3b8" font-size="9" font-family="monospace">emit(reviews)</text>
+          <rect x="110" y="70" width="45" height="14" rx="3" fill="#8b5cf6" opacity="0.8"/>
+          <text x="159" y="82" fill="#8b5cf6" font-size="7" font-family="monospace">8ms</text>
+          <text x="0" y="104" fill="#94a3b8" font-size="9" font-family="monospace">emit(related)</text>
+          <rect x="110" y="92" width="55" height="14" rx="3" fill="#a78bfa" opacity="0.8"/>
+          <text x="169" y="104" fill="#a78bfa" font-size="7" font-family="monospace">15ms</text>
+          <!-- Benefits -->
+          <text x="0" y="130" fill="#166534" font-size="8" font-family="monospace" font-weight="bold">Advantages:</text>
+          <circle cx="8" cy="143" r="3" fill="#34d399"/>
+          <text x="16" y="147" fill="#64748b" font-size="8" font-family="monospace">Near-zero latency (server &harr; DB)</text>
+          <circle cx="8" cy="160" r="3" fill="#34d399"/>
+          <text x="16" y="164" fill="#64748b" font-size="8" font-family="monospace">Each emit streams immediately</text>
+          <circle cx="8" cy="177" r="3" fill="#34d399"/>
+          <text x="16" y="181" fill="#64748b" font-size="8" font-family="monospace">0 round trips &mdash; single HTTP stream</text>
+          <text x="140" y="198" text-anchor="middle" fill="#059669" font-size="10" font-family="monospace" font-weight="bold">~15ms total, streamed progressively</text>
         </svg>
       </div>
     </div>
@@ -827,6 +961,75 @@
       </p>
     </div>
 
+    <!-- Complexity Diagram: useEffect vs async -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- useEffect complexity -->
+      <div class="bg-white rounded-2xl border border-red-200 p-5 sm:p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <span class="text-sm font-semibold text-slate-700">useEffect &mdash; Moving Parts</span>
+        </div>
+        <svg viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="useEffect pattern requires managing 7 interconnected concerns: state, effects, loading, errors, cleanup, dependency arrays, and stale closures">
+          <!-- Central node -->
+          <rect x="80" y="10" width="100" height="30" rx="8" fill="#ef4444" opacity="0.15" stroke="#ef4444" stroke-width="1.5"/>
+          <text x="130" y="30" text-anchor="middle" fill="#dc2626" font-size="10" font-family="monospace" font-weight="bold">useEffect</text>
+          <!-- Surrounding concerns -->
+          <rect x="0" y="60" width="75" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="37" y="76" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">useState x3</text>
+          <rect x="85" y="55" width="90" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="130" y="71" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">loading state</text>
+          <rect x="185" y="60" width="70" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="220" y="76" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">error state</text>
+          <rect x="0" y="100" width="85" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="42" y="116" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">cleanup fn</text>
+          <rect x="95" y="95" width="70" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="130" y="111" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">dep array</text>
+          <rect x="175" y="100" width="80" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="215" y="116" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">stale closure</text>
+          <rect x="35" y="140" width="80" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="75" y="156" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">cancelled flag</text>
+          <rect x="145" y="140" width="80" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="185" y="156" text-anchor="middle" fill="#dc2626" font-size="8" font-family="monospace">API endpoint</text>
+          <!-- Connecting lines to show complexity -->
+          <line x1="130" y1="40" x2="37" y2="60" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="130" y1="40" x2="130" y2="55" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="130" y1="40" x2="220" y2="60" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="37" y1="84" x2="42" y2="100" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="130" y1="79" x2="130" y2="95" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="220" y1="84" x2="215" y2="100" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="42" y1="124" x2="75" y2="140" stroke="#fca5a5" stroke-width="0.8"/>
+          <line x1="130" y1="119" x2="185" y2="140" stroke="#fca5a5" stroke-width="0.8"/>
+          <!-- Count -->
+          <text x="130" y="190" text-anchor="middle" fill="#dc2626" font-size="11" font-family="monospace" font-weight="bold">8 concepts to manage</text>
+        </svg>
+      </div>
+
+      <!-- async component simplicity -->
+      <div class="bg-white rounded-2xl border border-emerald-200 p-5 sm:p-6 shadow-sm ring-1 ring-emerald-100">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-semibold text-slate-700">async Component &mdash; Moving Parts</span>
+        </div>
+        <svg viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Async server component has only 2 concepts: await the data and return JSX. Everything else is handled automatically.">
+          <!-- Central node (larger, confident) -->
+          <rect x="55" y="40" width="150" height="50" rx="12" fill="#34d399" opacity="0.15" stroke="#34d399" stroke-width="2"/>
+          <text x="130" y="63" text-anchor="middle" fill="#059669" font-size="12" font-family="monospace" font-weight="bold">async function</text>
+          <text x="130" y="80" text-anchor="middle" fill="#059669" font-size="10" font-family="monospace">await + return JSX</text>
+          <!-- Just two concepts -->
+          <rect x="30" y="115" width="90" height="28" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+          <text x="75" y="134" text-anchor="middle" fill="#166534" font-size="9" font-family="monospace">await data</text>
+          <rect x="140" y="115" width="90" height="28" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+          <text x="185" y="134" text-anchor="middle" fill="#166534" font-size="9" font-family="monospace">return JSX</text>
+          <!-- Connections -->
+          <line x1="100" y1="90" x2="75" y2="115" stroke="#86efac" stroke-width="1.5"/>
+          <line x1="160" y1="90" x2="185" y2="115" stroke="#86efac" stroke-width="1.5"/>
+          <!-- Count -->
+          <text x="130" y="175" text-anchor="middle" fill="#059669" font-size="11" font-family="monospace" font-weight="bold">2 concepts. That's it.</text>
+          <text x="130" y="193" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="monospace">React handles loading, errors, streaming</text>
+        </svg>
+      </div>
+    </div>
+
     <!-- Before/After Code Comparison -->
     <div class="reveal max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16">
       <!-- Before: useEffect -->
@@ -952,6 +1155,48 @@
       </p>
     </div>
 
+    <!-- Architecture Integration Diagram -->
+    <div class="reveal max-w-3xl mx-auto mb-10 sm:mb-16">
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 sm:p-8">
+        <svg viewBox="0 0 560 180" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Architecture: your existing Rails stack (controllers, models, views, auth) connects through React on Rails Pro to RSC components and client components in the browser">
+          <!-- Your Rails Stack -->
+          <rect x="0" y="15" width="150" height="150" rx="12" fill="#ef4444" opacity="0.08" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="75" y="10" text-anchor="middle" fill="#fca5a5" font-size="10" font-family="monospace" font-weight="bold">YOUR RAILS STACK</text>
+          <rect x="12" y="30" width="126" height="22" rx="5" fill="#ef4444" opacity="0.12"/><text x="75" y="45" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace">Controllers</text>
+          <rect x="12" y="58" width="126" height="22" rx="5" fill="#ef4444" opacity="0.12"/><text x="75" y="73" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace">ActiveRecord Models</text>
+          <rect x="12" y="86" width="126" height="22" rx="5" fill="#ef4444" opacity="0.12"/><text x="75" y="101" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace">ERB Views</text>
+          <rect x="12" y="114" width="60" height="22" rx="5" fill="#ef4444" opacity="0.12"/><text x="42" y="129" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace">Devise</text>
+          <rect x="78" y="114" width="60" height="22" rx="5" fill="#ef4444" opacity="0.12"/><text x="108" y="129" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace">Sidekiq</text>
+          <text x="75" y="155" text-anchor="middle" fill="#fca5a5" font-size="7" font-family="monospace">Keeps working as-is</text>
+
+          <!-- Arrow -->
+          <line x1="155" y1="90" x2="195" y2="90" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <polygon points="195,86 195,94 205,90" fill="#818cf8"/>
+
+          <!-- React on Rails Pro (bridge) -->
+          <rect x="205" y="30" width="150" height="120" rx="12" fill="#6366f1" opacity="0.1" stroke="#6366f1" stroke-width="1.5"/>
+          <text x="280" y="22" text-anchor="middle" fill="#a5b4fc" font-size="10" font-family="monospace" font-weight="bold">REACT ON RAILS PRO</text>
+          <rect x="217" y="42" width="126" height="20" rx="5" fill="#6366f1" opacity="0.12"/><text x="280" y="56" text-anchor="middle" fill="#a5b4fc" font-size="8" font-family="monospace">Streaming SSR</text>
+          <rect x="217" y="68" width="126" height="20" rx="5" fill="#6366f1" opacity="0.12"/><text x="280" y="82" text-anchor="middle" fill="#a5b4fc" font-size="8" font-family="monospace">RSC Flight Protocol</text>
+          <rect x="217" y="94" width="126" height="20" rx="5" fill="#6366f1" opacity="0.12"/><text x="280" y="108" text-anchor="middle" fill="#a5b4fc" font-size="8" font-family="monospace">Async Props Bridge</text>
+          <rect x="217" y="120" width="126" height="20" rx="5" fill="#6366f1" opacity="0.12"/><text x="280" y="134" text-anchor="middle" fill="#a5b4fc" font-size="8" font-family="monospace">Code Splitting</text>
+
+          <!-- Arrow -->
+          <line x1="360" y1="90" x2="400" y2="90" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <polygon points="400,86 400,94 410,90" fill="#818cf8"/>
+
+          <!-- Browser -->
+          <rect x="410" y="15" width="150" height="150" rx="12" fill="#34d399" opacity="0.08" stroke="#34d399" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="485" y="10" text-anchor="middle" fill="#6ee7b7" font-size="10" font-family="monospace" font-weight="bold">BROWSER</text>
+          <rect x="422" y="30" width="126" height="28" rx="5" fill="#8b5cf6" opacity="0.12"/><text x="485" y="49" text-anchor="middle" fill="#c4b5fd" font-size="9" font-family="monospace">Server Components</text>
+          <text x="485" y="65" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">Pre-rendered HTML, 0 JS</text>
+          <rect x="422" y="80" width="126" height="28" rx="5" fill="#f97316" opacity="0.12"/><text x="485" y="99" text-anchor="middle" fill="#fdba74" font-size="9" font-family="monospace">Client Components</text>
+          <text x="485" y="115" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">Interactive islands, tiny JS</text>
+          <rect x="422" y="125" width="126" height="28" rx="5" fill="#34d399" opacity="0.12"/><text x="485" y="144" text-anchor="middle" fill="#6ee7b7" font-size="9" font-family="monospace">Selective Hydration</text>
+        </svg>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       <div class="reveal bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
         <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
@@ -1013,6 +1258,15 @@
 <!-- Scroll-reveal observer (minimal inline JS) -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    var revealElements = document.querySelectorAll('.reveal');
+
+    if (!('IntersectionObserver' in window)) {
+      Array.prototype.forEach.call(revealElements, function(el) {
+        el.classList.add('visible');
+      });
+      return;
+    }
+
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
@@ -1022,7 +1276,7 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    document.querySelectorAll('.reveal').forEach(function(el) {
+    Array.prototype.forEach.call(revealElements, function(el) {
       observer.observe(el);
     });
   });

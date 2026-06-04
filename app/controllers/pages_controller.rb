@@ -7,6 +7,7 @@ class PagesController < ApplicationController
   REPORT_BASENAME_RE = /\A([a-z0-9_-]+)_(ssr|client|rsc)-(desktop|mobile)\z/.freeze
 
   def why_rsc; end
+  def how_rsc_works; end
   def search_performance; end
   def measure; end
 

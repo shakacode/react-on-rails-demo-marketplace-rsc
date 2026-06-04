@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   get '/search-performance' => 'pages#search_performance'
   get '/rsc' => 'home#rsc'
   get '/why-rsc' => 'pages#why_rsc'
+  get '/how-rsc-works' => 'pages#how_rsc_works'
   get '/measure' => 'pages#measure'
   get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
 

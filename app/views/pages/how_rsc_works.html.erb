@@ -1,0 +1,797 @@
+<% content_for :head do %>
+<style>
+  /* ── Scroll-reveal animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Hero gradient ── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+  }
+  .hero-glow {
+    background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  }
+  .gradient-text {
+    background: linear-gradient(to right, #818cf8, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Code block styling ── */
+  .code-block {
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', ui-monospace, monospace;
+  }
+  @media (min-width: 640px) {
+    .code-block { font-size: 0.875rem; }
+  }
+  .code-block pre {
+    margin: 0;
+    padding: 1rem 1rem;
+    overflow-x: auto;
+    flex: 1;
+  }
+  @media (min-width: 640px) {
+    .code-block pre { padding: 1.5rem 1.75rem; }
+  }
+  .code-header {
+    background: #334155;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Syntax colors */
+  .syn-kw { color: #c084fc; }
+  .syn-fn { color: #67e8f9; }
+  .syn-str { color: #86efac; }
+  .syn-cm { color: #64748b; }
+  .syn-ty { color: #fbbf24; }
+  .syn-op { color: #94a3b8; }
+  .syn-prop { color: #f9a8d4; }
+  .syn-num { color: #fbbf24; }
+  .syn-dir { color: #fb923c; }
+
+  /* ── Smooth gradient sections ── */
+  .section-light { background: #ffffff; }
+  .section-muted { background: #f8fafc; }
+  .section-dark { background: #0f172a; color: #e2e8f0; }
+
+  /* ── Floating particles ── */
+  @keyframes float-particle {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+  }
+  .particle {
+    animation: float-particle var(--duration, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* ── Data flow animation ── */
+  @keyframes flow-pulse {
+    0% { stroke-dashoffset: 24; }
+    100% { stroke-dashoffset: 0; }
+  }
+  .flow-line {
+    stroke-dasharray: 6, 6;
+    animation: flow-pulse 1s linear infinite;
+  }
+
+  /* ── Pipeline step glow ── */
+  @keyframes step-glow {
+    0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+    50% { filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3)); }
+  }
+  .pipeline-step:hover {
+    animation: step-glow 2s ease-in-out infinite;
+  }
+
+  /* ── Step number badge ── */
+  .step-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Three modes comparison cards ── */
+  .mode-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .mode-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* ── Accessibility ── */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { transition: none; opacity: 1; transform: none; }
+    .particle { animation: none; opacity: 0.4; }
+    .flow-line { animation: none; }
+    .pipeline-step:hover { animation: none; }
+  }
+</style>
+<noscript>
+  <style>
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  </style>
+</noscript>
+<% end %>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden">
+  <div class="hero-glow absolute inset-0"></div>
+
+  <!-- Floating particles -->
+  <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle class="particle" cx="12%" cy="25%" r="2" fill="#818cf8" style="--duration: 5s; --delay: 0s;" />
+    <circle class="particle" cx="88%" cy="18%" r="1.5" fill="#a78bfa" style="--duration: 4s; --delay: 1s;" />
+    <circle class="particle" cx="65%" cy="75%" r="2" fill="#6366f1" style="--duration: 6s; --delay: 0.5s;" />
+    <circle class="particle" cx="30%" cy="70%" r="1.5" fill="#818cf8" style="--duration: 4.5s; --delay: 2s;" />
+    <rect class="particle" x="80%" y="55%" width="3" height="3" rx="0.5" fill="#a78bfa" style="--duration: 5.5s; --delay: 0.8s;" />
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 sm:pt-28 sm:pb-36 text-center">
+    <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 rounded-full px-4 py-1.5 mb-8">
+      <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" aria-hidden="true"></span>
+      <span class="text-indigo-300 text-sm font-medium">Architecture Guide</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+      How RSC Works<br/>
+      <span class="gradient-text">With Rails</span>
+    </h1>
+
+    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed">
+      A visual guide to how React Server Components stream data from your Rails backend to the browser &mdash; step by step.
+    </p>
+
+    <!-- Hero: Pipeline overview SVG -->
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 sm:p-8">
+        <svg viewBox="0 0 800 120" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="RSC pipeline: Rails Controller sends data via emit.call to Node Renderer, which produces RSC Flight payload, then Streaming SSR generates HTML that streams to the Browser">
+          <!-- Pipeline boxes -->
+          <rect x="0" y="25" width="130" height="70" rx="12" fill="#ef4444" opacity="0.15" stroke="#ef4444" stroke-width="1.5"/>
+          <text x="65" y="55" text-anchor="middle" fill="#fca5a5" font-size="11" font-family="monospace" font-weight="bold">Rails</text>
+          <text x="65" y="72" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace">Controller + View</text>
+
+          <rect x="175" y="25" width="130" height="70" rx="12" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="240" y="55" text-anchor="middle" fill="#c4b5fd" font-size="11" font-family="monospace" font-weight="bold">Node Renderer</text>
+          <text x="240" y="72" text-anchor="middle" fill="#c4b5fd" font-size="9" font-family="monospace">RSC Components</text>
+
+          <rect x="350" y="25" width="130" height="70" rx="12" fill="#6366f1" opacity="0.15" stroke="#6366f1" stroke-width="1.5"/>
+          <text x="415" y="55" text-anchor="middle" fill="#a5b4fc" font-size="11" font-family="monospace" font-weight="bold">React Flight</text>
+          <text x="415" y="72" text-anchor="middle" fill="#a5b4fc" font-size="9" font-family="monospace">RSC Payload</text>
+
+          <rect x="525" y="25" width="130" height="70" rx="12" fill="#0ea5e9" opacity="0.15" stroke="#0ea5e9" stroke-width="1.5"/>
+          <text x="590" y="55" text-anchor="middle" fill="#7dd3fc" font-size="11" font-family="monospace" font-weight="bold">Streaming SSR</text>
+          <text x="590" y="72" text-anchor="middle" fill="#7dd3fc" font-size="9" font-family="monospace">HTML Chunks</text>
+
+          <rect x="700" y="25" width="100" height="70" rx="12" fill="#34d399" opacity="0.15" stroke="#34d399" stroke-width="1.5"/>
+          <text x="750" y="55" text-anchor="middle" fill="#6ee7b7" font-size="11" font-family="monospace" font-weight="bold">Browser</text>
+          <text x="750" y="72" text-anchor="middle" fill="#6ee7b7" font-size="9" font-family="monospace">Progressive UI</text>
+
+          <!-- Flow arrows -->
+          <line x1="132" y1="60" x2="173" y2="60" class="flow-line" stroke="#818cf8" stroke-width="2"/>
+          <line x1="307" y1="60" x2="348" y2="60" class="flow-line" stroke="#818cf8" stroke-width="2"/>
+          <line x1="482" y1="60" x2="523" y2="60" class="flow-line" stroke="#818cf8" stroke-width="2"/>
+          <line x1="657" y1="60" x2="698" y2="60" class="flow-line" stroke="#818cf8" stroke-width="2"/>
+
+          <!-- Arrow tips -->
+          <polygon points="173,55 173,65 163,60" fill="#818cf8"/>
+          <polygon points="348,55 348,65 338,60" fill="#818cf8"/>
+          <polygon points="523,55 523,65 513,60" fill="#818cf8"/>
+          <polygon points="698,55 698,65 688,60" fill="#818cf8"/>
+
+          <!-- Labels below -->
+          <text x="152" y="112" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">emit.call()</text>
+          <text x="327" y="112" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Flight protocol</text>
+          <text x="502" y="112" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">renderToStream</text>
+          <text x="677" y="112" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">progressive</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wave divider -->
+  <div style="position: relative; margin-top: -1px;">
+    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full block" aria-hidden="true">
+      <path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#ffffff"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     STEP 1: RAILS CONTROLLER
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-red-500 font-semibold text-sm uppercase tracking-wider mb-3">Step 1</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Rails Prepares the Data</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Your controller fetches lightweight metadata as sync props. Heavy data is deferred to the streaming block &mdash; it runs <strong>concurrently in a background thread</strong> while the page shell streams.
+      </p>
+    </div>
+
+    <div class="reveal max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 sm:mb-16">
+      <!-- Controller -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="step-badge bg-red-100 text-red-600">1a</div>
+          <span class="text-sm font-semibold text-slate-600">Controller &mdash; fast sync props</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">products_controller.rb</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-kw">def</span> <span class="syn-fn">show_rsc</span>
+  <span class="syn-prop">@product</span> <span class="syn-op">=</span> <span class="syn-fn">find_product</span>
+
+  <span class="syn-cm"># Only lightweight metadata as sync props</span>
+  <span class="syn-cm"># (~2KB instead of ~28KB)</span>
+  <span class="syn-prop">@data</span> <span class="syn-op">=</span> <span class="syn-fn">serialize</span><span class="syn-op">(</span><span class="syn-prop">@product</span><span class="syn-op">)</span>
+    <span class="syn-op">.</span><span class="syn-fn">except</span><span class="syn-op">(</span><span class="syn-str">:description</span><span class="syn-op">,</span> <span class="syn-str">:specs</span><span class="syn-op">)</span>
+
+  <span class="syn-fn">stream_view_containing_react_components</span><span class="syn-op">(</span>
+    <span class="syn-prop">template:</span> <span class="syn-str">"products/show_rsc"</span>
+  <span class="syn-op">)</span>
+<span class="syn-kw">end</span></code></pre>
+        </div>
+      </div>
+
+      <!-- View -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="step-badge bg-red-100 text-red-600">1b</div>
+          <span class="text-sm font-semibold text-slate-600">View &mdash; background streaming</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">show_rsc.html.erb</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-op">&lt;%=</span> <span class="syn-fn">stream_react_component_with_async_props</span><span class="syn-op">(</span>
+  <span class="syn-str">"ProductPageRSC"</span><span class="syn-op">,</span>
+  <span class="syn-prop">props:</span> <span class="syn-op">{</span> <span class="syn-prop">product:</span> <span class="syn-fn">@data</span> <span class="syn-op">}</span>
+<span class="syn-op">) </span><span class="syn-kw">do</span> <span class="syn-op">|</span><span class="syn-prop">emit</span><span class="syn-op">|</span>
+  <span class="syn-cm"># Background thread &mdash; streams while</span>
+  <span class="syn-cm"># browser already renders the shell</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"details"</span><span class="syn-op">,</span> <span class="syn-fn">@product</span><span class="syn-op">.</span><span class="syn-prop">details</span><span class="syn-op">)</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"reviews"</span><span class="syn-op">,</span> <span class="syn-fn">@product</span><span class="syn-op">.</span><span class="syn-prop">reviews</span><span class="syn-op">)</span>
+  <span class="syn-prop">emit</span><span class="syn-op">.</span><span class="syn-fn">call</span><span class="syn-op">(</span><span class="syn-str">"related"</span><span class="syn-op">,</span> <span class="syn-fn">@product</span><span class="syn-op">.</span><span class="syn-prop">related</span><span class="syn-op">)</span>
+<span class="syn-kw">end</span> <span class="syn-op">%&gt;</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- What happens visual -->
+    <div class="reveal max-w-3xl mx-auto bg-red-50 border border-red-200 rounded-2xl p-5 sm:p-8">
+      <h3 class="font-bold text-slate-900 mb-3">What happens at this step</h3>
+      <div class="space-y-2 text-sm text-slate-600">
+        <div class="flex gap-3 items-start">
+          <span class="flex-shrink-0 w-5 h-5 bg-red-200 text-red-700 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+          <p>Controller fetches the product and serializes only the <strong>essential metadata</strong> (name, price, images) as sync props. Heavy data (description, reviews, related) is excluded.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="flex-shrink-0 w-5 h-5 bg-red-200 text-red-700 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+          <p><code class="bg-red-100 px-1 rounded text-xs">stream_view_containing_react_components</code> starts an HTTP streaming response &mdash; the browser receives the first bytes immediately.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="flex-shrink-0 w-5 h-5 bg-red-200 text-red-700 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+          <p>The <code class="bg-red-100 px-1 rounded text-xs">do |emit|</code> block runs in a <strong>background thread</strong>. Each <code class="bg-red-100 px-1 rounded text-xs">emit.call</code> sends a named data chunk to the Node renderer as soon as its query completes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     STEP 2: REACT SERVER COMPONENTS
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-muted py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-purple-600 font-semibold text-sm uppercase tracking-wider mb-3">Step 2</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">React Renders on the Server</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Server Components receive sync props instantly and render the page shell. Async components <strong>await streamed data</strong> from Rails and render as it arrives.
+      </p>
+    </div>
+
+    <div class="reveal max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 sm:mb-16">
+      <!-- Page shell component -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="step-badge bg-purple-100 text-purple-600">2a</div>
+          <span class="text-sm font-semibold text-slate-600">Page shell &mdash; renders instantly</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">ProductPageRSC.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-cm">// Server component &mdash; no 'use client'</span>
+<span class="syn-kw">export default function</span> <span class="syn-fn">ProductPageRSC</span><span class="syn-op">(</span>
+  <span class="syn-op">{</span> <span class="syn-prop">product</span><span class="syn-op">,</span> <span class="syn-prop">getReactOnRailsAsyncProp</span> <span class="syn-op">}</span>
+<span class="syn-op">) {</span>
+  <span class="syn-kw">return</span> <span class="syn-op">(</span>
+    <span class="syn-ty">&lt;&gt;</span>
+      <span class="syn-ty">&lt;Hero</span> <span class="syn-prop">product</span><span class="syn-op">={</span><span class="syn-prop">product</span><span class="syn-op">}</span> <span class="syn-ty">/&gt;</span>
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;Skeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncDetails</span> <span class="syn-op">{...</span><span class="syn-prop">props</span><span class="syn-op">}</span> <span class="syn-ty">/&gt;</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+      <span class="syn-ty">&lt;Suspense</span> <span class="syn-prop">fallback</span><span class="syn-op">={</span><span class="syn-ty">&lt;Skeleton /&gt;</span><span class="syn-op">}</span><span class="syn-ty">&gt;</span>
+        <span class="syn-ty">&lt;AsyncReviews</span> <span class="syn-op">{...</span><span class="syn-prop">props</span><span class="syn-op">}</span> <span class="syn-ty">/&gt;</span>
+      <span class="syn-ty">&lt;/Suspense&gt;</span>
+    <span class="syn-ty">&lt;/&gt;</span>
+  <span class="syn-op">);</span>
+<span class="syn-op">}</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Async component -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="step-badge bg-purple-100 text-purple-600">2b</div>
+          <span class="text-sm font-semibold text-slate-600">Async component &mdash; awaits data</span>
+        </div>
+        <div class="code-block shadow-lg flex-1 flex flex-col">
+          <div class="code-header">
+            <span class="code-dot" style="background:#f87171;"></span>
+            <span class="code-dot" style="background:#fbbf24;"></span>
+            <span class="code-dot" style="background:#34d399;"></span>
+            <span class="text-slate-400 text-xs ml-2 font-mono">AsyncReviews.tsx</span>
+          </div>
+          <pre class="text-slate-300"><code><span class="syn-cm">// Server component &mdash; async</span>
+<span class="syn-cm">// Runs on server, 0 JS to client</span>
+<span class="syn-kw">export default async function</span> <span class="syn-fn">AsyncReviews</span><span class="syn-op">(</span>
+  <span class="syn-op">{</span> <span class="syn-prop">getReactOnRailsAsyncProp</span><span class="syn-op">:</span> <span class="syn-prop">get</span> <span class="syn-op">}</span>
+<span class="syn-op">) {</span>
+  <span class="syn-cm">// Resolves when Rails calls</span>
+  <span class="syn-cm">// emit.call("reviews", data)</span>
+  <span class="syn-kw">const</span> <span class="syn-op">{</span> reviews <span class="syn-op">} =</span> <span class="syn-kw">await</span> <span class="syn-fn">get</span><span class="syn-op">(</span><span class="syn-str">'reviews'</span><span class="syn-op">);</span>
+
+  <span class="syn-kw">return</span> <span class="syn-ty">&lt;ReviewList</span> <span class="syn-prop">reviews</span><span class="syn-op">={</span>reviews<span class="syn-op">}</span> <span class="syn-ty">/&gt;</span><span class="syn-op">;</span>
+<span class="syn-op">}</span>
+
+<span class="syn-cm">// Suspense shows &lt;Skeleton /&gt; until</span>
+<span class="syn-cm">// this component's await resolves</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- What happens visual -->
+    <div class="reveal max-w-3xl mx-auto bg-purple-50 border border-purple-200 rounded-2xl p-5 sm:p-8">
+      <h3 class="font-bold text-slate-900 mb-3">What happens at this step</h3>
+      <div class="space-y-2 text-sm text-slate-600">
+        <div class="flex gap-3 items-start">
+          <span class="flex-shrink-0 w-5 h-5 bg-purple-200 text-purple-700 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+          <p>The Node renderer receives sync props and starts rendering <code class="bg-purple-100 px-1 rounded text-xs">ProductPageRSC</code>. The Hero section renders instantly with product metadata.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="flex-shrink-0 w-5 h-5 bg-purple-200 text-purple-700 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+          <p>React hits <code class="bg-purple-100 px-1 rounded text-xs">&lt;Suspense&gt;</code> boundaries. Each async component calls <code class="bg-purple-100 px-1 rounded text-xs">getReactOnRailsAsyncProp</code> which returns a Promise that resolves when Rails emits the data.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="flex-shrink-0 w-5 h-5 bg-purple-200 text-purple-700 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+          <p>React renders the <strong>skeleton fallbacks</strong> for each Suspense boundary and streams the shell HTML to the browser. The user sees the page structure immediately.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     STEP 3: STREAMING TO THE BROWSER
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-sky-600 font-semibold text-sm uppercase tracking-wider mb-3">Step 3</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">HTML Streams to the Browser</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        As each <code class="bg-slate-100 px-2 py-0.5 rounded text-sm">emit.call</code> fires in Rails, the corresponding Suspense boundary resolves. React streams the real content as an HTML chunk that <strong>replaces the skeleton in-place</strong>.
+      </p>
+    </div>
+
+    <!-- Streaming timeline visualization -->
+    <div class="reveal max-w-4xl mx-auto mb-10 sm:mb-16">
+      <div class="bg-slate-50 rounded-2xl p-5 sm:p-8 border border-slate-200">
+        <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Timeline showing how data streams from Rails to the browser: shell at 0ms, details at 100ms, reviews at 500ms, related products at 1.5s">
+          <!-- Time axis -->
+          <line x1="80" y1="260" x2="680" y2="260" stroke="#cbd5e1" stroke-width="1"/>
+          <text x="80" y="278" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">0ms</text>
+          <text x="200" y="278" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">100ms</text>
+          <text x="380" y="278" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">500ms</text>
+          <text x="580" y="278" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">1.5s</text>
+          <!-- Tick marks -->
+          <line x1="80" y1="256" x2="80" y2="264" stroke="#94a3b8" stroke-width="1"/>
+          <line x1="200" y1="256" x2="200" y2="264" stroke="#94a3b8" stroke-width="1"/>
+          <line x1="380" y1="256" x2="380" y2="264" stroke="#94a3b8" stroke-width="1"/>
+          <line x1="580" y1="256" x2="580" y2="264" stroke="#94a3b8" stroke-width="1"/>
+
+          <!-- Rails row -->
+          <text x="0" y="45" fill="#64748b" font-size="10" font-family="monospace" font-weight="bold">RAILS</text>
+          <rect x="80" y="30" width="500" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="330" y="47" text-anchor="middle" fill="#dc2626" font-size="9" font-family="monospace">Background thread: emit.call("details") ... emit.call("reviews") ... emit.call("related")</text>
+
+          <!-- Node renderer row -->
+          <text x="0" y="95" fill="#64748b" font-size="10" font-family="monospace" font-weight="bold">NODE</text>
+          <rect x="80" y="80" width="40" height="24" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+          <text x="100" y="97" text-anchor="middle" fill="#7c3aed" font-size="8" font-family="monospace">Shell</text>
+          <rect x="200" y="80" width="60" height="24" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+          <text x="230" y="97" text-anchor="middle" fill="#7c3aed" font-size="8" font-family="monospace">Details</text>
+          <rect x="380" y="80" width="60" height="24" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+          <text x="410" y="97" text-anchor="middle" fill="#7c3aed" font-size="8" font-family="monospace">Reviews</text>
+          <rect x="580" y="80" width="60" height="24" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+          <text x="610" y="97" text-anchor="middle" fill="#7c3aed" font-size="8" font-family="monospace">Related</text>
+
+          <!-- Browser row -->
+          <text x="0" y="155" fill="#64748b" font-size="10" font-family="monospace" font-weight="bold">BROWSER</text>
+
+          <!-- Page mockup growing over time -->
+          <!-- At 0ms: shell -->
+          <rect x="80" y="130" width="90" height="110" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+          <rect x="86" y="136" width="78" height="14" rx="3" fill="#6366f1"/>
+          <text x="125" y="147" text-anchor="middle" fill="white" font-size="7" font-family="monospace">Hero</text>
+          <rect x="86" y="155" width="78" height="12" rx="3" fill="#e2e8f0"/>
+          <rect x="86" y="171" width="78" height="12" rx="3" fill="#e2e8f0"/>
+          <rect x="86" y="187" width="78" height="12" rx="3" fill="#e2e8f0"/>
+          <text x="125" y="218" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">Shell only</text>
+
+          <!-- At 100ms: + details -->
+          <rect x="200" y="130" width="140" height="110" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+          <rect x="206" y="136" width="128" height="14" rx="3" fill="#6366f1"/>
+          <text x="270" y="147" text-anchor="middle" fill="white" font-size="7" font-family="monospace">Hero</text>
+          <rect x="206" y="155" width="128" height="22" rx="3" fill="#8b5cf6"/>
+          <text x="270" y="170" text-anchor="middle" fill="white" font-size="7" font-family="monospace">Details</text>
+          <rect x="206" y="181" width="128" height="12" rx="3" fill="#e2e8f0"/>
+          <rect x="206" y="197" width="128" height="12" rx="3" fill="#e2e8f0"/>
+          <text x="270" y="218" text-anchor="middle" fill="#8b5cf6" font-size="7" font-family="monospace">+ Details</text>
+
+          <!-- At 500ms: + reviews -->
+          <rect x="380" y="130" width="140" height="110" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+          <rect x="386" y="136" width="128" height="14" rx="3" fill="#6366f1"/>
+          <text x="450" y="147" text-anchor="middle" fill="white" font-size="7" font-family="monospace">Hero</text>
+          <rect x="386" y="155" width="128" height="18" rx="3" fill="#8b5cf6"/>
+          <text x="450" y="168" text-anchor="middle" fill="white" font-size="7" font-family="monospace">Details</text>
+          <rect x="386" y="177" width="128" height="22" rx="3" fill="#a78bfa"/>
+          <text x="450" y="192" text-anchor="middle" fill="white" font-size="7" font-family="monospace">Reviews</text>
+          <rect x="386" y="203" width="128" height="12" rx="3" fill="#e2e8f0"/>
+          <text x="450" y="218" text-anchor="middle" fill="#a78bfa" font-size="7" font-family="monospace">+ Reviews</text>
+
+          <!-- At 1.5s: complete -->
+          <rect x="580" y="130" width="100" height="110" rx="6" fill="white" stroke="#d1fae5" stroke-width="1.5"/>
+          <rect x="586" y="136" width="88" height="12" rx="3" fill="#6366f1"/>
+          <text x="630" y="146" text-anchor="middle" fill="white" font-size="6" font-family="monospace">Hero</text>
+          <rect x="586" y="152" width="88" height="14" rx="3" fill="#8b5cf6"/>
+          <text x="630" y="163" text-anchor="middle" fill="white" font-size="6" font-family="monospace">Details</text>
+          <rect x="586" y="170" width="88" height="16" rx="3" fill="#a78bfa"/>
+          <text x="630" y="182" text-anchor="middle" fill="white" font-size="6" font-family="monospace">Reviews</text>
+          <rect x="586" y="190" width="88" height="16" rx="3" fill="#34d399"/>
+          <text x="630" y="202" text-anchor="middle" fill="white" font-size="6" font-family="monospace">Related</text>
+          <text x="630" y="218" text-anchor="middle" fill="#059669" font-size="7" font-family="monospace" font-weight="bold">Complete</text>
+
+          <!-- Down arrows from node to browser -->
+          <line x1="100" y1="106" x2="125" y2="128" stroke="#c4b5fd" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="230" y1="106" x2="270" y2="128" stroke="#c4b5fd" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="410" y1="106" x2="450" y2="128" stroke="#c4b5fd" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="610" y1="106" x2="630" y2="128" stroke="#c4b5fd" stroke-width="1" stroke-dasharray="3,2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Key insight callout -->
+    <div class="reveal max-w-3xl mx-auto bg-sky-50 border border-sky-200 rounded-2xl p-5 sm:p-8">
+      <h3 class="font-bold text-slate-900 mb-3">The key insight</h3>
+      <p class="text-sm text-slate-600 mb-3">
+        Each <code class="bg-sky-100 px-1 rounded text-xs">emit.call</code> in Rails directly resolves a <code class="bg-sky-100 px-1 rounded text-xs">getReactOnRailsAsyncProp</code> Promise in React. The prop name must match exactly:
+      </p>
+      <div class="bg-white rounded-xl p-4 border border-sky-100 font-mono text-sm">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="text-red-500">emit.call(<span class="text-emerald-600">"reviews"</span>, data)</span>
+          <svg width="24" height="16" viewBox="0 0 24 16" fill="none" aria-hidden="true"><path d="M4 8h16M16 4l4 4-4 4" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="text-purple-600">await get(<span class="text-emerald-600">"reviews"</span>)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     THREE RENDERING MODES
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-dark py-14 sm:py-20 lg:py-28 relative overflow-hidden">
+  <svg class="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/></pattern></defs>
+    <rect width="100%" height="100%" fill="url(#grid2)"/>
+  </svg>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-indigo-400 font-semibold text-sm uppercase tracking-wider mb-3">Comparison</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4">Three Rendering Modes</h2>
+      <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+        React on Rails Pro supports all three approaches. Choose per page, migrate incrementally.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- V1: Full SSR -->
+      <div class="reveal mode-card bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">V1</span>
+          </div>
+          <h3 class="font-bold text-white text-lg">Full SSR</h3>
+        </div>
+        <p class="text-sm text-slate-400 mb-4">All data fetched on server. Full HTML returned at once. All JS shipped to client for hydration.</p>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+            <span class="text-slate-400">Entire page waits for slowest query</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+            <span class="text-slate-400">All libraries shipped to client</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+            <span class="text-slate-400">Full hydration required</span>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-white/10">
+          <span class="text-xs text-slate-500 font-mono">react_component("...", prerender: true)</span>
+        </div>
+      </div>
+
+      <!-- V2: Client Components -->
+      <div class="reveal mode-card bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">V2</span>
+          </div>
+          <h3 class="font-bold text-white text-lg">Client + Loadable</h3>
+        </div>
+        <p class="text-sm text-slate-400 mb-4">Code-split with @loadable/component. SSR critical parts, lazy-load the rest on client.</p>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+            <span class="text-slate-400">Lazy content loads after hydration</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+            <span class="text-slate-400">JS deferred but still shipped</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+            <span class="text-slate-400">Complex setup (5 packages)</span>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-white/10">
+          <span class="text-xs text-slate-500 font-mono">loadable(() =&gt; import("...")) + ChunkExtractor</span>
+        </div>
+      </div>
+
+      <!-- V3: RSC -->
+      <div class="reveal mode-card bg-white/5 backdrop-blur-sm border border-emerald-400/20 rounded-2xl p-6 ring-1 ring-emerald-400/10">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">V3</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-lg">RSC Streaming</h3>
+            <span class="text-xs text-emerald-400 font-semibold">RECOMMENDED</span>
+          </div>
+        </div>
+        <p class="text-sm text-slate-400 mb-4">Server components stream progressively. Only interactive JS ships to client. Zero-cost rendering.</p>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+            <span class="text-emerald-300">Sections stream independently</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+            <span class="text-emerald-300">Server-only code: 0 KB to client</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+            <span class="text-emerald-300">Minimal setup: just 'use client'</span>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-emerald-400/10">
+          <span class="text-xs text-emerald-500 font-mono">stream_react_component_with_async_props</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     COMPONENT BOUNDARY VISUAL
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section-light py-14 sm:py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="reveal text-center mb-10 sm:mb-16">
+      <span class="inline-block text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-3">Architecture</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4">Server vs Client Boundary</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+        Most of your component tree stays on the server. Only interactive islands &mdash; buttons, filters, forms &mdash; ship JavaScript to the browser.
+      </p>
+    </div>
+
+    <!-- Component tree visualization -->
+    <div class="reveal max-w-3xl mx-auto mb-10 sm:mb-16">
+      <div class="bg-slate-50 rounded-2xl p-5 sm:p-8 border border-slate-200">
+        <svg viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg" class="w-full" role="img" aria-label="Component tree showing server components as the majority (page, layout, content, charts) with small client component islands for interactivity (filters, cart button, gallery)">
+          <!-- Legend -->
+          <rect x="0" y="0" width="14" height="14" rx="3" fill="#8b5cf6"/>
+          <text x="20" y="12" fill="#64748b" font-size="11" font-family="sans-serif">Server Component (0 KB to client)</text>
+          <rect x="280" y="0" width="14" height="14" rx="3" fill="#f97316"/>
+          <text x="300" y="12" fill="#64748b" font-size="11" font-family="sans-serif">Client Component (ships JS)</text>
+
+          <!-- Root: ProductPageRSC -->
+          <rect x="200" y="35" width="200" height="36" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="300" y="58" text-anchor="middle" fill="#6d28d9" font-size="12" font-family="monospace" font-weight="bold">ProductPageRSC</text>
+
+          <!-- Level 2 branches -->
+          <line x1="250" y1="71" x2="100" y2="100" stroke="#cbd5e1" stroke-width="1.5"/>
+          <line x1="300" y1="71" x2="300" y2="100" stroke="#cbd5e1" stroke-width="1.5"/>
+          <line x1="350" y1="71" x2="500" y2="100" stroke="#cbd5e1" stroke-width="1.5"/>
+
+          <!-- Hero (server) -->
+          <rect x="30" y="100" width="140" height="32" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="100" y="121" text-anchor="middle" fill="#6d28d9" font-size="11" font-family="monospace">ProductHero</text>
+
+          <!-- Details (server) -->
+          <rect x="220" y="100" width="160" height="32" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="300" y="121" text-anchor="middle" fill="#6d28d9" font-size="11" font-family="monospace">AsyncDetails</text>
+
+          <!-- Reviews (server) -->
+          <rect x="430" y="100" width="140" height="32" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="500" y="121" text-anchor="middle" fill="#6d28d9" font-size="11" font-family="monospace">AsyncReviews</text>
+
+          <!-- Level 3 from Hero -->
+          <line x1="70" y1="132" x2="40" y2="160" stroke="#cbd5e1" stroke-width="1.5"/>
+          <line x1="130" y1="132" x2="160" y2="160" stroke="#cbd5e1" stroke-width="1.5"/>
+
+          <!-- ImageGallery (client!) -->
+          <rect x="0" y="160" width="110" height="32" rx="8" fill="#f97316" opacity="0.15" stroke="#f97316" stroke-width="1.5"/>
+          <text x="55" y="181" text-anchor="middle" fill="#c2410c" font-size="10" font-family="monospace">ImageGallery</text>
+          <text x="55" y="204" text-anchor="middle" fill="#f97316" font-size="8" font-family="monospace">'use client'</text>
+
+          <!-- AddToCart (client!) -->
+          <rect x="120" y="160" width="100" height="32" rx="8" fill="#f97316" opacity="0.15" stroke="#f97316" stroke-width="1.5"/>
+          <text x="170" y="181" text-anchor="middle" fill="#c2410c" font-size="10" font-family="monospace">AddToCart</text>
+          <text x="170" y="204" text-anchor="middle" fill="#f97316" font-size="8" font-family="monospace">'use client'</text>
+
+          <!-- Level 3 from Details -->
+          <line x1="260" y1="132" x2="260" y2="160" stroke="#cbd5e1" stroke-width="1.5"/>
+          <line x1="340" y1="132" x2="370" y2="160" stroke="#cbd5e1" stroke-width="1.5"/>
+
+          <!-- Description (server) -->
+          <rect x="200" y="160" width="120" height="32" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="260" y="181" text-anchor="middle" fill="#6d28d9" font-size="10" font-family="monospace">Description</text>
+
+          <!-- Specs (server) -->
+          <rect x="335" y="160" width="80" height="32" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="375" y="181" text-anchor="middle" fill="#6d28d9" font-size="10" font-family="monospace">Specs</text>
+
+          <!-- Level 3 from Reviews -->
+          <line x1="500" y1="132" x2="500" y2="160" stroke="#cbd5e1" stroke-width="1.5"/>
+
+          <!-- ReviewList (server) -->
+          <rect x="440" y="160" width="120" height="32" rx="8" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="500" y="181" text-anchor="middle" fill="#6d28d9" font-size="10" font-family="monospace">ReviewList</text>
+
+          <!-- Summary bar at bottom -->
+          <rect x="50" y="240" width="500" height="40" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+          <rect x="55" y="245" width="360" height="30" rx="7" fill="#8b5cf6" opacity="0.2"/>
+          <text x="235" y="265" text-anchor="middle" fill="#6d28d9" font-size="11" font-family="monospace" font-weight="bold">Server: 7 components (0 KB)</text>
+          <rect x="420" y="245" width="125" height="30" rx="7" fill="#f97316" opacity="0.2"/>
+          <text x="482" y="265" text-anchor="middle" fill="#c2410c" font-size="11" font-family="monospace" font-weight="bold">Client: 2 (~8 KB)</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Benefits summary -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="text-3xl font-extrabold text-emerald-600 mb-1">78%</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Server-Only</div>
+        <p class="text-xs text-slate-500">7 of 9 components never ship JS to the browser</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="text-3xl font-extrabold text-emerald-600 mb-1">~8 KB</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Client JS</div>
+        <p class="text-xs text-slate-500">Only ImageGallery and AddToCart ship interactive code</p>
+      </div>
+      <div class="reveal bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="text-3xl font-extrabold text-emerald-600 mb-1">0 KB</div>
+        <div class="text-sm font-semibold text-slate-800 mb-1">Heavy Libraries</div>
+        <p class="text-xs text-slate-500">Markdown, charts, date formatting stay server-side</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CTA SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero-gradient relative overflow-hidden py-16 sm:py-24 lg:py-36">
+  <div class="hero-glow absolute inset-0"></div>
+  <div class="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+    <div class="reveal">
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-6">Start Building with RSC</h2>
+      <p class="text-lg sm:text-xl text-slate-300 mb-12 max-w-xl mx-auto leading-relaxed">
+        See the performance difference yourself. React on Rails Pro makes RSC work seamlessly with your Rails app.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="/why-rsc" class="inline-flex items-center justify-center bg-white text-slate-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg shadow-white/10">
+          Why RSC?
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://www.shakacode.com/react-on-rails-pro/" class="inline-flex items-center justify-center bg-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/20 transition-colors border border-white/30">
+          Get React on Rails Pro
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="ml-2"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll-reveal observer -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var revealElements = document.querySelectorAll('.reveal');
+
+    if (!('IntersectionObserver' in window)) {
+      Array.prototype.forEach.call(revealElements, function(el) {
+        el.classList.add('visible');
+      });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    Array.prototype.forEach.call(revealElements, function(el) {
+      observer.observe(el);
+    });
+  });
+</script>
