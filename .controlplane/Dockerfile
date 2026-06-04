@@ -64,6 +64,9 @@ RUN RAILS_ENV=production \
     RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
     bin/shakapacker
 
+RUN test -f public/packs/loadable-stats.json && \
+    cp public/packs/loadable-stats.json ssr-generated/loadable-stats.json
+
 # ============================================================
 # Production stage - minimal runtime image
 # ============================================================

@@ -13,13 +13,12 @@ const DEFAULT_ROUTES = [
   '/measure',
   '/rsc-performance',
   '/rsc',
-  '/search/ssr', '/search/client', '/search/rsc',
+  '/restaurant/1/ssr', '/restaurant/1/client', '/restaurant/1/rsc',
   '/product/ssr', '/product/client', '/product/rsc',
   '/product-search/ssr', '/product-search/client', '/product-search/rsc',
   '/blog/ssr', '/blog/client', '/blog/rsc', '/blog/rsc-simple',
   '/blog/rsc-step1', '/blog/rsc-step1b', '/blog/rsc-step1c',
   '/blog/rsc-step2', '/blog/rsc-step3', '/blog/rsc-step4', '/blog/rsc-step5',
-  '/analytics/ssr', '/analytics/client', '/analytics/rsc',
 ];
 
 // A harness can scope the run to a subset (e.g. just the RSC client-boundary
