@@ -241,6 +241,11 @@
     .rsc-skel-0, .rsc-skel-1, .rsc-skel-2, .rsc-skel-3 { animation: none; opacity: 0; }
   }
 </style>
+<noscript>
+  <style>
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  </style>
+</noscript>
 <% end %>
 
 <!-- ════════════════════════════════════════════════════════════════
@@ -1253,6 +1258,15 @@
 <!-- Scroll-reveal observer (minimal inline JS) -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    var revealElements = document.querySelectorAll('.reveal');
+
+    if (!('IntersectionObserver' in window)) {
+      Array.prototype.forEach.call(revealElements, function(el) {
+        el.classList.add('visible');
+      });
+      return;
+    }
+
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
@@ -1262,7 +1276,7 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    document.querySelectorAll('.reveal').forEach(function(el) {
+    Array.prototype.forEach.call(revealElements, function(el) {
       observer.observe(el);
     });
   });
