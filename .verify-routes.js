@@ -74,6 +74,8 @@ async function checkRoute(browser, route) {
   } catch (e) {
     return {
       route, httpStatus, ok: false, navError: e.message,
+      bodyTextLength: 0, hasErrorPanel: false,
+      duplicateScripts: [],
       consoleErrors, pageErrors, failedRequests,
     };
   }
@@ -118,7 +120,8 @@ async function checkRoute(browser, route) {
   for (const route of ROUTES) {
     process.stderr.write(`checking ${route} ... `);
     const r = await checkRoute(browser, route);
-    process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
+    const duplicateScriptCount = r.duplicateScripts?.length || 0;
+    process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${duplicateScriptCount})\n`);
     results.push(r);
   }
 
@@ -130,8 +133,9 @@ async function checkRoute(browser, route) {
   console.log(`Total: ${results.length}, OK: ${results.length - fail.length}, FAIL: ${fail.length}\n`);
 
   for (const r of fail) {
+    const duplicateScriptCount = r.duplicateScripts?.length || 0;
     console.log(`\n--- FAIL ${r.route} ---`);
-    console.log(`  status=${r.httpStatus} bodyLen=${r.bodyTextLength} dupes=${r.duplicateScripts.length} errorPanel=${r.hasErrorPanel}`);
+    console.log(`  status=${r.httpStatus} bodyLen=${r.bodyTextLength} dupes=${duplicateScriptCount} errorPanel=${r.hasErrorPanel}`);
     if (r.navError) console.log(`  navError: ${r.navError}`);
     for (const e of r.pageErrors) {
       console.log(`  pageError [${e.kind || 'unclassified'}]: ${e.message.split('\n')[0]}`);
@@ -142,7 +146,7 @@ async function checkRoute(browser, route) {
     for (const f of r.failedRequests) {
       console.log(`  failed-request: ${f.url} (${f.reason})`);
     }
-    if (r.duplicateScripts.length) {
+    if (duplicateScriptCount > 0) {
       console.log(`  duplicates: ${[...new Set(r.duplicateScripts)].join(', ')}`);
     }
   }

@@ -20,5 +20,6 @@ ReactOnRailsPro.configure do |config|
   # RSC payload generation URL path
   config.rsc_payload_generation_url_path = 'rsc_payload/'
 
-  # React on Rails Pro 17 auto-stages loadable-stats.json when it exists.
+  # Keep @loadable/server stats beside each uploaded server bundle in the node renderer.
+  config.assets_to_copy = [Rails.root.join('public/packs/loadable-stats.json').to_s]
 end
