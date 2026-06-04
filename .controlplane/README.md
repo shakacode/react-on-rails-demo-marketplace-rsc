@@ -95,11 +95,13 @@ automatically redeploy the review app. `+review-app-delete` deletes the review
 app, and deletion also runs when the PR closes. Stale review apps are cleaned up
 nightly by `.github/workflows/cpflow-cleanup-stale-review-apps.yml`.
 
-In public repositories, generated review-app deploys skip fork PR heads because
-Docker builds use repository secrets. If a forked change needs a review app,
-first move the reviewed change to a trusted branch in this repository. Review
-apps still run pull request code, so same-repository PRs can read any secret
-mounted into the workload.
+In public repositories, automatic pull request review-app deploys skip fork PR
+heads because Docker builds use repository secrets. Manual comment or dispatch
+deploys from trusted maintainers can still run PR code, so do not deploy a fork
+PR unless the reviewed change has first been moved to a trusted branch in this
+repository or the wrapper has an explicit fork guard. Review apps still run pull
+request code, so same-repository PRs can read any secret mounted into the
+workload.
 
 Configure these GitHub repository secrets before enabling review app deploys:
 

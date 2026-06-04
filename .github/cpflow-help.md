@@ -24,10 +24,11 @@ For the normal generated review-app path, GitHub needs one repository secret:
 | `CPLN_TOKEN_STAGING` | Repository secret | Control Plane service-account token for the staging/review org. |
 
 For public repositories, use a staging/review token that cannot access
-production Control Plane resources. Generated review-app deploys skip fork PR
-heads because Docker builds use repository secrets. If a forked change needs a
-review app, first move the reviewed change to a trusted branch in this
-repository.
+production Control Plane resources. Automatic pull request deploys skip fork PR
+heads because Docker builds use repository secrets. Manual comment or dispatch
+deploys from trusted maintainers can still run PR code, so do not deploy a fork
+PR unless the reviewed change has first been moved to a trusted branch in this
+repository or the wrapper has an explicit fork guard.
 
 No repository variables are required for the standard review-app path when
 `.controlplane/controlplane.yml` has exactly one review app entry with
