@@ -75,6 +75,7 @@ jobs:
         run: |
           {
             echo "SECRET_KEY_BASE=$(openssl rand -hex 64)"
+            # Rails and node-renderer.js share this for authenticated renderer calls.
             echo "RENDERER_PASSWORD=$(openssl rand -hex 32)"
             # RAILS_MASTER_KEY is intentionally not set: the smoke app reads no
             # Rails.application.credentials keys; all secrets come from env vars.

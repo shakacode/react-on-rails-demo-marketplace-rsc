@@ -551,7 +551,7 @@ jobs:
               copy_status=0
               break
             else
-              copy_status=$?
+              copy_status=$? # Exit code of the failing imagetools command.
             fi
 
             if [[ "${attempt}" -lt "${copy_image_attempts}" ]]; then
@@ -572,6 +572,7 @@ jobs:
       - name: Deploy image to production
         id: deploy
         env:
+          CPLN_TOKEN: ${{ secrets.CPLN_TOKEN_PRODUCTION }}
           PRODUCTION_APP_NAME: ${{ vars.PRODUCTION_APP_NAME }}
           CPLN_ORG_PRODUCTION: ${{ steps.cpln-orgs.outputs.production }}
           RELEASE_PHASE_FLAG: ${{ steps.release-phase.outputs.flag }}
@@ -674,6 +675,19 @@ jobs:
         run: |
           set -euo pipefail
 
+          if ! [[ "${ROLLBACK_READINESS_RETRIES}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::ROLLBACK_READINESS_RETRIES must be a positive integer."
+            exit 1
+          fi
+
+          if ! [[ "${ROLLBACK_READINESS_INTERVAL}" =~ ^[0-9]+$ ]]; then
+            echo "::error::ROLLBACK_READINESS_INTERVAL must be a non-negative integer."
+            exit 1
+          fi
+
+          rollback_readiness_retries=$((10#${ROLLBACK_READINESS_RETRIES}))
+          rollback_readiness_interval=$((10#${ROLLBACK_READINESS_INTERVAL}))
+
           mapfile -t workloads < <(echo "${ROLLBACK_STATE}" | jq -r 'keys[]')
 
           # Poll workloads in parallel so the worst-case wall time during a
@@ -694,7 +708,7 @@ jobs:
             (
               set -euo pipefail
               ready=false
-              for attempt in $(seq 1 "${ROLLBACK_READINESS_RETRIES}"); do
+              for attempt in $(seq 1 "${rollback_readiness_retries}"); do
                 workload_status="$(cpln workload get "${workload_name}" --gvc "${PRODUCTION_APP_NAME}" --org "${CPLN_ORG_PRODUCTION}" -o json)"
                 deployment_ready="$(echo "${workload_status}" | jq -r '.status.ready // false')"
                 latest_ready="$(echo "${workload_status}" | jq -r '.status.readyLatest // false')"
@@ -703,8 +717,8 @@ jobs:
                   break
                 fi
 
-                if [[ "${attempt}" -lt "${ROLLBACK_READINESS_RETRIES}" ]]; then
-                  sleep "${ROLLBACK_READINESS_INTERVAL}"
+                if [[ "${attempt}" -lt "${rollback_readiness_retries}" ]]; then
+                  sleep "${rollback_readiness_interval}"
                 fi
               done
 
