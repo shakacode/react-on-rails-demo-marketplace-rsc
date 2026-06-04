@@ -3,6 +3,7 @@ const { RSCWebpackPlugin } = require('react-on-rails-rsc/WebpackPlugin');
 const webpack = require('webpack');
 const path = require('path');
 const commonWebpackConfig = require('./commonWebpackConfig');
+const rscClientReferenceOptions = require('./rscClientReferences');
 
 function extractLoader(rule, loaderName) {
   return rule.use.find((item) => {
@@ -55,7 +56,7 @@ const configureServer = (rscBundle = false) => {
   };
 
   if (!rscBundle) {
-    serverWebpackConfig.plugins.push(new RSCWebpackPlugin({ isServer: true }));
+    serverWebpackConfig.plugins.push(new RSCWebpackPlugin({ isServer: true, ...rscClientReferenceOptions }));
   }
   serverWebpackConfig.plugins.unshift(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
   // Custom output for the server-bundle that matches the config in

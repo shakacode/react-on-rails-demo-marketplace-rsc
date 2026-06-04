@@ -9,7 +9,7 @@ This document tracks the migration of the LocalHub demo from Webpack 5 to Rspack
 
 ## How to switch bundlers
 
-Shakapacker 9.5 supports env-variable switching:
+Shakapacker 10.1 supports env-variable switching:
 
 ```bash
 # Build with Rspack (all 3 bundles)
@@ -26,7 +26,7 @@ CLIENT_BUNDLE_ONLY=yes SHAKAPACKER_ASSETS_BUNDLER=rspack npx @rspack/cli build -
 
 ## Prerequisites
 
-- **Node.js 22.12.0+** (required by `@rspack/core` v2)
+- **Node.js 20.19.0+ or 22.12.0+** (required by Shakapacker 10.1 and `@rspack/core` v2)
 - Packages: `@rspack/core @rspack/cli @rspack/plugin-react-refresh rspack-manifest-plugin`
 
 ## Build performance
@@ -82,7 +82,7 @@ Additionally, without injection, rspack's production module concatenation merged
 
 **Result:** Zero renderer errors in both dev and prod. SSR HTML output matches webpack within 0.03%.
 
-**Upstream:** All three fixes should be contributed back to https://github.com/shakacode/react_on_rails_rsc
+**Upstream:** The Rspack plugin fixes are available in `react-on-rails-rsc@19.0.5-rc.2`.
 
 ## Page status
 
@@ -121,7 +121,7 @@ Additionally, without injection, rspack's production module concatenation merged
 1. **`@loadable/webpack-plugin` not included** — SSR/Client pages may break if `loadable-stats.json` becomes stale
 2. **`__dirname` warnings** — 4 `.server.tsx` files produce harmless `__dirname` mocked warnings
 3. **`require('@rspack/core')` experimental warning** — Node 22 shows an ESM compat warning (harmless)
-4. **Peer dep mismatches** — shakapacker expects `@rspack/core ^1.0.0`, we use v2.0.3
+4. **Shakapacker supplemental packages** — Shakapacker 10.1 adds optional `shakapacker-webpack` and `shakapacker-rspack` packages that can simplify managed bundler dependencies. This demo keeps explicit webpack and rspack dependencies because it exercises both bundlers side-by-side.
 
 ## Bundle size comparison
 

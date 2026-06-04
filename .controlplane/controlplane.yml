@@ -13,6 +13,7 @@ apps:
   react-server-components-demo:
     <<: *common
     release_script: rails db:migrate
+    secrets_name: react-server-components-demo-secrets
     setup_app_templates:
       - app
       - rails
@@ -21,6 +22,7 @@ apps:
     <<: *common
     match_if_app_name_starts_with: true
     release_script: rails db:migrate
+    secrets_name: react-server-components-demo-secrets
     setup_app_templates:
       - app
       - rails
