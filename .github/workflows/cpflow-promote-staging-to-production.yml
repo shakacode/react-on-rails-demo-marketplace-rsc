@@ -497,6 +497,8 @@ jobs:
           # production promotions cannot derive and publish the same next tag.
           # See the top-level concurrency group: cpflow-promote-staging-to-production.
           # cpln image query treats --max values less than 1 as unlimited.
+          # Keep this unbounded: the cpln CLI exposes --max but no server-side
+          # sort option, so a bounded page can miss the highest numeric tag.
           latest_number="$(
             cpln image query --org "${CPLN_ORG_PRODUCTION}" --prop "name~${PRODUCTION_APP_NAME}:" --max 0 -o json |
               jq -r --arg prefix "${PRODUCTION_APP_NAME}:" \
@@ -779,6 +781,7 @@ jobs:
     needs: promote-to-production
     if: needs.promote-to-production.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
 
