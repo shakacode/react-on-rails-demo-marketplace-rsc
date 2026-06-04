@@ -496,6 +496,7 @@ jobs:
           # The workflow-level concurrency group serializes this sequence so two
           # production promotions cannot derive and publish the same next tag.
           # See the top-level concurrency group: cpflow-promote-staging-to-production.
+          # cpln image query treats --max values less than 1 as unlimited.
           latest_number="$(
             cpln image query --org "${CPLN_ORG_PRODUCTION}" --prop "name~${PRODUCTION_APP_NAME}:" --max 0 -o json |
               jq -r --arg prefix "${PRODUCTION_APP_NAME}:" \
