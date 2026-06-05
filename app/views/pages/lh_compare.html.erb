@@ -1,3 +1,6 @@
+<% content_for(:page_title) { "Lighthouse Report Comparison | React on Rails RSC Demo" } %>
+<% content_for(:page_description) { "Side-by-side Lighthouse comparison of RSC, SSR, and client-side rendering variants from the React on Rails RSC demo." } %>
+<% content_for(:robots) { "noindex, follow" } %>
 <%
   feature_label = {
     "blog"           => "Blog Post",
@@ -60,7 +63,7 @@
       <span class="text-slate-400 text-xs">·</span>
       <a href="/lighthouse-reports/index.html" class="text-slate-300 text-xs hover:text-white">All 24 reports →</a>
       <span class="text-slate-400 text-xs">·</span>
-      <a href="/search-performance" class="text-slate-300 text-xs hover:text-white">Performance evidence page →</a>
+      <a href="/rsc-performance" class="text-slate-300 text-xs hover:text-white">Performance evidence page →</a>
     </div>
     <h1 class="text-2xl sm:text-3xl font-extrabold leading-tight">
       <%= feature_name %>

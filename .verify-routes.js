@@ -11,7 +11,7 @@ const DEFAULT_ROUTES = [
   '/',
   '/why-rsc',
   '/measure',
-  '/search-performance',
+  '/rsc-performance',
   '/rsc',
   '/search/ssr', '/search/client', '/search/rsc',
   '/product/ssr', '/product/client', '/product/rsc',

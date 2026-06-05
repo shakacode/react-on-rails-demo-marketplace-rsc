@@ -11,7 +11,9 @@ Rails.application.routes.draw do
   get '/source', to: redirect(repository_url, status: 308), as: :source_code
   get '/contributing', to: redirect(contributing_url, status: 308), as: :contributing_guide
   get '/issues', to: redirect(issues_url, status: 308), as: :project_issues
-  get '/search-performance' => 'pages#search_performance'
+  get '/rsc-performance' => 'pages#rsc_performance'
+  # Old slug kept as a permanent (308) redirect so existing links/SEO equity survive the rename.
+  get '/search-performance', to: redirect('/rsc-performance', status: 308)
   get '/rsc' => 'home#rsc'
   get '/why-rsc' => 'pages#why_rsc'
   get '/how-rsc-works' => 'pages#how_rsc_works'

@@ -10,6 +10,14 @@ class BlogController < ApplicationController
     :post_rsc_step2, :post_rsc_step3, :post_rsc_step4, :post_rsc_step5
   ]
 
+  before_action :set_seo_meta
+
+  SEO_VARIANTS = {
+    "post_ssr" => "Server-Side Rendering (SSR)",
+    "post_client" => "Client-Side Rendering",
+    "post_rsc" => "React Server Components (RSC)"
+  }.freeze
+
   # V1: Full SSR — all data fetched and rendered on server
   # In SSR, the content fetch delay blocks the ENTIRE response — no HTML is sent
   # until all data is ready, because Rails must render the full page before streaming.
@@ -86,5 +94,21 @@ class BlogController < ApplicationController
   def post_rsc_step5
     @post_data = BlogData.find_post(1)
     stream_view_containing_react_components(template: "blog/post_rsc_step5")
+  end
+
+  private
+
+  # The three headline variants are indexable; the "simple" and incremental
+  # debug-step pages are noindexed so they don't dilute the demo in search.
+  def set_seo_meta
+    variant = SEO_VARIANTS[action_name]
+    if variant
+      @page_title = "Blog Post — #{variant} | React on Rails RSC Demo"
+    else
+      @robots = "noindex, follow"
+    end
+    @page_description =
+      "A markdown-heavy blog post showing how React Server Components cut JavaScript " \
+      "bundle size versus SSR and client-side rendering."
   end
 end

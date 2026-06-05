@@ -6,6 +6,14 @@ class RestaurantsController < ApplicationController
 
   enable_async_react_rendering only: %i[show_rsc]
 
+  before_action :set_seo_meta
+
+  SEO_VARIANTS = {
+    "show_ssr" => "Server-Side Rendering (SSR)",
+    "show_client" => "Client-Side Rendering",
+    "show_rsc" => "React Server Components (RSC)"
+  }.freeze
+
   # V1: Full SSR — assemble the entire detail payload (markdown bio,
   # 80-item menu, 40 reviews, multi-currency price ladder data) and pass
   # it to the SSRed React component. Same payload as the RSC variant —
@@ -29,5 +37,15 @@ class RestaurantsController < ApplicationController
     @restaurant = Restaurant.find(params[:id])
     @detail = RestaurantDetailData.for(@restaurant)
     stream_view_containing_react_components(template: "restaurants/show_rsc")
+  end
+
+  private
+
+  def set_seo_meta
+    variant = SEO_VARIANTS[action_name]
+    @page_title = "Restaurant Detail — #{variant} | React on Rails RSC Demo" if variant
+    @page_description =
+      "A content-heavy restaurant detail page (markdown bio, 80-item menu, 40 reviews) " \
+      "comparing React Server Components against SSR and client-side rendering."
   end
 end
