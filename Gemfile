@@ -18,10 +18,10 @@ gem 'stimulus-rails'
 
 # React on Rails
 gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git',
-                       tag: 'v17.0.0.rc.0',
+                       tag: 'v17.0.0.rc.1',
                        glob: 'react_on_rails/*.gemspec'
 gem 'react_on_rails_pro', git: 'https://github.com/shakacode/react_on_rails.git',
-                            tag: 'v17.0.0.rc.0',
+                            tag: 'v17.0.0.rc.1',
                             glob: 'react_on_rails_pro/*.gemspec'
 
 # Shakapacker for webpack integration
