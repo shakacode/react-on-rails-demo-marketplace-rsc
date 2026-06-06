@@ -48,17 +48,20 @@ COPY . .
 # Build production assets
 ARG REACT_ON_RAILS_PRO_LICENSE
 ARG SECRET_KEY_BASE=dummy_secret_for_asset_compilation
+ARG RSC_CACHE_ENABLED=false
 
 RUN RAILS_ENV=production \
     NODE_ENV=production \
     SECRET_KEY_BASE=$SECRET_KEY_BASE \
     REACT_ON_RAILS_PRO_LICENSE=$REACT_ON_RAILS_PRO_LICENSE \
+    RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
     bundle exec rake react_on_rails:generate_packs
 
 RUN RAILS_ENV=production \
     NODE_ENV=production \
     SECRET_KEY_BASE=$SECRET_KEY_BASE \
     REACT_ON_RAILS_PRO_LICENSE=$REACT_ON_RAILS_PRO_LICENSE \
+    RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
     bin/shakapacker
 
 # ============================================================

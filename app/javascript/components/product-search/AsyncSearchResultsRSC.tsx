@@ -10,6 +10,7 @@
 //   - 500-char descriptions, 6 features, specs (same as SSR)
 
 import React from 'react';
+import { cacheComponent } from '../../utils/rscCache';
 import type { SearchProduct, Pagination as PaginationType, ReviewSnippet } from './types';
 import { SearchResultCard } from './SearchResultCard';
 import { SearchShellSort, SearchShellPagination, CompareButton, SearchShellActiveFilters, AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShellForServer';
@@ -31,6 +32,29 @@ interface SearchResultsData {
 interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
+
+const CachedResultsGrid = cacheComponent(
+  async ({ products, review_snippets }: { products: SearchProduct[]; review_snippets: Record<number, ReviewSnippet[]> }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {products.map((product, idx) => (
+        <SearchResultCard
+          key={product.id}
+          product={product}
+          description={product.description}
+          reviewSnippets={review_snippets[product.id]}
+          compareButton={<CompareButton productId={product.id} />}
+          addToCartButton={<AddToCartButton productId={product.id} inStock={product.in_stock} />}
+          starRating={<CardStarRating rating={product.average_rating} count={product.review_count} />}
+          reviewSnippetsNode={<CardReviewSnippets snippets={review_snippets[product.id] || []} />}
+          featuresList={<CardFeaturesList features={product.features || []} />}
+          productTags={<CardProductTags tags={product.tags || []} />}
+          index={idx}
+        />
+      ))}
+    </div>
+  ),
+  { id: 'search-results-grid', revalidate: 60 },
+);
 
 export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }: Props) {
   const data: SearchResultsData = await getReactOnRailsAsyncProp('search_results');
@@ -62,27 +86,7 @@ export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }
         )
       ) : (
         <>
-          {/* Product grid — ALL cards are server-rendered HTML, zero JS hydration cost.
-              Only the AddToCartButton and CompareButton (client components) hydrate per card. */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {products.map((product, idx) => (
-              <SearchResultCard
-                key={product.id}
-                product={product}
-                description={product.description}
-                reviewSnippets={review_snippets[product.id]}
-                compareButton={<CompareButton productId={product.id} />}
-                addToCartButton={<AddToCartButton productId={product.id} inStock={product.in_stock} />}
-                starRating={<CardStarRating rating={product.average_rating} count={product.review_count} />}
-                reviewSnippetsNode={<CardReviewSnippets snippets={review_snippets[product.id] || []} />}
-                featuresList={<CardFeaturesList features={product.features || []} />}
-                productTags={<CardProductTags tags={product.tags || []} />}
-                index={idx}
-              />
-            ))}
-          </div>
-
-          {/* Pagination — client component wrapper */}
+          <CachedResultsGrid products={products} review_snippets={review_snippets} />
           <SearchShellPagination pagination={pagination} />
         </>
       )}
