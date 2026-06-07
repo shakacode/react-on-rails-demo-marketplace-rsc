@@ -31,8 +31,11 @@ const config = {
   // Required for loadable components and async operations
   supportModules: true,
 
-  // Additional NodeJS modules to add to the VM context
-  additionalContext: { URL, AbortController, performance },
+  // Additional NodeJS modules to add to the VM context. REDIS_URL may include
+  // credentials, so keep this context limited to trusted server-side RSC code.
+  // ioredis stays external; initRedisCache is the only bundle module expected to use this URL.
+  // Redis caching also requires RSC_CACHE_ENABLED=true when building the RSC bundle.
+  additionalContext: { URL, AbortController, performance, __REDIS_URL__: env.REDIS_URL || '' },
 
   // Set to false to use real timers (required for setTimeout, setInterval)
   stubTimers: false,

@@ -1,10 +1,15 @@
 const { default: serverRspackConfig } = require('./serverRspackConfig');
+const addIoredisExternal = require('../shared/addIoredisExternal');
 
 const configureRsc = () => {
   const rscConfig = serverRspackConfig(true);
+  const serverBundleEntry = rscConfig.entry['server-bundle'];
 
   const rscEntry = {
-    'rsc-bundle': rscConfig.entry['server-bundle'],
+    'rsc-bundle': [
+      './app/javascript/utils/initRedisCache.ts',
+      ...(Array.isArray(serverBundleEntry) ? serverBundleEntry : [serverBundleEntry]),
+    ],
   };
   rscConfig.entry = rscEntry;
 
@@ -28,6 +33,7 @@ const configureRsc = () => {
   };
 
   rscConfig.output.filename = 'rsc-bundle.js';
+  rscConfig.externals = addIoredisExternal(rscConfig.externals);
   return rscConfig;
 };
 
