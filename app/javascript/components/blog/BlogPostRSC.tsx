@@ -1,6 +1,7 @@
 // No "use client" — this is a server component (RSC bundle)
 
 import React, { Suspense } from 'react';
+import { cacheComponent } from '../../utils/rscCache';
 import { BlogPost } from '../../types/blog';
 import { renderMarkdown } from '../../utils/renderMarkdown';
 import { BlogPostHeader } from './BlogPostHeader';
@@ -32,20 +33,24 @@ function ArticleSkeleton() {
   );
 }
 
-async function ArticleBodyRSC({ getReactOnRailsAsyncProp }: { getReactOnRailsAsyncProp: (name: string) => Promise<any> }) {
+const CachedArticleBody = cacheComponent(
+  async ({ content }: { postId: number; content: string }) => {
+    const html = renderMarkdown(content);
+    return (
+      <article
+        className="prose prose-lg max-w-none"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  },
+  { id: 'blog-article-body', revalidate: 60 },
+);
+
+async function ArticleBodyRSC({ postId, getReactOnRailsAsyncProp }: { postId: number; getReactOnRailsAsyncProp: (name: string) => Promise<any> }) {
   // Yield to the event loop so React flushes the header HTML first.
-  // Without this, the emit.call data may already be available (it fires immediately
-  // in the Rails background thread), and React would render the article inline
-  // without triggering Suspense — defeating progressive rendering.
   await new Promise<void>((r) => setTimeout(r, 0));
   const { content } = await getReactOnRailsAsyncProp('post_content');
-  const html = renderMarkdown(content);
-  return (
-    <article
-      className="prose prose-lg max-w-none"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  return <CachedArticleBody postId={postId} content={content} />;
 }
 
 export default function BlogPostRSC({ post, getReactOnRailsAsyncProp }: Props) {
@@ -64,7 +69,7 @@ export default function BlogPostRSC({ post, getReactOnRailsAsyncProp }: Props) {
       <TableOfContents entries={post.toc_entries} />
 
       <Suspense fallback={<ArticleSkeleton />}>
-        <ArticleBodyRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
+        <ArticleBodyRSC postId={post.id} getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
       </Suspense>
 
       <InteractiveSection />

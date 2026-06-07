@@ -15,6 +15,7 @@
 // Total JS savings: ~400KB+ eliminated from client bundle.
 
 import React, { Suspense } from 'react';
+import { cacheComponent } from '../../utils/rscCache';
 import { Product } from '../../types/product';
 import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
@@ -33,6 +34,26 @@ interface Props {
   product: Product;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
+
+// #83: cache the rendered RSC payload of the long-form markdown spec sheet,
+// keyed by product sku (+ the markdown source, deterministic per product).
+// The heavy marked / highlight.js / sanitize-html render runs once per product
+// then replays from cache.
+const CachedProductSpecSheet = cacheComponent(
+  async ({
+    productName,
+    productPriceUsd,
+    specMarkdown,
+  }: {
+    sku: string;
+    productName: string;
+    productPriceUsd: number;
+    specMarkdown: string;
+  }) => (
+    <ProductSpecSheet productName={productName} productPriceUsd={productPriceUsd} specMarkdown={specMarkdown} />
+  ),
+  { id: 'product-spec-sheet', revalidate: 60 },
+);
 
 export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Props) {
   return (
@@ -63,7 +84,7 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
 
         {/* Product details — below the fold, streamed to prioritize hero section for LCP */}
         <Suspense fallback={<ProductDetailsSkeleton />}>
-          <AsyncProductDetailsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
+          <AsyncProductDetailsRSC productId={product.id} getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
         </Suspense>
 
         {/* Reviews section — streams as data resolves */}
@@ -90,7 +111,8 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
 
         {/* Long-form spec sheet (markdown) + multi-currency price ladder.
             Heavy markdown stack runs SERVER-SIDE only on this variant. */}
-        <ProductSpecSheet
+        <CachedProductSpecSheet
+          sku={product.sku}
           productName={product.name}
           productPriceUsd={product.price}
           specMarkdown={buildProductSpecMarkdown(product.name, product.sku)}

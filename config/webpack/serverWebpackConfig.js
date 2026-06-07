@@ -59,6 +59,12 @@ const configureServer = (rscBundle = false) => {
     serverWebpackConfig.plugins.push(new RSCWebpackPlugin({ isServer: true, ...rscClientReferenceOptions }));
   }
   serverWebpackConfig.plugins.unshift(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
+
+  serverWebpackConfig.plugins.push(
+    new webpack.DefinePlugin({
+      'process.env.RSC_CACHE_ENABLED': JSON.stringify(process.env.RSC_CACHE_ENABLED || 'false'),
+    }),
+  );
   // Custom output for the server-bundle that matches the config in
   // config/initializers/react_on_rails.rb
   serverWebpackConfig.output = {
