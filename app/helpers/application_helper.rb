@@ -26,15 +26,22 @@ module ApplicationHelper
     "SSR, and client-side rendering side by side, backed by 24 independent " \
     "Lighthouse audits."
 
+  # Memoized so the three call sites in the layout head (title, og:title,
+  # twitter:title) resolve to one consistent value even under HTTP streaming.
   def seo_title(default = DEFAULT_TITLE)
-    return content_for(:page_title) if content_for?(:page_title)
-
-    @page_title.presence || default
+    @seo_title ||=
+      if content_for?(:page_title)
+        content_for(:page_title)
+      else
+        @page_title.presence || default
+      end
   end
 
   def seo_description(default = DEFAULT_DESCRIPTION)
-    raw = content_for?(:page_description) ? content_for(:page_description) : @page_description
-    (raw.presence || default).squish
+    @seo_description ||= begin
+      value = content_for?(:page_description) ? content_for(:page_description) : @page_description
+      (value.presence || default).squish
+    end
   end
 
   # Absolute canonical URL for the current request with any query string
@@ -56,7 +63,7 @@ module ApplicationHelper
   # schema.org JSON-LD describing the site and its publisher. Rendered once,
   # site-wide, in the layout <head>.
   def structured_data
-    JSON.generate(
+    json = JSON.generate(
       [
         {
           "@context" => "https://schema.org",
@@ -78,5 +85,9 @@ module ApplicationHelper
         }
       ]
     )
+    # json_escape neutralises <, >, & (so a stray "</script>" in any value can
+    # never break out of the script element); .html_safe then stops ActionView
+    # from re-escaping the result back into invalid JSON-LD.
+    json_escape(json).html_safe
   end
 end

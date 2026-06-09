@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Maintained manually: add/remove <url> entries here whenever indexable routes change. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Marketing / content pages -->
   <url><loc>https://rsc.reactonrails.com/</loc></url>

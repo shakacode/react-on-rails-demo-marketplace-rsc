@@ -7,7 +7,7 @@
 // Rasterises with rsvg-convert (preferred) and falls back to ImageMagick.
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,6 +72,9 @@ for (const [bin, args] of renderers) {
     // try the next renderer
   }
 }
+
+// Drop the temp SVG dir whether or not rendering succeeded.
+rmSync(dirname(tmp), { recursive: true, force: true });
 
 if (!rendered) {
   console.error('No SVG rasteriser found. Install librsvg (rsvg-convert) or ImageMagick.');
