@@ -94,6 +94,13 @@ ENV RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=true \
     PORT=3000
 
+# Deployed git commit SHA. cpflow's `build-image --commit=<sha>` passes this as a
+# build-arg (the image dockerignores `.git`, so there's no other runtime source);
+# promoting it to ENV lets BuildMetadata surface it in the footer. Declared last
+# so a new SHA only rebuilds these trivial metadata layers.
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT}
+
 EXPOSE 3000
 
 ENTRYPOINT ["/app/entrypoint.sh"]

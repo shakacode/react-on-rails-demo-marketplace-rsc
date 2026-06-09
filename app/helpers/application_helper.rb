@@ -19,6 +19,10 @@ module ApplicationHelper
   CANONICAL_HOST = "https://rsc.reactonrails.com"
   OG_IMAGE_PATH = "/og-image.png"
 
+  # Canonical GitHub repo. Single source of truth for the footer/nav source
+  # links (config/routes.rb) and the deployed-commit URL (BuildMetadata).
+  GITHUB_REPO_URL = "https://github.com/shakacode/react-server-components-marketplace-demo"
+
   DEFAULT_TITLE =
     "React Server Components for Ruby on Rails — Live Demo & Benchmarks"
   DEFAULT_DESCRIPTION =

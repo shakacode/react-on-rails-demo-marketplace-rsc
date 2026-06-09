@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   rsc_payload_route
-  repository_url = 'https://github.com/shakacode/react-server-components-marketplace-demo'
+  repository_url = ApplicationHelper::GITHUB_REPO_URL
   contributing_url = "#{repository_url}/blob/main/CONTRIBUTING.md"
   issues_url = "#{repository_url}/issues"
 
