@@ -122,8 +122,19 @@
     <footer class="border-t border-slate-200 bg-white">
       <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
         <p>Explore the code, compare the rendering strategies, and open a PR when you improve the demo.</p>
-        <div class="flex flex-wrap gap-4">
+        <div class="flex flex-wrap items-center gap-4">
           <%= link_to 'GitHub repo', source_code_path, class: 'transition hover:text-slate-900' %>
+          <%# Deployed commit SHA — only rendered when a SHA is known (omitted in local dev without git). %>
+          <% if deployed_commit_short_sha.present? %>
+            <% if deployed_commit_url.present? %>
+              <%= link_to "commit #{deployed_commit_short_sha}", deployed_commit_url,
+                    target: '_blank', rel: 'noreferrer noopener',
+                    class: 'font-mono text-xs text-slate-400 transition hover:text-slate-900',
+                    title: "Deployed commit #{deployed_commit_sha}" %>
+            <% else %>
+              <code class="font-mono text-xs text-slate-400" title="Deployed commit <%= deployed_commit_sha %>">commit <%= deployed_commit_short_sha %></code>
+            <% end %>
+          <% end %>
           <%= link_to 'Contributor guide', contributing_guide_path, class: 'transition hover:text-slate-900' %>
           <%= link_to 'Forum', 'https://forum.shakacode.com/c/reactjs', class: 'transition hover:text-slate-900' %>
           <%= link_to 'ShakaCode', 'https://www.shakacode.com', class: 'transition hover:text-slate-900' %>

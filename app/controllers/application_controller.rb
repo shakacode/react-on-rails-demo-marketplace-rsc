@@ -1,7 +1,21 @@
 class ApplicationController < ActionController::Base
   around_action :apply_db_delay
 
+  helper_method :deployed_commit_sha, :deployed_commit_short_sha, :deployed_commit_url
+
   private
+
+  def deployed_commit_sha
+    BuildMetadata.commit_sha
+  end
+
+  def deployed_commit_short_sha
+    BuildMetadata.short_commit_sha
+  end
+
+  def deployed_commit_url
+    BuildMetadata.commit_url
+  end
 
   def apply_db_delay
     delay_ms = params[:delay].to_i
