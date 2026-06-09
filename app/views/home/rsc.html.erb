@@ -1,3 +1,6 @@
+<% content_for(:page_title) { "React Server Components Streaming Demo | React on Rails" } %>
+<% content_for(:page_description) { "A minimal React Server Components streaming demo running on Ruby on Rails with React on Rails Pro." } %>
+<% content_for(:robots) { "noindex, follow" } %>
 <h2>React on Rails Pro — Server Component Demo</h2>
 
 <%= stream_react_component('SimpleServerComponent', prerender: true) %>

@@ -1,3 +1,9 @@
+<% content_for(:page_title) { "React Server Components Performance — 24 Lighthouse Audits" } %>
+<% content_for(:page_description) do %>
+  RSC vs SSR vs client-side rendering, measured. 24 independent Lighthouse audits
+  across blog, product, restaurant, and search pages — every number links to the
+  report that proves it.
+<% end %>
 <%
   # Per-feature data — every number on this page is sourced from one of the
   # 24 Lighthouse reports under public/lighthouse-reports/. Numbers are loaded
@@ -61,7 +67,8 @@
   <div class="relative max-w-5xl mx-auto px-4 sm:px-6">
     <span class="inline-block text-emerald-400 font-semibold text-xs uppercase tracking-[0.2em] mb-4">Performance Evidence</span>
     <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-5 leading-tight">
-      Every number,<br/>linked to the report that proves it.
+      React Server Components Performance
+      <span class="block text-slate-300 text-xl sm:text-2xl lg:text-3xl font-bold mt-3">Every number, linked to the report that proves it.</span>
     </h1>
     <p class="text-lg sm:text-xl text-slate-300 max-w-3xl leading-relaxed mb-8">
       24 independent performance audits across every page type. Mobile uses real-world slow network conditions; desktop uses standard browser settings. Every number links to its source report &mdash; nothing is cherry-picked.

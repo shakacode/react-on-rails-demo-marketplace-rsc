@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Maintained manually: add/remove <url> entries here whenever indexable routes change. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Marketing / content pages -->
+  <url><loc>https://rsc.reactonrails.com/</loc></url>
+  <url><loc>https://rsc.reactonrails.com/why-rsc</loc></url>
+  <url><loc>https://rsc.reactonrails.com/how-rsc-works</loc></url>
+  <url><loc>https://rsc.reactonrails.com/rsc-performance</loc></url>
+  <url><loc>https://rsc.reactonrails.com/measure</loc></url>
+
+  <!-- Demo pages: three rendering strategies per feature -->
+  <url><loc>https://rsc.reactonrails.com/blog/ssr</loc></url>
+  <url><loc>https://rsc.reactonrails.com/blog/client</loc></url>
+  <url><loc>https://rsc.reactonrails.com/blog/rsc</loc></url>
+  <url><loc>https://rsc.reactonrails.com/product/ssr</loc></url>
+  <url><loc>https://rsc.reactonrails.com/product/client</loc></url>
+  <url><loc>https://rsc.reactonrails.com/product/rsc</loc></url>
+  <url><loc>https://rsc.reactonrails.com/product-search/ssr</loc></url>
+  <url><loc>https://rsc.reactonrails.com/product-search/client</loc></url>
+  <url><loc>https://rsc.reactonrails.com/product-search/rsc</loc></url>
+  <url><loc>https://rsc.reactonrails.com/restaurant/1/ssr</loc></url>
+  <url><loc>https://rsc.reactonrails.com/restaurant/1/client</loc></url>
+  <url><loc>https://rsc.reactonrails.com/restaurant/1/rsc</loc></url>
+</urlset>

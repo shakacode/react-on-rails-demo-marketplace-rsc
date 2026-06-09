@@ -6,6 +6,14 @@ class ProductSearchController < ApplicationController
 
   enable_async_react_rendering only: [:search_rsc]
 
+  before_action :set_seo_meta
+
+  SEO_VARIANTS = {
+    "search_ssr" => "Server-Side Rendering (SSR)",
+    "search_client" => "Client-Side Rendering",
+    "search_rsc" => "React Server Components (RSC)"
+  }.freeze
+
   PER_PAGE = 24
 
   # V1: Full SSR — fetch ALL data (products + facets + stats + reviews + tags), return complete page.
@@ -36,6 +44,14 @@ class ProductSearchController < ApplicationController
   end
 
   private
+
+  def set_seo_meta
+    variant = SEO_VARIANTS[action_name]
+    @page_title = "Product Search — #{variant} | React on Rails RSC Demo" if variant
+    @page_description =
+      "A faceted product-search page with filters and independently loaded sections — " \
+      "comparing React Server Components against SSR and client-side rendering."
+  end
 
   def search_params
     params.permit(:q, :category, :brand, :min_rating, :in_stock, :price_min, :price_max, :sort, :page)

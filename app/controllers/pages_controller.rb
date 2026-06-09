@@ -8,7 +8,7 @@ class PagesController < ApplicationController
 
   def why_rsc; end
   def how_rsc_works; end
-  def search_performance; end
+  def rsc_performance; end
   def measure; end
 
   def lh_compare

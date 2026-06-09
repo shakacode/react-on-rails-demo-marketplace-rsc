@@ -132,7 +132,7 @@ function buildIndex() {
 <header class="page-head">
   <a href="/" class="back">← Back to demo</a>
   <h1>Lighthouse evidence</h1>
-  <p class="lede">Every number cited on the home page and on /search-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics, or use its app link to inspect the measured variant.</p>
+  <p class="lede">Every number cited on the home page and on /rsc-performance is derived from one of these Lighthouse reports. Lighthouse 12 with PageSpeed Insights' standard presets — mobile = Slow 4G + 4× CPU throttling; desktop = unthrottled, 1350×940 viewport. Open any row's report to see the raw audit, network waterfall, and diagnostics, or use its app link to inspect the measured variant.</p>
   <p class="lede small">See also: <a href="bundle-sizes.html">bundle-size breakdown</a> — what each variant ships to the browser, and why the RSC variants ship less.</p>
 </header>
 ${featureBlocks}

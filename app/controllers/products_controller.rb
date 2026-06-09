@@ -6,6 +6,14 @@ class ProductsController < ApplicationController
 
   enable_async_react_rendering only: [:show_rsc]
 
+  before_action :set_seo_meta
+
+  SEO_VARIANTS = {
+    "show_ssr" => "Server-Side Rendering (SSR)",
+    "show_client" => "Client-Side Rendering",
+    "show_rsc" => "React Server Components (RSC)"
+  }.freeze
+
   # V1: Full Server SSR — fetch ALL data, return complete page
   # All data must be ready before ANY HTML is sent to the browser.
   def show_ssr
@@ -37,6 +45,14 @@ class ProductsController < ApplicationController
   end
 
   private
+
+  def set_seo_meta
+    variant = SEO_VARIANTS[action_name]
+    @page_title = "Product Page — #{variant} | React on Rails RSC Demo" if variant
+    @page_description =
+      "An e-commerce product page rendered three ways — comparing React Server " \
+      "Components against SSR and client-side rendering in the React on Rails demo."
+  end
 
   def hero_image_url
     @product_data&.dig(:images, 0, "url") || @product_data&.dig(:images, 0, :url)
