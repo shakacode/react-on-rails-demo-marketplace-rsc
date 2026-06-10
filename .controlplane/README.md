@@ -165,6 +165,37 @@ a protected GitHub Environment named `production`, require reviewers, enable
 prevent self-review, and store `CPLN_TOKEN_PRODUCTION` as an environment secret
 rather than a repository secret.
 
+> **These repository variables must actually be created, not just documented.**
+> The staging wrapper's `validate-branch` preflight exits early when
+> `CPLN_ORG_STAGING` or `STAGING_APP_NAME` is missing, so the deploy never runs
+> and staging silently keeps serving the previously deployed image. A merge to
+> `main` looks fine in the PR, but staging stays stale. This was the root cause
+> of #88 (the variables were documented here but never set in repo settings).
+>
+> Verify the variables exist with:
+>
+> ```bash
+> gh variable list
+> # expected:
+> # CPLN_ORG_STAGING   shakacode-open-source-examples-staging
+> # STAGING_APP_NAME   react-server-components-demo
+> ```
+
+#### Confirming which commit staging is running
+
+The most reliable source is the GitHub Actions history: the newest **successful**
+"Deploy Staging to Control Plane" run deployed the commit it ran on.
+
+```bash
+gh run list --workflow=cpflow-deploy-staging.yml --status success \
+  --limit 1 --json headSha,createdAt,displayTitle
+```
+
+If that SHA lags `origin/main`, staging is behind: check the most recent run for
+a failed `validate-branch` (missing variables) or a failed build/deploy. An
+in-app footer SHA (tracked separately) makes the running commit visible at a
+glance without leaving the site.
+
 Validate generated wrapper changes locally with:
 
 ```bash
