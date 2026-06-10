@@ -92,7 +92,10 @@ Comment on a pull request with exactly one command:
 `+review-app-deploy` creates the review app if needed, builds and deploys the
 PR image, and comments with the review URL. Review apps intentionally skip the
 `rails db:migrate` release phase while they share the persistent demo database
-secret. After the first deploy request, later pushes to the same PR automatically
+secret, so a PR that adds a migration deploys against the unmigrated shared
+schema and typically fails at runtime (for example `PG::UndefinedColumn`).
+Validate migration PRs on staging, not review apps, before merging. After the
+first deploy request, later pushes to the same PR automatically
 redeploy the review app. `+review-app-delete` deletes the review app, and
 deletion also runs when the PR closes. Stale review apps are cleaned up nightly
 by `.github/workflows/cpflow-cleanup-stale-review-apps.yml`.
