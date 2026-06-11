@@ -165,6 +165,14 @@ Most apps do not need these:
 | `STAGING_APP_BRANCH` | Custom staging branch. The branch must also appear in `cpflow-deploy-staging.yml`'s push filter. |
 | `CPLN_CLI_VERSION` | Pin a specific `@controlplane/cli` version; normally leave unset. |
 
+Production promotion health-check and retry tuning (`HEALTH_CHECK_RETRIES`,
+`HEALTH_CHECK_INTERVAL`, `HEALTH_CHECK_ACCEPTED_STATUSES`,
+`COPY_IMAGE_RETRIES`, `COPY_IMAGE_RETRY_INTERVAL`,
+`ROLLBACK_READINESS_RETRIES`, `ROLLBACK_READINESS_INTERVAL`) can also be
+overridden with matching repository variables. Defaults and guidance live in
+the `env:` block at the top of
+`.github/workflows/cpflow-promote-staging-to-production.yml`.
+
 The PR-open help workflow posts a short command reference whenever the generated
 wrapper exists. That is intentional for configured demo repos. Forks or clones
 that copy the workflow before configuring Control Plane can remove
