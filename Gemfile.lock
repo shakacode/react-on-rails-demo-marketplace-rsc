@@ -1,33 +1,3 @@
-GIT
-  remote: https://github.com/shakacode/react_on_rails.git
-  revision: 7e3bc51af2bf70dcc10505a58bc0f23109ff3187
-  tag: v17.0.0.rc.1
-  glob: react_on_rails/*.gemspec
-  specs:
-    react_on_rails (17.0.0.rc.1)
-      addressable
-      connection_pool
-      execjs (~> 2.5)
-      rails (>= 5.2)
-      rainbow (~> 3.0)
-      shakapacker (>= 6.0)
-
-GIT
-  remote: https://github.com/shakacode/react_on_rails.git
-  revision: 7e3bc51af2bf70dcc10505a58bc0f23109ff3187
-  tag: v17.0.0.rc.1
-  glob: react_on_rails_pro/*.gemspec
-  specs:
-    react_on_rails_pro (17.0.0.rc.1)
-      addressable
-      async (>= 2.29)
-      async-http (~> 0.95)
-      execjs (~> 2.9)
-      io-endpoint (~> 0.17.0)
-      jwt (>= 2.5, < 4)
-      rainbow
-      react_on_rails (= 17.0.0.rc.1)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -328,6 +298,22 @@ GEM
       erb
       psych (>= 4.0.0)
       tsort
+    react_on_rails (17.0.0.rc.2)
+      addressable
+      connection_pool
+      execjs (~> 2.5)
+      rails (>= 5.2)
+      rainbow (~> 3.0)
+      shakapacker (>= 6.0)
+    react_on_rails_pro (17.0.0.rc.2)
+      addressable
+      async (>= 2.29)
+      async-http (~> 0.95)
+      execjs (~> 2.9)
+      io-endpoint (~> 0.17.0)
+      jwt (>= 2.5, < 4)
+      rainbow
+      react_on_rails (= 17.0.0.rc.2)
     regexp_parser (2.11.3)
     reline (0.6.3)
       io-console (~> 0.5)
@@ -451,8 +437,8 @@ DEPENDENCIES
   pry-byebug (~> 3.12)
   puma (~> 6.0)
   rails (~> 7.1)
-  react_on_rails!
-  react_on_rails_pro!
+  react_on_rails (= 17.0.0.rc.2)
+  react_on_rails_pro (= 17.0.0.rc.2)
   rspec-rails (~> 6.1)
   rubocop
   rubocop-rails

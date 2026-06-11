@@ -42,8 +42,8 @@ Before starting the migration, ensure your project meets these requirements:
 
 ```ruby
 # Gemfile
-gem 'react_on_rails', '~> 16.0'
-gem 'react_on_rails_pro', '~> 4.0'
+gem 'react_on_rails', '17.0.0.rc.2'
+gem 'react_on_rails_pro', '17.0.0.rc.2'
 ```
 
 ```json
@@ -52,14 +52,14 @@ gem 'react_on_rails_pro', '~> 4.0'
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-on-rails-pro": "latest",
-    "react-on-rails-pro-node-renderer": "latest",
-    "react-on-rails-rsc": "19.0.x"
+    "react-on-rails-pro": "17.0.0-rc.2",
+    "react-on-rails-pro-node-renderer": "17.0.0-rc.2",
+    "react-on-rails-rsc": "19.0.5-rc.7"
   }
 }
 ```
 
-> **Important:** RSC requires React 19. The RSC bundler APIs are unstable between React minor versions, so pin to a specific minor version (e.g., `19.0.x`). The `react-on-rails-rsc` package version tracks the React version it supports.
+> **Important:** RSC requires React 19. The RSC bundler APIs are unstable between React minor versions, so pin to the React on Rails RC stack's matching `react-on-rails-rsc` release. The `react-on-rails-rsc` package version tracks the React version it supports.
 
 ## Understanding the Three-Bundle Architecture
 

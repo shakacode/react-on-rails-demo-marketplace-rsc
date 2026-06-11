@@ -1,4 +1,5 @@
 import React from 'react';
+import { RatingDistribution } from '../../types/product';
 import { cacheComponent } from '../../utils/rscCache';
 import { ReviewDistributionChart } from './ReviewDistributionChart';
 
@@ -6,8 +7,14 @@ interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
+type CachedReviewStatsProps = {
+  distribution: RatingDistribution[];
+  averageRating: number;
+  totalReviews: number;
+};
+
 const CachedReviewStats = cacheComponent(
-  async ({ distribution, averageRating, totalReviews }: { distribution: number[]; averageRating: number; totalReviews: number }) => (
+  async ({ distribution, averageRating, totalReviews }: CachedReviewStatsProps) => (
     <ReviewDistributionChart
       distribution={distribution}
       averageRating={averageRating}
