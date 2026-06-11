@@ -50,8 +50,8 @@ gem 'react_on_rails_pro', '17.0.0.rc.2'
 // package.json — Required dependencies
 {
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "19.0.4",
+    "react-dom": "19.0.4",
     "react-on-rails-pro": "17.0.0-rc.2",
     "react-on-rails-pro-node-renderer": "17.0.0-rc.2",
     "react-on-rails-rsc": "19.0.5-rc.7"
@@ -59,7 +59,7 @@ gem 'react_on_rails_pro', '17.0.0.rc.2'
 }
 ```
 
-> **Important:** RSC requires React 19. The RSC bundler APIs are unstable between React minor versions, so pin to the React on Rails RC stack's matching `react-on-rails-rsc` release. The `react-on-rails-rsc` package version tracks the React version it supports.
+> **Important:** RSC requires React 19. The RSC bundler APIs are unstable between React minor versions, so pin to React 19.0.x and the React on Rails RC stack's matching `react-on-rails-rsc` release. The `react-on-rails-rsc` package version tracks the React version it supports.
 
 ## Understanding the Three-Bundle Architecture
 
