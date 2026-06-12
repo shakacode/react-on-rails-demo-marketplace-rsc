@@ -42,8 +42,8 @@ Before starting the migration, ensure your project meets these requirements:
 
 ```ruby
 # Gemfile
-gem 'react_on_rails', '17.0.0.rc.2'
-gem 'react_on_rails_pro', '17.0.0.rc.2'
+gem 'react_on_rails', '17.0.0.rc.3'
+gem 'react_on_rails_pro', '17.0.0.rc.3'
 ```
 
 ```json
@@ -52,8 +52,8 @@ gem 'react_on_rails_pro', '17.0.0.rc.2'
   "dependencies": {
     "react": "19.0.4",
     "react-dom": "19.0.4",
-    "react-on-rails-pro": "17.0.0-rc.2",
-    "react-on-rails-pro-node-renderer": "17.0.0-rc.2",
+    "react-on-rails-pro": "17.0.0-rc.3",
+    "react-on-rails-pro-node-renderer": "17.0.0-rc.3",
     "react-on-rails-rsc": "19.0.5-rc.7"
   }
 }
