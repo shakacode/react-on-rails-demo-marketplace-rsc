@@ -52,7 +52,7 @@ module BuildMetadata
     return unless status.success?
 
     valid_commit_sha(stdout.strip.presence)
-  rescue Errno::ENOENT, StandardError
+  rescue StandardError
     nil
   end
 

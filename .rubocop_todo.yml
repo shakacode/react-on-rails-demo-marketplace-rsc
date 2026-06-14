@@ -100,7 +100,6 @@ Lint/ScriptPermission:
 
 Lint/ShadowedException:
   Exclude:
-    - 'lib/build_metadata.rb'
     - 'scripts/test_goaway_repro.rb'
 
 # This cop supports safe autocorrection (--autocorrect).
