@@ -1,0 +1,15 @@
+inherit_from: .rubocop_todo.yml
+
+plugins:
+  - rubocop-rails
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: disable
+  ParserEngine: parser_whitequark
+  SuggestExtensions: false
+  Exclude:
+    - node_modules/**/*
+    - tmp/**/*
+    - vendor/**/*
