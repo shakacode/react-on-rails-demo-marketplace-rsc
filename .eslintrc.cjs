@@ -21,7 +21,6 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
   ],
-  plugins: ['@typescript-eslint', 'react', 'react-hooks'],
   settings: {
     react: {
       version: 'detect',

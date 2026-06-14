@@ -16,3 +16,13 @@ AllCops:
     - node_modules/**/*
     - tmp/**/*
     - vendor/**/*
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+Style/FormatStringToken:
+  EnforcedStyle: unannotated
+
+Style/SymbolArray:
+  EnforcedStyle: percent
+  MinSize: 10
