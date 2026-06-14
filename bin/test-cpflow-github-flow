@@ -17,7 +17,7 @@ ruby <<'RUBY'
 require "yaml"
 
 Dir[".github/actions/**/action.yml", ".github/workflows/*.yml"].sort.each do |path|
-  YAML.load_file(path, aliases: true)
+  YAML.safe_load_file(path, aliases: true)
   puts "parsed #{path}"
 end
 RUBY
@@ -28,7 +28,7 @@ require "yaml"
 
 bad = []
 Dir[".github/actions/**/action.yml"].sort.each do |path|
-  doc = YAML.load_file(path, aliases: true)
+  doc = YAML.safe_load_file(path, aliases: true)
   doc.fetch("inputs", {}).each do |name, spec|
     bad << "#{path}:#{name}" if spec["description"].to_s.include?("${{")
   end
@@ -51,7 +51,7 @@ EXPECTED_CPFLOW_CHECKOUT_REPOSITORY = "shakacode/control-plane-flow"
 refs = Hash.new { |hash, key| hash[key] = [] }
 
 Dir[".github/workflows/cpflow-*.yml"].sort.each do |path|
-  doc = YAML.load_file(path, aliases: true)
+  doc = YAML.safe_load_file(path, aliases: true)
   doc.fetch("jobs", {}).each do |job_name, job|
     next unless job.is_a?(Hash)
 
@@ -82,7 +82,7 @@ Dir[".github/workflows/cpflow-*.yml"].sort.each do |path|
 end
 
 promote_path = ".github/workflows/cpflow-promote-staging-to-production.yml"
-promote_doc = YAML.load_file(promote_path, aliases: true)
+promote_doc = YAML.safe_load_file(promote_path, aliases: true)
 promote_job = promote_doc.fetch("jobs", {})["promote-to-production"]
 
 unless promote_job

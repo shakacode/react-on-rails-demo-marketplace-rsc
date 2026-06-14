@@ -11,12 +11,12 @@ permissions:
 
 jobs:
   browser-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16@sha256:081f1bc7bd5e143dbb6e487b710bbc27712cdcfaced4c071b8e47349aa1b4171
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -28,6 +28,7 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/localhub_demo_smoke
       RAILS_ENV: production
       RAILS_SERVE_STATIC_FILES: "true"
+      RAILS_LOG_TO_STDOUT: "true"
       RENDERER_LOG_LEVEL: warn
 
     steps:
@@ -72,7 +73,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/puppeteer
-          key: puppeteer-chrome-${{ runner.os }}-${{ hashFiles('package.json') }}
+          key: puppeteer-chrome-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Chromium for Puppeteer
         # The cache key has no restore-keys, so a hit is exact and the browser
@@ -83,10 +84,15 @@ jobs:
       - name: Generate smoke credentials
         shell: bash
         run: |
+          secret_key_base="$(openssl rand -hex 64)"
+          renderer_password="$(openssl rand -hex 32)"
+          echo "::add-mask::${secret_key_base}"
+          echo "::add-mask::${renderer_password}"
+
           {
-            echo "SECRET_KEY_BASE=$(openssl rand -hex 64)"
+            echo "SECRET_KEY_BASE=${secret_key_base}"
             # Rails and node-renderer.js share this for authenticated renderer calls.
-            echo "RENDERER_PASSWORD=$(openssl rand -hex 32)"
+            echo "RENDERER_PASSWORD=${renderer_password}"
             # RAILS_MASTER_KEY is intentionally not set: the smoke app reads no
             # Rails.application.credentials keys; all secrets come from env vars.
           } >> "$GITHUB_ENV"
@@ -137,6 +143,9 @@ jobs:
               rails_ready=true
             fi
 
+            # The renderer does not expose an HTTP health endpoint, so this can
+            # only prove the port accepts connections before route smoke tests
+            # exercise the authenticated renderer request path.
             if (: >"/dev/tcp/127.0.0.1/${RENDERER_PORT}") 2>/dev/null; then
               renderer_ready=true
             fi

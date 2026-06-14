@@ -22,15 +22,17 @@ const normalizeRspackPlugins = (config) => {
   config.module.rules.forEach((rule) => {
     if (!Array.isArray(rule.use)) return;
 
+    let hasMiniCssExtract = false;
     const updatedUse = rule.use.map((use) => {
       const loader = typeof use === 'string' ? use : use.loader;
       if (!loader?.includes('mini-css-extract-plugin')) return use;
 
-      rule.type = 'javascript/auto';
+      hasMiniCssExtract = true;
       return CssExtractRspackPlugin.loader;
     });
 
     rule.use = updatedUse;
+    if (hasMiniCssExtract) rule.type = 'javascript/auto';
   });
 
   return config;

@@ -151,6 +151,29 @@ jobs:
             echo "production=${production_org}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Validate Control Plane app names
+        env:
+          STAGING_APP_NAME: ${{ vars.STAGING_APP_NAME }}
+          PRODUCTION_APP_NAME: ${{ vars.PRODUCTION_APP_NAME }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          validate_control_plane_app_name() {
+            local label="$1"
+            local value="$2"
+
+            if ! [[ "${value}" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
+              local display_value
+              display_value="$(printf '%q' "${value}")"
+              echo "::error::${label} (${display_value}) must be a valid Control Plane app name; use lowercase alphanumeric characters and hyphens only, with no leading or trailing hyphen." >&2
+              exit 1
+            fi
+          }
+
+          validate_control_plane_app_name "STAGING_APP_NAME" "${STAGING_APP_NAME}"
+          validate_control_plane_app_name "PRODUCTION_APP_NAME" "${PRODUCTION_APP_NAME}"
+
       - name: Capture release context
         id: release-context
         env:
@@ -214,7 +237,7 @@ jobs:
                 "rails"
               else
                 puts "::error::PRIMARY_WORKLOAD is not configured and app '#{app}' has multiple workloads: #{workloads.join(', ')}."
-                warn "       Set the PRIMARY_WORKLOAD repository variable to one of these workloads."
+                puts "       Set the PRIMARY_WORKLOAD repository variable to one of these workloads."
                 exit 1
               end
             elsif workloads.include?(requested_primary)
@@ -355,6 +378,9 @@ jobs:
             workload_json="$(cpln workload get "${workload_name}" --gvc "${PRODUCTION_APP_NAME}" --org "${CPLN_ORG_PRODUCTION}" -o json)"
             workload_image="$(echo "${workload_json}" | jq -r --arg container_name "${workload_name}" '[.spec.containers[]? | select(.name == $container_name) | .image][0] // empty')"
             workload_containers="$(echo "${workload_json}" | jq -c '.spec.containers | map({name, image})')"
+            # Control Plane workload versions are monotonic deployment metadata.
+            # Rollback restores the previous container images and lets Control
+            # Plane assign the next version for that rollback update.
             workload_version="$(echo "${workload_json}" | jq -r '.version')"
 
             if [[ -z "${workload_image}" ]]; then
@@ -407,6 +433,7 @@ jobs:
 
           selected_workload="${PRIMARY_WORKLOAD}"
           selected_image=""
+          staging_images='{}'
 
           while IFS= read -r workload_name; do
             [[ -n "${workload_name}" ]] || continue
@@ -419,6 +446,14 @@ jobs:
               exit 1
             fi
 
+            staging_images="$(
+              jq -c \
+                --arg workload "${workload_name}" \
+                --arg image "${workload_image}" \
+                '. + {($workload): $image}' \
+                <<< "${staging_images}"
+            )"
+
             if [[ "${workload_name}" == "${selected_workload}" ]]; then
               selected_image="${workload_image}"
             fi
@@ -427,6 +462,17 @@ jobs:
           staging_image_ref="${selected_image}"
           if [[ -z "${staging_image_ref}" ]]; then
             echo "::error::Could not determine the deployed staging image for primary workload '${selected_workload}'." >&2
+            exit 1
+          fi
+
+          mismatched_images="$(
+            jq -r --arg selected "${selected_image}" \
+              'to_entries[] | select(.value != $selected) | "\(.key)=\(.value)"' \
+              <<< "${staging_images}"
+          )"
+          if [[ -n "${mismatched_images}" ]]; then
+            echo "::error::Staging workloads do not all use the primary workload image. This promotion workflow copies and deploys one app image, so mixed workload images must be promoted by a workflow that handles per-workload image mapping." >&2
+            echo "${mismatched_images}" >&2
             exit 1
           fi
 
@@ -499,6 +545,8 @@ jobs:
           # cpln image query treats --max values less than 1 as unlimited.
           # Keep this unbounded: the cpln CLI exposes --max but no server-side
           # sort option, so a bounded page can miss the highest numeric tag.
+          # If image accumulation makes this slow, clean old production images
+          # before capping this query.
           latest_number="$(
             cpln image query --org "${CPLN_ORG_PRODUCTION}" --prop "name~${PRODUCTION_APP_NAME}:" --max 0 -o json |
               jq -r --arg prefix "${PRODUCTION_APP_NAME}:" \
@@ -551,7 +599,7 @@ jobs:
               copy_status=0
               break
             else
-              copy_status=$? # Exit code of the failing imagetools command.
+              copy_status=$? # Exit code of the failing imagetools command (inspect or create).
             fi
 
             if [[ "${attempt}" -lt "${copy_image_attempts}" ]]; then

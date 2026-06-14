@@ -13,6 +13,8 @@ const DEFAULT_ROUTES = [
   '/measure',
   '/rsc-performance',
   '/rsc',
+  // Legacy /analytics/* benchmark routes are no longer mounted; the active
+  // performance comparison page is /rsc-performance.
   '/restaurant/1/ssr', '/restaurant/1/client', '/restaurant/1/rsc',
   '/product/ssr', '/product/client', '/product/rsc',
   '/product-search/ssr', '/product-search/client', '/product-search/rsc',
