@@ -39,7 +39,7 @@ def generate_self_signed_cert
   ef.issuer_certificate = cert
   cert.add_extension(ef.create_extension("subjectAltName", "DNS:localhost,IP:127.0.0.1"))
 
-  cert.sign(key, OpenSSL::Digest::SHA256.new)
+  cert.sign(key, OpenSSL::Digest.new("SHA256"))
   [key, cert]
 end
 

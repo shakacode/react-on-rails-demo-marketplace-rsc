@@ -89,11 +89,6 @@ Layout/MultilineMethodCallIndentation:
     - 'scripts/test_goaway_repro.rb'
 
 # This cop supports safe autocorrection (--autocorrect).
-Lint/DeprecatedOpenSSLConstant:
-  Exclude:
-    - 'scripts/test_goaway_repro.rb'
-
-# This cop supports safe autocorrection (--autocorrect).
 Lint/ScriptPermission:
   Exclude:
     - 'scripts/test_goaway_repro.rb'
