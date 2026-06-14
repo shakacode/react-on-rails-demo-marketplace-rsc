@@ -93,11 +93,6 @@ Lint/DeprecatedOpenSSLConstant:
   Exclude:
     - 'scripts/test_goaway_repro.rb'
 
-# This cop supports unsafe autocorrection (--autocorrect-all).
-Lint/InterpolationCheck:
-  Exclude:
-    - 'app/services/restaurant_detail_data.rb'
-
 # This cop supports safe autocorrection (--autocorrect).
 Lint/ScriptPermission:
   Exclude:
@@ -228,10 +223,6 @@ Rails/Output:
     - 'db/seed_scripts/search_product_seeder.rb'
     - 'db/seed_scripts/small_seeder.rb'
     - 'db/seeds.rb'
-
-Rails/OutputSafety:
-  Exclude:
-    - 'app/helpers/application_helper.rb'
 
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: NotNilAndNotEmpty, NotBlank, UnlessBlank.

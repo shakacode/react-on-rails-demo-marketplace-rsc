@@ -112,7 +112,7 @@ class RestaurantDetailData
       'Bon Appétit Hot 10',
       'Wine Spectator Award of Excellence',
       'OpenTable Diners\' Choice',
-      'Local Critic\'s Pick — Top Five #{restaurant.cuisine_type}',
+      "Local Critic's Pick — Top Five #{restaurant.cuisine_type}",
       'Tasting Table Top 50 Nationwide',
     ].sample(rng.rand(3..5), random: rng)
 
@@ -169,7 +169,7 @@ class RestaurantDetailData
 
       Our story began in #{rng.rand(2008..2016)} when two friends — one a #{(['chef', 'sommelier', 'pastry cook', 'forager']).sample(random: rng)} and the other a #{(['restaurateur', 'farmer', 'food writer', 'designer']).sample(random: rng)} — sat at a kitchen table in #{restaurant.city || 'town'} and sketched out what would become #{restaurant.name}.
 
-      Back then, the cuisine scene in #{restaurant.city || 'this neighborhood'} was a different shape. There were #{(['no proper #{restaurant.cuisine_type} restaurants', 'three competing #{restaurant.cuisine_type} restaurants', 'one institution and a dozen imitators']).sample(random: rng)}. We saw an opportunity to do something quieter, smaller, and more intentional.
+      Back then, the cuisine scene in #{restaurant.city || 'this neighborhood'} was a different shape. There were #{(["no proper #{restaurant.cuisine_type} restaurants", "three competing #{restaurant.cuisine_type} restaurants", 'one institution and a dozen imitators']).sample(random: rng)}. We saw an opportunity to do something quieter, smaller, and more intentional.
 
       Our first dining room had #{rng.rand(18..32)} seats and one shared bathroom. Our menu had nine dishes. We changed the menu every two weeks for the first year because we were figuring out who we were.
 
