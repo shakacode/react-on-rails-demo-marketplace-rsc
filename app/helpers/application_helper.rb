@@ -92,6 +92,8 @@ module ApplicationHelper
     # json_escape neutralises <, >, & (so a stray "</script>" in any value can
     # never break out of the script element); .html_safe then stops ActionView
     # from re-escaping the result back into invalid JSON-LD.
+    # rubocop:disable Rails/OutputSafety
     json_escape(json).html_safe
+    # rubocop:enable Rails/OutputSafety
   end
 end

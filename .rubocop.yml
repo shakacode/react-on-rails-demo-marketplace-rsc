@@ -1,0 +1,27 @@
+inherit_from: .rubocop_todo.yml
+
+plugins:
+  - rubocop-rails
+
+AllCops:
+  TargetRubyVersion: 3.3
+  # Warn about cops added by future RuboCop upgrades without failing this baseline.
+  NewCops: pending
+  # Avoid the local Prism parser load failure: cannot load such file --
+  # prism/translation/parser34.
+  ParserEngine: parser_whitequark
+  SuggestExtensions: false
+  Exclude:
+    - node_modules/**/*
+    - tmp/**/*
+    - vendor/**/*
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+Style/FormatStringToken:
+  EnforcedStyle: unannotated
+
+Style/SymbolArray:
+  EnforcedStyle: percent
+  MinSize: 10

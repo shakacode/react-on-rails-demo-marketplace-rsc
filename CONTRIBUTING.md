@@ -51,6 +51,22 @@ This repo exists to make SSR, client components, and React Server Components eas
 - If you touch the RSC pipeline, confirm the SSR and client versions still render the same core information.
 - If you change deployment behavior, update [`.controlplane/README.md`](./.controlplane/README.md) as part of the same PR.
 
+## Local validation
+
+Use the repo-specific verification commands before opening or updating a PR:
+
+```bash
+script/demo-fleet-verify
+pnpm type-check
+pnpm lint
+bundle exec rubocop
+git diff --check
+```
+
+`script/demo-fleet-verify` is the broad demo gate. It runs the Rails test task, RSC import checks, generated pack checks, the production build, and RSC chunk verification.
+
+`pnpm lint` checks the JavaScript and TypeScript app tree with the repo ESLint config. `bundle exec rubocop` checks Ruby files with the repo RuboCop config and the current TODO baseline; remove entries from `.rubocop_todo.yml` as existing Ruby style debt is fixed.
+
 ## Documentation to read first
 
 - [README.md](./README.md)
