@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 const { RSCRspackPlugin } = require('react-on-rails-rsc/RspackPlugin');
+const rspack = require('@rspack/core');
 const path = require('path');
 const commonRspackConfig = require('./commonRspackConfig');
 
@@ -67,16 +68,17 @@ const configureServer = (rscBundle = false) => {
     }));
   }
 
-  // Rspack has LimitChunkCountPlugin at the same path
-  let LimitChunkCountPlugin;
-  try {
-    LimitChunkCountPlugin = require('@rspack/core').optimize.LimitChunkCountPlugin;
-  } catch {
-    // Fallback: try dynamic import for ESM-only @rspack/core
+  if (rspack.optimize?.LimitChunkCountPlugin) {
+    serverConfig.plugins.unshift(new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
   }
-  if (LimitChunkCountPlugin) {
-    serverConfig.plugins.unshift(new LimitChunkCountPlugin({ maxChunks: 1 }));
-  }
+
+  serverConfig.plugins.push(
+    new rspack.DefinePlugin({
+      'process.env.REACT_ON_RAILS_RSC_BUNDLE': JSON.stringify(rscBundle ? 'true' : 'false'),
+      'process.env.RSC_CACHE_ENABLED': JSON.stringify(process.env.RSC_CACHE_ENABLED || 'false'),
+      'process.env.RSC_L1_CACHE_MAX_ENTRIES': JSON.stringify(process.env.RSC_L1_CACHE_MAX_ENTRIES || '50'),
+    }),
+  );
 
   serverConfig.output = {
     filename: 'server-bundle.js',
@@ -126,7 +128,6 @@ const configureServer = (rscBundle = false) => {
   serverConfig.devtool = 'eval';
   serverConfig.target = 'node';
   serverConfig.node = false;
-
   return serverConfig;
 };
 
