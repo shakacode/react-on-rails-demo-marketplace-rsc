@@ -1,7 +1,40 @@
 const { RSCRspackPlugin } = require('react-on-rails-rsc/RspackPlugin');
+const { CssExtractRspackPlugin } = require('@rspack/core');
+const { getPlugins: getRspackPlugins } = require('shakapacker/package/plugins/rspack.js');
 const commonRspackConfig = require('./commonRspackConfig');
 
 const isHMR = process.env.HMR;
+
+const normalizeRspackPlugins = (config) => {
+  const generatedAssetPluginNames = new Set([
+    'EnvironmentPlugin',
+    'CssExtractRspackPlugin',
+    'MiniCssExtractPlugin',
+    'WebpackManifestPlugin',
+    'WebpackAssetsManifest',
+  ]);
+
+  config.plugins = [
+    ...getRspackPlugins(),
+    ...config.plugins.filter((plugin) => !generatedAssetPluginNames.has(plugin?.constructor?.name)),
+  ];
+
+  config.module.rules.forEach((rule) => {
+    if (!Array.isArray(rule.use)) return;
+
+    const updatedUse = rule.use.map((use) => {
+      const loader = typeof use === 'string' ? use : use.loader;
+      if (!loader?.includes('mini-css-extract-plugin')) return use;
+
+      rule.type = 'javascript/auto';
+      return CssExtractRspackPlugin.loader;
+    });
+
+    rule.use = updatedUse;
+  });
+
+  return config;
+};
 
 const overrideCssModulesConfig = (config) => {
   const cssRule = config.module.rules.find(
@@ -83,7 +116,7 @@ const configureClient = () => {
   };
   clientConfig.optimization.splitChunks = splitChunks;
 
-  return overrideCssModulesConfig(clientConfig);
+  return normalizeRspackPlugins(overrideCssModulesConfig(clientConfig));
 };
 
 module.exports = configureClient;

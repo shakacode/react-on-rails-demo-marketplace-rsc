@@ -72,7 +72,7 @@ cpflow run 'rails db:seed' -a react-server-components-demo
 ### Review apps
 
 This repo uses the generated Control Plane Flow GitHub Actions wrappers pinned
-to `shakacode/control-plane-flow@v5.0.4`.
+to `shakacode/control-plane-flow@v5.1.1`.
 
 Review app names are built from the prefix
 `react-server-components-demo-review`, so pull request 123 deploys as:
@@ -90,11 +90,15 @@ Comment on a pull request with exactly one command:
 ```
 
 `+review-app-deploy` creates the review app if needed, builds and deploys the
-PR image, runs the `rails db:migrate` release phase, and comments with the
-review URL. After the first deploy request, later pushes to the same PR
-automatically redeploy the review app. `+review-app-delete` deletes the review
-app, and deletion also runs when the PR closes. Stale review apps are cleaned up
-nightly by `.github/workflows/cpflow-cleanup-stale-review-apps.yml`.
+PR image, and comments with the review URL. Review apps intentionally skip the
+`rails db:migrate` release phase while they share the persistent demo database
+secret, so a PR that adds a migration deploys against the unmigrated shared
+schema and typically fails at runtime (for example `PG::UndefinedColumn`).
+Validate migration PRs on staging, not review apps, before merging. After the
+first deploy request, later pushes to the same PR automatically
+redeploy the review app. `+review-app-delete` deletes the review app, and
+deletion also runs when the PR closes. Stale review apps are cleaned up nightly
+by `.github/workflows/cpflow-cleanup-stale-review-apps.yml`.
 
 In public repositories, automatic pull request review-app deploys skip fork PR
 heads because Docker builds use repository secrets. Manual comment or dispatch
@@ -122,7 +126,10 @@ The review apps reuse the Control Plane secret dictionary named
 `react-server-components-demo-secrets`. Both app entries set `secrets_name` to
 this dictionary so `cpflow setup-app` binds each workload identity to the
 matching secret policy, and the app template references it through
-`{{APP_SECRETS}}`. Confirm the dictionary has values for:
+`{{APP_SECRETS}}`. The review-app entry also sets `secrets_policy_name` and a
+`shared_secret_grants` entry so cpflow can repair existing review-app identities
+without creating per-review secret dictionaries. Confirm the dictionary has
+values for:
 
 ```text
 DATABASE_URL

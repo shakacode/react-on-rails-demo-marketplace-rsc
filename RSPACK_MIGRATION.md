@@ -82,7 +82,7 @@ Additionally, without injection, rspack's production module concatenation merged
 
 **Result:** Zero renderer errors in both dev and prod. SSR HTML output matches webpack within 0.03%.
 
-**Upstream:** The Rspack plugin fixes are available in `react-on-rails-rsc@19.0.5-rc.2`.
+**Upstream:** The Rspack plugin fixes are available in `react-on-rails-rsc@19.0.5-rc.5`.
 
 ## Page status
 

@@ -1,0 +1,167 @@
+name: Browser Smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/localhub_demo_smoke
+      RAILS_ENV: production
+      RAILS_SERVE_STATIC_FILES: "true"
+      RENDERER_LOG_LEVEL: warn
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev
+
+      - name: Write Ruby version file
+        shell: bash
+        run: |
+          ruby_version="$(awk -F'"' '/^[[:space:]]*ruby[[:space:]]*=/ { print $2; exit }' mise.toml)"
+          if [[ -z "${ruby_version}" ]]; then
+            echo "::error::Could not read Ruby version from mise.toml"
+            exit 1
+          fi
+          printf '%s\n' "${ruby_version}" > .ruby-version
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f
+        with:
+          ruby-version-file: .ruby-version
+          bundler-cache: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a
+
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Puppeteer Chromium
+        id: puppeteer-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-chrome-${{ runner.os }}-${{ hashFiles('package.json') }}
+
+      - name: Install Chromium for Puppeteer
+        # The cache key has no restore-keys, so a hit is exact and the browser
+        # for this Puppeteer version is already in ~/.cache/puppeteer.
+        if: steps.puppeteer-cache.outputs.cache-hit != 'true'
+        run: npx puppeteer browsers install chrome
+
+      - name: Generate smoke credentials
+        shell: bash
+        run: |
+          {
+            echo "SECRET_KEY_BASE=$(openssl rand -hex 64)"
+            # Rails and node-renderer.js share this for authenticated renderer calls.
+            echo "RENDERER_PASSWORD=$(openssl rand -hex 32)"
+            # RAILS_MASTER_KEY is intentionally not set: the smoke app reads no
+            # Rails.application.credentials keys; all secrets come from env vars.
+          } >> "$GITHUB_ENV"
+
+      - name: Prepare database
+        # In production mode, db:prepare seeds a newly-created database. Running
+        # db:seed again duplicates order numbers and fails the smoke setup.
+        run: bin/rails db:prepare
+
+      - name: Build production assets
+        run: bin/build-production
+
+      - name: Smoke real routes in Chromium
+        shell: bash
+        env:
+          BASE_URL: http://127.0.0.1:3010
+          NODE_ENV: production
+          RENDERER_PORT: 3800
+        run: |
+          renderer_pid=""
+          rails_pid=""
+          trap '[[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
+            [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true' EXIT
+
+          node node-renderer.js > /tmp/marketplace-renderer.log 2>&1 &
+          renderer_pid=$!
+          bundle exec rails server -b 127.0.0.1 -p 3010 > /tmp/marketplace-rails.log 2>&1 &
+          rails_pid=$!
+
+          ready=false
+          for _ in {1..60}; do
+            if ! kill -0 "$renderer_pid" 2>/dev/null; then
+              echo "Node renderer exited before becoming ready"
+              cat /tmp/marketplace-renderer.log
+              exit 1
+            fi
+
+            if ! kill -0 "$rails_pid" 2>/dev/null; then
+              echo "Rails exited before becoming ready"
+              cat /tmp/marketplace-rails.log
+              exit 1
+            fi
+
+            rails_ready=false
+            renderer_ready=false
+
+            if curl -fsS http://127.0.0.1:3010/up >/dev/null; then
+              rails_ready=true
+            fi
+
+            if (: >"/dev/tcp/127.0.0.1/${RENDERER_PORT}") 2>/dev/null; then
+              renderer_ready=true
+            fi
+
+            if [[ "$rails_ready" == "true" && "$renderer_ready" == "true" ]]; then
+              ready=true
+              break
+            fi
+
+            sleep 1
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            echo "Rails and Node renderer did not become ready in time"
+            cat /tmp/marketplace-renderer.log
+            cat /tmp/marketplace-rails.log
+            exit 1
+          fi
+
+          pnpm smoke:routes
+
+      - name: Dump server logs on failure
+        if: failure()
+        run: |
+          echo "=== Rails log ==="
+          cat /tmp/marketplace-rails.log || true
+          echo "=== Node renderer log ==="
+          cat /tmp/marketplace-renderer.log || true
