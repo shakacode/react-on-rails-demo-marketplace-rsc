@@ -31,7 +31,10 @@ module.exports = {
     // Existing demo/RSC boundary code intentionally keeps legacy React imports
     // and loose payload types; keep the first lint gate focused on new issues.
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^(_|React$)' },
+    ],
     'react/no-unescaped-entities': 'off',
     'react/prop-types': 'off',
     'react-hooks/exhaustive-deps': 'error',

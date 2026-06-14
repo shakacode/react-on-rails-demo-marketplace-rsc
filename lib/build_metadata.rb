@@ -52,7 +52,7 @@ module BuildMetadata
     return unless status.success?
 
     valid_commit_sha(stdout.strip.presence)
-  rescue StandardError
+  rescue StandardError # includes Errno::ENOENT when git is unavailable locally
     nil
   end
 
