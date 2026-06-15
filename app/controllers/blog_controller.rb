@@ -4,10 +4,10 @@ class BlogController < ApplicationController
   include ReactOnRailsPro::RSCPayloadRenderer
   include ReactOnRailsPro::AsyncRendering
 
-  enable_async_react_rendering only: [
-    :post_rsc, :post_rsc_simple,
-    :post_rsc_step1, :post_rsc_step1b, :post_rsc_step1c,
-    :post_rsc_step2, :post_rsc_step3, :post_rsc_step4, :post_rsc_step5
+  enable_async_react_rendering only: %i[
+    post_rsc post_rsc_cached post_rsc_simple
+    post_rsc_step1 post_rsc_step1b post_rsc_step1c
+    post_rsc_step2 post_rsc_step3 post_rsc_step4 post_rsc_step5
   ]
 
   before_action :set_seo_meta
@@ -44,6 +44,17 @@ class BlogController < ApplicationController
     @post_meta = post.except(:content)
     @content_delay = ENV.fetch("CONTENT_DELAY_MS", "0").to_f / 1000
     stream_view_containing_react_components(template: "blog/post_rsc")
+  end
+
+  # V3 cached: identical RSC streaming to post_rsc, but the view wraps the component in
+  # cached_stream_react_component_with_async_props. The first request is a cold miss that streams live
+  # and writes every chunk through to the cache; subsequent requests are cache hits that replay those
+  # chunks and skip the content fetch, the two simulated sleeps, and the node-renderer round-trip.
+  def post_rsc_cached
+    post = BlogData.find_post(1)
+    @post_meta = post.except(:content)
+    @content_delay = ENV.fetch("CONTENT_DELAY_MS", "0").to_f / 1000
+    stream_view_containing_react_components(template: "blog/post_rsc_cached")
   end
 
   # V4: RSC Simple — markdown rendered server-side, all data passed upfront

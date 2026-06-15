@@ -44,6 +44,7 @@ Rails.application.routes.draw do
   get '/blog/ssr', to: 'blog#post_ssr'       # V1: marked + highlight.js shipped to client
   get '/blog/client', to: 'blog#post_client'  # V2: Libraries loaded in async chunk
   get '/blog/rsc', to: 'blog#post_rsc'              # V3: Libraries stay server-side + streaming
+  get '/blog/rsc-cached', to: 'blog#post_rsc_cached' # V3 + cache (cached_stream_react_component_with_async_props)
   get '/blog/rsc-simple', to: 'blog#post_rsc_simple' # V4: Libraries stay server-side, all data upfront
 
   # RSC debug steps (incremental complexity)
