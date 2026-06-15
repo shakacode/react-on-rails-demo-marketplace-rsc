@@ -72,6 +72,35 @@ Two corollaries from the data:
   set on this view-level *stream* cache (only on the Hash-returning `react_component` path), so hits
   are verified via the helper's log markers / timing, not that flag.
 
+## 3b. Cached SSR vs cached RSC — head to head (web vitals)
+
+Comparing the two *cached* variants directly (both warm hits), so server-render latency is removed
+from both and only the inherent SSR-vs-RSC differences remain:
+
+| Metric | blog SSR cached | blog RSC cached | search SSR cached | search RSC cached |
+|---|---|---|---|---|
+| TTFB | 27 ms | 32 ms | 27 ms | 28 ms |
+| FCP | 170 ms | 240 ms | 154 ms | 246 ms |
+| **LCP** | **170 ms** | 240 ms | **172 ms** | 338 ms |
+| **TBT** | 859 ms | **8 ms** | 193 ms | **0.5 ms** |
+| CLS | 0 | 0 | 0 | 0 |
+| JS shipped | 3386 KB | **1403 KB** | 3525 KB | **1482 KB** |
+
+- **TTFB — a tie** (~27–32 ms). Both are cache hits replaying bytes; neither renders.
+- **LCP / FCP — cached SSR wins** (blog 170 vs 240, search 172 vs 338). With render latency cached
+  away, SSR delivers the LCP element in one synchronous HTML payload, whereas cached RSC still
+  *progressively* streams + client-reconciles its chunks, so the LCP element paints slightly later
+  (most visible on search, where the results — the LCP content — arrive as a streamed section).
+- **TBT — cached RSC wins by ~100×** (blog 8 vs 859 ms, search 0.5 vs 193 ms). RSC ships ~half the
+  JavaScript (1.4 MB vs 3.4 MB), so far less main-thread blocking during hydration. This gap is an
+  RSC property, untouched by caching.
+- **CLS — tie at 0** for both (Suspense fallbacks preserve real heights).
+
+**Bottom line:** caching does not change *which* strategy wins each metric — it only erases the
+server-render-time gap that previously made uncached SSR look slow. Once both are cached, the choice
+is the usual SSR-vs-RSC trade-off, now both served at cache-hit speed: **cached SSR for the lowest
+LCP, cached RSC for far lower TBT and ~half the JS.**
+
 ## 4. Takeaways
 
 - Fragment caching is a large win for **server render time / TTFB** on every page, SSR and RSC alike
