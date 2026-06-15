@@ -18,6 +18,13 @@ export const PAGES = {
   'dashboard-ssr': { path: '/analytics/ssr', label: 'Dashboard SSR', hasStreaming: false },
   'dashboard-client': { path: '/analytics/client', label: 'Dashboard Client', hasStreaming: false },
   'dashboard-rsc': { path: '/analytics/rsc', label: 'Dashboard RSC', hasStreaming: true },
+  // Cached variants (issue #97) — fragment-cached siblings of the SSR/RSC pages above.
+  'ssr-cached': { path: '/blog/ssr-cached', label: 'SSR cached', hasStreaming: false },
+  'rsc-cached': { path: '/blog/rsc-cached', label: 'RSC cached', hasStreaming: true },
+  'product-ssr-cached': { path: '/product/ssr-cached', label: 'Product SSR cached', hasStreaming: false, selectors: { likeButton: 'button', relatedHeadingText: 'Customers Also Viewed' } },
+  'product-rsc-cached': { path: '/product/rsc-cached', label: 'Product RSC cached', hasStreaming: true, selectors: { likeButton: 'button', relatedHeadingText: 'Customers Also Viewed' } },
+  'search-ssr-cached': { path: '/product-search/ssr-cached', label: 'Search SSR cached', hasStreaming: false },
+  'search-rsc-cached': { path: '/product-search/rsc-cached', label: 'Search RSC cached', hasStreaming: true },
 };
 
 export const SELECTORS = {
