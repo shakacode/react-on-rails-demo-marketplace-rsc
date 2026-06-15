@@ -5,7 +5,7 @@ class BlogController < ApplicationController
   include ReactOnRailsPro::AsyncRendering
 
   enable_async_react_rendering only: %i[
-    post_rsc post_rsc_cached post_rsc_simple
+    post_rsc post_rsc_cached post_rsc_simple post_rsc_simple_cached
     post_rsc_step1 post_rsc_step1b post_rsc_step1c
     post_rsc_step2 post_rsc_step3 post_rsc_step4 post_rsc_step5
   ]
@@ -63,6 +63,16 @@ class BlogController < ApplicationController
     @post_data = post
     @related_posts = BlogData.related_posts(post[:id])
     stream_view_containing_react_components(template: "blog/post_rsc_simple")
+  end
+
+  # V1 cached: cached_react_component. Props (incl. the simulated content delay) are built lazily in
+  # the view block, so on a cache hit the data fetch, the delay, and the prerender are all skipped.
+  def post_ssr_cached; end
+
+  # V4 cached: cached_stream_react_component (plain stream, no async props). On a hit the streamed
+  # chunks replay and the data fetch + node render are skipped.
+  def post_rsc_simple_cached
+    stream_view_containing_react_components(template: "blog/post_rsc_simple_cached")
   end
 
   # === RSC debug steps (incremental complexity) ===

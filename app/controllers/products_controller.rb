@@ -3,8 +3,9 @@
 class ProductsController < ApplicationController
   include ReactOnRailsPro::RSCPayloadRenderer
   include ReactOnRailsPro::AsyncRendering
+  include ProductSerialization
 
-  enable_async_react_rendering only: [:show_rsc]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached]
 
   before_action :set_seo_meta
 
@@ -44,7 +45,34 @@ class ProductsController < ApplicationController
     stream_view_containing_react_components(template: "products/show_rsc")
   end
 
+  # V1 cached: cached_react_component. Only the cheap base serialize runs eagerly (also powers the
+  # hero preload); the expensive reviews/related/stats are built lazily in the view block
+  # (product_ssr_props) and skipped, along with the prerender, on a cache hit.
+  def show_ssr_cached
+    @product = find_product
+    @product_data = serialize_product(@product)
+  end
+
+  # V3 cached: cached_stream_react_component_with_async_props. On a hit, the async block
+  # (reviews/related/etc.) and the node render are skipped; chunks are replayed from cache.
+  def show_rsc_cached
+    @product = find_product
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
+    stream_view_containing_react_components(template: "products/show_rsc_cached")
+  end
+
   private
+
+  # Full SSR props, built lazily for the cached view block (evaluated only on a cache miss).
+  def product_ssr_props
+    {
+      product: @product_data,
+      reviews: @product.top_reviews(10).map { |r| serialize_review(r) },
+      review_stats: @product.review_stats,
+      related_products: @product.related_products(4).map { |p| serialize_product_card(p) }
+    }
+  end
+  helper_method :product_ssr_props
 
   def set_seo_meta
     variant = SEO_VARIANTS[action_name]
@@ -65,55 +93,5 @@ class ProductsController < ApplicationController
     else
       Product.first!
     end
-  end
-
-  def serialize_product(product)
-    {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price.to_f,
-      original_price: product.original_price&.to_f,
-      category: product.category,
-      brand: product.brand,
-      sku: product.sku,
-      images: product.images,
-      specs: product.specs,
-      features: product.features,
-      average_rating: product.average_rating.to_f,
-      review_count: product.review_count,
-      stock_quantity: product.stock_quantity,
-      in_stock: product.in_stock,
-      discount_percentage: product.discount_percentage
-    }
-  end
-
-  def serialize_review(review)
-    {
-      id: review.id,
-      rating: review.rating,
-      title: review.title,
-      comment: review.comment,
-      reviewer_name: review.reviewer_name,
-      verified_purchase: review.verified_purchase,
-      helpful_count: review.helpful_count,
-      created_at: review.created_at.iso8601
-    }
-  end
-
-  def serialize_product_card(product)
-    {
-      id: product.id,
-      name: product.name,
-      price: product.price.to_f,
-      original_price: product.original_price&.to_f,
-      category: product.category,
-      brand: product.brand,
-      images: product.images,
-      average_rating: product.average_rating.to_f,
-      review_count: product.review_count,
-      in_stock: product.in_stock,
-      discount_percentage: product.discount_percentage
-    }
   end
 end

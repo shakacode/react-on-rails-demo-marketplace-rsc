@@ -1,0 +1,10 @@
+<%# Cached variant of blog/post_ssr.html.erb. Props (incl. the simulated content delay) are built in
+    the block, so on a cache hit the data fetch, the delay, and the SSR prerender are all skipped.
+    Blog content is static demo data, so the post id is a stable cache key. The CONTENT_DELAY_MS is
+    deliberately NOT in the key (it changes timing, not output). %>
+<%= cached_react_component("BlogPostSSR", cache_key: ["blog_ssr", 1], prerender: true) do
+  content_delay = ENV.fetch("CONTENT_DELAY_MS", "0").to_f / 1000
+  sleep(content_delay) if content_delay > 0
+  post = BlogData.find_post(1)
+  { post: post, related_posts: BlogData.related_posts(post[:id]) }
+end %>

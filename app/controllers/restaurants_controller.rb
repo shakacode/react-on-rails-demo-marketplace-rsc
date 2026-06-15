@@ -4,7 +4,7 @@ class RestaurantsController < ApplicationController
   include ReactOnRailsPro::RSCPayloadRenderer
   include ReactOnRailsPro::AsyncRendering
 
-  enable_async_react_rendering only: %i[show_rsc]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached]
 
   before_action :set_seo_meta
 
@@ -37,6 +37,19 @@ class RestaurantsController < ApplicationController
     @restaurant = Restaurant.find(params[:id])
     @detail = RestaurantDetailData.for(@restaurant)
     stream_view_containing_react_components(template: "restaurants/show_rsc")
+  end
+
+  # V1 cached: cached_react_component. On a cache hit, both the detail assembly (built lazily in the
+  # view block) and the SSR prerender are skipped.
+  def show_ssr_cached
+    @restaurant = Restaurant.find(params[:id])
+  end
+
+  # V3 cached: cached_stream_react_component. On a hit, the streamed chunks are replayed and the
+  # detail assembly (view block) + node render are skipped.
+  def show_rsc_cached
+    @restaurant = Restaurant.find(params[:id])
+    stream_view_containing_react_components(template: "restaurants/show_rsc_cached")
   end
 
   private
