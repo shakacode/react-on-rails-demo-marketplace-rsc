@@ -144,18 +144,51 @@ Contributing factors (verified, none a real regression):
   Suspense reconciliation on top of HTML paint), which is why a tiny sample can misreport it. The
   *median* is unaffected.
 
-Caveat: this is unthrottled local dev. A throttled / production profile (slow CPU + network) is the
-right next step to confirm mobile behaviour; proving a *real* RSC LCP mechanism would require a
-main-thread trace showing Flight decode / Suspense reveal delaying the actual LCP candidate — which
-the current data does not show. (This investigation was cross-reviewed with Codex gpt-5.5 @ xhigh.)
+Caveat: this section is unthrottled local dev. **§3d re-runs it on a production build under throttled
+mobile** — and far from a regression, cached RSC there is ~1 s faster on LCP than cached SSR, because
+dev's fast CPU was hiding SSR's JavaScript-execution cost. (This investigation was cross-reviewed with
+Codex gpt-5.5 @ xhigh.)
+
+## 3d. Production + throttled-mobile profile (the realistic result)
+
+The §2–§3c numbers are unthrottled local **dev**. On a fast desktop CPU, parsing a few MB of JS is
+near-instant, so SSR's JS weight doesn't hurt LCP and SSR/RSC look ~tied. That hides the real mobile
+story. Re-run on a **production build** (`RAILS_ENV=production`, minified, eager-loaded, served from
+`localhost:5000`) under the project's throttle (**4× CPU, ~1.6 Mbps / 150 ms RTT, mobile viewport**).
+Both tools agree (harness puppeteer N=6 and an independent interleaved Playwright A/B N=8); harness
+numbers shown:
+
+| Metric (cached, prod + throttled mobile) | blog SSR | blog RSC | search SSR | search RSC |
+|---|---|---|---|---|
+| TTFB | 11.6 ms | 16.0 ms | 13.5 ms | 13.6 ms |
+| FCP | 2840 ms | **1840 ms** | 3356 ms | **2532 ms** |
+| **LCP** | 2840 ms | **1840 ms** (−1000) | 3356 ms | **2828 ms** (−528) |
+| **TBT** | 4190 ms | **205 ms** | 907 ms | **222 ms** |
+| Hydration | **9754 ms** | 506 ms | — | — |
+| CLS | 0 | 0 | 0 | 0 |
+| JS transfer (gzip) | **1550 KB** | **249 KB** | 1573 KB | **262 KB** |
+
+**Under realistic conditions, cached RSC is decisively FASTER than cached SSR on LCP — the opposite of
+a regression.** blog LCP 1840 vs 2840 ms (RSC ~35 % faster); search 2828 vs 3356 ms.
+
+**Root cause (now explicit):** RSC ships **~6× less JavaScript over the wire** (249 KB vs 1550 KB
+gzipped). On a throttled mobile CPU, SSR's bundle must download + parse + execute before/while the
+page becomes usable, blocking the main thread for seconds — TBT **4190 ms** and hydration **~9.8 s**
+for blog SSR — which pushes its LCP out to 2840 ms. RSC's tiny client payload barely blocks the main
+thread (TBT 205 ms, hydration 506 ms), so its content paints ~1 s sooner. **Caching preserves RSC's
+JS-size advantage; it does not create or hide an LCP problem.** The earlier "RSC LCP regression"
+(§3c) was unthrottled-dev noise that also masked RSC's real mobile win.
 
 ## 4. Takeaways
 
 - Fragment caching is a large win for **server render time / TTFB** on every page, SSR and RSC alike
   (3–54×), and is most dramatic on expensive pages (product-search SSR 653 → 29 ms; blog RSC
   1558 → 29 ms).
-- For **LCP**, caching most helps **SSR** (which had no streaming to hide its render latency). RSC's
-  LCP is already fast uncached, so caching mainly improves its *total* completion time and TTFB, not
-  its LCP.
-- Caching does nothing for **TBT / JS size** — those are client-side and identical cached vs uncached;
-  reducing them is RSC's job (less JS), not the cache's.
+- **There is no cached-RSC LCP regression.** On unthrottled dev it's a tie (noise made it briefly look
+  like a regression, §3c); on a **production build under throttled mobile it's a clear RSC win**
+  (LCP ~1 s faster on blog, ~530 ms on search) — §3d.
+- The decider on mobile is **JavaScript weight**: cached RSC ships ~6× less gzipped JS, so its TBT is
+  ~20× lower and hydration ~20× faster. Caching is server-side and can't change that — it's RSC's
+  structural advantage, and caching keeps it intact while also giving the SSR-class TTFB.
+- Always benchmark caching/RSC on a **production build under CPU+network throttle**; unthrottled dev
+  hides the JS-execution cost that dominates real mobile LCP/TBT.
