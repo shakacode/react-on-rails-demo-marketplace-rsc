@@ -15,6 +15,14 @@ class CssDemoController < ApplicationController
   def one_ssr; end
   def two_ssr; end
 
+  # FIX for the server-component-CSS gap: a pure server component's CSS lives only in the
+  # RSC/server bundle and never reaches the browser, so the streamed markup renders unstyled.
+  # The fix links the page's exact CSS set (page one = cssShared + cssA) from a client-built
+  # carrier pack via `append_stylesheet_pack_tag` — done at the TOP of the rsc-server view
+  # templates (a view-helper; not available on the controller), exactly like the gem's own
+  # `load_pack_for_generated_component` appends during the template render. Rails renders the
+  # view before the layout, so the <link> lands in the layout's `stylesheet_pack_tag` in the
+  # <head> (flushed before the streamed body paints → no FOUC). Scoped per route, no over-fetch.
   def one_rsc_server
     stream_view_containing_react_components(template: 'css_demo/one_rsc_server')
   end

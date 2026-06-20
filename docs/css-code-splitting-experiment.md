@@ -92,3 +92,42 @@ entirely.
 
 (Design and predictions cross-reviewed with Codex gpt-5.5 @ xhigh; measured results matched its
 predictions for all three shapes.)
+
+## The fix — deliver server-component CSS, scoped, without over-fetch
+
+The `rsc-server` under-fetch is fixed **at the app level**, keeping the visible tree as pure server
+components. Because a server component's CSS only exists in the RSC/server bundle, we re-import that
+page's exact CSS set into a **client-built carrier pack** and link it from the `<head>`:
+
+- `app/javascript/packs/css_demo_one.js` → `import cssShared.css; import cssA.css;` (page one's set)
+- `app/javascript/packs/css_demo_two.js` → `import cssShared.css; import cssB.css;` (page two's set)
+- Each `rsc-server` view appends only its own pack's **stylesheet** (never the JS):
+  `app/views/css_demo/one_rsc_server.html.erb` → `<% append_stylesheet_pack_tag('css_demo_one') %>`
+  (and `css_demo_two` for page two), placed before the `stream_react_component` call.
+
+The append runs during the view render — before the layout — so the `<link>` lands in the layout's
+single `stylesheet_pack_tag` in the `<head>`, which is flushed before the streamed body paints. This
+is exactly how the gem's own `load_pack_for_generated_component` injects client-component CSS; the
+server-component pack just happens to carry no CSS, which is why these pages were unstyled. Put it in
+the **view, not the controller** — `append_stylesheet_pack_tag` is a Shakapacker view helper and is
+not mixed into `ActionController`.
+
+Why it is scoped (no over-fetch): `splitChunks {chunks:'all'}` factors `cssShared` into one chunk
+shared by both packs, and `cssA`/`cssB` stay in their own per-page chunks. The carrier-pack JS entry
+is never rendered (`stylesheet_pack_tag` only), so no stray script ships.
+
+### Verified (production build, `:5000`, Playwright + network capture)
+
+| Page | marker outlines | CSS chunks requested | over-fetch |
+|---|---|---|---|
+| one / rsc-server | shared **7px**, A **11px** | `cssShared` + `cssA` (no `cssB`) | none ✅ |
+| two / rsc-server | shared **7px**, B **13px** | `cssShared` + `cssB` (no `cssA`) | none ✅ |
+
+All six pages now render styled, SSR'd, hydrated (where they have client components), with **zero**
+console/hydration errors. `cssShared` downloads exactly once per page; the head `<link>`s are present
+in the initial response (render-blocking → no FOUC). Net effect: `rsc-server` now matches `ssr` and
+`rsc-client` — each page pays for exactly the CSS its components use, no more and no less.
+
+(Fix design + implementation cross-reviewed with Codex gpt-5.5 @ xhigh: it chose this Rails
+carrier-pack approach over a `'use client'` CSS-sidecar — head-time render-blocking, no added
+hydration surface — and caught that the append must live in the view, not the controller.)
