@@ -143,7 +143,8 @@ interface Step {
   markerColor?: string;
 }
 
-const PAUSE = 3000;
+const MILESTONE_PAUSE = 3000;
+const STEP_PAUSE = 2000;
 const TRANS = 100;
 
 const INIT_MS = Math.max(200, DOWNLOAD_DEFS[1].discoverEff - 100);
@@ -154,7 +155,7 @@ const STEPS: Step[] = [
     label: 'Page Requested',
     description: 'Browser sends GET request to the CDN edge. The full SSR HTML is cached — no Rails server round-trip.',
     playMs: INIT_MS,
-    pauseMs: 0,
+    pauseMs: STEP_PAUSE,
   },
   {
     id: 'downloading',
@@ -162,7 +163,7 @@ const STEPS: Step[] = [
     description:
       "HTML downloads first. The browser's preload scanner finds <link> and <script> in <head> → CSS and JS start. Later, lazy component <script> tags in the body are discovered and share bandwidth with everything else.",
     playMs: FCP_EFF - INIT_MS,
-    pauseMs: 0,
+    pauseMs: STEP_PAUSE,
   },
   {
     id: 'fcp',
@@ -170,7 +171,7 @@ const STEPS: Step[] = [
     description:
       "ALL CSS in <head> must finish before the browser can paint anything. Now CSS is ready — the browser paints whatever HTML has arrived. Content is gray because JS hasn't hydrated the page yet.",
     playMs: TRANS,
-    pauseMs: PAUSE,
+    pauseMs: MILESTONE_PAUSE,
     marker: 'FCP',
     markerColor: '#f59e0b',
   },
@@ -180,7 +181,7 @@ const STEPS: Step[] = [
     description:
       'More HTML bytes arrive, more sections paint — top to bottom, like any document. Everything stays gray and non-interactive. Lazy components show skeleton placeholders.',
     playMs: HTML_DONE_EFF - FCP_EFF - TRANS,
-    pauseMs: 0,
+    pauseMs: STEP_PAUSE,
   },
   {
     id: 'html-complete',
@@ -188,7 +189,7 @@ const STEPS: Step[] = [
     description:
       'Full page visible but entirely non-interactive. Lazy-loaded components (menu items) show skeleton placeholders. The JS bundle is still downloading.',
     playMs: TRANS,
-    pauseMs: PAUSE,
+    pauseMs: MILESTONE_PAUSE,
     marker: 'HTML Done',
     markerColor: '#3b82f6',
   },
@@ -198,7 +199,7 @@ const STEPS: Step[] = [
     description:
       'JS bundle finishes downloading → Parse JS → Deserialize ALL props → Build GraphQL cache → Re-execute entire React tree → Attach handlers. Nothing interactive until this monolithic pass completes.',
     playMs: TTI_EFF - HTML_DONE_EFF - TRANS,
-    pauseMs: 0,
+    pauseMs: STEP_PAUSE,
   },
   {
     id: 'hydrated',
@@ -206,7 +207,7 @@ const STEPS: Step[] = [
     description:
       'Hydration complete — buttons work, forms submit! But lazy-loaded menu items still show skeletons. Their JS chunks were preloaded, but they need GraphQL data from the server.',
     playMs: TRANS,
-    pauseMs: PAUSE,
+    pauseMs: MILESTONE_PAUSE,
     marker: 'TTI',
     markerColor: '#10b981',
   },
@@ -216,7 +217,7 @@ const STEPS: Step[] = [
     description:
       'GraphQL queries fire for menu items. The component chunks were already preloaded via <script> tags in the initial HTML — only the data was missing.',
     playMs: COMPLETE_EFF - TTI_EFF - TRANS,
-    pauseMs: 0,
+    pauseMs: STEP_PAUSE,
   },
   {
     id: 'complete',
@@ -224,7 +225,7 @@ const STEPS: Step[] = [
     description:
       "All content rendered. Every section waited for every other — CSS blocked paint, JS blocked interactivity, data fetch blocked content. That's the cascading cost of SSR.",
     playMs: TRANS,
-    pauseMs: PAUSE,
+    pauseMs: MILESTONE_PAUSE,
     marker: 'Done',
     markerColor: '#6366f1',
   },
