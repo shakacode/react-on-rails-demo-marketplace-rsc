@@ -6,6 +6,7 @@ import { getSectionState, simulate } from './model/simulate';
 import type { NetworkPreset, SectionSnapshot, SimulationParams } from './types';
 import BrowserMockup from './ui/BrowserMockup';
 import ImpactAnalysis from './ui/ImpactAnalysis';
+import SsrWalkthrough from './ui/SsrWalkthrough';
 import TechnicalDeepDive from './ui/TechnicalDeepDive';
 
 function fmt(n: number): string {
@@ -151,7 +152,18 @@ export default function SsrRscPlayground() {
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-5 space-y-5 pb-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-5 space-y-8 pb-16">
+        {/* SSR Walkthrough - detailed step-by-step */}
+        <div>
+          <h2 className="text-lg font-bold text-slate-800 mb-3">How SSR loads your page — step by step</h2>
+          <SsrWalkthrough />
+        </div>
+
+        {/* Quick side-by-side comparison */}
+        <div>
+          <h2 className="text-lg font-bold text-slate-800 mb-3">Quick comparison: SSR vs RSC</h2>
+        </div>
+
         {/* Controls */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
