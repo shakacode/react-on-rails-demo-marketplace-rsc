@@ -39,18 +39,22 @@
     "date-fns": "^4.1.0",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
+    "hls.js": "^1.6.16",
     "intl-messageformat": "^11.2.4",
     "marked": "^17.0.2",
     "marked-highlight": "^2.2.3",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "react-image-lightbox": "^5.1.4",
     "react-on-rails-pro": "17.0.0-rc.6",
     "react-on-rails-pro-node-renderer": "17.0.0-rc.6",
     "react-on-rails-rsc": "19.2.0-rc.4",
+    "react-player": "^3.4.0",
     "react-server-dom-webpack": "19.2.7",
     "sanitize-html": "^2.17.3",
     "simple-statistics": "^7.8.9",
-    "web-vitals": "^4.2.0"
+    "web-vitals": "^4.2.0",
+    "yet-another-react-lightbox": "^3.32.0"
   },
   "pnpm": {
     "overrides": {
