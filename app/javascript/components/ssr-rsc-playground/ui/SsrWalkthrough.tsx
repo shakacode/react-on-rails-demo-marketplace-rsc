@@ -260,8 +260,8 @@ const STEPS: Step[] = [
 
 // ── Animation helpers ────────────────────────────────────────────────────────
 
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
+function easeInOutSine(t: number): number {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -300,7 +300,7 @@ export default function SsrWalkthrough() {
     const tick = () => {
       const elapsed = performance.now() - startTime;
       const progress = Math.min(1, elapsed / duration);
-      setEffMs(startEff + effDelta * easeOutCubic(progress));
+      setEffMs(startEff + effDelta * easeInOutSine(progress));
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(tick);
@@ -346,7 +346,7 @@ export default function SsrWalkthrough() {
       <div className="px-4 pt-4 pb-3 bg-slate-50 border-b border-slate-200">
         <div className="relative h-2 bg-slate-200 rounded-full overflow-visible mb-6">
           <div
-            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full transition-[width] duration-300 ease-out"
+            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full"
             style={{ width: `${overallProgress * 100}%` }}
           />
           {STEPS.filter((s) => s.marker).map((s) => {
@@ -429,7 +429,6 @@ export default function SsrWalkthrough() {
                         width: `${Math.max(barWidth, 0.3)}%`,
                         backgroundColor: r.color,
                         opacity: done ? 1 : 0.7,
-                        transition: 'width 60ms linear',
                       }}
                     />
                   )}
