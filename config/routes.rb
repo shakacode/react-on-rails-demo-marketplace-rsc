@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   get '/how-rsc-works' => 'pages#how_rsc_works'
   get '/measure' => 'pages#measure'
   get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
+  get '/ssr-rsc-playground' => 'pages#ssr_rsc_playground'
 
   # Restaurant detail page — three versions for the markdown-heavy detail view
   get '/restaurant/:id/ssr', to: 'restaurants#show_ssr', as: :restaurant_show_ssr
