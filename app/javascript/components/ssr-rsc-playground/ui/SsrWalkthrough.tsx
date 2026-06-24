@@ -2,6 +2,135 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+// ── Bandwidth simulation ─────────────────────────────────────────────────────
+// Models real browser behavior: resources are discovered at different times
+// (preload scanner parses <head>, then body), and bandwidth is shared equally
+// among all concurrent downloads (HTTP/2 multiplexing).
+
+interface ResourceDef {
+  name: string;
+  sizeKb: number;
+  label: string;
+  color: string;
+  discoverEff: number;
+}
+
+interface BwSegment {
+  startEff: number;
+  endEff: number;
+  startKb: number;
+  endKb: number;
+}
+
+interface SimResource extends ResourceDef {
+  endEff: number;
+  segments: BwSegment[];
+}
+
+function simulateBandwidth(defs: ResourceDef[], totalBw: number): SimResource[] {
+  const state = defs.map((d) => ({
+    ...d,
+    remaining: d.sizeKb,
+    downloaded: 0,
+    done: false,
+    endEff: 0,
+    segments: [] as BwSegment[],
+  }));
+
+  let t = 0;
+  while (state.some((s) => !s.done) && t < 100000) {
+    const active = state.filter((s) => t >= s.discoverEff && !s.done);
+    if (active.length === 0) {
+      const next = state
+        .filter((s) => !s.done)
+        .sort((a, b) => a.discoverEff - b.discoverEff)[0];
+      if (!next) break;
+      t = next.discoverEff;
+      continue;
+    }
+    const bwEach = totalBw / active.length;
+    let dt = Infinity;
+    for (const r of active) dt = Math.min(dt, r.remaining / bwEach);
+    const pending = state
+      .filter((s) => !s.done && s.discoverEff > t)
+      .sort((a, b) => a.discoverEff - b.discoverEff);
+    if (pending.length > 0 && pending[0].discoverEff - t < dt) dt = pending[0].discoverEff - t;
+
+    for (const r of active) {
+      const kb = bwEach * dt;
+      r.segments.push({ startEff: t, endEff: t + dt, startKb: r.downloaded, endKb: r.downloaded + kb });
+      r.downloaded += kb;
+      r.remaining -= kb;
+      if (r.remaining < 0.01) {
+        r.done = true;
+        r.endEff = t + dt;
+        r.remaining = 0;
+      }
+    }
+    t += dt;
+  }
+  return state;
+}
+
+function getProgress(res: SimResource, effMs: number): number {
+  if (effMs <= res.discoverEff) return 0;
+  if (effMs >= res.endEff) return 1;
+  for (const seg of res.segments) {
+    if (effMs <= seg.endEff) {
+      const frac = (effMs - seg.startEff) / (seg.endEff - seg.startEff);
+      return (seg.startKb + (seg.endKb - seg.startKb) * frac) / res.sizeKb;
+    }
+  }
+  return 1;
+}
+
+// ── Resource definitions & simulation run ────────────────────────────────────
+
+const DOWNLOAD_DEFS: ResourceDef[] = [
+  { name: 'document.html', sizeKb: 200, label: '200 KB', color: '#3b82f6', discoverEff: 0 },
+  { name: 'styles.css', sizeKb: 85, label: '85 KB', color: '#a855f7', discoverEff: 300 },
+  { name: 'bundle.js', sizeKb: 300, label: '300 KB', color: '#f59e0b', discoverEff: 400 },
+  { name: 'menu-chunk.js', sizeKb: 45, label: '45 KB', color: '#fb923c', discoverEff: 1000 },
+  { name: 'reviews-chunk.js', sizeKb: 30, label: '30 KB', color: '#fb923c', discoverEff: 1100 },
+];
+
+const SIM = simulateBandwidth(DOWNLOAD_DEFS, 0.12);
+
+const HTML_RES = SIM.find((r) => r.name === 'document.html')!;
+const CSS_RES = SIM.find((r) => r.name === 'styles.css')!;
+const JS_RES = SIM.find((r) => r.name === 'bundle.js')!;
+
+const FCP_EFF = Math.ceil(CSS_RES.endEff);
+const HTML_DONE_EFF = Math.ceil(HTML_RES.endEff);
+const JS_DONE_EFF = Math.ceil(JS_RES.endEff);
+const HYDRATION_MS = 1600;
+const TTI_EFF = JS_DONE_EFF + HYDRATION_MS;
+const LAZY_FETCH_MS = 1200;
+const COMPLETE_EFF = TTI_EFF + LAZY_FETCH_MS;
+
+const GQL_RES: SimResource = {
+  name: 'gql: menuItems',
+  sizeKb: 12,
+  label: '12 KB',
+  color: '#ec4899',
+  discoverEff: TTI_EFF,
+  endEff: COMPLETE_EFF,
+  segments: [{ startEff: TTI_EFF, endEff: COMPLETE_EFF, startKb: 0, endKb: 12 }],
+};
+
+const ALL_RESOURCES = [...SIM, GQL_RES];
+
+// ── Section visibility ───────────────────────────────────────────────────────
+// Sections appear as HTML bytes arrive, but only AFTER CSS finishes (FCP).
+
+const REVEAL_THRESHOLDS = [0.3, 0.4, 0.5, 0.65, 0.78, 0.93];
+
+function countVisible(effMs: number): number {
+  if (effMs < CSS_RES.endEff) return 0;
+  const htmlProg = getProgress(HTML_RES, effMs);
+  return REVEAL_THRESHOLDS.filter((t) => htmlProg >= t).length;
+}
+
 // ── Step definitions ─────────────────────────────────────────────────────────
 
 interface Step {
@@ -14,29 +143,34 @@ interface Step {
   markerColor?: string;
 }
 
+const PAUSE = 3000;
+const TRANS = 100;
+
+const INIT_MS = Math.max(200, DOWNLOAD_DEFS[1].discoverEff - 100);
+
 const STEPS: Step[] = [
   {
     id: 'start',
     label: 'Page Requested',
-    description: 'Browser sends request to CDN edge. The full HTML page is cached — no server round-trip needed.',
-    playMs: 800,
+    description: 'Browser sends GET request to the CDN edge. The full SSR HTML is cached — no Rails server round-trip.',
+    playMs: INIT_MS,
     pauseMs: 0,
   },
   {
     id: 'downloading',
-    label: 'Downloading',
+    label: 'Downloading Resources',
     description:
-      "HTML, CSS, and JS start downloading in parallel. The browser's preload scanner finds <link> and <script> tags in <head> and begins fetching CSS and JS while HTML is still arriving.",
-    playMs: 1200,
+      "HTML downloads first. The browser's preload scanner finds <link> and <script> in <head> → CSS and JS start. Later, lazy component <script> tags in the body are discovered and share bandwidth with everything else.",
+    playMs: FCP_EFF - INIT_MS,
     pauseMs: 0,
   },
   {
     id: 'fcp',
     label: 'First Contentful Paint',
     description:
-      'ALL CSS in <head> must finish downloading before the browser can paint anything. Once CSS is ready, the browser renders whatever HTML has arrived so far — but nothing is interactive.',
-    playMs: 400,
-    pauseMs: 3000,
+      "ALL CSS in <head> must finish before the browser can paint anything. Now CSS is ready — the browser paints whatever HTML has arrived. Content is gray because JS hasn't hydrated the page yet.",
+    playMs: TRANS,
+    pauseMs: PAUSE,
     marker: 'FCP',
     markerColor: '#f59e0b',
   },
@@ -44,35 +178,35 @@ const STEPS: Step[] = [
     id: 'html-rendering',
     label: 'Progressive Rendering',
     description:
-      "More HTML bytes arrive, more sections appear on screen — top to bottom, just like any document download. Everything renders gray because the page isn't hydrated yet.",
-    playMs: 1800,
+      'More HTML bytes arrive, more sections paint — top to bottom, like any document. Everything stays gray and non-interactive. Lazy components show skeleton placeholders.',
+    playMs: HTML_DONE_EFF - FCP_EFF - TRANS,
     pauseMs: 0,
   },
   {
     id: 'html-complete',
     label: 'HTML Complete',
     description:
-      'Full page is visible but entirely non-interactive. Lazy-loaded components (menu items) show skeleton placeholders. The JS bundle is still being parsed.',
-    playMs: 400,
-    pauseMs: 3000,
+      'Full page visible but entirely non-interactive. Lazy-loaded components (menu items) show skeleton placeholders. The JS bundle is still downloading.',
+    playMs: TRANS,
+    pauseMs: PAUSE,
     marker: 'HTML Done',
     markerColor: '#3b82f6',
   },
   {
     id: 'hydrating',
-    label: 'Hydrating',
+    label: 'Waiting for JS & Hydrating',
     description:
-      'One monolithic pass: Parse JS bundle → Deserialize ALL component props → Build GraphQL data cache → Re-execute entire React tree → Attach event handlers. Nothing is interactive until every step finishes.',
-    playMs: 1800,
+      'JS bundle finishes downloading → Parse JS → Deserialize ALL props → Build GraphQL cache → Re-execute entire React tree → Attach handlers. Nothing interactive until this monolithic pass completes.',
+    playMs: TTI_EFF - HTML_DONE_EFF - TRANS,
     pauseMs: 0,
   },
   {
     id: 'hydrated',
     label: 'Interactive!',
     description:
-      'The page is now interactive — buttons work, forms submit! But lazy-loaded menu items still show skeletons. They need their own GraphQL data fetched from the server.',
-    playMs: 400,
-    pauseMs: 3000,
+      'Hydration complete — buttons work, forms submit! But lazy-loaded menu items still show skeletons. Their JS chunks were preloaded, but they need GraphQL data from the server.',
+    playMs: TRANS,
+    pauseMs: PAUSE,
     marker: 'TTI',
     markerColor: '#10b981',
   },
@@ -80,23 +214,23 @@ const STEPS: Step[] = [
     id: 'lazy-fetch',
     label: 'Lazy Data Fetch',
     description:
-      'GraphQL queries fire for lazy-loaded menu items. The component JS chunks were already preloaded via <script> tags in the HTML — only the data was missing.',
-    playMs: 1200,
+      'GraphQL queries fire for menu items. The component chunks were already preloaded via <script> tags in the initial HTML — only the data was missing.',
+    playMs: COMPLETE_EFF - TTI_EFF - TRANS,
     pauseMs: 0,
   },
   {
     id: 'complete',
     label: 'Fully Loaded',
     description:
-      "All content rendered with real data. Every section waited for every other section — CSS blocked paint, hydration blocked interactivity, data fetch blocked content — that's the cascading cost of SSR.",
-    playMs: 400,
-    pauseMs: 3000,
+      "All content rendered. Every section waited for every other — CSS blocked paint, JS blocked interactivity, data fetch blocked content. That's the cascading cost of SSR.",
+    playMs: TRANS,
+    pauseMs: PAUSE,
     marker: 'Done',
     markerColor: '#6366f1',
   },
 ];
 
-// ── Timing computation ───────────────────────────────────────────────────────
+// ── Timing computation ──────────────────────────────────────────────────────
 
 interface StepTiming {
   step: Step;
@@ -156,47 +290,6 @@ function pauseRemaining(wallMs: number): number {
   return Math.max(0, t.wallEnd - wallMs);
 }
 
-// ── Network resources ────────────────────────────────────────────────────────
-
-interface Resource {
-  name: string;
-  size: string;
-  color: string;
-  startEff: number;
-  endEff: number;
-}
-
-const RESOURCES: Resource[] = [
-  { name: 'document.html', size: '133 KB', color: '#3b82f6', startEff: 0, endEff: TIMINGS[4].effEnd },
-  { name: 'styles.css', size: '73 KB', color: '#a855f7', startEff: 80, endEff: TIMINGS[2].effEnd },
-  { name: 'bundle.js', size: '300 KB', color: '#f59e0b', startEff: 80, endEff: TIMINGS[5].effEnd },
-  { name: 'menu-chunk.js', size: '45 KB', color: '#fb923c', startEff: 150, endEff: TIMINGS[3].effEnd - 300 },
-  { name: 'reviews-chunk.js', size: '30 KB', color: '#fb923c', startEff: 180, endEff: TIMINGS[3].effEnd - 500 },
-  { name: 'gql: menuItems', size: '12 KB', color: '#ec4899', startEff: TIMINGS[6].effEnd, endEff: TIMINGS[7].effEnd },
-];
-
-function getProgress(r: Resource, effMs: number): number {
-  if (effMs <= r.startEff) return 0;
-  if (effMs >= r.endEff) return 1;
-  return (effMs - r.startEff) / (r.endEff - r.startEff);
-}
-
-// ── Section reveal timing ────────────────────────────────────────────────────
-
-const FCP_EFF = TIMINGS[2].effEnd;
-const SECTION_REVEALS = [
-  FCP_EFF - 150,
-  FCP_EFF + 250,
-  FCP_EFF + 650,
-  FCP_EFF + 950,
-  FCP_EFF + 1250,
-  FCP_EFF + 1550,
-];
-
-function countVisible(effMs: number): number {
-  return SECTION_REVEALS.filter((t) => effMs >= t).length;
-}
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function SsrWalkthrough() {
@@ -214,8 +307,7 @@ export default function SsrWalkthrough() {
   }, []);
 
   const tick = useCallback(() => {
-    const elapsed = performance.now() - perfStartRef.current;
-    const next = Math.min(offsetRef.current + elapsed, TOTAL_WALL);
+    const next = Math.min(offsetRef.current + performance.now() - perfStartRef.current, TOTAL_WALL);
     setWallMs(next);
     if (next >= TOTAL_WALL) {
       setIsPlaying(false);
@@ -253,66 +345,49 @@ export default function SsrWalkthrough() {
     setWallMs(0);
   }, []);
 
-  const jumpTo = useCallback(
-    (idx: number) => {
-      stopRaf();
-      const target = TIMINGS[idx].wallPauseAt;
-      offsetRef.current = target;
-      setWallMs(target);
-      setIsPlaying(false);
-    },
-    [stopRaf]
-  );
-
-  // Derived state
   const effMs = wallToEff(wallMs);
   const current = getTimingAt(wallMs);
   const paused = isPausedAt(wallMs);
   const pauseLeft = pauseRemaining(wallMs);
   const numVisible = countVisible(effMs);
-  const isGray = effMs < TIMINGS[6].effEnd;
-  const lazyLoaded = effMs >= TIMINGS[7].effEnd;
-  const isHydrating = effMs >= TIMINGS[4].effEnd && effMs < TIMINGS[6].effEnd;
-  const hydrationProgress = isHydrating
-    ? (effMs - TIMINGS[4].effEnd) / (TIMINGS[6].effEnd - TIMINGS[4].effEnd)
-    : effMs >= TIMINGS[6].effEnd
-      ? 1
-      : 0;
+  const isGray = effMs < TTI_EFF;
+  const lazyLoaded = effMs >= COMPLETE_EFF;
+  const isHydrating = effMs >= JS_DONE_EFF && effMs < TTI_EFF;
+  const hydrationProgress = isHydrating ? (effMs - JS_DONE_EFF) / HYDRATION_MS : effMs >= TTI_EFF ? 1 : 0;
+  const waitingForJs = effMs >= HTML_DONE_EFF + TRANS && effMs < JS_DONE_EFF;
+  const overallProgress = wallMs / TOTAL_WALL;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden">
-      {/* ── Step progress bar ─────────────────────────────────────────────── */}
+      {/* ── Progress bar with milestone markers ──────────────────────── */}
       <div className="px-4 pt-4 pb-3 bg-slate-50 border-b border-slate-200">
-        <div className="flex items-center gap-0.5 mb-3">
-          {STEPS.map((step, i) => {
-            const t = TIMINGS[i];
-            const isActive = current.index === i;
-            const isDone = wallMs >= t.wallEnd;
+        <div className="relative h-2 bg-slate-200 rounded-full overflow-visible mb-6">
+          <div
+            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full"
+            style={{ width: `${overallProgress * 100}%`, transition: 'width 60ms linear' }}
+          />
+          {STEPS.filter((s) => s.marker).map((s) => {
+            const t = TIMINGS[STEPS.indexOf(s)];
+            const pos = (t.wallPauseAt / TOTAL_WALL) * 100;
+            const reached = wallMs >= t.wallPauseAt;
             return (
-              <React.Fragment key={step.id}>
-                <button
-                  onClick={() => jumpTo(i)}
-                  title={step.label}
-                  className={`relative w-7 h-7 rounded-full text-[9px] font-bold flex items-center justify-center transition-all cursor-pointer flex-shrink-0
-                    ${isActive ? 'bg-indigo-600 text-white scale-110 ring-2 ring-indigo-200' : isDone ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-400 hover:bg-slate-300'}`}
+              <div key={s.id} className="absolute" style={{ left: `${pos}%`, top: '-3px' }}>
+                <div
+                  className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm -translate-x-1/2 transition-colors ${reached ? '' : 'bg-slate-300'}`}
+                  style={reached ? { backgroundColor: s.markerColor } : undefined}
+                />
+                <span
+                  className="absolute top-5 left-1/2 -translate-x-1/2 text-[8px] font-bold whitespace-nowrap"
+                  style={{ color: reached ? s.markerColor : '#94a3b8' }}
                 >
-                  {i + 1}
-                  {step.marker && (isDone || isActive) && (
-                    <span
-                      className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[7px] font-bold whitespace-nowrap px-1 rounded"
-                      style={{ color: step.markerColor }}
-                    >
-                      {step.marker}
-                    </span>
-                  )}
-                </button>
-                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 min-w-[8px] ${isDone ? 'bg-indigo-200' : 'bg-slate-200'}`} />}
-              </React.Fragment>
+                  {s.marker}
+                </span>
+              </div>
             );
           })}
         </div>
 
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-slate-800">{current.step.label}</span>
             {current.step.marker && (
@@ -324,42 +399,52 @@ export default function SsrWalkthrough() {
               </span>
             )}
           </div>
-          {paused && <span className="text-[11px] text-slate-400 animate-pulse">Continuing in {Math.ceil(pauseLeft / 1000)}s...</span>}
+          {paused && (
+            <span className="text-[11px] text-slate-400 animate-pulse">Continuing in {Math.ceil(pauseLeft / 1000)}s...</span>
+          )}
         </div>
       </div>
 
-      {/* ── Network waterfall ─────────────────────────────────────────────── */}
+      {/* ── Network waterfall ─────────────────────────────────────────── */}
       <div className="bg-slate-900 px-4 py-3">
         <div className="flex items-center gap-2 mb-2.5">
           <span className="text-[10px] text-slate-500 font-mono font-semibold tracking-wider uppercase">Network</span>
           <div className="flex-1 h-px bg-slate-700" />
         </div>
         <div className="space-y-1">
-          {RESOURCES.map((r) => {
-            const p = getProgress(r, effMs);
-            const started = effMs >= r.startEff;
-            const done = p >= 1;
-            if (!started && effMs < r.startEff - 400) return null;
+          {ALL_RESOURCES.map((r) => {
+            const discovered = effMs >= r.discoverEff;
+            const approaching = effMs >= r.discoverEff - 300;
+            const done = effMs >= r.endEff;
+            if (!approaching) return null;
+
+            const barLeft = (r.discoverEff / COMPLETE_EFF) * 100;
+            const currentEnd = Math.min(effMs, r.endEff);
+            const barWidth = discovered ? ((currentEnd - r.discoverEff) / COMPLETE_EFF) * 100 : 0;
+
             return (
               <div key={r.name} className="flex items-center gap-2 h-[18px]">
-                <span className={`text-[9px] font-mono w-[120px] text-right truncate transition-colors ${started ? 'text-slate-300' : 'text-slate-600'}`}>
+                <span
+                  className={`text-[9px] font-mono w-[120px] text-right truncate transition-colors ${discovered ? 'text-slate-300' : 'text-slate-600'}`}
+                >
                   {r.name}
                 </span>
                 <div className="flex-1 relative h-[10px] bg-slate-800 rounded-sm overflow-hidden">
-                  {started && (
+                  {barWidth > 0 && (
                     <div
-                      className="absolute inset-y-0 left-0 rounded-sm"
+                      className="absolute inset-y-0 rounded-sm"
                       style={{
-                        width: `${Math.max(p * 100, 1)}%`,
+                        left: `${barLeft}%`,
+                        width: `${Math.max(barWidth, 0.3)}%`,
                         backgroundColor: r.color,
                         opacity: done ? 1 : 0.7,
-                        transition: 'width 80ms linear',
+                        transition: 'width 60ms linear',
                       }}
                     />
                   )}
                 </div>
                 <span className={`text-[8px] font-mono w-14 text-right ${done ? 'text-slate-300' : 'text-slate-600'}`}>
-                  {done ? r.size : started ? `${Math.round(p * parseInt(r.size))} KB` : ''}
+                  {done ? r.label : discovered ? `${Math.round(getProgress(r, effMs) * r.sizeKb)} KB` : ''}
                 </span>
               </div>
             );
@@ -367,7 +452,7 @@ export default function SsrWalkthrough() {
         </div>
       </div>
 
-      {/* ── Browser mockup ────────────────────────────────────────────────── */}
+      {/* ── Browser mockup ────────────────────────────────────────────── */}
       <div className="border-t border-slate-700">
         <div className="h-7 bg-gradient-to-b from-slate-600 to-slate-700 flex items-center px-3 gap-1.5">
           <span className="w-2 h-2 rounded-full bg-red-400/80" />
@@ -379,8 +464,10 @@ export default function SsrWalkthrough() {
         </div>
 
         <div className="relative min-h-[380px] bg-white">
-          {/* Page content with grayscale filter */}
-          <div className="transition-[filter] duration-700" style={{ filter: isGray && numVisible > 0 ? 'grayscale(1) brightness(0.92)' : 'none' }}>
+          <div
+            className="transition-[filter] duration-700"
+            style={{ filter: isGray && numVisible > 0 ? 'grayscale(1) brightness(0.92)' : 'none' }}
+          >
             {/* Blank state */}
             {numVisible === 0 && (
               <div className="h-[380px] flex items-center justify-center">
@@ -393,7 +480,9 @@ export default function SsrWalkthrough() {
               <div className="px-4 py-3 border-b border-slate-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-sm font-bold">B</div>
+                    <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-sm font-bold">
+                      B
+                    </div>
                     <div>
                       <div className="text-sm font-bold text-slate-800">Bella&apos;s Pizza</div>
                       <div className="text-[10px] text-amber-500">&#9733;&#9733;&#9733;&#9733;&#9734; 4.2 &middot; Open &middot; $$</div>
@@ -448,7 +537,9 @@ export default function SsrWalkthrough() {
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold">C</div>
+                    <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold">
+                      C
+                    </div>
                     <div>
                       <div className="text-[10px] font-semibold text-slate-700">Your Cart (2 items)</div>
                       <div className="text-[8px] text-slate-400">Margherita, Pepperoni</div>
@@ -503,9 +594,7 @@ export default function SsrWalkthrough() {
             )}
           </div>
 
-          {/* ── Overlays (not affected by grayscale) ──────────────────────── */}
-
-          {/* "Not Interactive" badge */}
+          {/* ── Overlays ────────────────────────────────────────────────── */}
           {isGray && numVisible > 0 && (
             <div className="absolute top-3 right-3 bg-red-50 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-red-200 flex items-center gap-1.5">
               <span className="w-2 h-2 bg-red-400 rounded-full" />
@@ -513,11 +602,17 @@ export default function SsrWalkthrough() {
             </div>
           )}
 
-          {/* "Interactive" badge */}
           {!isGray && numVisible > 0 && (
             <div className="absolute top-3 right-3 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-emerald-200 flex items-center gap-1.5">
               <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               Interactive
+            </div>
+          )}
+
+          {/* Waiting for JS overlay */}
+          {waitingForJs && numVisible > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-100/90 to-transparent px-4 py-3">
+              <span className="text-[10px] text-slate-500 font-medium">Waiting for JS bundle to finish downloading...</span>
             </div>
           )}
 
@@ -526,7 +621,10 @@ export default function SsrWalkthrough() {
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-indigo-50/90 to-transparent px-4 py-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full transition-all duration-150" style={{ width: `${hydrationProgress * 100}%` }} />
+                  <div
+                    className="h-full bg-indigo-500 rounded-full transition-all duration-150"
+                    style={{ width: `${hydrationProgress * 100}%` }}
+                  />
                 </div>
                 <span className="text-[10px] text-indigo-600 font-semibold whitespace-nowrap min-w-[130px]">
                   {hydrationProgress < 0.2
@@ -545,12 +643,12 @@ export default function SsrWalkthrough() {
         </div>
       </div>
 
-      {/* ── Step description ──────────────────────────────────────────────── */}
+      {/* ── Description ───────────────────────────────────────────────── */}
       <div className="px-5 py-3.5 bg-amber-50/50 border-t border-amber-100/50">
         <p className="text-[13px] text-slate-700 leading-relaxed">{current.step.description}</p>
       </div>
 
-      {/* ── Controls ──────────────────────────────────────────────────────── */}
+      {/* ── Controls ──────────────────────────────────────────────────── */}
       <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center gap-3">
         <button
           onClick={isPlaying ? pause : play}
@@ -563,10 +661,6 @@ export default function SsrWalkthrough() {
             Reset
           </button>
         )}
-        <div className="flex-1" />
-        <span className="text-[10px] text-slate-400 font-mono">
-          Step {current.index + 1} / {STEPS.length}
-        </span>
       </div>
     </div>
   );
