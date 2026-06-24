@@ -163,7 +163,7 @@ const STEPS: Step[] = [
   {
     id: 'downloading',
     label: 'Downloading Resources',
-    effEnd: FCP_EFF,
+    effEnd: Math.round(FCP_EFF * 0.6),
     note: {
       title: 'Resource Discovery & Bandwidth Sharing',
       body: 'HTML starts downloading first. As the browser parses <head>, its preload scanner discovers <link> and <script> tags — CSS and JS begin downloading. Lazy component <script> tags deeper in <body> are found even later.',
