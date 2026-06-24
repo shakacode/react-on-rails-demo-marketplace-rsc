@@ -2,53 +2,37 @@ export type NetworkPreset = 'wifi' | 'fast4g' | 'slow4g' | 'slow3g';
 
 export interface NetworkProfile {
   rttMs: number;
-  kbPerMs: number;
+  bandwidthKbMs: number;
   label: string;
 }
 
-export interface SimulationParams {
-  menuItems: number;
-  networkPreset: NetworkPreset;
-}
-
-export interface Section {
+export interface PageSection {
   id: string;
   label: string;
   kind: 'static' | 'dynamic';
+  cssKb: number;
+  totalJsKb: number;
+  clientJsKb: number;
+  propsKb: number;
+  htmlKb: number;
 }
 
-export interface Segment {
-  id: string;
-  label: string;
-  startMs: number;
-  endMs: number;
-  color: string;
-  row: number;
-  category: 'cache' | 'server' | 'network' | 'browser' | 'deferred';
-}
+export type SectionVisualState = 'hidden' | 'skeleton' | 'visible' | 'interactive';
 
-export type ConnectorType = 'eliminated' | 'overlapped' | 'streamed';
-
-export interface Connector {
-  id: string;
-  fromSegmentId: string;
-  toSegmentId: string;
-  type: ConnectorType;
-  label: string;
-}
-
-export type SectionVisualState = 'blank' | 'skeleton' | 'content' | 'interactive';
-
-export interface SectionState {
+export interface SectionSnapshot {
   id: string;
   label: string;
   state: SectionVisualState;
   kind: 'static' | 'dynamic';
 }
 
-export interface FilmstripFrame {
-  timeMs: number;
-  sections: SectionState[];
+export interface TimelineSegment {
+  id: string;
+  label: string;
+  startMs: number;
+  endMs: number;
+  color: string;
+  row: number;
 }
 
 export interface Milestone {
@@ -60,24 +44,34 @@ export interface Milestone {
 
 export interface Metrics {
   fcpMs: number;
-  pageWithFallbacksMs: number;
   firstInteractiveMs: number;
-  fullyLoadedMs: number;
+  ttiMs: number;
   htmlKb: number;
-  jsKb: number;
+  cssInHeadKb: number;
+  jsBundleKb: number;
 }
 
-export interface Timeline {
-  segments: Segment[];
+export interface SectionTimeline {
+  sectionId: string;
+  skeletonAtMs: number;
+  visibleAtMs: number;
+  interactiveAtMs: number;
+}
+
+export interface ArchitectureResult {
+  segments: TimelineSegment[];
   milestones: Milestone[];
-  filmstripFrames: FilmstripFrame[];
   metrics: Metrics;
+  sectionTimelines: SectionTimeline[];
 }
 
 export interface SimulationResult {
-  ssr: Timeline;
-  rsc: Timeline;
-  connectors: Connector[];
+  ssr: ArchitectureResult;
+  rsc: ArchitectureResult;
   maxDurationMs: number;
-  sections: Section[];
+}
+
+export interface SimulationParams {
+  networkPreset: NetworkPreset;
+  sections: PageSection[];
 }
