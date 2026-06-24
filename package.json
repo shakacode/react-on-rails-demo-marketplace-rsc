@@ -46,7 +46,7 @@
     "react-dom": "19.2.7",
     "react-on-rails-pro": "17.0.0-rc.6",
     "react-on-rails-pro-node-renderer": "17.0.0-rc.6",
-    "react-on-rails-rsc": "19.2.0-rc.3",
+    "react-on-rails-rsc": "19.2.0-rc.4",
     "react-server-dom-webpack": "19.2.7",
     "sanitize-html": "^2.17.3",
     "simple-statistics": "^7.8.9",
