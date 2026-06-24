@@ -3,9 +3,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // ── Bandwidth simulation ─────────────────────────────────────────────────────
-// Models real browser behavior: resources are discovered at different times
-// (preload scanner parses <head>, then body), and bandwidth is shared equally
-// among all concurrent downloads (HTTP/2 multiplexing).
 
 interface ResourceDef {
   name: string;
@@ -121,7 +118,6 @@ const GQL_RES: SimResource = {
 const ALL_RESOURCES = [...SIM, GQL_RES];
 
 // ── Section visibility ───────────────────────────────────────────────────────
-// Sections appear as HTML bytes arrive, but only AFTER CSS finishes (FCP).
 
 const REVEAL_THRESHOLDS = [0.3, 0.4, 0.5, 0.65, 0.78, 0.93];
 
@@ -133,172 +129,149 @@ function countVisible(effMs: number): number {
 
 // ── Step definitions ─────────────────────────────────────────────────────────
 
+const TRANS = 100;
+const INIT_MS = Math.max(200, DOWNLOAD_DEFS[1].discoverEff - 100);
+const TOTAL_EFF = COMPLETE_EFF + TRANS;
+
+interface StepNote {
+  title: string;
+  body: string;
+  insight: string;
+}
+
 interface Step {
   id: string;
   label: string;
-  description: string;
-  playMs: number;
-  pauseMs: number;
+  effEnd: number;
   marker?: string;
   markerColor?: string;
+  note: StepNote;
 }
-
-const MILESTONE_PAUSE = 3000;
-const STEP_PAUSE = 2000;
-const TRANS = 100;
-
-const INIT_MS = Math.max(200, DOWNLOAD_DEFS[1].discoverEff - 100);
 
 const STEPS: Step[] = [
   {
     id: 'start',
     label: 'Page Requested',
-    description: 'Browser sends GET request to the CDN edge. The full SSR HTML is cached — no Rails server round-trip.',
-    playMs: INIT_MS,
-    pauseMs: STEP_PAUSE,
+    effEnd: INIT_MS,
+    note: {
+      title: 'The Request',
+      body: 'The browser sends a GET request to the CDN edge. With SSR, the entire pre-rendered HTML is cached there — no round-trip to your Rails server. The response starts streaming immediately.',
+      insight:
+        'But the browser can’t display anything yet. It needs to download HTML first, discover CSS and JS referenced in the <head>, and wait for ALL CSS to finish before it can paint a single pixel.',
+    },
   },
   {
     id: 'downloading',
     label: 'Downloading Resources',
-    description:
-      "HTML downloads first. The browser's preload scanner finds <link> and <script> in <head> → CSS and JS start. Later, lazy component <script> tags in the body are discovered and share bandwidth with everything else.",
-    playMs: FCP_EFF - INIT_MS,
-    pauseMs: STEP_PAUSE,
+    effEnd: FCP_EFF,
+    note: {
+      title: 'Resource Discovery & Bandwidth Sharing',
+      body: 'HTML starts downloading first. As the browser parses <head>, its preload scanner discovers <link> and <script> tags — CSS and JS begin downloading. Lazy component <script> tags deeper in <body> are found even later.',
+      insight:
+        'All concurrent downloads share the same bandwidth via HTTP/2 multiplexing. Watch how bars slow down when new downloads start — adding more resources doesn’t just add time, it slows down EVERY other concurrent download.',
+    },
   },
   {
     id: 'fcp',
     label: 'First Contentful Paint',
-    description:
-      "ALL CSS in <head> must finish before the browser can paint anything. Now CSS is ready — the browser paints whatever HTML has arrived. Content is gray because JS hasn't hydrated the page yet.",
-    playMs: TRANS,
-    pauseMs: MILESTONE_PAUSE,
+    effEnd: FCP_EFF + TRANS,
     marker: 'FCP',
     markerColor: '#f59e0b',
+    note: {
+      title: 'CSS Blocks All Painting',
+      body: 'The browser CANNOT paint a single pixel until ALL CSS referenced in <head> finishes downloading. Now CSS is ready — the browser paints whatever HTML has arrived so far. Notice the content appears gray and non-interactive.',
+      insight:
+        'This is the critical bottleneck: every CSS file in <head> delays the entire page’s first paint — not just the section that needs it. In SSR, ALL sections’ CSS lives in <head>, so adding one section’s styles delays EVERY section’s first paint.',
+    },
   },
   {
     id: 'html-rendering',
     label: 'Progressive Rendering',
-    description:
-      'More HTML bytes arrive, more sections paint — top to bottom, like any document. Everything stays gray and non-interactive. Lazy components show skeleton placeholders.',
-    playMs: HTML_DONE_EFF - FCP_EFF - TRANS,
-    pauseMs: STEP_PAUSE,
+    effEnd: HTML_DONE_EFF,
+    note: {
+      title: 'HTML Paints Top-to-Bottom',
+      body: 'As more HTML bytes stream in, the browser paints more sections — header first, then menu, then cart. The page looks like it’s loading, which gives decent visual feedback.',
+      insight:
+        'But everything is gray and non-interactive. This is the "uncanny valley" of SSR: the user sees content that looks ready but ignores every click. Buttons don’t respond, forms don’t submit. The page is a screenshot, not an application.',
+    },
   },
   {
     id: 'html-complete',
     label: 'HTML Complete',
-    description:
-      'Full page visible but entirely non-interactive. Lazy-loaded components (menu items) show skeleton placeholders. The JS bundle is still downloading.',
-    playMs: TRANS,
-    pauseMs: MILESTONE_PAUSE,
+    effEnd: HTML_DONE_EFF + TRANS,
     marker: 'HTML Done',
     markerColor: '#3b82f6',
+    note: {
+      title: 'Visible But Completely Frozen',
+      body: 'The entire HTML document has arrived. Every section is painted on screen. The page LOOKS finished and ready to use — header, menu, cart, reviews, all visible.',
+      insight:
+        'But it’s a lie. No button works. No form submits. No dropdown opens. The user sees a "finished" page that ignores every interaction. The JavaScript bundle is still downloading — and the page cannot come alive without it.',
+    },
   },
   {
     id: 'hydrating',
     label: 'Waiting for JS & Hydrating',
-    description:
-      'JS bundle finishes downloading → Parse JS → Deserialize ALL props → Build GraphQL cache → Re-execute entire React tree → Attach handlers. Nothing interactive until this monolithic pass completes.',
-    playMs: TTI_EFF - HTML_DONE_EFF - TRANS,
-    pauseMs: STEP_PAUSE,
+    effEnd: TTI_EFF,
+    note: {
+      title: 'The Hydration Tax',
+      body: 'The JS bundle finally finishes downloading. React begins "hydration" — re-executing your entire component tree to attach event handlers to the server-rendered HTML. Watch the progress bar at the bottom of the page.',
+      insight:
+        'Hydration is monolithic and blocking: Parse JS → Deserialize ALL props → Rebuild GraphQL cache → Re-execute ENTIRE React tree → Attach handlers. One slow component blocks everything. No section becomes interactive until the entire tree finishes.',
+    },
   },
   {
     id: 'hydrated',
     label: 'Interactive!',
-    description:
-      'Hydration complete — buttons work, forms submit! But lazy-loaded menu items still show skeletons. Their JS chunks were preloaded, but they need GraphQL data from the server.',
-    playMs: TRANS,
-    pauseMs: MILESTONE_PAUSE,
+    effEnd: TTI_EFF + TRANS,
     marker: 'TTI',
     markerColor: '#10b981',
+    note: {
+      title: 'Finally Interactive!',
+      body: 'Hydration is complete. The page springs to life — buttons click, forms submit, dropdowns open. The grayscale filter lifts and colors return. But look at the menu — items still show skeleton placeholders.',
+      insight:
+        'The menu skeletons reveal another waterfall: lazy components’ JS chunks were preloaded, but they need GraphQL data from the server. That data fetch couldn’t even START until JS loaded, parsed, and hydrated. Sequential dependencies, not parallel work.',
+    },
   },
   {
     id: 'lazy-fetch',
     label: 'Lazy Data Fetch',
-    description:
-      'GraphQL queries fire for menu items. The component chunks were already preloaded via <script> tags in the initial HTML — only the data was missing.',
-    playMs: COMPLETE_EFF - TTI_EFF - TRANS,
-    pauseMs: STEP_PAUSE,
+    effEnd: COMPLETE_EFF,
+    note: {
+      title: 'The Data Waterfall',
+      body: 'GraphQL queries fire to fetch menu item data. The component JS chunks were already preloaded via <script> tags in the initial HTML, so the code is ready — only the data was missing.',
+      insight:
+        'Count the chain: HTML downloaded → JS downloaded → JS parsed → React hydrated → THEN data can be fetched. Each step depends on the previous one. The user waits for a waterfall of sequential work, not parallel execution.',
+    },
   },
   {
     id: 'complete',
     label: 'Fully Loaded',
-    description:
-      "All content rendered. Every section waited for every other — CSS blocked paint, JS blocked interactivity, data fetch blocked content. That's the cascading cost of SSR.",
-    playMs: TRANS,
-    pauseMs: MILESTONE_PAUSE,
+    effEnd: COMPLETE_EFF + TRANS,
     marker: 'Done',
     markerColor: '#6366f1',
+    note: {
+      title: 'The Cascading Cost of SSR',
+      body: 'Every section is finally rendered with real data. Menu items appear with names and prices. The page is truly complete — it took the full cascade to get here.',
+      insight:
+        'The fundamental problem: CSS blocked paint → JS blocked interactivity → hydration blocked data fetch → data blocked content. Every section waited for every other section at every stage. Adding ONE new component slows down the ENTIRE page. This is the architectural cost that RSC solves.',
+    },
   },
 ];
 
-// ── Timing computation ──────────────────────────────────────────────────────
+// ── Animation helpers ────────────────────────────────────────────────────────
 
-interface StepTiming {
-  step: Step;
-  index: number;
-  effStart: number;
-  effEnd: number;
-  wallStart: number;
-  wallPauseAt: number;
-  wallEnd: number;
-}
-
-const TIMINGS: StepTiming[] = (() => {
-  const result: StepTiming[] = [];
-  let eff = 0;
-  let wall = 0;
-  STEPS.forEach((step, index) => {
-    result.push({
-      step,
-      index,
-      effStart: eff,
-      effEnd: eff + step.playMs,
-      wallStart: wall,
-      wallPauseAt: wall + step.playMs,
-      wallEnd: wall + step.playMs + step.pauseMs,
-    });
-    eff += step.playMs;
-    wall += step.playMs + step.pauseMs;
-  });
-  return result;
-})();
-
-const TOTAL_WALL = TIMINGS[TIMINGS.length - 1].wallEnd;
-
-function wallToEff(wallMs: number): number {
-  for (const t of TIMINGS) {
-    if (wallMs <= t.wallPauseAt) return t.effStart + (wallMs - t.wallStart);
-    if (wallMs <= t.wallEnd) return t.effEnd;
-  }
-  return TIMINGS[TIMINGS.length - 1].effEnd;
-}
-
-function getTimingAt(wallMs: number): StepTiming {
-  for (const t of TIMINGS) {
-    if (wallMs < t.wallEnd) return t;
-  }
-  return TIMINGS[TIMINGS.length - 1];
-}
-
-function isPausedAt(wallMs: number): boolean {
-  const t = getTimingAt(wallMs);
-  return wallMs >= t.wallPauseAt && t.step.pauseMs > 0;
-}
-
-function pauseRemaining(wallMs: number): number {
-  if (!isPausedAt(wallMs)) return 0;
-  const t = getTimingAt(wallMs);
-  return Math.max(0, t.wallEnd - wallMs);
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function SsrWalkthrough() {
-  const [wallMs, setWallMs] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [stepIndex, setStepIndex] = useState(-1);
+  const [effMs, setEffMs] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [noteVisible, setNoteVisible] = useState(false);
   const rafRef = useRef<number | null>(null);
-  const perfStartRef = useRef(0);
-  const offsetRef = useRef(0);
 
   const stopRaf = useCallback(() => {
     if (rafRef.current !== null) {
@@ -307,70 +280,78 @@ export default function SsrWalkthrough() {
     }
   }, []);
 
-  const tick = useCallback(() => {
-    const next = Math.min(offsetRef.current + performance.now() - perfStartRef.current, TOTAL_WALL);
-    setWallMs(next);
-    if (next >= TOTAL_WALL) {
-      setIsPlaying(false);
-      return;
-    }
+  useEffect(() => stopRaf, [stopRaf]);
+
+  const advance = useCallback(() => {
+    if (animating) return;
+    const next = stepIndex + 1;
+    if (next >= STEPS.length) return;
+
+    setNoteVisible(false);
+    setStepIndex(next);
+
+    const startEff = effMs;
+    const targetEff = STEPS[next].effEnd;
+    const effDelta = targetEff - startEff;
+    const duration = Math.max(400, Math.min(2500, effDelta * 0.7));
+    const startTime = performance.now();
+
+    setAnimating(true);
+    const tick = () => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      setEffMs(startEff + effDelta * easeOutCubic(progress));
+
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        setEffMs(targetEff);
+        setAnimating(false);
+        setTimeout(() => setNoteVisible(true), 200);
+      }
+    };
     rafRef.current = requestAnimationFrame(tick);
-  }, []);
+  }, [stepIndex, effMs, animating, stopRaf]);
 
-  useEffect(() => {
-    if (isPlaying) {
-      perfStartRef.current = performance.now();
-      rafRef.current = requestAnimationFrame(tick);
-    }
-    return stopRaf;
-  }, [isPlaying, tick, stopRaf]);
-
-  const play = useCallback(() => {
-    if (wallMs >= TOTAL_WALL) {
-      offsetRef.current = 0;
-      setWallMs(0);
-    } else {
-      offsetRef.current = wallMs;
-    }
-    setIsPlaying(true);
-  }, [wallMs]);
-
-  const pause = useCallback(() => {
-    offsetRef.current = wallMs;
-    setIsPlaying(false);
-  }, [wallMs]);
+  const goBack = useCallback(() => {
+    if (animating || stepIndex <= 0) return;
+    stopRaf();
+    const prev = stepIndex - 1;
+    setStepIndex(prev);
+    setEffMs(STEPS[prev].effEnd);
+    setAnimating(false);
+    setNoteVisible(true);
+  }, [stepIndex, animating, stopRaf]);
 
   const reset = useCallback(() => {
-    setIsPlaying(false);
-    offsetRef.current = 0;
-    setWallMs(0);
-  }, []);
+    stopRaf();
+    setStepIndex(-1);
+    setEffMs(0);
+    setAnimating(false);
+    setNoteVisible(false);
+  }, [stopRaf]);
 
-  const effMs = wallToEff(wallMs);
-  const current = getTimingAt(wallMs);
-  const paused = isPausedAt(wallMs);
-  const pauseLeft = pauseRemaining(wallMs);
   const numVisible = countVisible(effMs);
   const isGray = effMs < TTI_EFF;
   const lazyLoaded = effMs >= COMPLETE_EFF;
   const isHydrating = effMs >= JS_DONE_EFF && effMs < TTI_EFF;
   const hydrationProgress = isHydrating ? (effMs - JS_DONE_EFF) / HYDRATION_MS : effMs >= TTI_EFF ? 1 : 0;
   const waitingForJs = effMs >= HTML_DONE_EFF + TRANS && effMs < JS_DONE_EFF;
-  const overallProgress = wallMs / TOTAL_WALL;
+  const overallProgress = effMs / TOTAL_EFF;
+  const currentStep = stepIndex >= 0 ? STEPS[stepIndex] : null;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden">
-      {/* ── Progress bar with milestone markers ──────────────────────── */}
+      {/* ── Progress bar with milestones ──────────────────────────────── */}
       <div className="px-4 pt-4 pb-3 bg-slate-50 border-b border-slate-200">
         <div className="relative h-2 bg-slate-200 rounded-full overflow-visible mb-6">
           <div
-            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full"
-            style={{ width: `${overallProgress * 100}%`, transition: 'width 60ms linear' }}
+            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full transition-[width] duration-300 ease-out"
+            style={{ width: `${overallProgress * 100}%` }}
           />
           {STEPS.filter((s) => s.marker).map((s) => {
-            const t = TIMINGS[STEPS.indexOf(s)];
-            const pos = (t.wallPauseAt / TOTAL_WALL) * 100;
-            const reached = wallMs >= t.wallPauseAt;
+            const pos = (s.effEnd / TOTAL_EFF) * 100;
+            const reached = effMs >= s.effEnd;
             return (
               <div key={s.id} className="absolute" style={{ left: `${pos}%`, top: '-3px' }}>
                 <div
@@ -390,18 +371,27 @@ export default function SsrWalkthrough() {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-800">{current.step.label}</span>
-            {current.step.marker && (
-              <span
-                className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: (current.step.markerColor || '#666') + '18', color: current.step.markerColor }}
-              >
-                {current.step.marker}
-              </span>
+            {currentStep ? (
+              <>
+                <span className="text-sm font-bold text-slate-800">{currentStep.label}</span>
+                {currentStep.marker && (
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    style={{
+                      backgroundColor: (currentStep.markerColor || '#666') + '18',
+                      color: currentStep.markerColor,
+                    }}
+                  >
+                    {currentStep.marker}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-sm text-slate-400">Ready to start</span>
             )}
           </div>
-          {paused && (
-            <span className="text-[11px] text-slate-400 animate-pulse">Continuing in {Math.ceil(pauseLeft / 1000)}s...</span>
+          {animating && (
+            <span className="text-[11px] text-indigo-500 font-medium animate-pulse">Loading...</span>
           )}
         </div>
       </div>
@@ -417,7 +407,7 @@ export default function SsrWalkthrough() {
             const discovered = effMs >= r.discoverEff;
             const approaching = effMs >= r.discoverEff - 300;
             const done = effMs >= r.endEff;
-            if (!approaching) return null;
+            if (stepIndex < 0 || !approaching) return null;
 
             const barLeft = (r.discoverEff / COMPLETE_EFF) * 100;
             const currentEnd = Math.min(effMs, r.endEff);
@@ -460,7 +450,9 @@ export default function SsrWalkthrough() {
           <span className="w-2 h-2 rounded-full bg-amber-400/80" />
           <span className="w-2 h-2 rounded-full bg-green-400/80" />
           <div className="flex-1 mx-4">
-            <div className="bg-slate-800/60 rounded px-2 py-0.5 text-[8px] text-slate-400 text-center">bellas-pizza.com/order</div>
+            <div className="bg-slate-800/60 rounded px-2 py-0.5 text-[8px] text-slate-400 text-center">
+              bellas-pizza.com/order
+            </div>
           </div>
         </div>
 
@@ -469,14 +461,33 @@ export default function SsrWalkthrough() {
             className="transition-[filter] duration-700"
             style={{ filter: isGray && numVisible > 0 ? 'grayscale(1) brightness(0.92)' : 'none' }}
           >
-            {/* Blank state */}
             {numVisible === 0 && (
               <div className="h-[380px] flex items-center justify-center">
-                <div className="text-sm text-slate-300">{effMs < 200 ? 'Requesting page...' : 'Downloading HTML...'}</div>
+                {stepIndex < 0 ? (
+                  <div className="text-center px-6">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                      <svg className="w-7 h-7 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-slate-500 mb-4">
+                      See how SSR loads your restaurant page &mdash; step by step
+                    </p>
+                    <button
+                      onClick={advance}
+                      className="px-7 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+                    >
+                      Start Walkthrough
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-300">
+                    {effMs < 200 ? 'Requesting page...' : 'Downloading HTML...'}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Header */}
             {numVisible >= 1 && (
               <div className="px-4 py-3 border-b border-slate-100">
                 <div className="flex items-center justify-between">
@@ -486,12 +497,17 @@ export default function SsrWalkthrough() {
                     </div>
                     <div>
                       <div className="text-sm font-bold text-slate-800">Bella&apos;s Pizza</div>
-                      <div className="text-[10px] text-amber-500">&#9733;&#9733;&#9733;&#9733;&#9734; 4.2 &middot; Open &middot; $$</div>
+                      <div className="text-[10px] text-amber-500">
+                        &#9733;&#9733;&#9733;&#9733;&#9734; 4.2 &middot; Open &middot; $$
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-1.5">
                     {['Menu', 'Reviews', 'Info'].map((t) => (
-                      <span key={t} className="text-[9px] px-2 py-0.5 bg-slate-100 rounded-md text-slate-500 font-medium">
+                      <span
+                        key={t}
+                        className="text-[9px] px-2 py-0.5 bg-slate-100 rounded-md text-slate-500 font-medium"
+                      >
                         {t}
                       </span>
                     ))}
@@ -500,7 +516,6 @@ export default function SsrWalkthrough() {
               </div>
             )}
 
-            {/* Menu Grid */}
             {numVisible >= 2 && (
               <div className="px-4 py-3">
                 <div className="text-[11px] font-bold text-slate-700 mb-2">Popular Items</div>
@@ -533,7 +548,6 @@ export default function SsrWalkthrough() {
               </div>
             )}
 
-            {/* Cart Widget */}
             {numVisible >= 3 && (
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
@@ -548,17 +562,20 @@ export default function SsrWalkthrough() {
                   </div>
                   <div className="text-right">
                     <div className="text-[11px] font-bold text-slate-800">$27.98</div>
-                    <div className="text-[8px] bg-indigo-600 text-white rounded px-1.5 py-0.5 font-semibold">Checkout</div>
+                    <div className="text-[8px] bg-indigo-600 text-white rounded px-1.5 py-0.5 font-semibold">
+                      Checkout
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Delivery Info */}
             {numVisible >= 4 && (
               <div className="px-4 py-1.5">
                 <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                  <div className="w-5 h-5 bg-slate-100 rounded flex items-center justify-center text-[8px] text-slate-400">T</div>
+                  <div className="w-5 h-5 bg-slate-100 rounded flex items-center justify-center text-[8px] text-slate-400">
+                    T
+                  </div>
                   <span className="font-medium">Est. 25&ndash;35 min</span>
                   <span className="text-slate-300">&middot;</span>
                   <span className="text-emerald-600 font-medium">Free delivery over $30</span>
@@ -566,20 +583,20 @@ export default function SsrWalkthrough() {
               </div>
             )}
 
-            {/* Reviews */}
             {numVisible >= 5 && (
               <div className="px-4 py-2.5 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[11px] font-bold text-slate-700">Customer Reviews</div>
-                    <div className="text-[9px] text-amber-500">&#9733;&#9733;&#9733;&#9733;&#9734; &middot; 142 reviews</div>
+                    <div className="text-[9px] text-amber-500">
+                      &#9733;&#9733;&#9733;&#9733;&#9734; &middot; 142 reviews
+                    </div>
                   </div>
                   <span className="text-[9px] text-indigo-500 font-medium">See all &#8594;</span>
                 </div>
               </div>
             )}
 
-            {/* Recommendations */}
             {numVisible >= 6 && (
               <div className="px-4 py-2.5 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-1.5">
@@ -595,7 +612,7 @@ export default function SsrWalkthrough() {
             )}
           </div>
 
-          {/* ── Overlays ────────────────────────────────────────────────── */}
+          {/* Overlays */}
           {isGray && numVisible > 0 && (
             <div className="absolute top-3 right-3 bg-red-50 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-red-200 flex items-center gap-1.5">
               <span className="w-2 h-2 bg-red-400 rounded-full" />
@@ -610,14 +627,14 @@ export default function SsrWalkthrough() {
             </div>
           )}
 
-          {/* Waiting for JS overlay */}
           {waitingForJs && numVisible > 0 && (
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-100/90 to-transparent px-4 py-3">
-              <span className="text-[10px] text-slate-500 font-medium">Waiting for JS bundle to finish downloading...</span>
+              <span className="text-[10px] text-slate-500 font-medium">
+                Waiting for JS bundle to finish downloading...
+              </span>
             </div>
           )}
 
-          {/* Hydration progress bar */}
           {isHydrating && numVisible > 0 && (
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-indigo-50/90 to-transparent px-4 py-3">
               <div className="flex items-center gap-3">
@@ -644,25 +661,105 @@ export default function SsrWalkthrough() {
         </div>
       </div>
 
-      {/* ── Description ───────────────────────────────────────────────── */}
-      <div className="px-5 py-3.5 bg-amber-50/50 border-t border-amber-100/50">
-        <p className="text-[13px] text-slate-700 leading-relaxed">{current.step.description}</p>
-      </div>
+      {/* ── Floating insight note ─────────────────────────────────────── */}
+      {stepIndex >= 0 && (
+      <div className="border-t border-slate-200">
+          <div className="p-5 bg-gradient-to-b from-slate-50/80 to-white">
+            <div
+              className={`transition-all duration-400 ease-out ${noteVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
+            >
+              {currentStep && (
+                <div className="relative bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-slate-100 overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-violet-500" />
 
-      {/* ── Controls ──────────────────────────────────────────────────── */}
-      <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center gap-3">
-        <button
-          onClick={isPlaying ? pause : play}
-          className="px-5 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-        >
-          {isPlaying ? 'Pause' : wallMs >= TOTAL_WALL ? 'Replay Walkthrough' : wallMs > 0 ? 'Resume' : 'Play Walkthrough'}
-        </button>
-        {wallMs > 0 && (
-          <button onClick={reset} className="px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-            Reset
-          </button>
-        )}
+                  <div className="pl-6 pr-5 py-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-[11px] font-bold text-white bg-indigo-600 px-2.5 py-0.5 rounded-full shadow-sm">
+                        {stepIndex + 1} / {STEPS.length}
+                      </span>
+                      <h4 className="text-base font-bold text-slate-900">{currentStep.note.title}</h4>
+                    </div>
+
+                    <p className="text-[13px] text-slate-600 leading-relaxed mb-3">{currentStep.note.body}</p>
+
+                    <div className="bg-amber-50/80 border-l-[3px] border-amber-400 rounded-r-lg px-4 py-3 mb-5">
+                      <div className="text-[11px] font-bold text-amber-700 uppercase tracking-wide mb-0.5">
+                        Key Insight
+                      </div>
+                      <p className="text-[12px] text-amber-900/80 leading-relaxed">{currentStep.note.insight}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-1.5">
+                        {STEPS.map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-2 h-2 rounded-full transition-colors ${
+                              i < stepIndex
+                                ? 'bg-indigo-300'
+                                : i === stepIndex
+                                  ? 'bg-indigo-600'
+                                  : 'bg-slate-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {stepIndex > 0 && (
+                          <button
+                            onClick={goBack}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Back
+                          </button>
+                        )}
+
+                        {stepIndex < STEPS.length - 1 ? (
+                          <button
+                            onClick={advance}
+                            className="flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
+                          >
+                            Next
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={reset}
+                            className="flex items-center gap-1.5 px-5 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                          >
+                            Start Over
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {!noteVisible && animating && (
+              <div className="flex items-center justify-center py-6">
+                <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+                  Simulating...
+                </div>
+              </div>
+            )}
+          </div>
       </div>
+      )}
     </div>
   );
 }
