@@ -1,0 +1,6 @@
+<%#
+  RSC streaming entry point. Same shape as restaurants/show_rsc.html.erb:
+  stream_react_component renders MediaGalleryRSC (a server component) and flushes
+  its HTML section-by-section. The whole @gallery manifest is passed as props.
+%>
+<%= stream_react_component("MediaGalleryRSC", props: @gallery, prerender: true) %>

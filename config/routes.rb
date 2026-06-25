@@ -20,6 +20,11 @@ Rails.application.routes.draw do
   get '/measure' => 'pages#measure'
   get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
 
+  # Multimedia showcase — media-heavy page (HLS video + responsive image galleries).
+  # RSC-first single page (issue #98). Both paths hit the same RSC action.
+  get '/media-gallery', to: 'media_gallery#show_rsc', as: :media_gallery
+  get '/media-gallery/rsc', to: 'media_gallery#show_rsc'
+
   # Restaurant detail page — three versions for the markdown-heavy detail view
   get '/restaurant/:id/ssr', to: 'restaurants#show_ssr', as: :restaurant_show_ssr
   get '/restaurant/:id/client', to: 'restaurants#show_client', as: :restaurant_show_client
