@@ -7,6 +7,7 @@ import type { NetworkPreset, SectionSnapshot, SimulationParams } from './types';
 import BrowserMockup from './ui/BrowserMockup';
 import ImpactAnalysis from './ui/ImpactAnalysis';
 import SsrWalkthrough from './ui/SsrWalkthrough';
+import CascadeImpact from './ui/CascadeImpact';
 import TechnicalDeepDive from './ui/TechnicalDeepDive';
 
 function fmt(n: number): string {
@@ -158,6 +159,9 @@ export default function SsrRscPlayground() {
           <h2 className="text-lg font-bold text-slate-800 mb-3">How SSR loads your page — step by step</h2>
           <SsrWalkthrough />
         </div>
+
+        {/* Cascade impact — what happens when you add a section */}
+        <CascadeImpact />
 
         {/* Quick side-by-side comparison */}
         <div>
