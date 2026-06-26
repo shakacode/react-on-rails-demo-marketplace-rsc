@@ -86,8 +86,8 @@ const L = (id: string, l: string, c: string, bg: string, badge?: string): Browse
 const STEPS: StreamStep[] = [
   {
     source: 'cdn',
-    title: 'Static Shell — Real Content from CDN Cache',
-    desc: 'Pre-built at deploy time. Served from CDN edge in ~30ms — no origin server needed.',
+    title: 'Cached Static Shell — Content + Skeletons from CDN',
+    desc: 'Pre-built at deploy time, served from CDN edge in ~30ms. Contains real content for static components AND skeleton fallbacks for dynamic Suspense boundaries — all in one cached document.',
     html:
 `<!DOCTYPE html>
 <html>
@@ -105,22 +105,7 @@ const STEPS: StreamStep[] = [
     <h3>Today's Specials</h3>
     <div>Truffle Pizza — $18.99</div>
     <div>Lobster Ravioli — $24.99</div>
-  </section>`,
-    detail: 'Header and Specials contain real rendered content — not skeletons. The Specials component uses "await cms.todaysSpecials()" but has no connection()/cookies()/headers() call, so React resolves it at build time and bakes the result into the cached shell. The JS bundle loads with async — it does NOT block rendering.',
-    sections: [
-      L('header', 'Header', "Bella's Pizza  4.2 · Open", '#e2e8f0'),
-      L('specials', 'Specials', 'Truffle Pizza $18.99 | Lobster Ravioli $24.99', '#fef3c7', 'async + cached'),
-      H('menu', 'Menu'),
-      H('cart', 'Cart'),
-      H('reviews', 'Reviews'),
-    ],
-  },
-  {
-    source: 'cdn',
-    title: 'Skeleton Fallbacks — Still from CDN Cache',
-    desc: 'Suspense boundary placeholders are part of the same cached HTML document.',
-    html:
-`
+  </section>
 
   <!--$?--><template id="B:0"></template>
   <div class="menu-skeleton">
@@ -136,7 +121,7 @@ const STEPS: StreamStep[] = [
   <!--$?--><template id="B:2"></template>
   <div class="reviews-skeleton">Loading...</div>
   <!--/$-->`,
-    detail: '<!--$?--> and <template id="B:X"> are React\'s Suspense boundary markers. The browser renders skeleton loading states instantly. Meanwhile, the CDN has already connected to the origin server and sent the "postponed" state — the origin is fetching cart data, menu items, and reviews in parallel right now.',
+    detail: 'Header and Specials contain real rendered content — the await cms.todaysSpecials() resolved at build time (no connection()/cookies() call). The <!--$?--> markers and <template id="B:X"> tags are Suspense boundary placeholders — the browser shows skeleton loading states for Menu, Cart, and Reviews instantly. Meanwhile, the CDN has already connected to the origin server to resume rendering the dynamic boundaries.',
     sections: [
       L('header', 'Header', "Bella's Pizza  4.2 · Open", '#e2e8f0'),
       L('specials', 'Specials', 'Truffle Pizza $18.99 | Lobster Ravioli $24.99', '#fef3c7', 'async + cached'),
