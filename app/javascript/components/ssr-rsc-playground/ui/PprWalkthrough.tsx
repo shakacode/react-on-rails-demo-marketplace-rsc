@@ -182,6 +182,7 @@ const TOTAL_EFF = TTI_EFF + TRANS;
 
 interface SectionState {
   header: 'hidden' | 'skeleton' | 'loaded' | 'interactive';
+  specials: 'hidden' | 'skeleton' | 'loaded' | 'interactive';
   menu: 'hidden' | 'skeleton' | 'loaded' | 'interactive';
   cart: 'hidden' | 'skeleton' | 'loaded' | 'interactive';
   delivery: 'hidden' | 'skeleton' | 'loaded' | 'interactive';
@@ -193,6 +194,7 @@ function getSectionStates(effMs: number): SectionState {
   const shellPainted = effMs >= SHELL_FCP;
   return {
     header: shellPainted ? (effMs >= SHELL_FCP + 10 ? 'interactive' : 'loaded') : effMs > CDN_LATENCY + 50 ? 'skeleton' : 'hidden',
+    specials: shellPainted ? (effMs >= SHELL_FCP + 10 ? 'interactive' : 'loaded') : effMs > CDN_LATENCY + 50 ? 'skeleton' : 'hidden',
     menu: effMs >= MENU_INTERACTIVE ? 'interactive' : effMs >= MENU_VISIBLE ? 'loaded' : shellPainted ? 'skeleton' : 'hidden',
     cart: effMs >= CART_INTERACTIVE ? 'interactive' : effMs >= CART_VISIBLE ? 'loaded' : shellPainted ? 'skeleton' : 'hidden',
     delivery: effMs >= DELIVERY_INTERACTIVE ? 'interactive' : effMs >= DELIVERY_VISIBLE ? 'loaded' : shellPainted ? 'skeleton' : 'hidden',
@@ -249,9 +251,9 @@ const STEPS: Step[] = [
     markerColor: '#10b981',
     note: {
       title: 'First Paint with Content — Not Just Skeletons',
-      body: `Shell paints at ${SHELL_FCP}ms. But look: Cart and Delivery already show REAL CONTENT, not skeletons! Their origin chunks arrived at ~${Math.round(CART_VISIBLE)}ms — before FCP. The $RC inline script already swapped their skeletons with real HTML. Meanwhile, Menu, Reviews, and Recommendations are still skeleton placeholders (the origin is still fetching their data).`,
+      body: `Shell paints at ${SHELL_FCP}ms. Header AND Specials show real content immediately — even though Specials used "await cms.todaysSpecials()". That async call resolved at build time (no connection() = static). Cart and Delivery also show real content — their origin chunks arrived at ~${Math.round(CART_VISIBLE)}ms, before FCP. Menu, Reviews, and Recommendations are still skeleton placeholders.`,
       insight:
-        'This is the PPR breakthrough: at FCP, you see a MIX of real content and skeletons. Boundaries that resolved fast on the server (Cart: user session cache, Delivery: cached zones) appear immediately. Slow boundaries (Menu: DB query, Reviews: external API) show skeletons. The page is ALREADY useful — not an empty shell.',
+        'Key insight: "async" does NOT mean "dynamic". Specials calls await but has no connection()/cookies()/headers() — so React resolves it at build time and bakes the result into the static shell. Only components that call connection() (or are wrapped in a dynamic Suspense boundary) become "postponed" holes that stream at request time.',
     },
   },
   {
@@ -306,7 +308,7 @@ const STEPS: Step[] = [
     markerColor: '#6366f1',
     note: {
       title: 'Every Boundary Works',
-      body: `All 6 sections are interactive at ${Math.round(TTI_EFF)}ms. But the page was USEFUL long before: Cart was clickable at ${Math.round(CART_INTERACTIVE)}ms, content was readable at ${Math.round(SHELL_FCP)}ms. The user never saw a blank screen or waited for a monolithic hydration pass.`,
+      body: `All 7 sections are interactive at ${Math.round(TTI_EFF)}ms. But the page was USEFUL long before: Header and Specials were interactive at FCP (${SHELL_FCP}ms) — both static, both baked into the shell. Cart was clickable at ${Math.round(CART_INTERACTIVE)}ms. The user never saw a blank screen or waited for a monolithic hydration pass.`,
       insight:
         'PPR stacks: CDN-speed FCP (' + SHELL_FCP + 'ms) → streaming content via $RC → server components (zero JS) → selective hydration (tree order, ~50ms each) → priority override on click. Adding a new Suspense boundary costs only that boundary\'s server render time. Nothing else gets slower.',
     },
@@ -374,9 +376,12 @@ function renderTokens(tokens: Seg[]): React.ReactNode {
 const APP_CODE = [
   '// page.tsx — React Server Component with PPR',
   'export default async function OrderPage() {',
+  '  const specials = await cms.todaysSpecials();',
+  '  // ↑ async but NO connection() — resolves at build, cached in shell',
   '  return (',
   '    <Layout>',
   '      <Header />           {/* ← Static: pre-rendered at build */}',
+  '      <Specials items={specials} /> {/* ← Also static! */}',
   '',
   '      <Suspense fallback={<MenuSkeleton />}>',
   '        <Menu items={await db.menuItems()} />',
@@ -428,8 +433,8 @@ const RESUME_TOKENS = RESUME_CODE.map(tokenizeCode);
 
 // ── Code highlight colors for static vs dynamic lines ────────────────────────
 
-const STATIC_LINES = new Set([3, 4]);
-const DYNAMIC_LINES = new Set([6, 7, 8, 10, 11, 12, 14, 15, 16]);
+const STATIC_LINES = new Set([2, 3, 5, 6, 7]);
+const DYNAMIC_LINES = new Set([9, 10, 11, 13, 14, 15, 17, 18, 19]);
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -505,7 +510,7 @@ export default function PprWalkthrough() {
   const allContentVisible = effMs >= Math.max(REVIEWS_VISIBLE, RECS_VISIBLE);
   const fullyInteractive = effMs >= TTI_EFF;
 
-  const totalSections = 6;
+  const totalSections = 7;
   const loadedCount = Object.values(sectionStates).filter((s) => s === 'loaded' || s === 'interactive').length;
   const interactiveCount = Object.values(sectionStates).filter((s) => s === 'interactive').length;
 
@@ -528,7 +533,7 @@ export default function PprWalkthrough() {
             <ConceptCard
               step="1"
               title="Build Time"
-              desc="React's prerender() API renders the page and aborts via AbortSignal. Async Suspense boundaries that haven't resolved are frozen as 'postponed' state. The output is a static HTML shell with skeleton fallbacks baked in."
+              desc="React's prerender() API renders the page. Async calls without connection() resolve at build time (e.g. CMS fetches). Suspense boundaries that haven't resolved are frozen as 'postponed' state. The output is a static HTML shell with real content + skeleton fallbacks."
               color="#8b5cf6"
               icon={<BuildIcon />}
             />
@@ -956,6 +961,38 @@ export default function PprWalkthrough() {
                     </div>
                   </div>
                   <StatusBadge state={sectionStates.header} label="Header (static)" />
+                </div>
+
+                {/* Specials — async but static (fetched from CMS at build time) */}
+                <div className="px-4 py-2 border-b border-slate-100">
+                  {sectionStates.specials === 'loaded' || sectionStates.specials === 'interactive' ? (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="text-[10px] font-bold text-amber-700">Today&apos;s Specials</span>
+                        <span className="text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-semibold">async + cached</span>
+                      </div>
+                      <div className="flex gap-1.5">
+                        {[
+                          { name: 'Truffle Pizza', price: '$18.99', bg: 'bg-amber-50', border: 'border-amber-200' },
+                          { name: 'Lobster Ravioli', price: '$24.99', bg: 'bg-rose-50', border: 'border-rose-200' },
+                        ].map((item) => (
+                          <div key={item.name} className={`flex-1 ${item.bg} border ${item.border} rounded-lg px-2 py-1.5 text-center`}>
+                            <div className="text-[8px] font-semibold text-slate-700">{item.name}</div>
+                            <div className="text-[8px] font-bold text-amber-600">{item.price}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : sectionStates.specials === 'skeleton' ? (
+                    <div className="animate-pulse">
+                      <div className="h-2.5 bg-slate-200 rounded w-24 mb-1.5" />
+                      <div className="flex gap-1.5">
+                        <div className="flex-1 h-8 bg-slate-100 rounded-lg" />
+                        <div className="flex-1 h-8 bg-slate-100 rounded-lg" />
+                      </div>
+                    </div>
+                  ) : null}
+                  <StatusBadge state={sectionStates.specials} label="Specials (async but static — cms.todaysSpecials())" />
                 </div>
 
                 {/* Menu section — Suspense boundary */}
