@@ -55,6 +55,14 @@ Rails.application.routes.draw do
   get '/blog/rsc-step4', to: 'blog#post_rsc_step4'
   get '/blog/rsc-step5', to: 'blog#post_rsc_step5'
 
+  # CSS code-splitting experiment — per-page big CSS files, cssShared shared across pages.
+  # one = Shared + A, two = Shared + B. Three rendering shapes: ssr / rsc-server / rsc-client.
+  get '/css-demo/one/ssr', to: 'css_demo#one_ssr'
+  get '/css-demo/two/ssr', to: 'css_demo#two_ssr'
+  get '/css-demo/one/rsc-server', to: 'css_demo#one_rsc_server'
+  get '/css-demo/two/rsc-server', to: 'css_demo#two_rsc_server'
+  get '/css-demo/one/rsc-client', to: 'css_demo#one_rsc_client'
+  get '/css-demo/two/rsc-client', to: 'css_demo#two_rsc_client'
 
   # API endpoints (Task 2)
   namespace :api do
