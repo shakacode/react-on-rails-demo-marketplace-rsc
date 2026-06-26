@@ -376,26 +376,31 @@ function renderTokens(tokens: Seg[]): React.ReactNode {
 const APP_CODE = [
   '// page.tsx — React Server Component with PPR',
   'export default async function OrderPage() {',
-  '  const specials = await cms.todaysSpecials();',
-  '  // ↑ async but NO connection() — resolves at build, cached in shell',
   '  return (',
   '    <Layout>',
-  '      <Header />           {/* ← Static: pre-rendered at build */}',
-  '      <Specials items={specials} /> {/* ← Also static! */}',
+  '      <Header />       {/* ← Static */}',
+  '      <Specials />     {/* ← Also static! (async inside) */}',
   '',
   '      <Suspense fallback={<MenuSkeleton />}>',
-  '        <Menu items={await db.menuItems()} />',
-  '      </Suspense>          {/* ← Dynamic: resumed at request time */}',
+  '        <Menu />       {/* ← Dynamic: calls connection() */}',
+  '      </Suspense>',
   '',
   '      <Suspense fallback={<CartSkeleton />}>',
-  '        <Cart user={await getUser()} />',
+  '        <Cart />       {/* ← Dynamic: calls cookies() */}',
   '      </Suspense>',
   '',
   '      <Suspense fallback={<ReviewsSkeleton />}>',
-  '        <Reviews data={await db.reviews()} />',
+  '        <Reviews />',
   '      </Suspense>',
   '    </Layout>',
   '  );',
+  '}',
+  '',
+  '// Specials.tsx — async but NO connection()/cookies()',
+  'async function Specials() {',
+  '  const items = await cms.todaysSpecials();',
+  '  // ↑ resolves at build time → baked into static shell',
+  '  return <SpecialsGrid items={items} />;',
   '}',
 ];
 
@@ -433,8 +438,8 @@ const RESUME_TOKENS = RESUME_CODE.map(tokenizeCode);
 
 // ── Code highlight colors for static vs dynamic lines ────────────────────────
 
-const STATIC_LINES = new Set([2, 3, 5, 6, 7]);
-const DYNAMIC_LINES = new Set([9, 10, 11, 13, 14, 15, 17, 18, 19]);
+const STATIC_LINES = new Set([4, 5, 22, 23, 24, 25, 26]);
+const DYNAMIC_LINES = new Set([7, 8, 9, 11, 12, 13, 15, 16, 17]);
 
 // ── Component ────────────────────────────────────────────────────────────────
 
