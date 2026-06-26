@@ -157,7 +157,7 @@ const STEPS: Step[] = [
       title: 'The Request',
       body: 'The browser sends a GET request to the CDN edge. With SSR, the entire pre-rendered HTML is cached there — no round-trip to your Rails server. The response starts streaming immediately.',
       insight:
-        'But the browser can’t display anything yet. It needs to download HTML first, discover CSS and JS referenced in the <head>, and wait for ALL CSS to finish before it can paint a single pixel.',
+        'But the browser can\'t display anything yet. It needs to download the full HTML document, then CSS and JS referenced in the <head>. Nothing paints until the critical resources finish downloading.',
     },
   },
   {
@@ -168,7 +168,7 @@ const STEPS: Step[] = [
       title: 'Resource Discovery & Bandwidth Sharing',
       body: 'HTML starts downloading first. As the browser parses <head>, its preload scanner discovers <link> and <script> tags — CSS and JS begin downloading. Lazy component <script> tags deeper in <body> are found even later.',
       insight:
-        'All concurrent downloads share the same bandwidth via HTTP/2 multiplexing. Watch how bars slow down when new downloads start — adding more resources doesn’t just add time, it slows down EVERY other concurrent download.',
+        'All concurrent downloads share the same bandwidth via HTTP/2 multiplexing. Watch how bars slow down when new downloads start — adding more resources doesn\'t just add time, it slows down EVERY other concurrent download.',
     },
   },
   {
@@ -178,10 +178,10 @@ const STEPS: Step[] = [
     marker: 'FCP',
     markerColor: '#f59e0b',
     note: {
-      title: 'CSS Blocks All Painting',
-      body: 'The browser CANNOT paint a single pixel until ALL CSS referenced in <head> finishes downloading. Now CSS is ready — the browser paints whatever HTML has arrived so far. Notice the content appears gray and non-interactive.',
+      title: 'First Contentful Paint',
+      body: 'CSS and HTML have finished downloading. The browser paints the page content for the first time. Notice the content appears gray and non-interactive — buttons don\'t work yet.',
       insight:
-        'This is the critical bottleneck: every CSS file in <head> delays the entire page’s first paint — not just the section that needs it. In SSR, ALL sections’ CSS lives in <head>, so adding one section’s styles delays EVERY section’s first paint.',
+        'Content is visible, but the page is frozen. The browser still needs to download, parse, and execute the full JS bundle before ANY button or interaction works. This is the "uncanny valley" of SSR — it looks ready but isn\'t.',
     },
   },
   {
@@ -190,9 +190,9 @@ const STEPS: Step[] = [
     effEnd: HTML_DONE_EFF,
     note: {
       title: 'HTML Paints Top-to-Bottom',
-      body: 'As more HTML bytes stream in, the browser paints more sections — header first, then menu, then cart. The page looks like it’s loading, which gives decent visual feedback.',
+      body: 'As more HTML bytes stream in, the browser paints more sections — header first, then menu, then cart. The page looks like it\'s loading, which gives decent visual feedback.',
       insight:
-        'But everything is gray and non-interactive. This is the "uncanny valley" of SSR: the user sees content that looks ready but ignores every click. Buttons don’t respond, forms don’t submit. The page is a screenshot, not an application.',
+        'But everything is gray and non-interactive. This is the "uncanny valley" of SSR: the user sees content that looks ready but ignores every click. Buttons don\'t respond, forms don\'t submit. The page is a screenshot, not an application.',
     },
   },
   {
@@ -205,7 +205,7 @@ const STEPS: Step[] = [
       title: 'Visible But Completely Frozen',
       body: 'The entire HTML document has arrived. Every section is painted on screen. The page LOOKS finished and ready to use — header, menu, cart, reviews, all visible.',
       insight:
-        'But it’s a lie. No button works. No form submits. No dropdown opens. The user sees a "finished" page that ignores every interaction. The JavaScript bundle is still downloading — and the page cannot come alive without it.',
+        'But it\'s a lie. No button works. No form submits. No dropdown opens. The user sees a "finished" page that ignores every interaction. The JavaScript bundle is still downloading — and the page cannot come alive without it.',
     },
   },
   {
@@ -229,7 +229,7 @@ const STEPS: Step[] = [
       title: 'Finally Interactive!',
       body: 'Hydration is complete. The page springs to life — buttons click, forms submit, dropdowns open. The grayscale filter lifts and colors return. But look at the menu — items still show skeleton placeholders.',
       insight:
-        'The menu skeletons reveal another waterfall: lazy components’ JS chunks were preloaded, but they need GraphQL data from the server. That data fetch couldn’t even START until JS loaded, parsed, and hydrated. Sequential dependencies, not parallel work.',
+        'The menu skeletons reveal another waterfall: lazy components\' JS chunks were preloaded, but they need GraphQL data from the server. That data fetch couldn\'t even START until JS loaded, parsed, and hydrated. Sequential dependencies, not parallel work.',
     },
   },
   {
@@ -253,7 +253,7 @@ const STEPS: Step[] = [
       title: 'The Cascading Cost of SSR',
       body: 'Every section is finally rendered with real data. Menu items appear with names and prices. The page is truly complete — it took the full cascade to get here.',
       insight:
-        'The fundamental problem: CSS blocked paint → JS blocked interactivity → hydration blocked data fetch → data blocked content. Every section waited for every other section at every stage. Adding ONE new component slows down the ENTIRE page. This is the architectural cost that RSC solves.',
+        'The fundamental problem: JS blocked interactivity → monolithic hydration blocked everything → every section waited for every other section. Adding ONE new component\'s JS slows down the ENTIRE page\'s interactivity. This coupling is the architectural cost that RSC solves with streaming and selective hydration.',
     },
   },
 ];

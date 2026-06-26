@@ -135,14 +135,6 @@ const hydDelta = Math.round(
 
 const SSR_CHAINS = [
   {
-    icon: '🎨',
-    trigger: { text: `+${A.cssKb - B.cssKb} KB CSS`, color: '#a855f7' },
-    effects: [
-      { text: `FCP +${fcpDelta}ms`, color: '#f59e0b' },
-      { text: 'ALL sections paint later', color: '#ef4444' },
-    ],
-  },
-  {
     icon: '⚡',
     trigger: { text: `+${A.jsKb - B.jsKb} KB JS`, color: '#f59e0b' },
     effects: [
@@ -649,9 +641,9 @@ export default function CascadeImpact() {
           <div className="px-6 py-4 bg-gradient-to-r from-red-50 to-orange-50 border-t border-red-100">
             <p className="text-[13px] text-red-800 leading-relaxed">
               <strong>Every section on the page gets slower</strong> &mdash; not just the new one.
-              In SSR, one component&rsquo;s CSS, HTML, and JS cascade through the entire loading pipeline,
-              delaying paint, interactivity, and content for ALL existing sections.
-              <span className="text-red-600 font-bold"> This is the problem RSC solves.</span>
+              In SSR, one component&rsquo;s HTML and JS cascade through the entire loading pipeline,
+              delaying interactivity and content for ALL existing sections via monolithic hydration.
+              <span className="text-red-600 font-bold"> This is the problem RSC solves with streaming and selective hydration.</span>
             </p>
           </div>
         ) : mode === 'lazy' ? (

@@ -65,7 +65,7 @@ function simulateSSR(sections: PageSection[], net: NetworkProfile): Architecture
   const cssEnd = cssStart + downloadTime(totalCssKb, net);
   segments.push({
     id: 'ssr-css',
-    label: `CSS (${Math.round(totalCssKb)} KB) — blocks paint`,
+    label: `CSS (${Math.round(totalCssKb)} KB)`,
     startMs: cssStart,
     endMs: cssEnd,
     color: '#f59e0b',
@@ -193,8 +193,7 @@ function simulateRSC(sections: PageSection[], net: NetworkProfile): Architecture
     const streamStart = streamCursor + SERVER_PROCESS_PER_BOUNDARY_MS;
     const streamKb = sec.htmlKb + RSC_PAYLOAD_PER_BOUNDARY_KB;
     const streamEnd = streamStart + downloadTime(streamKb, net);
-    const boundaryCssEnd = streamStart + downloadTime(sec.cssKb, net);
-    const visibleAtMs = Math.max(streamEnd, boundaryCssEnd);
+    const visibleAtMs = streamEnd;
 
     const hydrationStart = Math.max(visibleAtMs, jsReadyMs);
     const hydrationTime = sec.clientJsKb > 0 ? SELECTIVE_HYDRATION_MS : 5;

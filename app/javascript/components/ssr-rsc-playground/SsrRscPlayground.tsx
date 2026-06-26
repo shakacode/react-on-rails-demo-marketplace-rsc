@@ -8,6 +8,8 @@ import BrowserMockup from './ui/BrowserMockup';
 import ImpactAnalysis from './ui/ImpactAnalysis';
 import SsrWalkthrough from './ui/SsrWalkthrough';
 import CascadeImpact from './ui/CascadeImpact';
+import RscSolution from './ui/RscSolution';
+import PprWalkthrough from './ui/PprWalkthrough';
 import TechnicalDeepDive from './ui/TechnicalDeepDive';
 
 function fmt(n: number): string {
@@ -16,7 +18,7 @@ function fmt(n: number): string {
 
 function getSsrAnnotation(playheadMs: number, fcpMs: number, ttiMs: number): string {
   if (playheadMs < 1) return 'Page requested — waiting for CDN response...';
-  if (playheadMs < fcpMs) return `Blank screen — ALL CSS must download before any paint (${fmt(fcpMs)})`;
+  if (playheadMs < fcpMs) return `Blank screen — waiting for HTML + CSS to download (${fmt(fcpMs)})`;
   if (playheadMs < ttiMs) return `Content visible but buttons DON'T WORK — hydrating... (TTI at ${fmt(ttiMs)})`;
   return `Fully interactive at ${fmt(ttiMs)}`;
 }
@@ -163,6 +165,15 @@ export default function SsrRscPlayground() {
         {/* Cascade impact — what happens when you add a section */}
         <CascadeImpact />
 
+        {/* RSC solution — how islands and streaming fix the problem */}
+        <RscSolution />
+
+        {/* PPR — Partial Prerendering introduction and walkthrough */}
+        <div>
+          <h2 className="text-lg font-bold text-slate-800 mb-3">How PPR loads your page — static shell + streaming resume</h2>
+          <PprWalkthrough />
+        </div>
+
         {/* Quick side-by-side comparison */}
         <div>
           <h2 className="text-lg font-bold text-slate-800 mb-3">Quick comparison: SSR vs RSC</h2>
@@ -222,13 +233,12 @@ export default function SsrRscPlayground() {
 
         {/* Compact metrics bar */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
             {[
               { label: 'FCP', ssr: result.ssr.metrics.fcpMs, rsc: result.rsc.metrics.fcpMs },
               { label: '1st Interactive', ssr: result.ssr.metrics.firstInteractiveMs, rsc: result.rsc.metrics.firstInteractiveMs },
               { label: 'Fully Interactive', ssr: result.ssr.metrics.ttiMs, rsc: result.rsc.metrics.ttiMs },
               { label: 'HTML', ssr: result.ssr.metrics.htmlKb, rsc: result.rsc.metrics.htmlKb, unit: 'KB' },
-              { label: 'CSS in <head>', ssr: result.ssr.metrics.cssInHeadKb, rsc: result.rsc.metrics.cssInHeadKb, unit: 'KB' },
               { label: 'JS Bundle', ssr: result.ssr.metrics.jsBundleKb, rsc: result.rsc.metrics.jsBundleKb, unit: 'KB' },
             ].map((m) => {
               const u = m.unit || '';

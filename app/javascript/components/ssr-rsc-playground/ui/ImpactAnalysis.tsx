@@ -89,7 +89,6 @@ export default function ImpactAnalysis({
               <span className="w-5 h-5 bg-red-100 rounded flex items-center justify-center text-[10px]">!</span>
               SSR: Cascading Impact
             </div>
-            <MetricRow label="CSS in <head>" before={`${Math.round(baseSSR.cssInHeadKb)}`} after={`${Math.round(addedSSR.cssInHeadKb)}`} unit=" KB" worse />
             <MetricRow label="FCP" before={fmt(baseSSR.fcpMs)} after={fmt(addedSSR.fcpMs)} unit="" worse />
             <MetricRow label="JS Bundle" before={`${Math.round(baseSSR.jsBundleKb)}`} after={`${Math.round(addedSSR.jsBundleKb)}`} unit=" KB" worse />
             <MetricRow label="TTI" before={fmt(baseSSR.ttiMs)} after={fmt(addedSSR.ttiMs)} unit="" worse />
@@ -103,7 +102,6 @@ export default function ImpactAnalysis({
               <span className="w-5 h-5 bg-emerald-100 rounded flex items-center justify-center text-[10px]">✓</span>
               RSC: Isolated Impact
             </div>
-            <UnchangedRow label="Shell CSS" value={`${Math.round(baseRSC.cssInHeadKb)}`} unit=" KB" />
             <UnchangedRow label="FCP" value={fmt(baseRSC.fcpMs)} unit="" />
             <UnchangedRow label="Client JS" value={`${Math.round(baseRSC.jsBundleKb)}`} unit=" KB" />
             <UnchangedRow label="TTI" value={fmt(baseRSC.ttiMs)} unit="" />

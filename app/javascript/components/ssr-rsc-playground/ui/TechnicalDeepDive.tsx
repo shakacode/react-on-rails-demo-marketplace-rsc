@@ -109,9 +109,9 @@ function GanttChart({
 
 const EXPLANATIONS = [
   {
-    title: 'CSS',
-    ssr: 'ALL CSS in <head>. Browser paints nothing until every stylesheet downloads. Adding a section’s CSS delays the entire page’s first paint.',
-    rsc: 'Each Suspense boundary carries its own CSS. Menu’s CSS doesn’t block Header from painting.',
+    title: 'Streaming',
+    ssr: 'The server renders the ENTIRE page to HTML before sending anything. The browser waits for the full document -- slow sections delay everything.',
+    rsc: 'The server streams a tiny shell immediately, then streams each Suspense boundary as its data resolves. Fast sections appear first.',
   },
   {
     title: 'JavaScript',
@@ -131,7 +131,7 @@ const EXPLANATIONS = [
   {
     title: 'Download Size',
     ssr: 'One large HTML response. More sections = more bytes before anything starts. Exceeding 14 KB (TCP slow start) adds extra round trips.',
-    rsc: 'Tiny shell first, then each boundary streams as its data resolves. Earlier content isn’t delayed by later content.',
+    rsc: 'Tiny shell first, then each boundary streams as its data resolves. Earlier content is not delayed by later content.',
   },
 ];
 
@@ -163,7 +163,7 @@ export default function TechnicalDeepDive({ result, playheadMs }: TechnicalDeepD
                 maxDurationMs={result.maxDurationMs}
               />
               <div className="text-[10px] text-slate-500 mt-1">
-                CSS must ALL load before ANY paint. Hydration is one pass — no section is interactive until all finish.
+                Full page downloads before paint. Hydration is one monolithic pass — no section is interactive until ALL finish.
               </div>
             </div>
             <div>
@@ -175,7 +175,7 @@ export default function TechnicalDeepDive({ result, playheadMs }: TechnicalDeepD
                 maxDurationMs={result.maxDurationMs}
               />
               <div className="text-[10px] text-slate-500 mt-1">
-                Each boundary brings its own CSS. Sections hydrate independently. Click triggers priority hydration.
+                Shell streams instantly. Each boundary streams as data resolves. Sections hydrate independently — click triggers priority hydration.
               </div>
             </div>
           </div>
