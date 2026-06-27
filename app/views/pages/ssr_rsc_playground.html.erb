@@ -1,0 +1,6 @@
+<% content_for(:page_title) { "SSR vs RSC Playground | React on Rails Performance Demo" } %>
+<% content_for(:page_description) do %>
+  Interactive playground to explore SSR performance tradeoffs and see how RSC eliminates them. Tune parameters and watch animated timelines.
+<% end %>
+
+<%= react_component("SsrRscPlayground", props: {}, prerender: false) %>
