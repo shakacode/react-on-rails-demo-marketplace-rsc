@@ -442,6 +442,65 @@ export default function SsrWalkthrough() {
         </div>
       </div>
 
+      {/* ── Step navigation ─────────────────────────────────────────── */}
+      {stepIndex >= 0 && (
+        <div className="px-4 py-2.5 bg-white border-t border-slate-200 flex items-center justify-between">
+          <div className="flex gap-1.5">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  i < stepIndex
+                    ? 'bg-indigo-300'
+                    : i === stepIndex
+                      ? 'bg-indigo-600'
+                      : 'bg-slate-200'
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {stepIndex > 0 && (
+              <button
+                onClick={goBack}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+            )}
+
+            {stepIndex < STEPS.length - 1 ? (
+              <button
+                onClick={advance}
+                className="flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
+              >
+                Next
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={reset}
+                className="flex items-center gap-1.5 px-5 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+              >
+                Start Over
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Browser mockup ────────────────────────────────────────────── */}
       <div className="border-t border-slate-700">
         <div className="h-7 bg-gradient-to-b from-slate-600 to-slate-700 flex items-center px-3 gap-1.5">
@@ -688,61 +747,6 @@ export default function SsrWalkthrough() {
                       <p className="text-[12px] text-amber-900/80 leading-relaxed">{currentStep.note.insight}</p>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-1.5">
-                        {STEPS.map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-2 h-2 rounded-full transition-colors ${
-                              i < stepIndex
-                                ? 'bg-indigo-300'
-                                : i === stepIndex
-                                  ? 'bg-indigo-600'
-                                  : 'bg-slate-200'
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {stepIndex > 0 && (
-                          <button
-                            onClick={goBack}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                            Back
-                          </button>
-                        )}
-
-                        {stepIndex < STEPS.length - 1 ? (
-                          <button
-                            onClick={advance}
-                            className="flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
-                          >
-                            Next
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={reset}
-                            className="flex items-center gap-1.5 px-5 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
-                          >
-                            Start Over
-                          </button>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}

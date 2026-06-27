@@ -336,7 +336,7 @@ function tokenizeCode(raw: string): Seg[] {
     if ((match = rest.match(/^(import|from|export|default|async|function|await|const|return)\b/))) {
       segs.push({ text: match[0], color: '#c084fc' });
       rest = rest.slice(match[0].length);
-    } else if ((match = rest.match(/^(prerender|cache|Suspense|App|signal|controller|prelude|postponed|savePostponedState|resumeOnServer)\b/))) {
+    } else if ((match = rest.match(/^(prerender|cache|resume|Suspense|App|signal|controller|prelude|postponed|savePostponedState|resumeOnServer)\b/))) {
       segs.push({ text: match[0], color: '#67e8f9' });
       rest = rest.slice(match[0].length);
     } else if ((match = rest.match(/^'[^']*'/))) {
@@ -378,15 +378,18 @@ const APP_CODE = [
   'export default async function OrderPage() {',
   '  return (',
   '    <Layout>',
-  '      <Header />       {/* ← Static */}',
-  '      <Specials />     {/* ← Also static! (async inside) */}',
+  '      <Header />      {/* ← Static */}',
+  '',
+  '      <Suspense fallback={<SpecialsSkeleton />}>',
+  '        <Specials />  {/* ← Cached */}',
+  '      </Suspense>',
   '',
   '      <Suspense fallback={<MenuSkeleton />}>',
-  '        <Menu />       {/* ← Dynamic: calls connection() */}',
+  '        <Menu />      {/* ← Dynamic */}',
   '      </Suspense>',
   '',
   '      <Suspense fallback={<CartSkeleton />}>',
-  '        <Cart />       {/* ← Dynamic: calls cookies() */}',
+  '        <Cart />      {/* ← Dynamic */}',
   '      </Suspense>',
   '',
   '      <Suspense fallback={<ReviewsSkeleton />}>',
@@ -395,24 +398,37 @@ const APP_CODE = [
   '    </Layout>',
   '  );',
   '}',
+];
+
+const SPECIALS_CODE = [
+  "// Specials.tsx",
+  "import { cache } from 'react-on-rails-pro/cache';",
   '',
-  '// Specials.tsx — async but NO connection()/cookies()',
-  'async function Specials() {',
-  '  const items = await cms.todaysSpecials();',
-  '  // ↑ resolves at build time → baked into static shell',
-  '  return <SpecialsGrid items={items} />;',
-  '}',
+  'const Specials = cache(',
+  '  async () => {',
+  '    const items = await cms.todaysSpecials();',
+  '    return <SpecialsGrid items={items} />;',
+  '  },',
+  "  { key: 'specials', ttl: '1h' }",
+  ');',
+  '',
+  '// cache() wraps the component so its output is',
+  '// cached and reused — no re-fetch on every request.',
+  '// The Suspense boundary above shows a skeleton',
+  "// only on the first render; after that it's instant.",
 ];
 
 const PRERENDER_CODE = [
   "import { prerender } from 'react-dom/static';",
   '',
-  '// Build time (simplified): render, abort to freeze dynamic holes',
+  '// Build time: render, abort to freeze dynamic holes',
   'const controller = new AbortController();',
-  'setTimeout(() => controller.abort()); // abort after sync work',
-  'const { prelude, postponed } = await prerender(<App />, {',
-  '  signal: controller.signal',
-  '});',
+  'setTimeout(() => controller.abort());',
+  '',
+  'const { prelude, postponed } = await prerender(',
+  '  <App />,',
+  '  { signal: controller.signal }',
+  ');',
   '',
   '// Cache static HTML shell on CDN',
   'await cdn.put(route, prelude);',
@@ -424,22 +440,27 @@ const PRERENDER_CODE = [
 const RESUME_CODE = [
   "import { resume } from 'react-dom/server';",
   '',
-  '// At request time: resume from postponed state (simplified)',
+  '// At request time: resume from postponed state',
   'const postponed = await getPostponedState(route);',
-  'const stream = await resume(<App />, postponed);',
   '',
-  '// Pipe dynamic HTML chunks to the response writable stream',
+  'const stream = await resume(',
+  '  <App />,',
+  '  postponed',
+  ');',
+  '',
+  '// Pipe dynamic HTML chunks to the response',
   'stream.pipeTo(response.writable);',
 ];
 
 const APP_TOKENS = APP_CODE.map(tokenizeCode);
+const SPECIALS_TOKENS = SPECIALS_CODE.map(tokenizeCode);
 const PRERENDER_TOKENS = PRERENDER_CODE.map(tokenizeCode);
 const RESUME_TOKENS = RESUME_CODE.map(tokenizeCode);
 
 // ── Code highlight colors for static vs dynamic lines ────────────────────────
 
-const STATIC_LINES = new Set([4, 5, 22, 23, 24, 25, 26]);
-const DYNAMIC_LINES = new Set([7, 8, 9, 11, 12, 13, 15, 16, 17]);
+const STATIC_LINES = new Set([4, 6, 7, 8]);
+const DYNAMIC_LINES = new Set([10, 11, 12, 14, 15, 16, 18, 19, 20]);
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -559,15 +580,15 @@ export default function PprWalkthrough() {
           </div>
         </div>
 
-        {/* Code panels */}
-        <div className="grid grid-cols-3 divide-x divide-slate-200">
+        {/* Code panels — Row 1: React Component + Specials definition */}
+        <div className="grid grid-cols-2 divide-x divide-slate-200">
           {/* App code */}
           <div>
             <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">React Component</span>
             </div>
-            <div className="bg-slate-900 p-4 font-mono text-[10px] leading-[18px] overflow-x-auto min-h-[320px]">
+            <div className="bg-slate-900 p-4 font-mono text-[11px] leading-[20px] overflow-x-auto whitespace-pre">
               {APP_TOKENS.map((tokens, i) => (
                 <div
                   key={i}
@@ -593,7 +614,7 @@ export default function PprWalkthrough() {
               <div className="mt-3 flex gap-4 text-[9px]">
                 <span className="flex items-center gap-1.5">
                   <span className="w-3 h-0.5 bg-emerald-500 rounded" />
-                  <span className="text-emerald-400">Static (build-time)</span>
+                  <span className="text-emerald-400">Static / Cached</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-3 h-0.5 bg-indigo-500 rounded" />
@@ -603,13 +624,40 @@ export default function PprWalkthrough() {
             </div>
           </div>
 
+          {/* Specials definition */}
+          <div>
+            <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cached Component</span>
+            </div>
+            <div className="bg-slate-900 p-4 font-mono text-[11px] leading-[20px] overflow-x-auto whitespace-pre">
+              {SPECIALS_TOKENS.map((tokens, i) => (
+                <div
+                  key={i}
+                  className="flex"
+                  style={{
+                    backgroundColor: (i >= 1 && i <= 9) ? 'rgba(245, 158, 11, 0.06)' : undefined,
+                    borderLeft: (i >= 1 && i <= 9) ? '2px solid #f59e0b' : '2px solid transparent',
+                    paddingLeft: '10px',
+                  }}
+                >
+                  <span className="text-slate-600 w-5 text-right mr-3 select-none">{i + 1}</span>
+                  <span className="flex-1">{renderTokens(tokens)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Code panels — Row 2: Build Time + Request Time */}
+        <div className="grid grid-cols-2 divide-x divide-slate-200 border-t border-slate-200">
           {/* Prerender API */}
           <div>
             <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-violet-400" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Build Time</span>
             </div>
-            <div className="bg-slate-900 p-4 font-mono text-[10px] leading-[18px] overflow-x-auto min-h-[320px]">
+            <div className="bg-slate-900 p-4 font-mono text-[11px] leading-[20px] overflow-x-auto whitespace-pre">
               {PRERENDER_TOKENS.map((tokens, i) => (
                 <div key={i} className="flex" style={{ paddingLeft: '10px' }}>
                   <span className="text-slate-600 w-5 text-right mr-3 select-none">{i + 1}</span>
@@ -633,7 +681,7 @@ export default function PprWalkthrough() {
               <span className="w-2 h-2 rounded-full bg-indigo-400" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Request Time (Origin)</span>
             </div>
-            <div className="bg-slate-900 p-4 font-mono text-[10px] leading-[18px] overflow-x-auto min-h-[320px]">
+            <div className="bg-slate-900 p-4 font-mono text-[11px] leading-[20px] overflow-x-auto whitespace-pre">
               {RESUME_TOKENS.map((tokens, i) => (
                 <div key={i} className="flex" style={{ paddingLeft: '10px' }}>
                   <span className="text-slate-600 w-5 text-right mr-3 select-none">{i + 1}</span>
