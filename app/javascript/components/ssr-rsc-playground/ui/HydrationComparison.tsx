@@ -515,6 +515,7 @@ export default function HydrationComparison() {
         </button>
         <input
           type="range" min={0} max={TOTAL} step={1} value={timeMs}
+          aria-label="Hydration timeline scrubber"
           onChange={(e) => { stop(); setPlaying(false); setTimeMs(parseFloat(e.target.value)); }}
           className="flex-1 h-1.5 accent-rose-500 cursor-pointer"
         />

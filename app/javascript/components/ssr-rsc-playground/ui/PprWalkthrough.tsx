@@ -297,7 +297,7 @@ const STEPS: Step[] = [
       title: 'Slow Boundary Doesn\'t Block Anything',
       body: `The ML recommendation engine finally responds at ~${Math.round(RECS_VISIBLE)}ms. Recs HTML streams in via $RC — the skeleton is replaced with personalized suggestions. Since the JS bundle is already loaded, React immediately hydrates this boundary (~50ms). Everything else has been interactive for hundreds of milliseconds.`,
       insight:
-        'This boundary took ${Math.round(RECS_VISIBLE)}ms on the server — but it didn\'t slow down anything else. Cart was interactive at ${Math.round(CART_INTERACTIVE)}ms. Menu at ${Math.round(MENU_INTERACTIVE)}ms. In cached SSR, this slow API call would delay the ENTIRE page. In PPR, it only delays itself.',
+        `This boundary took ${Math.round(RECS_VISIBLE)}ms on the server — but it didn't slow down anything else. Cart was interactive at ${Math.round(CART_INTERACTIVE)}ms. Menu at ${Math.round(MENU_INTERACTIVE)}ms. In cached SSR, this slow API call would delay the ENTIRE page. In PPR, it only delays itself.`,
     },
   },
   {

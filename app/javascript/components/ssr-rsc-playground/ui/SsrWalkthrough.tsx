@@ -287,6 +287,7 @@ export default function SsrWalkthrough() {
     const next = stepIndex + 1;
     if (next >= STEPS.length) return;
 
+    stopRaf();
     setNoteVisible(false);
     setStepIndex(next);
 
