@@ -8,7 +8,9 @@ import BrowserMockup from './ui/BrowserMockup';
 import ImpactAnalysis from './ui/ImpactAnalysis';
 import SsrWalkthrough from './ui/SsrWalkthrough';
 import CascadeImpact from './ui/CascadeImpact';
+import PprWalkthrough from './ui/PprWalkthrough';
 import PprStreaming from './ui/PprStreaming';
+import HydrationComparison from './ui/HydrationComparison';
 import TechnicalDeepDive from './ui/TechnicalDeepDive';
 
 function fmt(n: number): string {
@@ -164,8 +166,17 @@ export default function SsrRscPlayground() {
         {/* Cascade impact — what happens when you add a section */}
         <CascadeImpact />
 
+        {/* PPR — Partial Prerendering introduction and walkthrough */}
+        <div>
+          <h2 className="text-lg font-bold text-slate-800 mb-3">How PPR loads your page — static shell + streaming resume</h2>
+          <PprWalkthrough />
+        </div>
+
         {/* PPR Streaming — wire-level HTML streaming visualization */}
         <PprStreaming />
+
+        {/* Hydration comparison — monolithic SSR vs independent PPR islands */}
+        <HydrationComparison />
 
         {/* Quick side-by-side comparison */}
         <div>
