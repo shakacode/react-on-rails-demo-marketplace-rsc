@@ -90,6 +90,8 @@ Examples: StatusBadge, WaitTimeBadge, RatingBadge, SpecialsList, TrendingItems
 
 ### Data Fetching Patterns
 
+> **Three options, composable.** This demo contrasts traditional client lazy-loading with RSC server-fetch + streaming. The third option, for interactive client-owned state, is [TanStack Query](https://reactonrails.com/docs/building-features/tanstack-query): a client cache over the Rails JSON API (request dedup, background refetch, optimistic updates, invalidation). RSC for first paint, TanStack Query for the live app. See the [TanStack starter](https://starter.reactonrails.com).
+
 **Both versions use the same RSC webpack config.** The difference is which bundle renders the page:
 
 **Traditional Version** (uses client bundle with SSR):
