@@ -1,9 +1,9 @@
 // 'use client' — same redesigned JSX as MenuSectionForServer plus an
-// interactive category filter and useMemo'd markdown rendering during
-// hydration. SSR/Client variants ship marked + highlight.js + sanitize-html.
+// interactive category filter and markdown rendering during hydration.
+// SSR/Client variants ship marked + highlight.js + sanitize-html.
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { MenuItem, MenuPayload } from './types';
 import { renderSanitizedMarkdown } from '../../utils/sanitizeAndRender';
 import { PriceLadder } from './PriceLadder';
@@ -26,7 +26,7 @@ const CATEGORY_ACCENT: Record<string, { bar: string; chip: string }> = {
 
 function MenuItemCard({ item }: { item: MenuItem }) {
   const accent = CATEGORY_ACCENT[item.category] ?? { bar: 'bg-slate-300', chip: 'bg-slate-100 text-slate-700' };
-  const descHtml = useMemo(() => renderSanitizedMarkdown(item.description), [item.description]);
+  const descHtml = renderSanitizedMarkdown(item.description);
   const photo = `https://picsum.photos/seed/menu-${item.id}/240/180`;
   return (
     <article className="group relative rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">

@@ -3,7 +3,7 @@
 // V2: Async content loader — fetches search results, facets, and review snippets via API.
 // This component + all rendering libraries are loaded in an async chunk.
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { SearchProduct, Facets, Pagination as PaginationType, ReviewSnippet, SearchParams } from './types';
 import { SearchResultCard } from './SearchResultCard';
 import { FilterSidebar } from './FilterSidebar';

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { ProductImage } from '../../types/product';
 
 interface Props {
@@ -13,21 +13,21 @@ export function ProductImageGallery({ images, productName }: Props) {
 
   const selectedImage = images[selectedIndex] || images[0];
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setZoomPosition({ x, y });
-  }, [isZoomed]);
+  };
 
-  const handlePrev = useCallback(() => {
+  const handlePrev = () => {
     setSelectedIndex((i) => (i > 0 ? i - 1 : images.length - 1));
-  }, [images.length]);
+  };
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     setSelectedIndex((i) => (i < images.length - 1 ? i + 1 : 0));
-  }, [images.length]);
+  };
 
   return (
     <div className="space-y-4">

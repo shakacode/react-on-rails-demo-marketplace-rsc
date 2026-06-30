@@ -1,5 +1,6 @@
 module.exports = function(api) {
-  api.cache(true);
+  const reactCompilerEnabled = process.env.REACT_COMPILER_ENABLED === 'true';
+  api.cache.using(() => `compiler:${reactCompilerEnabled}`);
 
   const presets = [
     ['@babel/preset-env', {
@@ -16,7 +17,11 @@ module.exports = function(api) {
     }]
   ];
 
-  const plugins = [];
+  const plugins = ['@loadable/babel-plugin'];
+
+  if (reactCompilerEnabled) {
+    plugins.unshift(['babel-plugin-react-compiler', { target: '19' }]);
+  }
 
   return {
     presets,

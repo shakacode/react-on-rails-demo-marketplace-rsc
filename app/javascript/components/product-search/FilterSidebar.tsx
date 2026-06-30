@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import type { Facets } from './types';
 import { FilterSidebarSkeleton } from './SearchSkeletons';
 
@@ -26,47 +26,47 @@ export function FilterSidebar({ facets, activeFilters, onFilterChange }: Props) 
     availability: true,
   });
 
-  const toggleSection = useCallback((section: string) => {
+  const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  }, []);
+  };
 
-  const handleCategoryClick = useCallback((category: string) => {
+  const handleCategoryClick = (category: string) => {
     onFilterChange({
       ...activeFilters,
       category: activeFilters.category === category ? undefined : category,
     });
-  }, [activeFilters, onFilterChange]);
+  };
 
-  const handleBrandClick = useCallback((brand: string) => {
+  const handleBrandClick = (brand: string) => {
     onFilterChange({
       ...activeFilters,
       brand: activeFilters.brand === brand ? undefined : brand,
     });
-  }, [activeFilters, onFilterChange]);
+  };
 
-  const handleRatingClick = useCallback((rating: number) => {
+  const handleRatingClick = (rating: number) => {
     const current = activeFilters.min_rating;
     onFilterChange({
       ...activeFilters,
       min_rating: current === String(rating) ? undefined : String(rating),
     });
-  }, [activeFilters, onFilterChange]);
+  };
 
-  const handlePriceRangeClick = useCallback((min: number, max: number) => {
+  const handlePriceRangeClick = (min: number, max: number) => {
     const isActive = activeFilters.price_min === String(min) && activeFilters.price_max === String(max);
     onFilterChange({
       ...activeFilters,
       price_min: isActive ? undefined : String(min),
       price_max: isActive ? undefined : String(max),
     });
-  }, [activeFilters, onFilterChange]);
+  };
 
-  const handleStockToggle = useCallback(() => {
+  const handleStockToggle = () => {
     onFilterChange({
       ...activeFilters,
       in_stock: activeFilters.in_stock === 'true' ? undefined : 'true',
     });
-  }, [activeFilters, onFilterChange]);
+  };
 
   if (!facets) {
     return <FilterSidebarSkeleton />;

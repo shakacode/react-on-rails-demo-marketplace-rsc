@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface Props {
   initialQuery: string;
@@ -19,7 +19,7 @@ export function SearchInput({ initialQuery, onSearch }: Props) {
     }
   }, []);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
 
@@ -30,25 +30,25 @@ export function SearchInput({ initialQuery, onSearch }: Props) {
       onSearch(value);
       debounceRef.current = null;
     }, 400);
-  }, [onSearch]);
+  };
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
     onSearch(query);
-  }, [query, onSearch]);
+  };
 
-  const handleClear = useCallback(() => {
+  const handleClear = () => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
     setQuery('');
     onSearch('');
-  }, [onSearch]);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="relative">

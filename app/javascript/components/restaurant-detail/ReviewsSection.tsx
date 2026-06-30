@@ -2,7 +2,7 @@
 // in the browser. Used by SSR/Client variants.
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Review } from './types';
 import { renderSanitizedMarkdown } from '../../utils/sanitizeAndRender';
 
@@ -68,7 +68,7 @@ function RatingDistribution({ reviews, averageRating, reviewCount }: { reviews: 
 }
 
 function ReviewCard({ review }: { review: Review }) {
-  const html = useMemo(() => renderSanitizedMarkdown(review.body), [review.body]);
+  const html = renderSanitizedMarkdown(review.body);
   const date = new Date(review.created_at).toLocaleDateString('en-US', {
     timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
   });
@@ -105,14 +105,11 @@ export function ReviewsSection({ reviews, averageRating, reviewCount }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('newest');
   const [minRating, setMinRating] = useState(0);
 
-  const visible = useMemo(() => {
-    const filtered = reviews.filter((r) => r.rating >= minRating);
-    const sorted = [...filtered];
-    if (sortKey === 'newest') sorted.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
-    else if (sortKey === 'rating') sorted.sort((a, b) => b.rating - a.rating);
-    else if (sortKey === 'helpful') sorted.sort((a, b) => b.helpful_count - a.helpful_count);
-    return sorted;
-  }, [reviews, sortKey, minRating]);
+  const filtered = reviews.filter((r) => r.rating >= minRating);
+  const visible = [...filtered];
+  if (sortKey === 'newest') visible.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+  else if (sortKey === 'rating') visible.sort((a, b) => b.rating - a.rating);
+  else if (sortKey === 'helpful') visible.sort((a, b) => b.helpful_count - a.helpful_count);
 
   return (
     <section className="container mx-auto px-4 mb-14">
