@@ -4,7 +4,7 @@
 // Libraries are loaded in async chunks after initial page load.
 // Multiple API round-trips for results, facets, and review snippets.
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import loadable from '@loadable/component';
 import type { SearchParams } from './types';
 import { SearchInput } from './SearchInput';
@@ -34,9 +34,9 @@ interface Props {
 }
 
 export default function ProductSearchClient({ search_params }: Props) {
-  const handleSearch = (q: string) => {
+  const handleSearch = useCallback((q: string) => {
     applySearchParams({ q: q || undefined });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

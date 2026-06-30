@@ -2,7 +2,7 @@
 // Product result cards are rendered as server components (zero JS).
 // Each wrapper is a separate client component island that hydrates independently.
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SearchInput } from './SearchInput';
 import { SortBar } from './SortBar';
 import { FilterSidebar } from './FilterSidebar';
@@ -29,9 +29,9 @@ interface SearchShellHeaderProps {
 
 // Client-side search bar wrapper
 export function SearchShellHeader({ initialQuery }: SearchShellHeaderProps) {
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     applySearchParams({ q: query || undefined });
-  };
+  }, []);
 
   return (
     <SearchInput initialQuery={initialQuery} onSearch={handleSearch} />
@@ -45,9 +45,9 @@ interface SearchShellSortProps {
 
 // Client-side sort bar wrapper
 export function SearchShellSort({ currentSort, totalResults }: SearchShellSortProps) {
-  const handleSortChange = (sort: string) => {
+  const handleSortChange = useCallback((sort: string) => {
     applySearchParams({ sort });
-  };
+  }, []);
 
   return (
     <SortBar currentSort={currentSort} totalResults={totalResults} onSortChange={handleSortChange} />
@@ -61,9 +61,9 @@ interface SearchShellFiltersProps {
 
 // Client-side filter sidebar wrapper
 export function SearchShellFilters({ facets, activeFilters = {} }: SearchShellFiltersProps) {
-  const handleFilterChange = (filters: Record<string, string | undefined>) => {
+  const handleFilterChange = useCallback((filters: Record<string, string | undefined>) => {
     applySearchParams(filters as SearchParamUpdates);
-  };
+  }, []);
 
   return (
     <FilterSidebar
@@ -80,9 +80,9 @@ interface SearchShellPaginationProps {
 
 // Client-side pagination wrapper
 export function SearchShellPagination({ pagination }: SearchShellPaginationProps) {
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     applySearchParams({ page: String(page) });
-  };
+  }, []);
 
   return (
     <PaginationControls pagination={pagination} onPageChange={handlePageChange} />
@@ -100,11 +100,11 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ productId, inStock }: AddToCartButtonProps) {
   const [added, setAdded] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     setAdded(true);
     // In a real app: dispatch to cart store / API call
     setTimeout(() => setAdded(false), 2000);
-  };
+  }, []);
 
   if (!inStock) {
     return (
@@ -151,14 +151,14 @@ function useCompareState(productId: number): [boolean, () => void] {
     return () => { compareState.listeners.delete(listener); };
   }, [productId]);
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     if (compareState.selected.has(productId)) {
       compareState.selected.delete(productId);
     } else if (compareState.selected.size < 4) {
       compareState.selected.add(productId);
     }
     compareState.listeners.forEach((l) => l());
-  };
+  }, [productId]);
 
   return [isSelected, toggle];
 }
@@ -197,10 +197,10 @@ export function CompareBar() {
     return () => { compareState.listeners.delete(listener); };
   }, []);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     compareState.selected.clear();
     compareState.listeners.forEach((l) => l());
-  };
+  }, []);
 
   if (count === 0) return null;
 
@@ -238,15 +238,15 @@ export function SearchShellActiveFilters({ filtersApplied }: SearchShellActiveFi
     label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace('_', ' '),
   }));
 
-  const handleRemove = (type: string) => {
+  const handleRemove = useCallback((type: string) => {
     if (type === 'price') {
       applySearchParams({ price_min: undefined, price_max: undefined });
     } else {
       applySearchParams({ [type as 'category']: undefined });
     }
-  };
+  }, []);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     applySearchParams({
       category: undefined,
       brand: undefined,
@@ -255,7 +255,7 @@ export function SearchShellActiveFilters({ filtersApplied }: SearchShellActiveFi
       price_min: undefined,
       price_max: undefined,
     });
-  };
+  }, []);
 
   return (
     <ActiveFilterPills
@@ -274,14 +274,14 @@ interface SearchShellTagsProps {
 export function SearchShellTags({ tags }: SearchShellTagsProps) {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
-  const handleTagClick = (tag: string) => {
+  const handleTagClick = useCallback((tag: string) => {
     setSelectedTags((prev) => {
       const next = new Set(prev);
       if (next.has(tag)) next.delete(tag);
       else next.add(tag);
       return next;
     });
-  };
+  }, []);
 
   if (tags.length === 0) return null;
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 interface Props {
   price: number;
@@ -10,25 +10,25 @@ export function AddToCartSection({ price, inStock, stockQuantity }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const handleDecrement = () => {
+  const handleDecrement = useCallback(() => {
     setQuantity((q) => Math.max(1, q - 1));
-  };
+  }, []);
 
-  const handleIncrement = () => {
+  const handleIncrement = useCallback(() => {
     setQuantity((q) => Math.min(stockQuantity, q + 1));
-  };
+  }, [stockQuantity]);
 
   const [buyingNow, setBuyingNow] = useState(false);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
-  };
+  }, []);
 
-  const handleBuyNow = () => {
+  const handleBuyNow = useCallback(() => {
     setBuyingNow(true);
     setTimeout(() => setBuyingNow(false), 2000);
-  };
+  }, []);
 
   return (
     <div className="space-y-4">

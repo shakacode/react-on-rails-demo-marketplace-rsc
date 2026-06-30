@@ -7,7 +7,7 @@
 // INP impacted because every result card is hydrated with interactive event handlers.
 // 36 products per page with 3 reviews each = ~200+ hydrated interactive elements.
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { SearchProduct, Facets, Pagination as PaginationType, ReviewSnippet, SearchMeta } from './types';
 import { SearchResultCard } from './SearchResultCard';
 import { AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShell';
@@ -63,31 +63,31 @@ export default function ProductSearchSSR({
     label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace('_', ' '),
   }));
 
-  const handleSearch = (q: string) => {
+  const handleSearch = useCallback((q: string) => {
     applySearchParams({ q: q || undefined });
-  };
+  }, []);
 
-  const handleSortChange = (sort: string) => {
+  const handleSortChange = useCallback((sort: string) => {
     applySearchParams({ sort });
-  };
+  }, []);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     applySearchParams({ page: String(page) });
-  };
+  }, []);
 
-  const handleFilterChange = (filters: Record<string, string | undefined>) => {
+  const handleFilterChange = useCallback((filters: Record<string, string | undefined>) => {
     applySearchParams(filters as SearchParamUpdates);
-  };
+  }, []);
 
-  const handleRemoveFilter = (type: string) => {
+  const handleRemoveFilter = useCallback((type: string) => {
     if (type === 'price') {
       applySearchParams({ price_min: undefined, price_max: undefined });
     } else {
       applySearchParams({ [type as 'category']: undefined });
     }
-  };
+  }, []);
 
-  const handleClearAllFilters = () => {
+  const handleClearAllFilters = useCallback(() => {
     applySearchParams({
       category: undefined,
       brand: undefined,
@@ -96,25 +96,25 @@ export default function ProductSearchSSR({
       price_min: undefined,
       price_max: undefined,
     });
-  };
+  }, []);
 
-  const handleTagClick = (tag: string) => {
+  const handleTagClick = useCallback((tag: string) => {
     setSelectedTags((prev) => {
       const next = new Set(prev);
       if (next.has(tag)) next.delete(tag);
       else next.add(tag);
       return next;
     });
-  };
+  }, []);
 
-  const handleCompareToggle = (productId: number) => {
+  const handleCompareToggle = useCallback((productId: number) => {
     setCompareList((prev) => {
       const next = new Set(prev);
       if (next.has(productId)) next.delete(productId);
       else if (next.size < 4) next.add(productId);
       return next;
     });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
