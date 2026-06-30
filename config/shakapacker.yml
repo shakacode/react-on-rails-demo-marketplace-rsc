@@ -1,7 +1,7 @@
 ---
 default:
   precompile_hook: "rake react_on_rails:generate_packs"
-  javascript_transpiler: swc
+  javascript_transpiler: babel
   source_path: app/javascript
   source_entry_path: packs
   shakapacker_precompile: false
@@ -42,7 +42,7 @@ default:
   - ".jpg"
 development:
   precompile_hook: "rake react_on_rails:generate_packs"
-  javascript_transpiler: swc
+  javascript_transpiler: babel
   source_path: app/javascript
   source_entry_path: packs
   shakapacker_precompile: false
@@ -75,7 +75,7 @@ development:
     static: false
 test:
   precompile_hook: "rake react_on_rails:generate_packs"
-  javascript_transpiler: swc
+  javascript_transpiler: babel
   source_path: app/javascript
   source_entry_path: packs
   shakapacker_precompile: false
@@ -93,7 +93,7 @@ test:
   compiler_strategy: digest
 production:
   precompile_hook: "rake react_on_rails:generate_packs"
-  javascript_transpiler: swc
+  javascript_transpiler: babel
   source_path: app/javascript
   source_entry_path: packs
   shakapacker_precompile: false
