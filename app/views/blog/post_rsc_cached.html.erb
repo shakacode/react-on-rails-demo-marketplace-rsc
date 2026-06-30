@@ -1,0 +1,24 @@
+<%# Cached variant of blog/post_rsc.html.erb. Same component, sync props, and async section emits,
+    but wrapped in cached_stream_react_component_with_async_props (see
+    app/helpers/react_on_rails_pro_cache_helper.rb).
+
+    cache_key: the post content (MAIN_POST) is static demo data that varies only by id, so the post id
+    is a stable, complete key. The simulated delays (CONTENT_DELAY_MS / sleep 1.5) are deliberately
+    NOT in the key — they change timing, not output, and skipping them on a hit is the whole point.
+
+    On a cache HIT the block below never runs: the two sleeps, the content fetch, and the related-posts
+    lookup are all skipped, and the previously-streamed chunks are replayed from cache. %>
+<%= cached_stream_react_component_with_async_props("BlogPostRSC",
+      cache_key: ["blog_post_rsc", @post_meta[:id]],
+      props: { post: @post_meta }, prerender: true) do |emit|
+  # Simulate slow content fetch (e.g., CMS API, database query).
+  sleep(@content_delay) if @content_delay > 0
+  content = BlogData.find_post(@post_meta[:id])[:content]
+  emit.call("post_content", { content: content })
+
+  sleep 1.5  # Simulate slow recommendation engine
+
+  emit.call("related_posts", {
+    posts: BlogData.related_posts(@post_meta[:id])
+  })
+end %>

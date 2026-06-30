@@ -28,24 +28,33 @@ Rails.application.routes.draw do
 
   # Restaurant detail page — three versions for the markdown-heavy detail view
   get '/restaurant/:id/ssr', to: 'restaurants#show_ssr', as: :restaurant_show_ssr
+  get '/restaurant/:id/ssr-cached', to: 'restaurants#show_ssr_cached' # SSR + cached_react_component
   get '/restaurant/:id/client', to: 'restaurants#show_client', as: :restaurant_show_client
   get '/restaurant/:id/rsc', to: 'restaurants#show_rsc', as: :restaurant_show_rsc
+  get '/restaurant/:id/rsc-cached', to: 'restaurants#show_rsc_cached' # RSC + cached_stream_react_component
 
   # Product page routes — three versions demonstrating e-commerce RSC gains
   get '/product/ssr', to: 'products#show_ssr'        # V1: All data fetched on server, returned at once
+  get '/product/ssr-cached', to: 'products#show_ssr_cached' # V1 + cached_react_component
   get '/product/client', to: 'products#show_client'   # V2: Loadable components, client-side fetch
   get '/product/rsc', to: 'products#show_rsc'         # V3: RSC streaming
+  get '/product/rsc-cached', to: 'products#show_rsc_cached' # V3 + cached_stream_react_component_with_async_props
 
   # Product search results — three versions demonstrating search page RSC gains
   get '/product-search/ssr', to: 'product_search#search_ssr'       # V1: Full SSR
+  get '/product-search/ssr-cached', to: 'product_search#search_ssr_cached' # V1 + cached_react_component
   get '/product-search/client', to: 'product_search#search_client'  # V2: Client-side search
   get '/product-search/rsc', to: 'product_search#search_rsc'        # V3: RSC streaming
+  get '/product-search/rsc-cached', to: 'product_search#search_rsc_cached' # V3 + cached stream w/ async props
 
   # Blog post routes — three versions demonstrating bundle size differences
   get '/blog/ssr', to: 'blog#post_ssr'       # V1: marked + highlight.js shipped to client
+  get '/blog/ssr-cached', to: 'blog#post_ssr_cached' # V1 + cached_react_component
   get '/blog/client', to: 'blog#post_client'  # V2: Libraries loaded in async chunk
   get '/blog/rsc', to: 'blog#post_rsc'              # V3: Libraries stay server-side + streaming
+  get '/blog/rsc-cached', to: 'blog#post_rsc_cached' # V3 + cache (cached_stream_react_component_with_async_props)
   get '/blog/rsc-simple', to: 'blog#post_rsc_simple' # V4: Libraries stay server-side, all data upfront
+  get '/blog/rsc-simple-cached', to: 'blog#post_rsc_simple_cached' # V4 + cached_stream_react_component
 
   # RSC debug steps (incremental complexity)
   get '/blog/rsc-step1', to: 'blog#post_rsc_step1'

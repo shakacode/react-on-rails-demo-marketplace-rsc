@@ -1,5 +1,13 @@
 web: bundle exec rails server -p 3000
-webpack: bin/shakapacker-dev-server
+# Build the client bundle to disk (watch) instead of the in-memory dev-server.
+# RSC needs react-client-manifest.json on disk so react_on_rails_pro can copy it to the node
+# renderer: while the webpack dev-server is running, ReactOnRails::PackerUtils.asset_uri_from_packer
+# resolves that manifest to a dev-server URL (not a file), so the copy fails and RSC server rendering
+# errors ("Switched to client rendering..."). Building to disk makes dev_server_running? false, so the
+# gem resolves/copies the manifest from public/packs. Trade-off: no HMR (full reload). Rails serves
+# public/packs statically in dev. NOTE: after a client-only RSC change that doesn't change the
+# server/RSC bundle hash, restart `renderer` or clear `.node-renderer-bundles` to refresh the manifest.
+webpack: CLIENT_BUNDLE_ONLY=yes bin/shakapacker --watch
 
 # Keep the JS fresh for server rendering. Remove if not server rendering
 rails-server-assets: HMR=true SERVER_BUNDLE_ONLY=yes bin/shakapacker --watch

@@ -4,7 +4,7 @@ class ProductSearchController < ApplicationController
   include ReactOnRailsPro::RSCPayloadRenderer
   include ReactOnRailsPro::AsyncRendering
 
-  enable_async_react_rendering only: [:search_rsc]
+  enable_async_react_rendering only: %i[search_rsc search_rsc_cached]
 
   before_action :set_seo_meta
 
@@ -43,7 +43,37 @@ class ProductSearchController < ApplicationController
     stream_view_containing_react_components(template: "product_search/search_rsc")
   end
 
+  # V1 cached: cached_react_component. On a hit, the full SSR data assembly (built lazily in the view
+  # block via product_search_ssr_props) and the prerender are skipped. Cache key is the search params.
+  def search_ssr_cached
+    @search_params_data = search_params.to_h
+  end
+
+  # V3 cached: cached_stream_react_component_with_async_props. On a hit, the async block (results,
+  # facets, tags, brand highlights) and the node render are skipped; chunks replay from cache.
+  def search_rsc_cached
+    @search_params_data = search_params.to_h
+    stream_view_containing_react_components(template: "product_search/search_rsc_cached")
+  end
+
   private
+
+  # Full SSR props, built lazily for the cached view block (evaluated only on a cache miss).
+  def product_search_ssr_props
+    products_scope = Product.filtered_search(search_params)
+    products_data = paginate_and_serialize(products_scope, PER_PAGE, rich: true)
+    {
+      products: products_data[:products],
+      pagination: products_data[:pagination],
+      facets: Product.facets(base_scope_for_facets),
+      search_meta: search_meta_data(products_scope),
+      descriptions: load_product_descriptions(products_data[:products], truncate_at: 500),
+      review_snippets: load_review_snippets(products_data[:products].map { |p| p[:id] }, per_product: 2),
+      popular_tags: load_popular_tags,
+      brand_highlights: load_brand_highlights
+    }
+  end
+  helper_method :product_search_ssr_props
 
   def set_seo_meta
     variant = SEO_VARIANTS[action_name]
