@@ -107,7 +107,7 @@ class ProductsController < ApplicationController
     variant = SEO_VARIANTS[action_name]
     @page_title = "Product Page — #{variant} | React on Rails RSC Demo" if variant
     @page_description =
-      "An e-commerce product page rendered three ways — comparing React Server " \
+      "An e-commerce product page rendered multiple ways — comparing React Server " \
       "Components against SSR and client-side rendering in the React on Rails demo."
   end
 
