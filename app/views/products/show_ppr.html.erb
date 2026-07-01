@@ -1,3 +1,6 @@
+<%# ProductPagePPR is registered inside startup/ProductPageRSC.tsx so it reuses the
+    existing generated/ProductPageRSC hydration pack instead of needing its own
+    generated/ProductPagePPR entrypoint. Keep this pack tag and auto_load_bundle: false in sync. %>
 <% append_javascript_pack_tag "generated/ProductPageRSC", defer: true %>
 <% content_for :head do %>
   <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
