@@ -5,14 +5,15 @@ class ProductsController < ApplicationController
   include ReactOnRailsPro::AsyncRendering
   include ProductSerialization
 
-  enable_async_react_rendering only: %i[show_rsc show_rsc_cached]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_ppr]
 
   before_action :set_seo_meta
 
   SEO_VARIANTS = {
     "show_ssr" => "Server-Side Rendering (SSR)",
     "show_client" => "Client-Side Rendering",
-    "show_rsc" => "React Server Components (RSC)"
+    "show_rsc" => "React Server Components (RSC)",
+    "show_ppr" => "Experimental PPR-style RSC"
   }.freeze
 
   # V1: Full Server SSR — fetch ALL data, return complete page
@@ -61,6 +62,15 @@ class ProductsController < ApplicationController
     stream_view_containing_react_components(template: "products/show_rsc_cached")
   end
 
+  # V4 experiment: keep the hero/editorial shell inline and cacheable while review/recommendation
+  # sections stay request-live async holes.
+  def show_ppr
+    @product = find_product
+    @product_data = product_ppr_shell_props(@product)
+    @product_ppr_async_payloads = product_ppr_async_payloads(@product)
+    stream_view_containing_react_components(template: "products/show_ppr")
+  end
+
   private
 
   # Full SSR props, built lazily for the cached view block (evaluated only on a cache miss).
@@ -73,6 +83,25 @@ class ProductsController < ApplicationController
     }
   end
   helper_method :product_ssr_props
+
+  def product_ppr_shell_props(product)
+    serialize_product(product)
+  end
+
+  def product_ppr_async_payloads(product)
+    reviews = product.top_reviews(5)
+    related = product.related_products(4)
+
+    {
+      review_stats: product.review_stats,
+      reviews: {
+        reviews: reviews.map { |review| serialize_review(review) }
+      },
+      related_products: {
+        products: related.map { |related_product| serialize_product_card(related_product) }
+      }
+    }
+  end
 
   def set_seo_meta
     variant = SEO_VARIANTS[action_name]

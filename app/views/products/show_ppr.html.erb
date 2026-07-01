@@ -1,0 +1,10 @@
+<% append_javascript_pack_tag "generated/ProductPageRSC", defer: true %>
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%= stream_react_component_with_async_props("ProductPagePPR",
+    props: { product: @product_data }, prerender: true, auto_load_bundle: false) do |emit|
+  @product_ppr_async_payloads.each do |prop_name, payload|
+    emit.call(prop_name.to_s, payload)
+  end
+end %>
