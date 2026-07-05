@@ -16,7 +16,7 @@ const developmentEnvOnly = (clientConfig, _serverConfig) => {
       }
       clientConfig.plugins.push(new ReactRefreshPlugin());
     } catch (error) {
-      if (error.code !== 'MODULE_NOT_FOUND') {
+      if (error.code !== 'MODULE_NOT_FOUND' || !error.message.includes("'@rspack/plugin-react-refresh'")) {
         console.warn(`Skipping React Refresh: ${error.message}`);
       }
     }
