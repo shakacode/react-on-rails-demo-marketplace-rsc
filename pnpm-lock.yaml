@@ -124,10 +124,13 @@ importers:
         version: 0.5.17(react-refresh@0.14.2)(type-fest@0.20.2)(webpack-dev-server@5.2.3)(webpack@5.105.4)
       '@rspack/cli':
         specifier: ^2.0.3
-        version: 2.0.3(@rspack/core@2.0.3)
+        version: 2.0.3(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0))
       '@rspack/core':
         specifier: ^2.0.3
         version: 2.0.3
+      '@rspack/dev-server':
+        specifier: ^2.0.3
+        version: 2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0)
       '@rspack/plugin-react-refresh':
         specifier: ^2.0.0
         version: 2.0.0(@rspack/core@2.0.3)(react-refresh@0.14.2)
@@ -229,7 +232,7 @@ importers:
         version: 14.2.1(@rspack/core@2.0.3)(sass@1.98.0)(webpack@5.105.4)
       shakapacker:
         specifier: 10.2.0
-        version: 10.2.0(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@babel/runtime@7.29.2)(@rspack/cli@2.0.3(@rspack/core@2.0.3))(@rspack/core@2.0.3)(@rspack/plugin-react-refresh@2.0.0(@rspack/core@2.0.3)(react-refresh@0.14.2))(@swc/core@1.15.21)(babel-loader@9.2.1(@babel/core@7.29.0)(webpack@5.105.4))(css-loader@7.1.4(@rspack/core@2.0.3)(webpack@5.105.4))(mini-css-extract-plugin@2.10.1(webpack@5.105.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.0.3))(sass-loader@14.2.1(@rspack/core@2.0.3)(sass@1.98.0)(webpack@5.105.4))(sass@1.98.0)(swc-loader@0.2.7(@swc/core@1.15.21)(webpack@5.105.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.21)(webpack@5.105.4))(webpack-assets-manifest@6.5.1(webpack@5.105.4))(webpack-cli@5.1.4)(webpack-dev-server@5.2.3)(webpack@5.105.4)
+        version: 10.2.0(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@babel/runtime@7.29.2)(@rspack/cli@2.0.3(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0)))(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0))(@rspack/plugin-react-refresh@2.0.0(@rspack/core@2.0.3)(react-refresh@0.14.2))(@swc/core@1.15.21)(babel-loader@9.2.1(@babel/core@7.29.0)(webpack@5.105.4))(css-loader@7.1.4(@rspack/core@2.0.3)(webpack@5.105.4))(mini-css-extract-plugin@2.10.1(webpack@5.105.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.0.3))(sass-loader@14.2.1(@rspack/core@2.0.3)(sass@1.98.0)(webpack@5.105.4))(sass@1.98.0)(swc-loader@0.2.7(@swc/core@1.15.21)(webpack@5.105.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.21)(webpack@5.105.4))(webpack-assets-manifest@6.5.1(webpack@5.105.4))(webpack-cli@5.1.4)(webpack-dev-server@5.2.3)(webpack@5.105.4)
       style-loader:
         specifier: ^3.3.0
         version: 3.3.4(webpack@5.105.4)
@@ -1658,6 +1661,25 @@ packages:
       '@module-federation/runtime-tools':
         optional: true
       '@swc/helpers':
+        optional: true
+
+  '@rspack/dev-middleware@2.0.3':
+    resolution: {integrity: sha512-GxnGj9jy76G3eCPyZei81fwKLAMLZaPEEqFz1/QDYquhwi/qYZX5fekFJ1XVpuwxGEK9KSX3hxZylfwrs4cmLA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      '@rspack/core': ^2.0.0
+    peerDependenciesMeta:
+      '@rspack/core':
+        optional: true
+
+  '@rspack/dev-server@2.0.3':
+    resolution: {integrity: sha512-S29nOxXQS9o+0uGNe7SgND2dAKnte5ZTD5tiT3/B4lKbviqpXD4tbH7NZWA3hGwlSkmOIbFlysYPL1bVHuBcSg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      '@rspack/core': ^2.0.0-0
+      selfsigned: ^5.0.0
+    peerDependenciesMeta:
+      selfsigned:
         optional: true
 
   '@rspack/lite-tapable@1.1.0':
@@ -7021,13 +7043,26 @@ snapshots:
       '@rspack/binding-win32-ia32-msvc': 2.0.3
       '@rspack/binding-win32-x64-msvc': 2.0.3
 
-  '@rspack/cli@2.0.3(@rspack/core@2.0.3)':
+  '@rspack/cli@2.0.3(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0))':
     dependencies:
       '@rspack/core': 2.0.3
+    optionalDependencies:
+      '@rspack/dev-server': 2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0)
 
   '@rspack/core@2.0.3':
     dependencies:
       '@rspack/binding': 2.0.3
+
+  '@rspack/dev-middleware@2.0.3(@rspack/core@2.0.3)':
+    optionalDependencies:
+      '@rspack/core': 2.0.3
+
+  '@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0)':
+    dependencies:
+      '@rspack/core': 2.0.3
+      '@rspack/dev-middleware': 2.0.3(@rspack/core@2.0.3)
+    optionalDependencies:
+      selfsigned: 5.5.0
 
   '@rspack/lite-tapable@1.1.0': {}
 
@@ -10371,7 +10406,7 @@ snapshots:
 
   setprototypeof@1.2.0: {}
 
-  shakapacker@10.2.0(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@babel/runtime@7.29.2)(@rspack/cli@2.0.3(@rspack/core@2.0.3))(@rspack/core@2.0.3)(@rspack/plugin-react-refresh@2.0.0(@rspack/core@2.0.3)(react-refresh@0.14.2))(@swc/core@1.15.21)(babel-loader@9.2.1(@babel/core@7.29.0)(webpack@5.105.4))(css-loader@7.1.4(@rspack/core@2.0.3)(webpack@5.105.4))(mini-css-extract-plugin@2.10.1(webpack@5.105.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.0.3))(sass-loader@14.2.1(@rspack/core@2.0.3)(sass@1.98.0)(webpack@5.105.4))(sass@1.98.0)(swc-loader@0.2.7(@swc/core@1.15.21)(webpack@5.105.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.21)(webpack@5.105.4))(webpack-assets-manifest@6.5.1(webpack@5.105.4))(webpack-cli@5.1.4)(webpack-dev-server@5.2.3)(webpack@5.105.4):
+  shakapacker@10.2.0(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@babel/runtime@7.29.2)(@rspack/cli@2.0.3(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0)))(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0))(@rspack/plugin-react-refresh@2.0.0(@rspack/core@2.0.3)(react-refresh@0.14.2))(@swc/core@1.15.21)(babel-loader@9.2.1(@babel/core@7.29.0)(webpack@5.105.4))(css-loader@7.1.4(@rspack/core@2.0.3)(webpack@5.105.4))(mini-css-extract-plugin@2.10.1(webpack@5.105.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.0.3))(sass-loader@14.2.1(@rspack/core@2.0.3)(sass@1.98.0)(webpack@5.105.4))(sass@1.98.0)(swc-loader@0.2.7(@swc/core@1.15.21)(webpack@5.105.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.21)(webpack@5.105.4))(webpack-assets-manifest@6.5.1(webpack@5.105.4))(webpack-cli@5.1.4)(webpack-dev-server@5.2.3)(webpack@5.105.4):
     dependencies:
       js-yaml: 4.1.1
       pack-config-diff: 0.1.0
@@ -10382,8 +10417,9 @@ snapshots:
       '@babel/core': 7.29.0
       '@babel/preset-env': 7.29.2(@babel/core@7.29.0)
       '@babel/runtime': 7.29.2
-      '@rspack/cli': 2.0.3(@rspack/core@2.0.3)
+      '@rspack/cli': 2.0.3(@rspack/core@2.0.3)(@rspack/dev-server@2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0))
       '@rspack/core': 2.0.3
+      '@rspack/dev-server': 2.0.3(@rspack/core@2.0.3)(selfsigned@5.5.0)
       '@rspack/plugin-react-refresh': 2.0.0(@rspack/core@2.0.3)(react-refresh@0.14.2)
       '@swc/core': 1.15.21
       babel-loader: 9.2.1(@babel/core@7.29.0)(webpack@5.105.4)
