@@ -22,7 +22,8 @@
     "vitals:quick": "node scripts/measure-vitals.mjs --iterations 3 --warmup 1",
     "lint:rsc": "node scripts/check-rsc-imports.mjs",
     "verify:rsc": "node scripts/check-rsc-chunks.mjs",
-    "smoke:routes": "node .verify-routes.js"
+    "smoke:routes": "node .verify-routes.js",
+    "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
@@ -64,6 +65,7 @@
     }
   },
   "devDependencies": {
+    "acorn-loose": "^8.5.2",
     "@babel/core": "^7.24.0",
     "@babel/preset-env": "^7.24.0",
     "@babel/preset-react": "^7.24.0",

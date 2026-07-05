@@ -173,6 +173,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^7.0.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      acorn-loose:
+        specifier: ^8.5.2
+        version: 8.5.2
       autoprefixer:
         specifier: ^10.4.0
         version: 10.4.27(postcss@8.5.8)

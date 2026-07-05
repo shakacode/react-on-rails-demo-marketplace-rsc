@@ -1,7 +1,9 @@
 const { default: serverRspackConfig } = require('./serverRspackConfig');
+const { getRspackRscImplementation } = require('../rsc-implementations');
 
 const configureRsc = () => {
   const rscConfig = serverRspackConfig(true);
+  const rscImplementation = getRspackRscImplementation();
 
   const rscEntry = {
     'rsc-bundle': rscConfig.entry['server-bundle'],
@@ -14,7 +16,7 @@ const configureRsc = () => {
   rscConfig.module.rules.push({
     test: /\.(ts|tsx|js|jsx|mjs)$/,
     enforce: 'post',
-    loader: 'react-on-rails-rsc/WebpackLoader',
+    loader: rscImplementation.rscLoader,
   });
 
   // Add the `react-server` condition to the resolve config
