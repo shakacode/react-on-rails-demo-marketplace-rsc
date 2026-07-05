@@ -1,4 +1,8 @@
 const { default: serverWebpackConfig, extractLoader } = require('./serverWebpackConfig');
+const path = require('path');
+const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
+
+const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
 
 const configureRsc = () => {
   const rscConfig = serverWebpackConfig(true);
@@ -15,7 +19,7 @@ const configureRsc = () => {
   rscConfig.module.rules.push({
     test: /\.(ts|tsx|js|jsx|mjs)$/,
     enforce: 'post',
-    loader: 'react-on-rails-rsc/WebpackLoader',
+    loader: rscBuildAdapter.getLoader({ bundlerName: 'webpack' }),
   });
 
   // Add the `react-server` condition to the resolve config

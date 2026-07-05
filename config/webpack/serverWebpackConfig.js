@@ -1,9 +1,11 @@
 /* eslint-disable no-param-reassign */
-const { RSCWebpackPlugin } = require('react-on-rails-rsc/WebpackPlugin');
 const webpack = require('webpack');
 const path = require('path');
 const commonWebpackConfig = require('./commonWebpackConfig');
 const rscClientReferenceOptions = require('./rscClientReferences');
+const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
+
+const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
 
 function extractLoader(rule, loaderName) {
   return rule.use.find((item) => {
@@ -56,7 +58,12 @@ const configureServer = (rscBundle = false) => {
   };
 
   if (!rscBundle) {
-    serverWebpackConfig.plugins.push(new RSCWebpackPlugin({ isServer: true, ...rscClientReferenceOptions }));
+    serverWebpackConfig.plugins.push(
+      rscBuildAdapter.createWebpackPlugin({
+        isServer: true,
+        releasedPluginOptions: rscClientReferenceOptions,
+      }),
+    );
   }
   serverWebpackConfig.plugins.unshift(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
 

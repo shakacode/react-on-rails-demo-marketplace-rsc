@@ -1,7 +1,10 @@
-const { RSCRspackPlugin } = require('react-on-rails-rsc/RspackPlugin');
 const { CssExtractRspackPlugin } = require('@rspack/core');
 const { getPlugins: getRspackPlugins } = require('shakapacker/package/plugins/rspack.js');
+const path = require('path');
 const commonRspackConfig = require('./commonRspackConfig');
+const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
+
+const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
 
 const isHMR = process.env.HMR;
 
@@ -72,16 +75,21 @@ const configureClient = () => {
   // server-bundle should ONLY be built by the serverConfig
   delete clientConfig.entry['server-bundle'];
 
-  clientConfig.plugins.push(new RSCRspackPlugin({
-    isServer: false,
-    clientReferences: [
-      {
-        directory: './app/javascript',
-        recursive: true,
-        include: /\.[cm]?[jt]sx?$/,
+  rscBuildAdapter.configureClientConfig(clientConfig);
+  clientConfig.plugins.push(
+    rscBuildAdapter.createRspackPlugin({
+      isServer: false,
+      releasedPluginOptions: {
+        clientReferences: [
+          {
+            directory: './app/javascript',
+            recursive: true,
+            include: /\.[cm]?[jt]sx?$/,
+          },
+        ],
       },
-    ],
-  }));
+    }),
+  );
 
   // Skip @loadable/webpack-plugin for now — it may not be compatible with rspack v2.
   // RSC pages don't need it (they use server-side rendering for code splitting).

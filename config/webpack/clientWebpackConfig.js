@@ -1,9 +1,11 @@
-const { RSCWebpackPlugin } = require('react-on-rails-rsc/WebpackPlugin');
 const LoadablePlugin = require('@loadable/webpack-plugin');
+const path = require('path');
 const commonWebpackConfig = require('./commonWebpackConfig');
 const rscClientReferenceOptions = require('./rscClientReferences');
+const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
 
 const isHMR = process.env.HMR;
+const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
 
 // Override CSS Modules configuration to use v8-style default exports
 const overrideCssModulesConfig = (config) => {
@@ -48,7 +50,13 @@ const configureClient = () => {
   // client config is going to try to load chunks.
   delete clientConfig.entry['server-bundle'];
 
-  clientConfig.plugins.push(new RSCWebpackPlugin({ isServer: false, ...rscClientReferenceOptions }));
+  rscBuildAdapter.configureClientConfig(clientConfig);
+  clientConfig.plugins.push(
+    rscBuildAdapter.createWebpackPlugin({
+      isServer: false,
+      releasedPluginOptions: rscClientReferenceOptions,
+    }),
+  );
 
   if (!isHMR) {
     clientConfig.plugins.unshift(new LoadablePlugin({ filename: 'loadable-stats.json', writeToDisk: true }));
