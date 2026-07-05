@@ -7,6 +7,15 @@ const rspackConfig = require('./ServerClientOrBoth');
 const developmentEnvOnly = (clientConfig, _serverConfig) => {
   if (inliningCss) {
     try {
+      require.resolve('@rspack/plugin-react-refresh');
+    } catch (error) {
+      if (error.code !== 'MODULE_NOT_FOUND') {
+        console.warn(`Skipping React Refresh: ${error.message}`);
+      }
+      return;
+    }
+
+    try {
       const reactRefreshPlugin = require('@rspack/plugin-react-refresh');
       // v1 exported the constructor directly; v2 returns a namespace with this named export.
       const ReactRefreshPlugin =
@@ -16,9 +25,7 @@ const developmentEnvOnly = (clientConfig, _serverConfig) => {
       }
       clientConfig.plugins.push(new ReactRefreshPlugin());
     } catch (error) {
-      if (error.code !== 'MODULE_NOT_FOUND' || !error.message.includes("'@rspack/plugin-react-refresh'")) {
-        console.warn(`Skipping React Refresh: ${error.message}`);
-      }
+      console.warn(`Skipping React Refresh: ${error.message}`);
     }
   }
 };
