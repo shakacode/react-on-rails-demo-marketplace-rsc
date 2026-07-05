@@ -78,13 +78,13 @@ importers:
         version: 5.1.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-on-rails-pro:
         specifier: 17.0.0-rc.6
-        version: 17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.0-rc.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7)
+        version: 17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7)
       react-on-rails-pro-node-renderer:
         specifier: 17.0.0-rc.6
         version: 17.0.0-rc.6
       react-on-rails-rsc:
-        specifier: 19.2.0-rc.4
-        version: 19.2.0-rc.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
+        specifier: 19.2.0
+        version: 19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
       react-player:
         specifier: ^3.4.0
         version: 3.4.0(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -4448,8 +4448,8 @@ packages:
       react-on-rails-rsc:
         optional: true
 
-  react-on-rails-rsc@19.2.0-rc.4:
-    resolution: {integrity: sha512-Jm9822vmAvXPbQ3gyx8B5RwbGcmxEXZ1eMEoVxd3rsnnxuZ7B35dr11Ygy2FBPPq4v5sJa/PFWGir/m8Cg1b9Q==}
+  react-on-rails-rsc@19.2.0:
+    resolution: {integrity: sha512-4PlfNFWGHl029al/yi10G3fcREbTwzqQ45uqYs6i9Baqds2OROyWp1xdorfX4Ok46IVJjje14SeaJVyN8pGDGg==}
     peerDependencies:
       react: ^19.2.7
       react-dom: ^19.2.7
@@ -10069,15 +10069,15 @@ snapshots:
       lockfile: 1.0.4
       pino: 9.14.0
 
-  react-on-rails-pro@17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.0-rc.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7):
+  react-on-rails-pro@17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7):
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-on-rails: 17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     optionalDependencies:
-      react-on-rails-rsc: 19.2.0-rc.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
+      react-on-rails-rsc: 19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
 
-  react-on-rails-rsc@19.2.0-rc.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4):
+  react-on-rails-rsc@19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2

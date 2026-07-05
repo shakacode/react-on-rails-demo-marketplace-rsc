@@ -48,7 +48,7 @@
     "react-image-lightbox": "^5.1.4",
     "react-on-rails-pro": "17.0.0-rc.6",
     "react-on-rails-pro-node-renderer": "17.0.0-rc.6",
-    "react-on-rails-rsc": "19.2.0-rc.4",
+    "react-on-rails-rsc": "19.2.0",
     "react-player": "^3.4.0",
     "react-server-dom-webpack": "19.2.7",
     "sanitize-html": "^2.17.3",
