@@ -17,8 +17,8 @@ gem 'turbo-rails'
 gem 'stimulus-rails'
 
 # React on Rails
-gem 'react_on_rails', '17.0.0.rc.6'
-gem 'react_on_rails_pro', '17.0.0.rc.6'
+gem 'react_on_rails', '17.0.0.rc.7'
+gem 'react_on_rails_pro', '17.0.0.rc.7'
 
 # Shakapacker for webpack integration
 gem 'shakapacker', '10.2.0'
