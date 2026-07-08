@@ -509,7 +509,7 @@ export default function PprWalkthrough() {
       }
     };
     rafRef.current = requestAnimationFrame(tick);
-  }, [stepIndex, effMs, animating, stopRaf]);
+  }, [stepIndex, effMs, animating]);
 
   const goBack = useCallback(() => {
     if (animating || stepIndex <= 0) return;

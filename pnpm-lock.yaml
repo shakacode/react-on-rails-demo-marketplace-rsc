@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@ungap/structured-clone': 1.3.1
-  react-on-rails: 17.0.0-rc.6
+  react-on-rails: 17.0.0-rc.7
   shakapacker: 10.2.0
 
 importers:
@@ -77,14 +77,14 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-on-rails-pro:
-        specifier: 17.0.0-rc.6
-        version: 17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7)
+        specifier: 17.0.0-rc.7
+        version: 17.0.0-rc.7(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.1-rc.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7)
       react-on-rails-pro-node-renderer:
-        specifier: 17.0.0-rc.6
-        version: 17.0.0-rc.6
+        specifier: 17.0.0-rc.7
+        version: 17.0.0-rc.7
       react-on-rails-rsc:
-        specifier: 19.2.0
-        version: 19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
+        specifier: 19.2.1-rc.0
+        version: 19.2.1-rc.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
       react-player:
         specifier: ^3.4.0
         version: 3.4.0(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -4390,8 +4390,8 @@ packages:
       react: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
       react-dom: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
 
-  react-on-rails-pro-node-renderer@17.0.0-rc.6:
-    resolution: {integrity: sha512-nX9Nmgb3hiUMPItC5xfV/W/FGnYLLzefr5qJOURPxrkHgEa6dw1ndnH2mRPyh0zFkOaCB2FBIy8lkWfXvRpfiA==}
+  react-on-rails-pro-node-renderer@17.0.0-rc.7:
+    resolution: {integrity: sha512-qyB0wd1AU7KsPMJJyc3U3l4rgq8ZVR8FOAqNQ4riZ2adqeNfz5k5Gx1NKwKMWd51ri7fGqyZDFC8295bAIQEZw==}
     engines: {node: '>=18.19.0'}
     peerDependencies:
       '@fastify/otel': '>=0.18.0 <1.0.0'
@@ -4432,14 +4432,14 @@ packages:
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@17.0.0-rc.6:
-    resolution: {integrity: sha512-Uc4IUmNYAJIk4iy4RatLN0qVM7MAi8zgXVvd7vZMEnVkGGhHqvj1A82ft97yJqgfqF9mm3eSPPyU3gyXrH5CsQ==}
+  react-on-rails-pro@17.0.0-rc.7:
+    resolution: {integrity: sha512-tfHNFjlX0Vnb/t4GxUc3X3mw742hHcrR3VapYfz3kAlDPNnpMi03PzPVPxwAO5FeQloHvAKq9/rjUemdsRDSQQ==}
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       ioredis: '>= 5'
       react: '>= 16'
       react-dom: '>= 16'
-      react-on-rails-rsc: ^19.0.5
+      react-on-rails-rsc: '>=19.2.1-rc.0 <20.0.0'
     peerDependenciesMeta:
       '@tanstack/react-router':
         optional: true
@@ -4448,15 +4448,15 @@ packages:
       react-on-rails-rsc:
         optional: true
 
-  react-on-rails-rsc@19.2.0:
-    resolution: {integrity: sha512-4PlfNFWGHl029al/yi10G3fcREbTwzqQ45uqYs6i9Baqds2OROyWp1xdorfX4Ok46IVJjje14SeaJVyN8pGDGg==}
+  react-on-rails-rsc@19.2.1-rc.0:
+    resolution: {integrity: sha512-lWUQloOMYS2/Jio7M9pKaY84+gNJ1ZD2pMTj37HDZtf6GsJjb0CJfJlizvxbquUdMQawX+1h59c63syFZ7AWmQ==}
     peerDependencies:
       react: ^19.2.7
       react-dom: ^19.2.7
       webpack: ^5.59.0
 
-  react-on-rails@17.0.0-rc.6:
-    resolution: {integrity: sha512-/u2hzYvuUN+1HnH0gEdbfQvkWkgLMSN2kl/2x9CCOInIHffBvilgXzBgJrP5NlvjWpguUWSxO6PrYpgV0BzLMA==}
+  react-on-rails@17.0.0-rc.7:
+    resolution: {integrity: sha512-JWeDJeFUc8TEWtz4MWLMHpCIPBw3stKBx//EY8aPDZDwL1UxX3tnDDt/4JlIOzvGonz4ncGxEbEKcnBheyafDw==}
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -10059,7 +10059,7 @@ snapshots:
       react-lifecycles-compat: 3.0.4
       warning: 4.0.3
 
-  react-on-rails-pro-node-renderer@17.0.0-rc.6:
+  react-on-rails-pro-node-renderer@17.0.0-rc.7:
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
@@ -10069,15 +10069,15 @@ snapshots:
       lockfile: 1.0.4
       pino: 9.14.0
 
-  react-on-rails-pro@17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7):
+  react-on-rails-pro@17.0.0-rc.7(react-dom@19.2.7(react@19.2.7))(react-on-rails-rsc@19.2.1-rc.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4))(react@19.2.7):
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
-      react-on-rails: 17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      react-on-rails: 17.0.0-rc.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     optionalDependencies:
-      react-on-rails-rsc: 19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
+      react-on-rails-rsc: 19.2.1-rc.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4)
 
-  react-on-rails-rsc@19.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4):
+  react-on-rails-rsc@19.2.1-rc.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.105.4):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
@@ -10087,7 +10087,7 @@ snapshots:
       webpack: 5.105.4(@swc/core@1.15.21)(webpack-cli@5.1.4)
       webpack-sources: 3.3.4
 
-  react-on-rails@17.0.0-rc.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  react-on-rails@17.0.0-rc.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
