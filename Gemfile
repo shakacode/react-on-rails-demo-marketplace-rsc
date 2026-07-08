@@ -3,12 +3,12 @@ source 'https://rubygems.org'
 ruby '3.3.0'
 
 # Fix connection_pool compatibility with Ruby 3.3
-gem 'connection_pool', '~> 2.4'
+gem 'connection_pool', '~> 3.0'
 
 # Core Rails
-gem 'rails', '~> 7.1'
-gem 'pg', '~> 1.5'
-gem 'puma', '~> 6.0'
+gem 'rails', '~> 8.1'
+gem 'pg', '~> 1.6'
+gem 'puma', '~> 8.0'
 
 # Asset Pipeline
 gem 'sprockets-rails'
@@ -34,7 +34,7 @@ gem 'bootsnap', require: false
 
 group :development, :test do
   gem 'debug', platforms: %i[mri windows]
-  gem 'rspec-rails', '~> 6.1'
+  gem 'rspec-rails', '~> 8.0'
   gem 'factory_bot_rails'
   gem 'faker'
   gem "pry", "~> 0.16.0"
