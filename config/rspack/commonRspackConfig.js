@@ -8,6 +8,7 @@ const commonOptions = {
 };
 
 const baseRspackConfig = generateRspackConfig();
+const loadableSwcPlugin = ['@swc/plugin-loadable-components', {}];
 
 const normalizeRspackEnvironmentPlugin = (config) => {
   config.plugins = config.plugins.map((plugin) => {
@@ -19,6 +20,33 @@ const normalizeRspackEnvironmentPlugin = (config) => {
   return config;
 };
 
-const commonRspackConfig = () => normalizeRspackEnvironmentPlugin(merge({}, baseRspackConfig, commonOptions));
+const configureLoadableSwcPlugin = (config) => {
+  config.module.rules.forEach((rule) => {
+    if (!Array.isArray(rule.use)) return;
+
+    rule.use.forEach((use) => {
+      if (!use?.loader?.includes('swc-loader')) return;
+
+      use.options ||= {};
+      use.options.jsc ||= {};
+      use.options.jsc.experimental ||= {};
+      use.options.jsc.experimental.plugins ||= [];
+
+      const hasLoadablePlugin = use.options.jsc.experimental.plugins.some(
+        ([pluginName]) => pluginName === loadableSwcPlugin[0],
+      );
+
+      if (!hasLoadablePlugin) {
+        use.options.jsc.experimental.plugins.push(loadableSwcPlugin);
+      }
+    });
+  });
+
+  return config;
+};
+
+const commonRspackConfig = () => configureLoadableSwcPlugin(
+  normalizeRspackEnvironmentPlugin(merge({}, baseRspackConfig, commonOptions)),
+);
 
 module.exports = commonRspackConfig;
