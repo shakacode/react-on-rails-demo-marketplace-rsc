@@ -77,7 +77,7 @@ jobs:
 
     steps:
       - name: Checkout demo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -85,7 +85,7 @@ jobs:
           bundler-cache: true
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -100,7 +100,7 @@ jobs:
 
       # ── Option A: build the RoR Pro packages from a source checkout ──────────
       - name: Checkout react_on_rails (Pro packages)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: shakacode/react_on_rails
           ref: ${{ github.event.inputs.ror_ref }}
@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload server logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rsc-e2e-logs
           path: |
