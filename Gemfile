@@ -1,9 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '3.3.0'
-
-# Fix connection_pool compatibility with Ruby 3.3
-gem 'connection_pool', '~> 3.0'
+ruby '3.4.6'
 
 # Core Rails
 gem 'rails', '~> 8.1'
