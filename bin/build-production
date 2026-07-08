@@ -6,6 +6,7 @@ echo "=== Building production assets ==="
 export RAILS_ENV=production
 export NODE_ENV=production
 export SECRET_KEY_BASE="${SECRET_KEY_BASE:-test123}"
+export SHAKAPACKER_ASSETS_BUNDLER="${SHAKAPACKER_ASSETS_BUNDLER:-rspack}"
 
 # 1. Clean previous build artifacts
 echo "--- Cleaning previous builds ---"
@@ -18,8 +19,8 @@ rm -rf public/packs
 echo "--- Generating packs ---"
 bundle exec rake react_on_rails:generate_packs
 
-# 2. Compile all webpack bundles (client, server, RSC)
-echo "--- Compiling webpack bundles ---"
+# 2. Compile all asset bundles (client, server, RSC)
+echo "--- Compiling ${SHAKAPACKER_ASSETS_BUNDLER} bundles ---"
 bin/shakapacker
 
 echo "=== Production build complete ==="
