@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'pathname'
+
+ROOT = Pathname.new(__dir__).join('..').expand_path
+
+DECLARATIONS = {
+  'Gemfile' => [ROOT.join('Gemfile'), /^ruby\s+["']([^"']+)["']/],
+  'Gemfile.lock' => [ROOT.join('Gemfile.lock'), /^RUBY VERSION\s*\n\s+ruby\s+(\S+)/],
+  'mise.toml' => [ROOT.join('mise.toml'), /^ruby\s*=\s*["']([^"']+)["']/],
+  '.controlplane/Dockerfile' => [ROOT.join('.controlplane/Dockerfile'), /^FROM\s+ruby:([^-\s]+)-slim\b/],
+  'CONTRIBUTING.md' => [ROOT.join('CONTRIBUTING.md'), /Install Ruby\s+`([^`]+)`/]
+}.freeze
+
+versions = DECLARATIONS.to_h do |label, (path, pattern)|
+  match = path.read.match(pattern)
+  abort "Ruby version check failed: could not find the Ruby version in #{label}" unless match
+
+  [label, match[1]]
+end
+
+if versions.values.uniq.one?
+  puts "Ruby version declarations agree: #{versions.values.first}"
+else
+  warn 'Ruby version declarations do not agree:'
+  versions.each { |label, version| warn "  #{label}: #{version}" }
+  exit 1
+end

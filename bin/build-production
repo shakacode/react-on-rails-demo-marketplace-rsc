@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+bin/check-ruby-versions
+
 echo "=== Building production assets ==="
 
 export RAILS_ENV=production
