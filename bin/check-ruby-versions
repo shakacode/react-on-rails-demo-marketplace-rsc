@@ -5,13 +5,19 @@ require 'pathname'
 
 ROOT = Pathname.new(__dir__).join('..').expand_path
 
+DOCKERFILE_RUBY_VERSION_PATTERN = /
+  ^ARG[ \t]+RUBY_VERSION=(\S+)[ \t]*\r?\n
+  (?:[ \t]*(?:\#[^\r\n]*)?\r?\n)*
+  FROM[ \t]+ruby:\$\{RUBY_VERSION\}-slim[ \t]+AS[ \t]+base[ \t]*$
+/x
+
 DECLARATIONS = {
   'Gemfile' => [ROOT.join('Gemfile'), /^ruby\s+["']([^"']+)["']/],
   'Gemfile.lock' => [ROOT.join('Gemfile.lock'), /^RUBY VERSION\s*\n\s+ruby\s+(\S+)/],
   'mise.toml' => [ROOT.join('mise.toml'), /^ruby\s*=\s*["']([^"']+)["']/],
   '.controlplane/Dockerfile' => [
     ROOT.join('.controlplane/Dockerfile'),
-    /^ARG\s+RUBY_VERSION=(\S+)\nFROM\s+ruby:\$\{RUBY_VERSION\}-slim\s+AS\s+base$/
+    DOCKERFILE_RUBY_VERSION_PATTERN
   ],
   'CONTRIBUTING.md' => [ROOT.join('CONTRIBUTING.md'), /^\s*1\. Install Ruby\s+`([^`]+)`,/],
   '.rubocop.yml' => [ROOT.join('.rubocop.yml'), /^\s*TargetRubyVersion:\s+(\S+)$/]
