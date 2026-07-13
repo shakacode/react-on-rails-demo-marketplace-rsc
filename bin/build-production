@@ -28,9 +28,16 @@ bin/shakapacker
 
 # 4. Validate the artifacts requested by the selected bundle mode
 if [[ -n "${WEBPACK_SERVE:-}" || -n "${CLIENT_BUNDLE_ONLY:-}" ]]; then
-  required_artifacts=(public/packs/loadable-stats.json)
+  required_artifacts=(
+    public/packs/manifest.json
+    public/packs/react-client-manifest.json
+    public/packs/loadable-stats.json
+  )
 elif [[ -n "${SERVER_BUNDLE_ONLY:-}" ]]; then
-  required_artifacts=(ssr-generated/server-bundle.js)
+  required_artifacts=(
+    ssr-generated/server-bundle.js
+    ssr-generated/react-server-client-manifest.json
+  )
 elif [[ -n "${RSC_BUNDLE_ONLY:-}" ]]; then
   required_artifacts=(ssr-generated/rsc-bundle.js)
 else
@@ -38,6 +45,8 @@ else
     ssr-generated/server-bundle.js
     ssr-generated/rsc-bundle.js
     ssr-generated/react-server-client-manifest.json
+    public/packs/manifest.json
+    public/packs/react-client-manifest.json
     public/packs/loadable-stats.json
   )
 fi
