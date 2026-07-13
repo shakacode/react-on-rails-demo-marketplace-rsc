@@ -9,21 +9,34 @@ DECLARATIONS = {
   'Gemfile' => [ROOT.join('Gemfile'), /^ruby\s+["']([^"']+)["']/],
   'Gemfile.lock' => [ROOT.join('Gemfile.lock'), /^RUBY VERSION\s*\n\s+ruby\s+(\S+)/],
   'mise.toml' => [ROOT.join('mise.toml'), /^ruby\s*=\s*["']([^"']+)["']/],
-  '.controlplane/Dockerfile' => [ROOT.join('.controlplane/Dockerfile'), /^FROM\s+ruby:([^-\s]+)-slim\b/],
-  'CONTRIBUTING.md' => [ROOT.join('CONTRIBUTING.md'), /Install Ruby\s+`([^`]+)`/]
+  '.controlplane/Dockerfile' => [
+    ROOT.join('.controlplane/Dockerfile'),
+    /^ARG\s+RUBY_VERSION=(\S+)\nFROM\s+ruby:\$\{RUBY_VERSION\}-slim\s+AS\s+base$/
+  ],
+  'CONTRIBUTING.md' => [ROOT.join('CONTRIBUTING.md'), /^\s*1\. Install Ruby\s+`([^`]+)`,/],
+  '.rubocop.yml' => [ROOT.join('.rubocop.yml'), /^\s*TargetRubyVersion:\s+(\S+)$/]
 }.freeze
 
 versions = DECLARATIONS.to_h do |label, (path, pattern)|
+  abort "Ruby version check failed: could not read #{label}" unless path.file?
+
   match = path.read.match(pattern)
   abort "Ruby version check failed: could not find the Ruby version in #{label}" unless match
 
   [label, match[1]]
 end
 
-if versions.values.uniq.one?
-  puts "Ruby version declarations agree: #{versions.values.first}"
+runtime_version = versions.fetch('Gemfile')
+expected_versions = versions.to_h { |label, _version| [label, runtime_version] }
+expected_versions['.rubocop.yml'] = runtime_version.split('.').first(2).join('.')
+mismatches = versions.reject { |label, version| version == expected_versions.fetch(label) }
+
+if mismatches.empty?
+  puts "Ruby version declarations agree: #{runtime_version}"
 else
   warn 'Ruby version declarations do not agree:'
-  versions.each { |label, version| warn "  #{label}: #{version}" }
+  versions.each do |label, version|
+    warn "  #{label}: #{version} (expected #{expected_versions.fetch(label)})"
+  end
   exit 1
 end
