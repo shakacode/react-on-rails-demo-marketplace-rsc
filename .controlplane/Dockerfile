@@ -52,21 +52,11 @@ ARG SECRET_KEY_BASE=dummy_secret_for_asset_compilation
 ARG RSC_CACHE_ENABLED=false
 ARG REACT_COMPILER_ENABLED=false
 
-RUN RAILS_ENV=production \
-    NODE_ENV=production \
-    SECRET_KEY_BASE=$SECRET_KEY_BASE \
+RUN SECRET_KEY_BASE=$SECRET_KEY_BASE \
     REACT_ON_RAILS_PRO_LICENSE=$REACT_ON_RAILS_PRO_LICENSE \
     RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
     REACT_COMPILER_ENABLED=$REACT_COMPILER_ENABLED \
-    bundle exec rake react_on_rails:generate_packs
-
-RUN RAILS_ENV=production \
-    NODE_ENV=production \
-    SECRET_KEY_BASE=$SECRET_KEY_BASE \
-    REACT_ON_RAILS_PRO_LICENSE=$REACT_ON_RAILS_PRO_LICENSE \
-    RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
-    REACT_COMPILER_ENABLED=$REACT_COMPILER_ENABLED \
-    bin/shakapacker
+    bin/build-production
 
 # ============================================================
 # Production stage - minimal runtime image

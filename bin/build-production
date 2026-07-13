@@ -16,13 +16,46 @@ rm -rf app/javascript/packs/generated
 rm -rf app/javascript/generated
 rm -rf .node-renderer-bundles
 rm -rf public/packs
+rm -rf ssr-generated
 
 # 2. Generate auto-bundled packs (react_on_rails auto_load_bundle)
 echo "--- Generating packs ---"
 bundle exec rake react_on_rails:generate_packs
 
-# 2. Compile all asset bundles (client, server, RSC)
+# 3. Compile all asset bundles (client, server, RSC)
 echo "--- Compiling ${SHAKAPACKER_ASSETS_BUNDLER} bundles ---"
 bin/shakapacker
+
+# 4. Validate the artifacts requested by the selected bundle mode
+if [[ -n "${WEBPACK_SERVE:-}" || -n "${CLIENT_BUNDLE_ONLY:-}" ]]; then
+  required_artifacts=(
+    public/packs/manifest.json
+    public/packs/react-client-manifest.json
+    public/packs/loadable-stats.json
+  )
+elif [[ -n "${SERVER_BUNDLE_ONLY:-}" ]]; then
+  required_artifacts=(
+    ssr-generated/server-bundle.js
+    ssr-generated/react-server-client-manifest.json
+  )
+elif [[ -n "${RSC_BUNDLE_ONLY:-}" ]]; then
+  required_artifacts=(ssr-generated/rsc-bundle.js)
+else
+  required_artifacts=(
+    ssr-generated/server-bundle.js
+    ssr-generated/rsc-bundle.js
+    ssr-generated/react-server-client-manifest.json
+    public/packs/manifest.json
+    public/packs/react-client-manifest.json
+    public/packs/loadable-stats.json
+  )
+fi
+
+for artifact in "${required_artifacts[@]}"; do
+  if [[ ! -s "${artifact}" ]]; then
+    echo "Missing or empty required production artifact: ${artifact}" >&2
+    exit 1
+  fi
+done
 
 echo "=== Production build complete ==="
