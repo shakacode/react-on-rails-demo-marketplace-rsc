@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM ruby:3.3.0-slim AS base
+ARG RUBY_VERSION=3.4.6
+FROM ruby:${RUBY_VERSION}-slim AS base
 
 ENV NODE_VERSION=20.19.5
 ENV PNPM_VERSION=9.15.2
