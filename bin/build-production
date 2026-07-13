@@ -16,13 +16,25 @@ rm -rf app/javascript/packs/generated
 rm -rf app/javascript/generated
 rm -rf .node-renderer-bundles
 rm -rf public/packs
+rm -rf ssr-generated
 
 # 2. Generate auto-bundled packs (react_on_rails auto_load_bundle)
 echo "--- Generating packs ---"
 bundle exec rake react_on_rails:generate_packs
 
-# 2. Compile all asset bundles (client, server, RSC)
+# 3. Compile all asset bundles (client, server, RSC)
 echo "--- Compiling ${SHAKAPACKER_ASSETS_BUNDLER} bundles ---"
 bin/shakapacker
+
+for artifact in \
+  ssr-generated/server-bundle.js \
+  ssr-generated/rsc-bundle.js \
+  ssr-generated/react-server-client-manifest.json \
+  public/packs/loadable-stats.json; do
+  if [[ ! -s "${artifact}" ]]; then
+    echo "Missing or empty required production artifact: ${artifact}" >&2
+    exit 1
+  fi
+done
 
 echo "=== Production build complete ==="
