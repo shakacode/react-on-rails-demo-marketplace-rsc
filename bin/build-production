@@ -26,11 +26,23 @@ bundle exec rake react_on_rails:generate_packs
 echo "--- Compiling ${SHAKAPACKER_ASSETS_BUNDLER} bundles ---"
 bin/shakapacker
 
-for artifact in \
-  ssr-generated/server-bundle.js \
-  ssr-generated/rsc-bundle.js \
-  ssr-generated/react-server-client-manifest.json \
-  public/packs/loadable-stats.json; do
+# 4. Validate the artifacts requested by the selected bundle mode
+if [[ -n "${WEBPACK_SERVE:-}" || -n "${CLIENT_BUNDLE_ONLY:-}" ]]; then
+  required_artifacts=(public/packs/loadable-stats.json)
+elif [[ -n "${SERVER_BUNDLE_ONLY:-}" ]]; then
+  required_artifacts=(ssr-generated/server-bundle.js)
+elif [[ -n "${RSC_BUNDLE_ONLY:-}" ]]; then
+  required_artifacts=(ssr-generated/rsc-bundle.js)
+else
+  required_artifacts=(
+    ssr-generated/server-bundle.js
+    ssr-generated/rsc-bundle.js
+    ssr-generated/react-server-client-manifest.json
+    public/packs/loadable-stats.json
+  )
+fi
+
+for artifact in "${required_artifacts[@]}"; do
   if [[ ! -s "${artifact}" ]]; then
     echo "Missing or empty required production artifact: ${artifact}" >&2
     exit 1
