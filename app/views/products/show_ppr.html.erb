@@ -1,0 +1,11 @@
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%# PPR variant: the static shell (hero + product info + skeletons) is prerendered
+    and cached on the first request. On subsequent requests the cached shell serves
+    instantly while only the dynamic Suspense boundaries (reviews, related, etc.)
+    stream fresh from the server.
+    cache_key = product id + updated_at. %>
+<%= ppr_react_component("ProductPageSSR",
+    cache_key: ["product_ppr", @product.id, @product.updated_at.to_i],
+    prerender: true) { product_ssr_props } %>
