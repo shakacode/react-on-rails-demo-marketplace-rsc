@@ -26,6 +26,7 @@ on:
       - '.verify-routes.js'
       - 'node-renderer.js'
       - 'package.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/rsc-rspack-e2e.yml'
   workflow_dispatch:
     inputs:
