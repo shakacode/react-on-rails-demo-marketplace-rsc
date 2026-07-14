@@ -22,7 +22,8 @@
     "vitals:quick": "node scripts/measure-vitals.mjs --iterations 3 --warmup 1",
     "lint:rsc": "node scripts/check-rsc-imports.mjs",
     "verify:rsc": "node scripts/check-rsc-chunks.mjs",
-    "smoke:routes": "node .verify-routes.js"
+    "smoke:routes": "node .verify-routes.js",
+    "test:renderer-context": "node --test scripts/renderer-context.test.mjs"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
