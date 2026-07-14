@@ -95,6 +95,12 @@ jobs:
       - name: Enable corepack
         run: corepack enable
 
+      - name: Verify committed demo dependency graph
+        # This is the lockfile contract for the demo. The yalc substitutions
+        # below may update only the linked React on Rails packages; they must
+        # start from the committed parser/sanitizer graph.
+        run: pnpm install --frozen-lockfile
+
       - name: Install yalc
         run: npm install -g yalc
 
@@ -156,7 +162,8 @@ jobs:
           # pnpm.overrides so react-on-rails-pro's workspace:* dep still resolves
           # to the local build instead of the private git repo.
           node -e 'const fs=require("fs"),p=JSON.parse(fs.readFileSync("package.json","utf8")),D={"react-on-rails-pro":"file:.yalc/react-on-rails-pro","react-on-rails-pro-node-renderer":"file:.yalc/react-on-rails-pro-node-renderer","react-on-rails-rsc":"file:.yalc/react-on-rails-rsc"},A=Object.assign({"react-on-rails":"file:.yalc/react-on-rails"},D);for(const s of ["dependencies","devDependencies"])if(p[s]){delete p[s]["react-on-rails"];for(const k in D)if(p[s][k])p[s][k]=D[k];}p.pnpm=p.pnpm||{};p.pnpm.overrides=Object.assign({},p.pnpm.overrides,A);fs.writeFileSync("package.json",JSON.stringify(p,null,2));'
-          rm -f pnpm-lock.yaml
+          # Keep the committed lockfile: pnpm now updates only the yalc-linked
+          # package edges while retaining the demo's transitive dependency graph.
           pnpm install --no-frozen-lockfile
 
       - name: Install Chromium for Puppeteer
