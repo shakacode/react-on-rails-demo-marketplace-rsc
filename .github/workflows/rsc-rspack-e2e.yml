@@ -101,6 +101,9 @@ jobs:
         # start from the committed parser/sanitizer graph.
         run: pnpm install --frozen-lockfile
 
+      - name: Verify renderer VM web-platform globals
+        run: pnpm test:renderer-context
+
       - name: Install yalc
         run: npm install -g yalc
 
