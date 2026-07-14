@@ -19,8 +19,10 @@ on:
     paths:
       - 'config/rspack/**'
       - 'config/webpack/**'
+      - 'config/renderer-context.js'
       - 'scripts/verify-rsc-e2e.sh'
       - 'scripts/check-rsc-chunks.mjs'
+      - 'scripts/renderer-context.test.mjs'
       - '.verify-routes.js'
       - 'node-renderer.js'
       - 'package.json'
