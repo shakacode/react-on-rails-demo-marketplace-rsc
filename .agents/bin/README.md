@@ -11,7 +11,7 @@ means that capability is n/a here.
 | `validate` | Broad demo validation gate | `script/demo-fleet-verify` |
 | `test` | Run the Rails test task | `bundle exec rake` — this app has no committed RSpec suite; the broad demo gate also runs it |
 | `lint` | Lint / format | `pnpm type-check`, `pnpm lint`, then `bundle exec rubocop` |
-| `build` | Production asset build | `pnpm build:production` |
+| `build` | Production asset build | `bin/build-production` (sets the Rails/secret/bundler environment, cleans generated assets, regenerates packs, then compiles bundles) |
 | `docs` | Docs checks | n/a |
 | `ci-detect` | CI change detector | n/a |
 
