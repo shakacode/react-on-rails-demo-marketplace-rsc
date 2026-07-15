@@ -9,7 +9,7 @@ means that capability is n/a here.
 | --- | --- | --- |
 | `setup` | Bootstrap dependencies and database | `bin/setup` |
 | `validate` | Broad demo validation gate | `script/demo-fleet-verify` |
-| `test` | Run the Rails test task | `bundle exec rake` — this app has no committed RSpec suite; the broad demo gate also runs it |
+| `test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — the repository has no committed unit or RSpec suite; this runs the Rails task, RSC import checks, pack generation, a production build, and RSC chunk verification |
 | `lint` | Lint / format | `pnpm type-check`, `pnpm lint`, then `bundle exec rubocop` |
 | `build` | Production asset build | `bin/build-production` (sets the Rails/secret/bundler environment, cleans generated assets, regenerates packs, then compiles bundles) |
 | `docs` | Docs checks | n/a |
@@ -23,4 +23,5 @@ This repository uses `mise.toml` for Ruby. The setup wrapper never runs `mise
 trust` for you. Before the first setup in a checkout, review that file and run
 `mise trust mise.toml` yourself; until then, `.agents/bin/setup` stops with this
 manual prerequisite. Setup also stops if it cannot determine that trust status,
-so a query error can never bypass the manual review step.
+or if mise reports anything other than the expected trusted status, so a query
+or output-format error can never bypass the manual review step.

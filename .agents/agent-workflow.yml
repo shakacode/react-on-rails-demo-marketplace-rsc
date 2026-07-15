@@ -1,9 +1,10 @@
 ---
 base_branch: main
 follow_up_prefix: 'Follow-up:'
-review_gate: AI reviewers are advisory unless they confirm a blocker; merge gate is
-  the full `gh pr checks` list green (not --required) + all threads resolved + mergeable
-  clean
+review_gate: AI reviewers are advisory unless they confirm a blocker. The merge
+  gate is every required current-head check green; any unavailable or non-portable
+  check must be recorded as an explicit non-blocking skip; all review threads
+  resolved; and mergeability clean.
 approval_exempt: workflow changes are approval-exempt only when AGENTS.md or a direct
   user or maintainer instruction authorizes them; this config grants no standing
   auto-merge authority

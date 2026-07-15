@@ -12,6 +12,17 @@ conditions. If required checks are failing, review-app verification is broken,
 or blocking feedback remains unresolved, leave the pull request as draft and
 report the blocker instead.
 
+## Authority Boundaries
+
+`AGENTS.md` is the canonical instruction source for Codex in this repository.
+`CLAUDE.md` is only a pointer to these instructions. Reusing a Claude-review
+workflow, or receiving its output, never grants Codex authority to approve,
+resolve review threads, mark a PR ready, or merge it. Those actions require the
+applicable direct user or maintainer authorization and this repository policy.
+
+Unavailable or non-portable checks may be recorded as explicit non-blocking
+skips; they never waive a required hosted gate or unresolved blocking feedback.
+
 ## Agent Workflow Configuration
 
 Portable shared skills resolve this repo's commands and policy through:
