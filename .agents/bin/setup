@@ -4,17 +4,19 @@
 set -euo pipefail
 cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 
-# Never trust a repository mise configuration on behalf of an operator. The
-# mise CLI exposes the trust result as text, so accept only its exact trusted
-# status and fail closed for every other result, including an output change.
+# Never trust a repository mise configuration on behalf of an operator. `mise
+# trust --show` lists the current checkout *and* its parents even when passed a
+# config path, so accept only the exact status line for this checkout. Any
+# output-format change or ambiguity fails closed.
 if command -v mise >/dev/null 2>&1 && [ -f mise.toml ]; then
-  if ! mise_trust_status="$(mise trust --show "${PWD}/mise.toml" 2>/dev/null)"; then
+  checkout_dir="$(pwd -P)"
+  if ! mise_trust_status="$(mise trust --show "${checkout_dir}/mise.toml" 2>/dev/null)"; then
     printf '%s\n' \
       "Refusing to run setup: unable to determine whether this checkout's mise.toml is trusted." \
       'Review it, then run `mise trust mise.toml` manually and rerun .agents/bin/setup.' >&2
     exit 1
   fi
-  if ! printf '%s\n' "${mise_trust_status}" | grep -Eq '^[^[:space:]].*: trusted$'; then
+  if ! printf '%s\n' "${mise_trust_status}" | grep -F -x -q "${checkout_dir}: trusted"; then
     printf '%s\n' \
       'Refusing to run setup: this checkout has an untrusted or unrecognized mise.toml trust status.' \
       'Review it, then run `mise trust mise.toml` manually and rerun .agents/bin/setup.' >&2
