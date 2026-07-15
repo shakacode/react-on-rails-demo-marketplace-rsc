@@ -7,11 +7,11 @@ means that capability is n/a here.
 
 | Script | Purpose | This repo runs |
 | --- | --- | --- |
-| `setup` | Install dependencies | `bundle install` |
-| `validate` | Pre-push gate | `bundle exec rake` |
-| `test` | Run tests | `bundle exec rspec "$@"` |
-| `lint` | Lint / format | n/a |
-| `build` | Build / type-check | n/a |
+| `setup` | Bootstrap dependencies and database | `bin/setup` |
+| `validate` | Broad demo validation gate | `script/demo-fleet-verify` |
+| `test` | Run the Rails test task | `bundle exec rake` — this app has no committed RSpec suite; the broad demo gate also runs it |
+| `lint` | Lint / format | `pnpm type-check`, `pnpm lint`, then `bundle exec rubocop` |
+| `build` | Production asset build | `pnpm build:production` |
 | `docs` | Docs checks | n/a |
 | `ci-detect` | CI change detector | n/a |
 
