@@ -8,7 +8,12 @@ cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 # its trust status is read-only; setup stops with the manual prerequisite when
 # the checkout has not yet been reviewed and trusted locally.
 if command -v mise >/dev/null 2>&1 && [ -f mise.toml ]; then
-  mise_trust_status="$(mise trust --show "${PWD}/mise.toml" 2>&1 || true)"
+  if ! mise_trust_status="$(mise trust --show "${PWD}/mise.toml" 2>&1)"; then
+    printf '%s\n' \
+      "Refusing to run setup: unable to determine whether this checkout's mise.toml is trusted." \
+      'Review it, then run `mise trust mise.toml` manually and rerun .agents/bin/setup.' >&2
+    exit 1
+  fi
   if printf '%s\n' "${mise_trust_status}" | grep -q ': untrusted$'; then
     printf '%s\n' \
       'Refusing to run setup: this checkout has an untrusted mise.toml.' \

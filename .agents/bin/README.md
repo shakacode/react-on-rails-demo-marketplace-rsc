@@ -22,4 +22,5 @@ Non-command policy lives in [`../agent-workflow.yml`](../agent-workflow.yml).
 This repository uses `mise.toml` for Ruby. The setup wrapper never runs `mise
 trust` for you. Before the first setup in a checkout, review that file and run
 `mise trust mise.toml` yourself; until then, `.agents/bin/setup` stops with this
-manual prerequisite.
+manual prerequisite. Setup also stops if it cannot determine that trust status,
+so a query error can never bypass the manual review step.
