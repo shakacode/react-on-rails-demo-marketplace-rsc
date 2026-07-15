@@ -3,4 +3,18 @@
 # Bootstrap the full local development environment.
 set -euo pipefail
 cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+
+# Never trust a repository mise configuration on behalf of an operator. Checking
+# its trust status is read-only; setup stops with the manual prerequisite when
+# the checkout has not yet been reviewed and trusted locally.
+if command -v mise >/dev/null 2>&1 && [ -f mise.toml ]; then
+  mise_trust_status="$(mise trust --show "${PWD}/mise.toml" 2>&1 || true)"
+  if printf '%s\n' "${mise_trust_status}" | grep -q ': untrusted$'; then
+    printf '%s\n' \
+      'Refusing to run setup: this checkout has an untrusted mise.toml.' \
+      'Review it, then run `mise trust mise.toml` manually and rerun .agents/bin/setup.' >&2
+    exit 1
+  fi
+fi
+
 exec bin/setup "$@"
