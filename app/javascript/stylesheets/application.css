@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @import 'highlight.js/styles/github-dark.css';
 
 /* Lightbox vendor CSS for the /media-gallery page. Imported here (the global CSS
@@ -6,9 +7,11 @@
 @import 'react-image-lightbox/style.css';
 @import 'yet-another-react-lightbox/styles.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@source "../../../app/javascript/**/*.{js,jsx,ts,tsx}";
+@source "../../../app/views/**/*.{erb,html}";
+@source "../../../app/helpers/**/*.rb";
+
+@plugin "@tailwindcss/typography";
 
 /* Custom design tokens */
 :root {
@@ -69,4 +72,3 @@ html.reading-mode-dark main code {
   background-color: #111827;
   color: #f3f4f6;
 }
-

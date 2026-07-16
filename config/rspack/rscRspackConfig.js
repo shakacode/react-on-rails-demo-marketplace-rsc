@@ -1,11 +1,9 @@
 const { default: serverRspackConfig } = require('./serverRspackConfig');
-const path = require('path');
-const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
-
-const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
+const { getRspackRscImplementation } = require('../rsc-implementations');
 
 const configureRsc = () => {
   const rscConfig = serverRspackConfig(true);
+  const rscImplementation = getRspackRscImplementation();
 
   const rscEntry = {
     'rsc-bundle': rscConfig.entry['server-bundle'],
@@ -18,7 +16,7 @@ const configureRsc = () => {
   rscConfig.module.rules.push({
     test: /\.(ts|tsx|js|jsx|mjs)$/,
     enforce: 'post',
-    loader: rscBuildAdapter.getLoader({ bundlerName: 'rspack' }),
+    loader: rscImplementation.rscLoader,
   });
 
   // Add the `react-server` condition to the resolve config

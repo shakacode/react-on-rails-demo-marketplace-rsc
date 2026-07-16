@@ -1,9 +1,10 @@
 /* eslint-disable no-param-reassign */
 const path = require('path');
 const commonRspackConfig = require('./commonRspackConfig');
-const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
-
-const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
+const {
+  getRspackRscImplementation,
+  rspackDefaultClientReferences,
+} = require('../rsc-implementations');
 
 function extractLoader(rule, loaderName) {
   if (!Array.isArray(rule.use)) return undefined;
@@ -22,6 +23,7 @@ function extractLoader(rule, loaderName) {
 
 const configureServer = (rscBundle = false) => {
   const serverConfig = commonRspackConfig();
+  const rscImplementation = getRspackRscImplementation();
 
   const serverEntry = {
     'server-bundle': serverConfig.entry['server-bundle'],
@@ -58,17 +60,8 @@ const configureServer = (rscBundle = false) => {
 
   if (!rscBundle) {
     serverConfig.plugins.push(
-      rscBuildAdapter.createRspackPlugin({
-        isServer: true,
-        releasedPluginOptions: {
-          clientReferences: [
-            {
-              directory: './app/javascript',
-              recursive: true,
-              include: /\.[cm]?[jt]sx?$/,
-            },
-          ],
-        },
+      rscImplementation.createServerPlugin({
+        clientReferences: rspackDefaultClientReferences,
       }),
     );
   }

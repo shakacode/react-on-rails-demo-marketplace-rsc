@@ -2,8 +2,9 @@ const path = require('path');
 const { analyzeRouteEntries, writeGeneratedRouteEntries } = require('./analyzer');
 const { ExperimentalRouteEntryRSCPlugin } = require('./plugin');
 
-function createAdapter(options) {
+function createRouteEntryImplementation(options) {
   const projectRoot = path.resolve(options.projectRoot || process.cwd());
+  const bundlerName = options.bundlerName;
   const routeEntryDirectoryName = process.env.RSC_ROUTE_ENTRY_DIRECTORY || 'startup';
   let analysis;
 
@@ -19,7 +20,7 @@ function createAdapter(options) {
     return analysis;
   };
 
-  const createPlugin = ({ bundlerName, isServer, releasedPluginOptions }) =>
+  const createPlugin = ({ isServer, releasedPluginOptions }) =>
     new ExperimentalRouteEntryRSCPlugin({
       bundlerName,
       isServer,
@@ -29,13 +30,14 @@ function createAdapter(options) {
     });
 
   return {
-    name: options.name,
+    rscLoader: path.join(__dirname, 'loader.js'),
+    supportsServerComponentCssManifest: false,
 
     configureClientConfig(config) {
       const routeAnalysis = getAnalysis();
       if (!config.entry || typeof config.entry !== 'object' || Array.isArray(config.entry)) {
         throw new Error(
-          'route-entry-experiment requires an object-shaped bundler entry configuration.',
+          'route_entry requires an object-shaped bundler entry configuration.',
         );
       }
 
@@ -44,20 +46,16 @@ function createAdapter(options) {
       }
     },
 
-    createWebpackPlugin({ isServer, releasedPluginOptions }) {
-      return createPlugin({ bundlerName: 'webpack', isServer, releasedPluginOptions });
+    createClientPlugin(releasedPluginOptions) {
+      return createPlugin({ isServer: false, releasedPluginOptions });
     },
 
-    createRspackPlugin({ isServer, releasedPluginOptions }) {
-      return createPlugin({ bundlerName: 'rspack', isServer, releasedPluginOptions });
-    },
-
-    getLoader() {
-      return path.join(__dirname, 'loader.js');
+    createServerPlugin(releasedPluginOptions) {
+      return createPlugin({ isServer: true, releasedPluginOptions });
     },
   };
 }
 
 module.exports = {
-  createAdapter,
+  createRouteEntryImplementation,
 };

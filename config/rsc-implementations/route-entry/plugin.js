@@ -83,7 +83,7 @@ class ExperimentalRouteEntryRSCPlugin {
 
           const payload = {
             version: 1,
-            adapter: 'route-entry-experiment',
+            implementation: 'route_entry',
             bundler: this.bundlerName,
             isServer: this.isServer,
             routeEntryDirectoryName: this.analysis.routeEntryDirectoryName,

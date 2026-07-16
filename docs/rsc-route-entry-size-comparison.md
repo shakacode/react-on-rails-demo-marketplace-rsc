@@ -1,14 +1,14 @@
 # RSC Route Entry Size Comparison
 
 This note compares the released `react-on-rails-rsc` build path with the local
-`route-entry-experiment` adapter in this branch.
+`route_entry` implementation in this branch.
 
 The comparison is intentionally scoped to the assets controlled by the RSC
 plugin/loader behavior:
 
 - Released mode uses `react-client-manifest.json` and counts the JS/CSS chunks
   for the client references discovered for each route.
-- Experimental mode uses `react-rsc-route-entry-manifest.json` and counts the
+- `route_entry` mode uses `react-rsc-route-entry-manifest.json` and counts the
   generated `rsc-route-*` entry files for each route.
 - The common page shell is not counted: `application` CSS, `client-bundle`,
   HTML, images, API responses, and the Flight payload are shared costs outside
@@ -32,7 +32,7 @@ discover.
 
 ## Build Inputs
 
-Measured on July 4, 2026 from this branch using webpack production builds:
+Measured from this branch using webpack production builds:
 
 ```bash
 rm -rf public/packs ssr-generated tmp/rsc-route-entry-experiment tmp/rsc-size-comparison
@@ -44,7 +44,7 @@ cp -R ssr-generated tmp/rsc-size-comparison/released-webpack/ssr-generated
 
 mkdir -p tmp/rsc-size-comparison/route-entry-webpack
 rm -rf public/packs ssr-generated tmp/rsc-route-entry-experiment
-RSC_BUILD_ADAPTER=route-entry-experiment NODE_ENV=production \
+RSC_BUILD_IMPLEMENTATION=route_entry NODE_ENV=production \
   pnpm exec webpack --config config/webpack/webpack.config.js
 cp -R public/packs tmp/rsc-size-comparison/route-entry-webpack/public-packs
 cp -R ssr-generated tmp/rsc-size-comparison/route-entry-webpack/ssr-generated
@@ -97,8 +97,8 @@ route entry.
 
 The CSS demo numbers are intentionally large because `cssShared.css`, `cssA.css`,
 and `cssB.css` are benchmark files. For `/css-demo/one/rsc-server` and
-`/css-demo/two/rsc-server`, the experimental adapter finds the two CSS files
-needed by each page:
+`/css-demo/two/rsc-server`, the `route_entry` implementation finds the two CSS
+files needed by each page:
 
 - page one: shared CSS + A CSS;
 - page two: shared CSS + B CSS.

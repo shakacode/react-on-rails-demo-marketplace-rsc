@@ -1,11 +1,9 @@
 const LoadablePlugin = require('@loadable/webpack-plugin');
-const path = require('path');
 const commonWebpackConfig = require('./commonWebpackConfig');
 const rscClientReferenceOptions = require('./rscClientReferences');
-const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
+const { getWebpackRscImplementation } = require('../rsc-implementations');
 
 const isHMR = process.env.HMR;
-const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
 
 // Override CSS Modules configuration to use v8-style default exports
 const overrideCssModulesConfig = (config) => {
@@ -43,6 +41,7 @@ const overrideCssModulesConfig = (config) => {
 
 const configureClient = () => {
   const clientConfig = commonWebpackConfig();
+  const rscImplementation = getWebpackRscImplementation();
 
   // server-bundle is special and should ONLY be built by the serverConfig
   // In case this entry is not deleted, a very strange "window" not found
@@ -50,13 +49,8 @@ const configureClient = () => {
   // client config is going to try to load chunks.
   delete clientConfig.entry['server-bundle'];
 
-  rscBuildAdapter.configureClientConfig(clientConfig);
-  clientConfig.plugins.push(
-    rscBuildAdapter.createWebpackPlugin({
-      isServer: false,
-      releasedPluginOptions: rscClientReferenceOptions,
-    }),
-  );
+  rscImplementation.configureClientConfig(clientConfig);
+  clientConfig.plugins.push(rscImplementation.createClientPlugin(rscClientReferenceOptions));
 
   if (!isHMR) {
     clientConfig.plugins.unshift(new LoadablePlugin({ filename: 'loadable-stats.json', writeToDisk: true }));

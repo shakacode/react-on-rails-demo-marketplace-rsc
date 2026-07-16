@@ -3,9 +3,7 @@ const webpack = require('webpack');
 const path = require('path');
 const commonWebpackConfig = require('./commonWebpackConfig');
 const rscClientReferenceOptions = require('./rscClientReferences');
-const { getRscBuildAdapter } = require('../../experimental/rsc-build-adapters');
-
-const rscBuildAdapter = getRscBuildAdapter({ projectRoot: path.resolve(__dirname, '../..') });
+const { getWebpackRscImplementation } = require('../rsc-implementations');
 
 function extractLoader(rule, loaderName) {
   return rule.use.find((item) => {
@@ -27,6 +25,7 @@ const configureServer = (rscBundle = false) => {
   // entry value will result in changing the client config!
   // Using webpack-merge into an empty object avoids this issue.
   const serverWebpackConfig = commonWebpackConfig();
+  const rscImplementation = getWebpackRscImplementation();
 
   // We just want the single server bundle entry
   const serverEntry = {
@@ -58,12 +57,7 @@ const configureServer = (rscBundle = false) => {
   };
 
   if (!rscBundle) {
-    serverWebpackConfig.plugins.push(
-      rscBuildAdapter.createWebpackPlugin({
-        isServer: true,
-        releasedPluginOptions: rscClientReferenceOptions,
-      }),
-    );
+    serverWebpackConfig.plugins.push(rscImplementation.createServerPlugin(rscClientReferenceOptions));
   }
   serverWebpackConfig.plugins.unshift(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
 

@@ -1,6 +1,8 @@
 <%# Server-component CSS (cssShared + cssA) lives only in the RSC/server bundle, so it never %>
 <%# reaches the browser and this page renders unstyled. Link the page's exact CSS set from a %>
-<%# client-built carrier pack. This append runs during the view render (before the layout), so %>
-<%# the <link> lands in the <head>'s stylesheet_pack_tag — render-blocking, scoped, no over-fetch. %>
-<% append_stylesheet_pack_tag('css_demo_one') %>
+<%# Prefer the experimental module-graph manifest's serverComponentCss when available. %>
+<%# Fall back to the client-built carrier pack for the released plugin path. %>
+<% unless append_rsc_server_component_manifest_css('CssPageOneServerCss') %>
+  <% append_stylesheet_pack_tag('css_demo_one') %>
+<% end %>
 <%= stream_react_component("CssPageOneServerCss", prerender: true) %>

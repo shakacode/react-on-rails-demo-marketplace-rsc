@@ -4,7 +4,7 @@ plugins:
   - rubocop-rails
 
 AllCops:
-  TargetRubyVersion: 3.3
+  TargetRubyVersion: 3.4
   # Warn about cops added by future RuboCop upgrades without failing this baseline.
   NewCops: pending
   # Avoid the local Prism parser load failure: cannot load such file --
