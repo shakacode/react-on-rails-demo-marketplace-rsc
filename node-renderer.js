@@ -1,5 +1,7 @@
 const path = require('path');
 
+const { rendererAdditionalContext } = require('./config/renderer-context');
+
 const { env } = process;
 
 const { reactOnRailsProNodeRenderer } = require('react-on-rails-pro-node-renderer');
@@ -32,7 +34,7 @@ const config = {
   supportModules: true,
 
   // Additional NodeJS modules to add to the VM context
-  additionalContext: { URL, AbortController, performance },
+  additionalContext: rendererAdditionalContext,
 
   // Set to false to use real timers (required for setTimeout, setInterval)
   stubTimers: false,

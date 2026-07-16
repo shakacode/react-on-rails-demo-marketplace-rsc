@@ -1,14 +1,11 @@
 source 'https://rubygems.org'
 
-ruby '3.3.0'
-
-# Fix connection_pool compatibility with Ruby 3.3
-gem 'connection_pool', '~> 2.4'
+ruby '3.4.6'
 
 # Core Rails
-gem 'rails', '~> 7.1'
-gem 'pg', '~> 1.5'
-gem 'puma', '~> 6.0'
+gem 'rails', '~> 8.1'
+gem 'pg', '~> 1.6'
+gem 'puma', '~> 8.0'
 
 # Asset Pipeline
 gem 'sprockets-rails'
@@ -17,11 +14,11 @@ gem 'turbo-rails'
 gem 'stimulus-rails'
 
 # React on Rails
-gem 'react_on_rails', '17.0.0.rc.6'
-gem 'react_on_rails_pro', '17.0.0.rc.6'
+gem 'react_on_rails', '17.0.0.rc.10'
+gem 'react_on_rails_pro', '17.0.0.rc.10'
 
 # Shakapacker for webpack integration
-gem 'shakapacker', '10.1.0'
+gem 'shakapacker', '10.2.0'
 
 # JSON handling
 gem 'jbuilder'
@@ -34,7 +31,7 @@ gem 'bootsnap', require: false
 
 group :development, :test do
   gem 'debug', platforms: %i[mri windows]
-  gem 'rspec-rails', '~> 6.1'
+  gem 'rspec-rails', '~> 8.0'
   gem 'factory_bot_rails'
   gem 'faker'
   gem "pry", "~> 0.16.0"

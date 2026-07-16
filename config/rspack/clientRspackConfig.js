@@ -1,4 +1,5 @@
 const { CssExtractRspackPlugin } = require('@rspack/core');
+const LoadablePlugin = require('@loadable/webpack-plugin');
 const { getPlugins: getRspackPlugins } = require('shakapacker/package/plugins/rspack.js');
 const commonRspackConfig = require('./commonRspackConfig');
 const {
@@ -82,9 +83,9 @@ const configureClient = () => {
     }),
   );
 
-  // Skip @loadable/webpack-plugin for now — it may not be compatible with rspack v2.
-  // RSC pages don't need it (they use server-side rendering for code splitting).
-  // We can add it later if SSR/Client pages need it.
+  if (!isHMR) {
+    clientConfig.plugins.unshift(new LoadablePlugin({ filename: 'loadable-stats.json', writeToDisk: true }));
+  }
 
   clientConfig.resolve.fallback = {
     fs: false,

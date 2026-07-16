@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   get '/measure' => 'pages#measure'
   get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
   get '/ssr-rsc-playground' => 'pages#ssr_rsc_playground'
+  get '/products', to: 'product_search#search_rsc', as: :products
 
   # Multimedia showcase — media-heavy page (HLS video + responsive image galleries).
   # RSC-first single page (issue #98). Both paths hit the same RSC action.

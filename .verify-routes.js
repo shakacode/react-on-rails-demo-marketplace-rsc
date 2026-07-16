@@ -9,6 +9,7 @@ const puppeteer = require('puppeteer');
 const BASE = process.env.BASE_URL || 'http://localhost:3010';
 const DEFAULT_ROUTES = [
   '/',
+  '/products',
   '/why-rsc',
   '/measure',
   '/rsc-performance',

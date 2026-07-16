@@ -12,7 +12,7 @@ This repo exists to make SSR, client components, and React Server Components eas
 
 ## Local setup
 
-1. Install Ruby `3.3.0`, PostgreSQL, and Node `20.x` or newer.
+1. Install Ruby `3.4.6`, PostgreSQL, and Node `20.x` or newer.
 2. Install dependencies:
 
    ```bash
