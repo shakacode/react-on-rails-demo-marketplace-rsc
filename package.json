@@ -23,7 +23,8 @@
     "lint:rsc": "node scripts/check-rsc-imports.mjs",
     "verify:rsc": "node scripts/check-rsc-chunks.mjs",
     "smoke:routes": "node .verify-routes.js",
-    "test:renderer-context": "node --test scripts/renderer-context.test.mjs"
+    "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
+    "postinstall": "node scripts/apply-ppr-patches.js"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
@@ -47,9 +48,9 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-image-lightbox": "^5.1.4",
-    "react-on-rails-pro": "file:vendor/packages/react-on-rails-pro-17.0.0-rc.6.tgz",
-    "react-on-rails-pro-node-renderer": "file:vendor/packages/react-on-rails-pro-node-renderer-17.0.0-rc.6.tgz",
-    "react-on-rails-rsc": "file:vendor/packages/react-on-rails-rsc-19.2.1.tgz",
+    "react-on-rails-pro": "17.0.0-rc.10",
+    "react-on-rails-pro-node-renderer": "17.0.0-rc.10",
+    "react-on-rails-rsc": "19.2.1-rc.1",
     "react-player": "^3.4.0",
     "react-server-dom-webpack": "19.2.7",
     "sanitize-html": "^2.17.5",
@@ -60,7 +61,7 @@
   "pnpm": {
     "overrides": {
       "@ungap/structured-clone": "1.3.1",
-      "react-on-rails": "file:vendor/packages/react-on-rails-17.0.0-rc.6.tgz",
+      "react-on-rails": "17.0.0-rc.10",
       "shakapacker": "10.2.0"
     }
   },
@@ -101,6 +102,7 @@
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "mini-css-extract-plugin": "^2.10.2",
+    "patch-package": "^8.0.1",
     "postcss": "^8.5.16",
     "postcss-loader": "^8.1.0",
     "postcss-preset-env": "^11.3.2",
