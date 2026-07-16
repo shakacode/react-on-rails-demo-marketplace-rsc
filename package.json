@@ -47,9 +47,9 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-image-lightbox": "^5.1.4",
-    "react-on-rails-pro": "17.0.0-rc.10",
-    "react-on-rails-pro-node-renderer": "17.0.0-rc.10",
-    "react-on-rails-rsc": "19.2.1-rc.1",
+    "react-on-rails-pro": "file:vendor/packages/react-on-rails-pro-17.0.0-rc.6.tgz",
+    "react-on-rails-pro-node-renderer": "file:vendor/packages/react-on-rails-pro-node-renderer-17.0.0-rc.6.tgz",
+    "react-on-rails-rsc": "file:vendor/packages/react-on-rails-rsc-19.2.1.tgz",
     "react-player": "^3.4.0",
     "react-server-dom-webpack": "19.2.7",
     "sanitize-html": "^2.17.5",
@@ -60,7 +60,7 @@
   "pnpm": {
     "overrides": {
       "@ungap/structured-clone": "1.3.1",
-      "react-on-rails": "17.0.0-rc.10",
+      "react-on-rails": "file:vendor/packages/react-on-rails-17.0.0-rc.6.tgz",
       "shakapacker": "10.2.0"
     }
   },
