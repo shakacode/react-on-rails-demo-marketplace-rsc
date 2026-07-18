@@ -118,6 +118,16 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     )
   end
 
+  it 'generates React on Rails packs before compiling the E2E bundles' do
+    runner = Rails.root.join('e2e/run-playwright').read
+    generation_offset = runner.index('bundle exec rake react_on_rails:generate_packs')
+    compilation_offset = runner.index('bin/shakapacker')
+
+    expect(generation_offset).not_to be_nil
+    expect(compilation_offset).not_to be_nil
+    expect(generation_offset).to be < compilation_offset
+  end
+
   it 'prepares the hosted test database before loading the bridge spec' do
     workflow = Rails.root.join('.github/workflows/playwright-e2e.yml').read
     prepare_offset = workflow.index('name: Prepare test database')

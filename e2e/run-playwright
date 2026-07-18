@@ -49,6 +49,7 @@ case "${database_name}" in
 esac
 
 bin/rails db:prepare
+bundle exec rake react_on_rails:generate_packs
 bin/shakapacker
 
 node node-renderer.js > "${log_dir}/node-renderer.log" 2>&1 &
