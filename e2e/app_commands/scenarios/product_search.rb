@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-E2EDatabaseSafety.verify!
+E2EProductCleanup.clean!
 
 now = Time.current
 products = (1..25).map do |number|

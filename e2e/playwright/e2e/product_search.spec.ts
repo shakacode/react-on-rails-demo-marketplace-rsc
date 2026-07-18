@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-import { app, appScenario } from '../support/on-rails';
+import { app, appScenario } from '../support/on-rails.mjs';
 
 test.beforeEach(async () => {
-  await app('clean');
   await appScenario('product_search');
 });
 

@@ -14,3 +14,16 @@ module E2EDatabaseSafety
     raise "Refusing E2E command against database #{database_name.inspect}" unless safe_database
   end
 end
+
+# Clears product fixtures only after verifying the E2E process uses a dedicated test database.
+module E2EProductCleanup
+  module_function
+
+  def clean!
+    E2EDatabaseSafety.verify!
+
+    ProductReview.delete_all
+    Product.delete_all
+    Rails.cache.clear
+  end
+end

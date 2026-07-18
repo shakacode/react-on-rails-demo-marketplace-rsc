@@ -3,6 +3,7 @@
 require 'open3'
 require 'stringio'
 require_relative '../spec/rails_helper'
+require_relative 'e2e_helper'
 
 # rubocop:disable Metrics/BlockLength
 RSpec.describe 'Rails-aware Playwright foundation' do
@@ -126,6 +127,28 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(generation_offset).not_to be_nil
     expect(compilation_offset).not_to be_nil
     expect(generation_offset).to be < compilation_offset
+  end
+
+  it 'uses the non-instrumented Rails command client contract' do
+    stdout, stderr, status = Open3.capture3(
+      'node',
+      '--test',
+      Rails.root.join('e2e/playwright/support/on-rails.test.mjs').to_s,
+      chdir: Rails.root.to_s
+    )
+
+    expect(status).to be_success, [stdout, stderr].join("\n")
+  end
+
+  it 'can load the product-search scenario repeatedly without accumulating fixtures' do
+    scenario_path = Rails.root.join('e2e/app_commands/scenarios/product_search.rb')
+
+    2.times { load scenario_path }
+
+    expect(Product.count).to eq(26)
+    expect(Product.distinct.count(:sku)).to eq(26)
+  ensure
+    load Rails.root.join('e2e/app_commands/clean.rb')
   end
 
   it 'prepares the hosted test database before loading the bridge spec' do
