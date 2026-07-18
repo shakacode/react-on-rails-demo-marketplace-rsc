@@ -9,7 +9,7 @@ means that capability is n/a here.
 | --- | --- | --- |
 | `setup` | Bootstrap dependencies and database | `bin/setup` |
 | `validate` | Broad demo validation gate | `script/demo-fleet-verify` |
-| `test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — runs the public-route request specs, Rails task, RSC import checks, pack generation, a production build, and RSC chunk verification |
+| `test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — runs the Rails default task (including the public-route request specs), RSC import checks, pack generation, a production build, and RSC chunk verification |
 | `lint` | Lint / format | `pnpm type-check`, `pnpm lint`, then `bundle exec rubocop` |
 | `build` | Production asset build | `bin/build-production` (sets the Rails/secret/bundler environment, cleans generated assets, regenerates packs, then compiles bundles) |
 | `docs` | Docs checks | n/a |

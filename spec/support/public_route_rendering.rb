@@ -5,6 +5,7 @@
 # asset contents, so this focused contract replaces only those process boundaries.
 module PublicRouteRenderingStub
   COMPONENT_HTML = '<div data-route-contract-component="true"></div>'.html_safe
+  NO_OP_EMITTER = ->(*, **) {}
 
   def react_component(*, **, &)
     COMPONENT_HTML
@@ -23,19 +24,23 @@ module PublicRouteRenderingStub
     COMPONENT_HTML
   end
 
-  def stream_react_component_with_async_props(*, **, &)
+  def stream_react_component_with_async_props(*, **, &async_props_block)
+    async_props_block&.call(NO_OP_EMITTER)
     COMPONENT_HTML
   end
 
-  def cached_react_component(*, **, &)
+  def cached_react_component(*, **, &props_block)
+    props_block&.call
     COMPONENT_HTML
   end
 
-  def cached_stream_react_component(*, **, &)
+  def cached_stream_react_component(*, **, &props_block)
+    props_block&.call
     COMPONENT_HTML
   end
 
-  def cached_stream_react_component_with_async_props(*, **, &)
+  def cached_stream_react_component_with_async_props(*, **, &async_props_block)
+    async_props_block&.call(NO_OP_EMITTER)
     COMPONENT_HTML
   end
 

@@ -52,6 +52,32 @@ RSpec.describe 'Public routes', type: :request do
     end
   end
 
+  describe 'test rendering boundary' do
+    it 'executes cached component props blocks' do
+      expect_any_instance_of(Product).to receive(:top_reviews).with(10).and_call_original
+
+      get '/product/ssr-cached'
+    end
+
+    it 'executes cached stream component props blocks' do
+      expect(RestaurantDetailData).to receive(:for).with(an_instance_of(Restaurant)).and_call_original
+
+      get "/restaurant/#{restaurant.id}/rsc-cached"
+    end
+
+    it 'executes async props blocks with an emitter' do
+      expect_any_instance_of(Product).to receive(:top_reviews).with(5).and_call_original
+
+      get '/product/rsc'
+    end
+
+    it 'executes cached async props blocks with an emitter' do
+      expect_any_instance_of(Product).to receive(:top_reviews).with(5).and_call_original
+
+      get '/product/rsc-cached'
+    end
+  end
+
   describe 'rendering contract' do
     PublicRouteContract.routes.each do |route_case|
       it "returns #{route_case.fetch('expected_status')} for #{route_case.fetch('path')}" do
