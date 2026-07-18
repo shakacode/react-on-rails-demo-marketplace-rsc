@@ -77,17 +77,7 @@ module PublicRouteControllerRenderingStub
   end
 end
 
-PUBLIC_ROUTE_CONTROLLERS = [
-  ApplicationController,
-  BlogController,
-  CssDemoController,
-  HomeController,
-  MediaGalleryController,
-  PagesController,
-  ProductSearchController,
-  ProductsController,
-  RestaurantsController
-].freeze
+PUBLIC_ROUTE_CONTROLLERS = PublicRouteContract.controller_classes.freeze
 
 RSpec.configure do |config|
   config.before(:each, public_route_contract: true) do

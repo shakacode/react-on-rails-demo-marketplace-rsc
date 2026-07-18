@@ -35,6 +35,20 @@ RSpec.describe 'Public routes', type: :request, public_route_contract: true do
   end
 
   describe 'contract coverage' do
+    it 'derives rendering-stub controllers from the public route contract' do
+      expect(PUBLIC_ROUTE_CONTROLLERS).to eq(PublicRouteContract.controller_classes)
+      expect(PUBLIC_ROUTE_CONTROLLERS).to contain_exactly(
+        BlogController,
+        CssDemoController,
+        HomeController,
+        MediaGalleryController,
+        PagesController,
+        ProductSearchController,
+        ProductsController,
+        RestaurantsController
+      )
+    end
+
     it 'requires every GET route to be exercised or explicitly excluded' do
       route_patterns = PublicRouteContract.route_patterns
       exercised_patterns = PublicRouteContract.routes.map { |route_case| route_case.fetch('path') }

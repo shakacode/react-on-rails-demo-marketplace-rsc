@@ -22,10 +22,16 @@ module PublicRouteContract
   end
 
   def route_patterns
-    Rails.application.routes.routes.filter_map do |route|
-      next unless route.verb.to_s.split('|').include?('GET')
+    application_get_routes.map { |route| normalize_pattern(route.path.spec.to_s) }.uniq
+  end
 
-      normalize_pattern(route.path.spec.to_s)
+  def controller_classes
+    contract_patterns = routes.map { |route_case| route_case.fetch('path') }
+
+    application_get_routes.filter_map do |route|
+      next unless contract_patterns.include?(normalize_pattern(route.path.spec.to_s))
+
+      controller_class_for(route)
     end.uniq
   end
 
@@ -50,5 +56,16 @@ module PublicRouteContract
         raise ArgumentError, "Unknown public-route exclusion matcher: #{exclusion.fetch('match').inspect}"
       end
     end
+  end
+
+  def application_get_routes
+    Rails.application.routes.routes.select do |route|
+      route.verb.to_s.split('|').include?('GET')
+    end
+  end
+
+  def controller_class_for(route)
+    controller_path = route.defaults[:controller]
+    "#{controller_path.camelize}Controller".constantize if controller_path
   end
 end
