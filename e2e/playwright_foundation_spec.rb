@@ -263,7 +263,8 @@ RSpec.describe 'Rails-aware Playwright foundation' do
           for pid in "${fixture_pids[@]}"; do
             wait "${pid}" 2>/dev/null || true
           done
-          rm -rf "${temp_dir}"
+          rm -f -- "${temp_dir}"/*.port
+          rmdir -- "${temp_dir}"
         }
         trap cleanup_fixtures EXIT
 
