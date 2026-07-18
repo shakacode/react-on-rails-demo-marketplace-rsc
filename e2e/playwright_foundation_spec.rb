@@ -422,6 +422,18 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(generation_offset).to be < compilation_offset
   end
 
+  it 'stages test loadable stats for the node renderer and restores the prior asset' do
+    runner = Rails.root.join('e2e/run-playwright').read
+
+    expect(runner).to include('public/packs-test/loadable-stats.json')
+    expect(runner).to include('renderer_loadable_stats_backup')
+    expect(runner).to include('renderer_loadable_stats_staged')
+    expect(runner).to include('if [[ "${renderer_loadable_stats_staged}" != true ]]; then')
+    expect(runner).to include('restore_renderer_loadable_stats')
+    expect(runner).to include('clean_renderer_bundle_cache')
+    expect(runner).to include('.node-renderer-bundles')
+  end
+
   it 'uses the non-instrumented Rails command client contract' do
     stdout, stderr, status = Open3.capture3(
       'node',
@@ -433,11 +445,27 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(status).to be_success, [stdout, stderr].join("\n")
   end
 
-  it 'can load the product scenarios repeatedly without accumulating fixtures' do
+  it 'can load the product and restaurant scenarios repeatedly without accumulating fixtures' do
     scenario_path = Rails.root.join('e2e/app_commands/scenarios/product_search.rb')
+    stale_restaurant = Restaurant.create!(name: 'Stale Restaurant', cuisine_type: 'Test')
+    stale_menu_item = stale_restaurant.menu_items.create!(name: 'Stale Item', price: 1)
+    stale_order = stale_restaurant.orders.create!(
+      order_number: "STALE-E2E-#{SecureRandom.hex(8)}",
+      status: 'pending',
+      placed_at: Time.current,
+      total_price: 1
+    )
+    OrderLine.create!(order: stale_order, menu_item: stale_menu_item, quantity: 1, price_per_unit: 1)
 
     2.times { load scenario_path }
 
+    expect(Restaurant.count).to eq(1)
+    expect(Restaurant.first).to have_attributes(
+      id: 146_086,
+      name: 'E2E Restaurant',
+      cuisine_type: 'Pacific Rim',
+      city: 'Honolulu'
+    )
     expect(Product.count).to eq(28)
     expect(Product.distinct.count(:sku)).to eq(28)
     expect(ProductReview.count).to eq(2)
@@ -451,6 +479,10 @@ RSpec.describe 'Rails-aware Playwright foundation' do
       in_stock: false
     )
   ensure
+    OrderLine.delete_all
+    Order.delete_all
+    MenuItem.delete_all
+    Restaurant.delete_all
     load Rails.root.join('e2e/app_commands/clean.rb')
   end
 

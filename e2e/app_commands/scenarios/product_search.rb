@@ -1,8 +1,30 @@
 # frozen_string_literal: true
 
 E2EProductCleanup.clean!
+E2ERestaurantCleanup.clean!
 
 now = Time.zone.local(2026, 7, 18, 0, 0, 0)
+restaurant = Restaurant.create!(
+  id: 146_086,
+  name: 'E2E Restaurant',
+  description: 'Deterministic restaurant fixture for Playwright journeys.',
+  cuisine_type: 'Pacific Rim',
+  latitude: 21.3069,
+  longitude: -157.8583,
+  address: '123 Test Kitchen Way',
+  city: 'Honolulu',
+  state: 'HI',
+  zip_code: '96813',
+  phone: '(808) 555-0146',
+  website: 'https://example.com/e2e-restaurant',
+  timezone: 'Pacific/Honolulu',
+  average_rating: 4.75,
+  review_count: 128,
+  image_url: '/seed-images/placeholder.svg',
+  created_at: now,
+  updated_at: now
+)
+
 product_page = Product.create!(
   name: 'E2E Product Page Headphones',
   description: 'E2E Product Page Headphones deliver deterministic sound.',
@@ -114,4 +136,8 @@ products << {
 
 Product.create!(products)
 
-{ products: Product.count, categories: Product.group(:category).count }
+{
+  products: Product.count,
+  categories: Product.group(:category).count,
+  restaurant_id: restaurant.id
+}

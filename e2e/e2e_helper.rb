@@ -27,3 +27,18 @@ module E2EProductCleanup
     Rails.cache.clear
   end
 end
+
+# Clears the deterministic restaurant fixture and its dependent records.
+module E2ERestaurantCleanup
+  module_function
+
+  def clean!
+    E2EDatabaseSafety.verify!
+
+    OrderLine.delete_all
+    Order.delete_all
+    MenuItem.delete_all
+    Restaurant.destroy_all
+    Rails.cache.clear
+  end
+end
