@@ -77,7 +77,7 @@ for _ in {1..60}; do
     echo "Rails exited before the E2E server became ready"
     exit 1
   fi
-  if curl --fail --silent --show-error "${E2E_BASE_URL}/up" > /dev/null \
+  if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "${E2E_BASE_URL}/up" > /dev/null \
     && ( : >"/dev/tcp/${RENDERER_HOST}/${RENDERER_PORT}" ) 2>/dev/null; then
     ready=true
     break

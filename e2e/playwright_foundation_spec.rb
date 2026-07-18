@@ -120,6 +120,42 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     )
   end
 
+  it 'bounds a Rails readiness probe when a listener accepts but never responds' do
+    runner = Rails.root.join('e2e/run-playwright').read
+    timeout_options = runner.match(
+      /curl --fail --silent --show-error --connect-timeout (?<connect>\d+) --max-time (?<transfer>\d+)/
+    )
+    listener = TCPServer.new('127.0.0.1', 0)
+    accepted_socket = nil
+    server_thread = Thread.new do
+      accepted_socket = listener.accept
+      sleep 10
+    end
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+    expect(timeout_options).not_to be_nil
+    _stdout, _stderr, status = Open3.capture3(
+      'curl',
+      '--fail',
+      '--silent',
+      '--show-error',
+      '--connect-timeout',
+      timeout_options[:connect],
+      '--max-time',
+      timeout_options[:transfer],
+      "http://127.0.0.1:#{listener.local_address.ip_port}/up"
+    )
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+
+    expect(status).not_to be_success
+    expect(elapsed).to be < timeout_options[:transfer].to_f + 1.5
+  ensure
+    server_thread&.kill
+    server_thread&.join
+    accepted_socket&.close
+    listener&.close
+  end
+
   it 'removes the Rails command capability from the renderer process' do
     runner = Rails.root.join('e2e/run-playwright').read
     security_boundary = Rails.root.join('e2e/README.md').read
