@@ -8,7 +8,12 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['public/**', 'node_modules/**'],
+    ignores: [
+      'public/**',
+      'node_modules/**',
+      'app/javascript/packs/generated/**',
+      'app/javascript/generated/**',
+    ],
   },
   js.configs.recommended,
   ...typescriptEslint.configs['flat/recommended'],
