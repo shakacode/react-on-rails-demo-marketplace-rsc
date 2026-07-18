@@ -89,6 +89,24 @@ RSpec.describe 'Public routes', type: :request, public_route_contract: true do
 
       get '/product/rsc-cached'
     end
+
+    [
+      ['/product/rsc-cached', ProductsController, 'ProductPageRSC'],
+      ['/product-search/rsc-cached', ProductSearchController, 'ProductSearchRSC'],
+      ['/blog/rsc-cached', BlogController, 'BlogPostRSC']
+    ].each do |path, controller, component_name|
+      it "uses the app cache helper for #{path}" do
+        expect_any_instance_of(controller.view_context_class)
+          .to receive(:check_async_caching_options!)
+          .and_call_original
+        expect(ReactOnRailsPro::Cache)
+          .to receive(:react_component_cache_key)
+          .with(component_name, hash_including(:cache_key, prerender: true))
+          .and_call_original
+
+        get path
+      end
+    end
   end
 
   describe 'rendering contract' do

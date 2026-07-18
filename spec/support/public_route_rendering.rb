@@ -39,11 +39,6 @@ module PublicRouteRenderingStub
     COMPONENT_HTML
   end
 
-  def cached_stream_react_component_with_async_props(*, **, &async_props_block)
-    async_props_block&.call(NO_OP_EMITTER)
-    COMPONENT_HTML
-  end
-
   def stylesheet_pack_tag(*, **)
     ''
   end
@@ -96,6 +91,9 @@ PUBLIC_ROUTE_CONTROLLERS = [
 
 RSpec.configure do |config|
   config.before(:each, public_route_contract: true) do
+    allow(ReactOnRailsPro::Utils).to receive(:bundle_hash).and_return('route-contract-server-bundle')
+    allow(ReactOnRailsPro::Utils).to receive(:rsc_bundle_hash).and_return('route-contract-rsc-bundle')
+
     streaming_controllers = PUBLIC_ROUTE_CONTROLLERS.select do |controller|
       controller.method_defined?(:stream_view_containing_react_components)
     end
