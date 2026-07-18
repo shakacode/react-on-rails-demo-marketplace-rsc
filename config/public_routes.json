@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "scope": {
+    "method": "GET",
+    "excluded_methods_reason": "Non-GET endpoints are API or framework mutation endpoints and are outside the public-page rendering contract."
+  },
+  "routes": [
+    { "path": "/", "expected_status": 200 },
+    {
+      "path": "/source",
+      "expected_status": 308,
+      "expected_location": "https://github.com/shakacode/react-server-components-marketplace-demo"
+    },
+    {
+      "path": "/contributing",
+      "expected_status": 308,
+      "expected_location": "https://github.com/shakacode/react-server-components-marketplace-demo/blob/main/CONTRIBUTING.md"
+    },
+    {
+      "path": "/issues",
+      "expected_status": 308,
+      "expected_location": "https://github.com/shakacode/react-server-components-marketplace-demo/issues"
+    },
+    { "path": "/rsc-performance", "expected_status": 200 },
+    {
+      "path": "/search-performance",
+      "expected_status": 308,
+      "expected_location": "/rsc-performance"
+    },
+    { "path": "/rsc", "expected_status": 200 },
+    { "path": "/why-rsc", "expected_status": 200 },
+    { "path": "/how-rsc-works", "expected_status": 200 },
+    { "path": "/measure", "expected_status": 200 },
+    {
+      "path": "/lh-compare",
+      "request_path": "/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop",
+      "expected_status": 200
+    },
+    { "path": "/ssr-rsc-playground", "expected_status": 200 },
+    { "path": "/products", "expected_status": 200 },
+    { "path": "/media-gallery", "expected_status": 200 },
+    { "path": "/media-gallery/rsc", "expected_status": 200 },
+    {
+      "path": "/restaurant/:id/ssr",
+      "parameters": { "id": "restaurant" },
+      "expected_status": 200
+    },
+    {
+      "path": "/restaurant/:id/ssr-cached",
+      "parameters": { "id": "restaurant" },
+      "expected_status": 200
+    },
+    {
+      "path": "/restaurant/:id/client",
+      "parameters": { "id": "restaurant" },
+      "expected_status": 200
+    },
+    {
+      "path": "/restaurant/:id/rsc",
+      "parameters": { "id": "restaurant" },
+      "expected_status": 200
+    },
+    {
+      "path": "/restaurant/:id/rsc-cached",
+      "parameters": { "id": "restaurant" },
+      "expected_status": 200
+    },
+    { "path": "/product/ssr", "expected_status": 200 },
+    { "path": "/product/ssr-cached", "expected_status": 200 },
+    { "path": "/product/client", "expected_status": 200 },
+    { "path": "/product/rsc", "expected_status": 200 },
+    { "path": "/product/rsc-cached", "expected_status": 200 },
+    { "path": "/product-search/ssr", "expected_status": 200 },
+    { "path": "/product-search/ssr-cached", "expected_status": 200 },
+    { "path": "/product-search/client", "expected_status": 200 },
+    { "path": "/product-search/rsc", "expected_status": 200 },
+    { "path": "/product-search/rsc-cached", "expected_status": 200 },
+    { "path": "/blog/ssr", "expected_status": 200 },
+    { "path": "/blog/ssr-cached", "expected_status": 200 },
+    { "path": "/blog/client", "expected_status": 200 },
+    { "path": "/blog/rsc", "expected_status": 200 },
+    { "path": "/blog/rsc-cached", "expected_status": 200 },
+    { "path": "/blog/rsc-simple", "expected_status": 200 },
+    { "path": "/blog/rsc-simple-cached", "expected_status": 200 },
+    { "path": "/blog/rsc-step1", "expected_status": 200 },
+    { "path": "/blog/rsc-step1b", "expected_status": 200 },
+    { "path": "/blog/rsc-step1c", "expected_status": 200 },
+    { "path": "/blog/rsc-step2", "expected_status": 200 },
+    { "path": "/blog/rsc-step3", "expected_status": 200 },
+    { "path": "/blog/rsc-step4", "expected_status": 200 },
+    { "path": "/blog/rsc-step5", "expected_status": 200 },
+    { "path": "/css-demo/one/ssr", "expected_status": 200 },
+    { "path": "/css-demo/two/ssr", "expected_status": 200 },
+    { "path": "/css-demo/one/rsc-server", "expected_status": 200 },
+    { "path": "/css-demo/two/rsc-server", "expected_status": 200 },
+    { "path": "/css-demo/one/rsc-client", "expected_status": 200 },
+    { "path": "/css-demo/two/rsc-client", "expected_status": 200 }
+  ],
+  "exclusions": [
+    {
+      "match": "exact",
+      "paths": ["/rsc_payload/:component_name"],
+      "reason": "React on Rails Pro framework payload endpoint; it is not a public page."
+    },
+    {
+      "match": "exact",
+      "paths": ["/up"],
+      "reason": "Rails health endpoint; it is covered by deployment health checks rather than page rendering tests."
+    },
+    {
+      "match": "prefix",
+      "value": "/api/",
+      "reason": "JSON API endpoints are not public HTML pages."
+    },
+    {
+      "match": "exact",
+      "paths": [
+        "/recede_historical_location",
+        "/resume_historical_location",
+        "/refresh_historical_location"
+      ],
+      "reason": "Turbo Native framework navigation endpoints are not app-owned public pages."
+    },
+    {
+      "match": "prefix",
+      "value": "/rails/",
+      "reason": "Rails engine endpoints are framework-managed and are not app-owned public pages."
+    }
+  ]
+}

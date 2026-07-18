@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+bundle exec rspec
 bundle exec rake
 pnpm lint:rsc
 SECRET_KEY_BASE=dummy_secret_key_base_for_demo_fleet bin/build-production
