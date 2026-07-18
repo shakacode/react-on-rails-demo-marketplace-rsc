@@ -103,6 +103,8 @@ jobs:
         run: bin/rails db:prepare
 
       - name: Run canonical demo validation
+        env:
+          RAILS_ENV: test
         run: .agents/bin/validate
 
       - name: Smoke real routes in Chromium
