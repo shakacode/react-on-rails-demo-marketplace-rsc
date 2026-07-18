@@ -56,7 +56,6 @@ async function checkProductSearchInteraction(page) {
 
   await page.waitForSelector(inputSelector, { visible: true, timeout: 5000 });
   await page.click(inputSelector);
-  await page.type(inputSelector, query);
 
   const [response, resultsResponse, facetsResponse] = await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 25000 }),
@@ -68,7 +67,23 @@ async function checkProductSearchInteraction(page) {
       (candidate) => isSearchApiResponse(candidate, '/api/product_search/facets'),
       { timeout: 25000 }
     ),
-    page.keyboard.press('Enter'),
+    (async () => {
+      await page.evaluate(({ selector, value }) => {
+        const input = document.querySelector(selector);
+        if (!(input instanceof HTMLInputElement)) {
+          throw new Error('search input was not available');
+        }
+
+        const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        if (!valueSetter) {
+          throw new Error('search input value setter was not available');
+        }
+
+        valueSetter.call(input, value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }, { selector: inputSelector, value: query });
+      await page.keyboard.press('Enter');
+    })(),
   ]);
 
   if (!response || response.status() !== 200) {
@@ -108,6 +123,22 @@ async function checkProductSearchInteraction(page) {
   if (!hasExpectedFacets) {
     throw new Error('search facets API did not return the expected no-match payload');
   }
+
+  await page.waitForFunction(
+    ({ selector, expectedQuery }) => {
+      const input = document.querySelector(selector);
+      const url = new URL(window.location.href);
+      const hasEmptyState = Array.from(document.querySelectorAll('h3'))
+        .some((heading) => heading.textContent?.trim() === 'No products found');
+
+      return url.searchParams.get('q') === expectedQuery
+        && input instanceof HTMLInputElement
+        && input.value === expectedQuery
+        && hasEmptyState;
+    },
+    { timeout: 5000 },
+    { selector: inputSelector, expectedQuery: query }
+  );
 
   const state = await page.evaluate((selector) => {
     const input = document.querySelector(selector);
@@ -181,6 +212,17 @@ async function checkRoute(browser, route) {
     } catch (e) {
       interactionError = e.message;
     }
+  }
+
+  if (interactionError) {
+    await page.close().catch(() => {});
+    return {
+      route, httpStatus, ok: false,
+      interactionError,
+      bodyTextLength: 0, hasErrorPanel: false,
+      duplicateScripts: [],
+      consoleErrors, pageErrors, failedRequests,
+    };
   }
 
   // Check that something rendered
