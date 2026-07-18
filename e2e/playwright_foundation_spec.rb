@@ -494,6 +494,10 @@ RSpec.describe 'Rails-aware Playwright foundation' do
 
   it 'can load the product and restaurant scenarios repeatedly without accumulating fixtures' do
     scenario_path = Rails.root.join('e2e/app_commands/scenarios/product_search.rb')
+    baseline_restaurants = Restaurant.count
+    baseline_menu_items = MenuItem.count
+    baseline_orders = Order.count
+    baseline_order_lines = OrderLine.count
     stale_restaurant = Restaurant.create!(
       id: E2ERestaurantCleanup::RESTAURANT_ID,
       name: 'Stale Restaurant',
@@ -534,10 +538,10 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(MenuItem.find(unrelated_menu_item.id)).to eq(unrelated_menu_item)
     expect(Order.find(unrelated_order.id)).to eq(unrelated_order)
     expect(OrderLine.find(unrelated_order_line.id)).to eq(unrelated_order_line)
-    expect(Restaurant.count).to eq(2)
-    expect(MenuItem.count).to eq(1)
-    expect(Order.count).to eq(1)
-    expect(OrderLine.count).to eq(1)
+    expect(Restaurant.count).to eq(baseline_restaurants + 2)
+    expect(MenuItem.count).to eq(baseline_menu_items + 1)
+    expect(Order.count).to eq(baseline_orders + 1)
+    expect(OrderLine.count).to eq(baseline_order_lines + 1)
     expect(Product.count).to eq(28)
     expect(Product.distinct.count(:sku)).to eq(28)
     expect(ProductReview.count).to eq(2)
@@ -551,10 +555,9 @@ RSpec.describe 'Rails-aware Playwright foundation' do
       in_stock: false
     )
   ensure
-    OrderLine.delete_all
-    Order.delete_all
-    MenuItem.delete_all
-    Restaurant.delete_all
+    E2ERestaurantCleanup.clean!
+    OrderLine.where(id: unrelated_order_line&.id).delete_all
+    unrelated_restaurant&.destroy!
     load Rails.root.join('e2e/app_commands/clean.rb')
   end
 
