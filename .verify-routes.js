@@ -11,6 +11,9 @@ const publicRouteContract = require('./config/public_routes.json');
 const BASE = process.env.BASE_URL || 'http://localhost:3010';
 const BROWSER_PARAMETER_VALUES = { restaurant: '1' };
 const PERSISTENT_MEDIA_ROUTES = new Set(['/media-gallery', '/media-gallery/rsc']);
+const MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR =
+  'button[aria-label="Open image 1 of 8 in the react-image-lightbox lightbox"]';
+const MEDIA_LIGHTBOX_CLOSE_SELECTOR = 'button[aria-label="Close lightbox"]';
 
 function browserRouteFor(routeCase) {
   const route = Object.entries(routeCase.parameters || {}).reduce(
@@ -199,6 +202,59 @@ async function checkProductSearchInteraction(page) {
   }
 }
 
+async function checkMediaClientInteraction(page) {
+  // The thumbnail is present in the server HTML, but opening and closing the
+  // lightbox requires its client-island event handlers to have hydrated.
+  const timeout = 25000;
+  const deadline = Date.now() + timeout;
+  const selectors = {
+    thumbnailSelector: MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR,
+    closeSelector: MEDIA_LIGHTBOX_CLOSE_SELECTOR,
+  };
+  const timedOut = () => new Error(`Media lightbox did not open and close within ${timeout}ms`);
+  const evaluateBeforeDeadline = async (pageFunction) => {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw timedOut();
+
+    let timer;
+    try {
+      return await Promise.race([
+        page.evaluate(pageFunction, selectors),
+        new Promise((_resolve, reject) => {
+          timer = setTimeout(() => reject(timedOut()), remaining);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  let opened = false;
+  while (!opened) {
+    opened = await evaluateBeforeDeadline(({ thumbnailSelector, closeSelector }) => {
+      if (document.querySelector(closeSelector)) return true;
+
+      const thumbnail = document.querySelector(thumbnailSelector);
+      if (typeof thumbnail?.click === 'function') thumbnail.click();
+      return false;
+    });
+    if (!opened) await yieldToBrowser();
+  }
+
+  let closed = false;
+  while (!closed) {
+    closed = await evaluateBeforeDeadline(({ closeSelector }) => {
+      const close = document.querySelector(closeSelector);
+      if (!close) return true;
+
+      if (typeof close.click === 'function') close.click();
+      return false;
+    });
+    if (!closed) await yieldToBrowser();
+  }
+}
+
 async function checkRoute(browser, route) {
   const page = await browser.newPage();
   const consoleErrors = [];
@@ -242,6 +298,14 @@ async function checkRoute(browser, route) {
       duplicateScripts: [],
       consoleErrors, pageErrors, failedRequests,
     };
+  }
+
+  if (PERSISTENT_MEDIA_ROUTES.has(route)) {
+    try {
+      await checkMediaClientInteraction(page);
+    } catch (e) {
+      interactionError = e.message;
+    }
   }
 
   // Give React a beat to finish any post-paint work
