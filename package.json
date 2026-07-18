@@ -25,7 +25,8 @@
     "verify:rsc": "node scripts/check-rsc-chunks.mjs",
     "smoke:routes": "node .verify-routes.js",
     "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs",
-    "test:renderer-context": "node --test scripts/renderer-context.test.mjs"
+    "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
+    "test:e2e": "bash e2e/run-playwright"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
@@ -76,6 +77,7 @@
     "@babel/preset-react": "^8.0.1",
     "@babel/preset-typescript": "^8.0.1",
     "@loadable/babel-plugin": "^5.16.1",
+    "@playwright/test": "1.61.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
     "@rspack/cli": "^2.1.2",
     "@rspack/core": "^2.1.2",
