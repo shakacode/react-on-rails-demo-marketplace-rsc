@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 # The E2E command endpoint executes Ruby files with the Rails process's
-# privileges. Keep it explicitly enabled, limited to non-production
-# environments, and authorize only the socket peer recorded by Rack.
+# privileges. Keep it explicitly enabled, limited to the test environment,
+# and authorize only the socket peer recorded by Rack.
 module E2ERailsBridge
   ALLOWED_COMMANDS = ['clean', 'scenarios/product_search'].freeze
   COMMAND_PATH = '/__e2e__/command'
@@ -18,7 +18,7 @@ module E2ERailsBridge
     opt_in: ENV.fetch(PRIVATE_COMMANDS_ENV, nil),
     token: ENV.fetch(PRIVATE_TOKEN_ENV, nil)
   )
-    %w[development test].include?(environment.to_s) &&
+    environment.to_s == 'test' &&
       opt_in == '1' &&
       token&.bytesize.to_i >= TOKEN_MINIMUM_BYTES
   end

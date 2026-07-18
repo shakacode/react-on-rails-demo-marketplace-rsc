@@ -16,8 +16,9 @@ Both the runner and app commands refuse database names that do not end in
 ## Rails command security boundary
 
 The Rails command endpoint can execute repository-owned Ruby with the Rails
-process's privileges. It is therefore disabled by default, unavailable in
-production, bound to `127.0.0.1`, and rejects non-loopback socket peers. Even
+process's privileges. It is therefore disabled by default and available only
+when Rails runs in the test environment. Development and production keep it
+disabled. It is bound to `127.0.0.1` and rejects non-loopback socket peers. Even
 when enabled by `E2E_RAILS_COMMANDS=1`, only the `clean` and
 `scenarios/product_search` files are accepted. The runner generates a fresh
 capability token for each invocation; only the Rails process's guarded command

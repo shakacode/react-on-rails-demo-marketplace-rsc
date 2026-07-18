@@ -14,12 +14,16 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(defined?(CypressOnRails)).to eq('constant')
   end
 
-  it 'requires an explicit opt-in in a non-production environment' do
+  it 'requires an explicit opt-in in the test environment' do
     expect(E2ERailsBridge.enabled?(environment: 'test', opt_in: nil, token: valid_token)).to be(false)
     expect(E2ERailsBridge.enabled?(environment: 'test', opt_in: '1', token: nil)).to be(false)
     expect(E2ERailsBridge.enabled?(environment: 'test', opt_in: '1', token: 'short')).to be(false)
-    expect(E2ERailsBridge.enabled?(environment: 'development', opt_in: '1', token: valid_token)).to be(true)
+    expect(E2ERailsBridge.enabled?(environment: 'test', opt_in: '1', token: valid_token)).to be(true)
+    expect(E2ERailsBridge.enabled?(environment: 'development', opt_in: '1', token: valid_token)).to be(false)
     expect(E2ERailsBridge.enabled?(environment: 'production', opt_in: '1', token: valid_token)).to be(false)
+    expect(Rails.root.join('e2e/README.md').read.split.join(' ')).to include(
+      'available only when Rails runs in the test environment'
+    )
     expect(CypressOnRails.configuration.use_middleware).to be(false)
 
     middleware_names = Rails.application.middleware.middlewares.map { |middleware| middleware.klass.name }
@@ -310,6 +314,31 @@ RSpec.describe 'Rails-aware Playwright foundation' do
         abort 'unsafe reset middleware mounted' if middleware_names.include?('CypressOnRails::StateResetMiddleware')
 
         request = Rack::MockRequest.new(Rails.application)
+        [
+          ['missing', nil],
+          ['invalid', 'b' * 64]
+        ].each do |label, token|
+          product = Product.create!(
+            name: "#{label} token guard",
+            description: 'must survive',
+            price: 1,
+            category: 'E2E',
+            brand: 'E2E',
+            sku: "#{label.upcase}-TOKEN-GUARD-#{SecureRandom.hex(8)}"
+          )
+          request_options = {
+            'REMOTE_ADDR' => '127.0.0.1',
+            'CONTENT_TYPE' => 'application/json',
+            input: { name: 'clean' }.to_json
+          }
+          request_options['HTTP_X_E2E_RAILS_TOKEN'] = token if token
+
+          response = request.post(E2ERailsBridge::COMMAND_PATH, request_options)
+          abort "#{label} token request was not forbidden" unless response.status == 403
+          abort "#{label} token request executed clean" unless Product.exists?(product.id)
+          product.destroy!
+        end
+
         ['/__cypress__/reset_state', '/cypress_rails_reset_state'].each do |path|
           product = Product.create!(
             name: 'reset guard',
