@@ -46,42 +46,7 @@ renderer_loadable_stats_backup=""
 renderer_loadable_stats_target_existed=false
 renderer_loadable_stats_staged=false
 renderer_bundle_cache="${repo_root}/.node-renderer-bundles"
-
-clean_renderer_bundle_cache() {
-  if [[ -d "${renderer_bundle_cache}" ]]; then
-    find "${renderer_bundle_cache}" -mindepth 1 -depth -delete || true
-    rmdir "${renderer_bundle_cache}" 2>/dev/null || true
-  fi
-}
-
-restore_renderer_loadable_stats() {
-  if [[ "${renderer_loadable_stats_staged}" != true ]]; then
-    return
-  fi
-
-  if [[ "${renderer_loadable_stats_target_existed}" == true ]]; then
-    mkdir -p "$(dirname "${renderer_loadable_stats_target}")" || true
-    cp "${renderer_loadable_stats_backup}" "${renderer_loadable_stats_target}" || true
-  else
-    rm -f "${renderer_loadable_stats_target}"
-    rmdir "$(dirname "${renderer_loadable_stats_target}")" 2>/dev/null || true
-  fi
-
-  if [[ -n "${renderer_loadable_stats_backup}" ]]; then
-    rm -f "${renderer_loadable_stats_backup}"
-  fi
-}
-
-cleanup() {
-  local exit_status=$?
-
-  trap - EXIT
-  trap '' INT TERM
-  stop_children "${renderer_pid}:${renderer_pgid}" "${rails_pid}:${rails_pgid}"
-  clean_renderer_bundle_cache
-  restore_renderer_loadable_stats
-  exit "${exit_status}"
-}
+source "${repo_root}/e2e/bin/playwright-cleanup"
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM

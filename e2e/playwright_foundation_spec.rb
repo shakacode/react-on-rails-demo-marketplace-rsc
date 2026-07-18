@@ -3,6 +3,7 @@
 require 'open3'
 require 'socket'
 require 'stringio'
+require 'tmpdir'
 require_relative '../spec/rails_helper'
 require_relative 'e2e_helper'
 
@@ -220,16 +221,18 @@ RSpec.describe 'Rails-aware Playwright foundation' do
 
   it 'boundedly terminates and reaps every managed child during cleanup' do
     cleanup_helper = Rails.root.join('e2e/bin/process-cleanup')
+    playwright_cleanup = Rails.root.join('e2e/bin/playwright-cleanup').read
     runner = Rails.root.join('e2e/run-playwright').read
 
     expect(cleanup_helper).to exist
     expect(runner).to include('source "${repo_root}/e2e/bin/process-cleanup"')
-    expect(runner).to include('local exit_status=$?')
-    expect(runner).to include('trap - EXIT')
-    expect(runner).to include(
+    expect(runner).to include('source "${repo_root}/e2e/bin/playwright-cleanup"')
+    expect(playwright_cleanup).to include('local exit_status=$?')
+    expect(playwright_cleanup).to include('trap - EXIT')
+    expect(playwright_cleanup).to include(
       'stop_children "${renderer_pid}:${renderer_pgid}" "${rails_pid}:${rails_pgid}"'
     )
-    expect(runner).to include('exit "${exit_status}"')
+    expect(playwright_cleanup).to include('exit "${exit_status}"')
     expect(runner).to include("trap 'exit 130' INT")
     expect(runner).to include("trap 'exit 143' TERM")
     expect(runner).to match(
@@ -424,14 +427,58 @@ RSpec.describe 'Rails-aware Playwright foundation' do
 
   it 'stages test loadable stats for the node renderer and restores the prior asset' do
     runner = Rails.root.join('e2e/run-playwright').read
+    cleanup_helper = Rails.root.join('e2e/bin/playwright-cleanup').read
 
     expect(runner).to include('public/packs-test/loadable-stats.json')
     expect(runner).to include('renderer_loadable_stats_backup')
     expect(runner).to include('renderer_loadable_stats_staged')
-    expect(runner).to include('if [[ "${renderer_loadable_stats_staged}" != true ]]; then')
-    expect(runner).to include('restore_renderer_loadable_stats')
-    expect(runner).to include('clean_renderer_bundle_cache')
+    expect(runner).to include('source "${repo_root}/e2e/bin/playwright-cleanup"')
+    expect(cleanup_helper).to include('if [[ "${renderer_loadable_stats_staged}" != true ]]; then')
+    expect(cleanup_helper).to include('restore_renderer_loadable_stats')
+    expect(cleanup_helper).to include('if ! restore_renderer_loadable_stats; then')
+    conditional_restore = cleanup_helper.index(
+      'if cp "${renderer_loadable_stats_backup}" "${renderer_loadable_stats_target}"; then'
+    )
+    backup_removal = cleanup_helper.index('rm -f "${renderer_loadable_stats_backup}"', conditional_restore)
+    restore_failure = cleanup_helper.index('else', backup_removal)
+    failure_return = cleanup_helper.index('return 1', restore_failure)
+    expect(conditional_restore).to be < backup_removal
+    expect(backup_removal).to be < restore_failure
+    expect(restore_failure).to be < failure_return
+    expect(cleanup_helper).to include('clean_renderer_bundle_cache')
     expect(runner).to include('.node-renderer-bundles')
+  end
+
+  it 'retains the renderer stats backup and fails cleanup when restoration fails' do
+    Dir.mktmpdir('renderer-stats-cleanup') do |directory|
+      backup = File.join(directory, 'loadable-stats.backup.json')
+      blocked_parent = File.join(directory, 'blocked-parent')
+      target = File.join(blocked_parent, 'loadable-stats.json')
+      File.write(backup, '{"original":true}')
+      File.write(blocked_parent, 'not a directory')
+
+      cleanup_script = <<~BASH
+        source "#{Rails.root.join('e2e/bin/process-cleanup')}"
+        source "#{Rails.root.join('e2e/bin/playwright-cleanup')}"
+        renderer_pid=""
+        renderer_pgid=""
+        rails_pid=""
+        rails_pgid=""
+        renderer_bundle_cache="#{File.join(directory, 'renderer-cache')}"
+        renderer_loadable_stats_staged=true
+        renderer_loadable_stats_target_existed=true
+        renderer_loadable_stats_backup="#{backup}"
+        renderer_loadable_stats_target="#{target}"
+        true
+        cleanup
+      BASH
+
+      _stdout, stderr, status = Open3.capture3('bash', '-c', cleanup_script)
+
+      expect(status.exitstatus).to eq(1)
+      expect(File.read(backup)).to eq('{"original":true}')
+      expect(stderr).to include('backup retained')
+    end
   end
 
   it 'uses the non-instrumented Rails command client contract' do
@@ -447,7 +494,11 @@ RSpec.describe 'Rails-aware Playwright foundation' do
 
   it 'can load the product and restaurant scenarios repeatedly without accumulating fixtures' do
     scenario_path = Rails.root.join('e2e/app_commands/scenarios/product_search.rb')
-    stale_restaurant = Restaurant.create!(name: 'Stale Restaurant', cuisine_type: 'Test')
+    stale_restaurant = Restaurant.create!(
+      id: E2ERestaurantCleanup::RESTAURANT_ID,
+      name: 'Stale Restaurant',
+      cuisine_type: 'Test'
+    )
     stale_menu_item = stale_restaurant.menu_items.create!(name: 'Stale Item', price: 1)
     stale_order = stale_restaurant.orders.create!(
       order_number: "STALE-E2E-#{SecureRandom.hex(8)}",
@@ -456,16 +507,37 @@ RSpec.describe 'Rails-aware Playwright foundation' do
       total_price: 1
     )
     OrderLine.create!(order: stale_order, menu_item: stale_menu_item, quantity: 1, price_per_unit: 1)
+    unrelated_restaurant = Restaurant.create!(name: 'Unrelated Restaurant', cuisine_type: 'Test')
+    unrelated_menu_item = unrelated_restaurant.menu_items.create!(name: 'Unrelated Item', price: 2)
+    unrelated_order = unrelated_restaurant.orders.create!(
+      order_number: "UNRELATED-E2E-#{SecureRandom.hex(8)}",
+      status: 'pending',
+      placed_at: Time.current,
+      total_price: 2
+    )
+    unrelated_order_line = OrderLine.create!(
+      order: unrelated_order,
+      menu_item: unrelated_menu_item,
+      quantity: 1,
+      price_per_unit: 2
+    )
 
     2.times { load scenario_path }
 
-    expect(Restaurant.count).to eq(1)
-    expect(Restaurant.first).to have_attributes(
+    expect(Restaurant.find(E2ERestaurantCleanup::RESTAURANT_ID)).to have_attributes(
       id: 146_086,
       name: 'E2E Restaurant',
       cuisine_type: 'Pacific Rim',
       city: 'Honolulu'
     )
+    expect(Restaurant.find(unrelated_restaurant.id)).to eq(unrelated_restaurant)
+    expect(MenuItem.find(unrelated_menu_item.id)).to eq(unrelated_menu_item)
+    expect(Order.find(unrelated_order.id)).to eq(unrelated_order)
+    expect(OrderLine.find(unrelated_order_line.id)).to eq(unrelated_order_line)
+    expect(Restaurant.count).to eq(2)
+    expect(MenuItem.count).to eq(1)
+    expect(Order.count).to eq(1)
+    expect(OrderLine.count).to eq(1)
     expect(Product.count).to eq(28)
     expect(Product.distinct.count(:sku)).to eq(28)
     expect(ProductReview.count).to eq(2)

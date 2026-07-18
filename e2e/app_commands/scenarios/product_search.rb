@@ -5,7 +5,7 @@ E2ERestaurantCleanup.clean!
 
 now = Time.zone.local(2026, 7, 18, 0, 0, 0)
 restaurant = Restaurant.create!(
-  id: 146_086,
+  id: E2ERestaurantCleanup::RESTAURANT_ID,
   name: 'E2E Restaurant',
   description: 'Deterministic restaurant fixture for Playwright journeys.',
   cuisine_type: 'Pacific Rim',
