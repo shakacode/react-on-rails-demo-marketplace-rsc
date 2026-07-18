@@ -81,6 +81,34 @@ async function checkProductSearchInteraction(page) {
     throw new Error(`search facets API returned status ${facetsResponse.status()}`);
   }
 
+  let resultsPayload;
+  let facetsPayload;
+  try {
+    [resultsPayload, facetsPayload] = await Promise.all([
+      resultsResponse.json(),
+      facetsResponse.json(),
+    ]);
+  } catch (e) {
+    throw new Error(`search API response was not valid JSON: ${e.message}`);
+  }
+
+  const hasExpectedResults = Array.isArray(resultsPayload?.products)
+    && resultsPayload.products.length === 0
+    && resultsPayload?.meta?.query === query
+    && resultsPayload.meta.total_results === 0;
+  if (!hasExpectedResults) {
+    throw new Error('search results API did not return the expected no-match payload');
+  }
+
+  const facets = facetsPayload?.facets;
+  const hasExpectedFacets = facets !== null
+    && typeof facets === 'object'
+    && !Array.isArray(facets)
+    && facets.total_count === 0;
+  if (!hasExpectedFacets) {
+    throw new Error('search facets API did not return the expected no-match payload');
+  }
+
   const state = await page.evaluate((selector) => {
     const input = document.querySelector(selector);
     const url = new URL(window.location.href);
