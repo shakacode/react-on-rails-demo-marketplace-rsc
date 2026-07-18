@@ -1,6 +1,7 @@
 // Comprehensive page verifier:
 // - opens each route
 // - waits for network idle (hydration window)
+// - submits a client-side product search and verifies the resulting empty state
 // - captures all console messages, page errors, request failures
 // - reports anything that's not a clean load
 
@@ -43,6 +44,47 @@ function classify(text) {
   return 'other';
 }
 
+async function checkProductSearchInteraction(page) {
+  const inputSelector = 'input[placeholder="Search products, brands, categories..."]';
+  const query = '__chromium_smoke_no_match__';
+
+  await page.waitForSelector(inputSelector, { visible: true, timeout: 5000 });
+  await page.click(inputSelector);
+  await page.type(inputSelector, query);
+
+  const [response] = await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 25000 }),
+    page.keyboard.press('Enter'),
+  ]);
+
+  if (!response || response.status() !== 200) {
+    throw new Error(`search navigation returned status ${response ? response.status() : 'unknown'}`);
+  }
+
+  const state = await page.evaluate((selector) => {
+    const input = document.querySelector(selector);
+    const url = new URL(window.location.href);
+    const hasEmptyState = Array.from(document.querySelectorAll('h3'))
+      .some((heading) => heading.textContent?.trim() === 'No products found');
+
+    return {
+      query: url.searchParams.get('q'),
+      inputValue: input instanceof HTMLInputElement ? input.value : null,
+      hasEmptyState,
+    };
+  }, inputSelector);
+
+  if (state.query !== query) {
+    throw new Error(`search URL query was ${JSON.stringify(state.query)}, expected ${JSON.stringify(query)}`);
+  }
+  if (state.inputValue !== query) {
+    throw new Error(`search input value was ${JSON.stringify(state.inputValue)}, expected ${JSON.stringify(query)}`);
+  }
+  if (!state.hasEmptyState) {
+    throw new Error('search results did not render the expected empty state');
+  }
+}
+
 async function checkRoute(browser, route) {
   const page = await browser.newPage();
   const consoleErrors = [];
@@ -69,6 +111,7 @@ async function checkRoute(browser, route) {
   });
 
   let httpStatus = null;
+  let interactionError = null;
   try {
     const resp = await page.goto(BASE + route, { waitUntil: 'networkidle0', timeout: 25000 });
     httpStatus = resp ? resp.status() : null;
@@ -83,6 +126,14 @@ async function checkRoute(browser, route) {
 
   // Give React a beat to finish any post-paint work
   await new Promise(r => setTimeout(r, 800));
+
+  if (route === '/product-search/client') {
+    try {
+      await checkProductSearchInteraction(page);
+    } catch (e) {
+      interactionError = e.message;
+    }
+  }
 
   // Check that something rendered
   const bodyTextLength = await page.evaluate(() => document.body?.innerText?.length || 0);
@@ -101,10 +152,12 @@ async function checkRoute(browser, route) {
     && consoleErrors.filter(e => e.kind !== 'other').length === 0
     && !hasErrorPanel
     && dupes.length === 0
-    && bodyTextLength > 100;
+    && bodyTextLength > 100
+    && interactionError === null;
 
   return {
     route, httpStatus, ok,
+    interactionError,
     bodyTextLength, hasErrorPanel,
     duplicateScripts: dupes,
     consoleErrors, pageErrors, failedRequests,
@@ -136,6 +189,7 @@ async function checkRoute(browser, route) {
     console.log(`\n--- FAIL ${r.route} ---`);
     console.log(`  status=${r.httpStatus} bodyLen=${r.bodyTextLength} dupes=${r.duplicateScripts.length} errorPanel=${r.hasErrorPanel}`);
     if (r.navError) console.log(`  navError: ${r.navError}`);
+    if (r.interactionError) console.log(`  interactionError: ${r.interactionError}`);
     for (const e of r.pageErrors) {
       console.log(`  pageError [${e.kind || 'unclassified'}]: ${e.message.split('\n')[0]}`);
     }
