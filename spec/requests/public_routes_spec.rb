@@ -2,8 +2,19 @@
 
 require 'rails_helper'
 
+RSpec.describe 'Public route rendering isolation' do
+  it 'leaves renderer methods unchanged in untagged examples' do
+    expect(
+      ProductsController.instance_method(:stream_view_containing_react_components).owner
+    ).to eq(ReactOnRailsPro::Stream)
+    expect(
+      ProductsController.view_context_class.instance_method(:react_component).owner
+    ).to eq(ReactOnRails::Helper)
+  end
+end
+
 # rubocop:disable Metrics/BlockLength
-RSpec.describe 'Public routes', type: :request do
+RSpec.describe 'Public routes', type: :request, public_route_contract: true do
   let!(:restaurant) do
     Restaurant.create!(
       name: 'Route Contract Restaurant',
@@ -69,6 +80,8 @@ RSpec.describe 'Public routes', type: :request do
       expect_any_instance_of(Product).to receive(:top_reviews).with(5).and_call_original
 
       get '/product/rsc'
+
+      expect(response.body).to include('data-route-contract-component="true"')
     end
 
     it 'executes cached async props blocks with an emitter' do
