@@ -100,7 +100,7 @@ function tokenizeLine(raw: string): Seg[] {
     if ((match = rest.match(/^(export|default|async|function|return|await)\b/))) {
       segs.push({ text: match[0], color: '#c084fc' });
       rest = rest.slice(match[0].length);
-    } else if ((match = rest.match(/^<\/?/)) && rest.match(/^<\/?(Layout|Suspense|Header|Menu|Cart|Reviews|div)/)) {
+    } else if (/^<\/?(Layout|Suspense|Header|Menu|Cart|Reviews|div)/.test(rest)) {
       const tagMatch = rest.match(/^(<\/?)(Layout|Suspense|Header|Menu|Cart|Reviews|div)/)!;
       segs.push({ text: tagMatch[1], color: '#cbd5e1' });
       segs.push({ text: tagMatch[2], color: '#60a5fa' });

@@ -125,7 +125,7 @@ function simulateSSR(sections: PageSection[], net: NetworkProfile): Architecture
     startMs: hydrationStart,
     endMs: hydrationEnd,
     color: '#ef4444',
-    row: row++,
+    row,
   });
 
   const ttiMs = hydrationEnd;
