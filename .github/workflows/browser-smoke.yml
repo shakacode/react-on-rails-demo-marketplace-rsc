@@ -67,6 +67,12 @@ jobs:
       - name: Install JavaScript dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run canonical lint gate
+        run: .agents/bin/lint
+
+      - name: Audit high-severity JavaScript dependencies
+        run: pnpm audit:high
+
       - name: Cache Puppeteer Chromium
         id: puppeteer-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -96,8 +102,8 @@ jobs:
         # db:seed again duplicates order numbers and fails the smoke setup.
         run: bin/rails db:prepare
 
-      - name: Build production assets
-        run: bin/build-production
+      - name: Run canonical demo validation
+        run: .agents/bin/validate
 
       - name: Smoke real routes in Chromium
         shell: bash

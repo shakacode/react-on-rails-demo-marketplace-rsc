@@ -1,15 +1,16 @@
 # frozen_string_literal: true
 
+# Resolves stylesheet assets emitted for React Server Components.
 module RscManifestCssHelper
-  RSC_MANIFEST_IMPLEMENTATION_DEFAULT = "release"
-  CLIENT_MANIFEST_PATH = Rails.root.join("public/packs/react-client-manifest.json")
-  SERVER_MANIFEST_PATH = Rails.root.join("ssr-generated/react-server-client-manifest.json")
+  RSC_MANIFEST_IMPLEMENTATION_DEFAULT = 'release'
+  CLIENT_MANIFEST_PATH = Rails.root.join('public/packs/react-client-manifest.json')
+  SERVER_MANIFEST_PATH = Rails.root.join('ssr-generated/react-server-client-manifest.json')
   STARTUP_EXTENSIONS = %w[.tsx .ts .jsx .js].freeze
   GENERATED_PACK_EXTENSIONS = %w[.js .jsx .ts .tsx].freeze
   SIMPLE_REEXPORT_RE = /^\s*export\s+\{\s*default\s*\}\s+from\s+["']([^"']+)["']/
 
   def current_rsc_build_implementation
-    ENV.fetch("RSC_BUILD_IMPLEMENTATION", RSC_MANIFEST_IMPLEMENTATION_DEFAULT)
+    ENV.fetch('RSC_BUILD_IMPLEMENTATION', RSC_MANIFEST_IMPLEMENTATION_DEFAULT)
   end
 
   def append_rsc_server_component_manifest_css(component_name)
@@ -17,7 +18,7 @@ module RscManifestCssHelper
     return false if hrefs.empty?
 
     content_for :head do
-      safe_join(hrefs.map { |href| stylesheet_link_tag(href, media: "all") }, "\n")
+      safe_join(hrefs.map { |href| stylesheet_link_tag(href, media: 'all') }, "\n")
     end
 
     true
@@ -39,18 +40,17 @@ module RscManifestCssHelper
     @combined_rsc_server_component_css ||= begin
       manifests = [load_rsc_manifest(CLIENT_MANIFEST_PATH), load_rsc_manifest(SERVER_MANIFEST_PATH)]
       manifests.each_with_object({}) do |manifest, result|
-        server_component_css = manifest["serverComponentCss"]
-        next result unless server_component_css.is_a?(Hash)
-
-        server_component_css.each do |key, hrefs|
-          next unless hrefs.is_a?(Array)
-
-          result[key] ||= []
-          hrefs.each do |href|
-            result[key] << href unless result[key].include?(href)
-          end
-        end
+        merge_server_component_css(manifest, result)
       end
+    end
+  end
+
+  def merge_server_component_css(manifest, result)
+    server_component_css = manifest['serverComponentCss']
+    return unless server_component_css.is_a?(Hash)
+
+    server_component_css.each do |key, hrefs|
+      result[key] = Array(result[key]) | hrefs if hrefs.is_a?(Array)
     end
   end
 
@@ -95,7 +95,7 @@ module RscManifestCssHelper
   end
 
   def resolve_relative_module_path(base_directory, specifier)
-    return nil unless specifier.start_with?(".", "..")
+    return nil unless specifier.start_with?('.', '..')
 
     base_path = base_directory.join(specifier)
     candidates = [base_path]
