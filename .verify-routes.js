@@ -46,19 +46,39 @@ function classify(text) {
 
 async function checkProductSearchInteraction(page) {
   const inputSelector = 'input[placeholder="Search products, brands, categories..."]';
-  const query = '__chromium_smoke_no_match__';
+  const query = 'chromium-smoke-no-match-zqxj-74019';
+  const isSearchApiResponse = (response, pathname) => {
+    const url = new URL(response.url());
+    return url.origin === new URL(BASE).origin
+      && url.pathname === pathname
+      && url.searchParams.get('q') === query;
+  };
 
   await page.waitForSelector(inputSelector, { visible: true, timeout: 5000 });
   await page.click(inputSelector);
   await page.type(inputSelector, query);
 
-  const [response] = await Promise.all([
+  const [response, resultsResponse, facetsResponse] = await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 25000 }),
+    page.waitForResponse(
+      (candidate) => isSearchApiResponse(candidate, '/api/product_search/results'),
+      { timeout: 25000 }
+    ),
+    page.waitForResponse(
+      (candidate) => isSearchApiResponse(candidate, '/api/product_search/facets'),
+      { timeout: 25000 }
+    ),
     page.keyboard.press('Enter'),
   ]);
 
   if (!response || response.status() !== 200) {
     throw new Error(`search navigation returned status ${response ? response.status() : 'unknown'}`);
+  }
+  if (!resultsResponse.ok()) {
+    throw new Error(`search results API returned status ${resultsResponse.status()}`);
+  }
+  if (!facetsResponse.ok()) {
+    throw new Error(`search facets API returned status ${facetsResponse.status()}`);
   }
 
   const state = await page.evaluate((selector) => {
