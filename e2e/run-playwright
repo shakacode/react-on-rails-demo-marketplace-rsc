@@ -62,7 +62,7 @@ bin/shakapacker
 require-open-port 127.0.0.1 5017
 require-open-port 127.0.0.1 3800
 
-node node-renderer.js > "${log_dir}/node-renderer.log" 2>&1 &
+env -u E2E_RAILS_TOKEN node node-renderer.js > "${log_dir}/node-renderer.log" 2>&1 &
 renderer_pid=$!
 bundle exec rails server -b 127.0.0.1 -p 5017 > "${log_dir}/rails.log" 2>&1 &
 rails_pid=$!

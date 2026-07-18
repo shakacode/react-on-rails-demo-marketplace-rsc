@@ -120,6 +120,21 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     )
   end
 
+  it 'removes the Rails command capability from the renderer process' do
+    runner = Rails.root.join('e2e/run-playwright').read
+    security_boundary = Rails.root.join('e2e/README.md').read
+    normalized_boundary = security_boundary.split.join(' ')
+
+    expect(runner).to include('env -u E2E_RAILS_TOKEN node node-renderer.js')
+    expect(runner).not_to match(/^node node-renderer\.js/m)
+    expect(normalized_boundary).to include(
+      "only the Rails process's guarded command middleware and Playwright's Node request client receive it"
+    )
+    expect(normalized_boundary).to include(
+      'The node renderer, browser, and page JavaScript do not receive the token.'
+    )
+  end
+
   it 'refuses to continue when a managed loopback port already has a listener' do
     listener = TCPServer.new('127.0.0.1', 0)
     port = listener.local_address.ip_port
@@ -220,6 +235,26 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(prepare_offset).not_to be_nil
     expect(foundation_offset).not_to be_nil
     expect(prepare_offset).to be < foundation_offset
+  end
+
+  it 'runs the E2E type and lint gates in hosted and canonical validation' do
+    package_scripts = JSON.parse(Rails.root.join('package.json').read).fetch('scripts')
+    runtime_type_config = JSON.parse(Rails.root.join('e2e/tsconfig.runtime.json').read)
+    workflow = Rails.root.join('.github/workflows/playwright-e2e.yml').read
+    validation = Rails.root.join('script/demo-fleet-verify').read
+    static_gate_offset = workflow.index('name: Check Playwright types and lint')
+    browser_offset = workflow.index('name: Run the product-search browser journey')
+
+    expect(package_scripts.fetch('type-check:e2e')).to include('e2e/tsconfig.json')
+    expect(package_scripts.fetch('type-check:e2e')).to include('e2e/tsconfig.runtime.json')
+    expect(runtime_type_config.fetch('files')).to include('playwright/support/on-rails.mjs')
+    expect(package_scripts.fetch('lint:e2e')).to include('e2e/**/*.{js,mjs,ts,mts}')
+    expect(package_scripts.fetch('test:e2e:unit')).to include('e2e/playwright/support/*.test.mjs')
+    expect(static_gate_offset).not_to be_nil
+    expect(browser_offset).not_to be_nil
+    expect(static_gate_offset).to be < browser_offset
+    expect(workflow).to include('run: pnpm type-check:e2e && pnpm lint:e2e && pnpm test:e2e:unit')
+    expect(validation).to include("pnpm type-check:e2e\npnpm lint:e2e\npnpm test:e2e:unit")
   end
 
   it 'mounts only the guarded command middleware when opted in' do

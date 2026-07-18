@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+pnpm type-check:e2e
+pnpm lint:e2e
+pnpm test:e2e:unit
 bundle exec rake
 pnpm lint:rsc
 SECRET_KEY_BASE=dummy_secret_key_base_for_demo_fleet bin/build-production

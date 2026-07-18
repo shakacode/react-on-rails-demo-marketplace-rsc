@@ -13,7 +13,9 @@
     "renderer": "node node-renderer.js",
     "lint": "eslint app/javascript --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint app/javascript --ext .js,.jsx,.ts,.tsx --fix",
+    "lint:e2e": "eslint \"e2e/**/*.{js,mjs,ts,mts}\"",
     "type-check": "tsc --noEmit --ignoreDeprecations 6.0 --types node",
+    "type-check:e2e": "tsc --project e2e/tsconfig.json --noEmit --ignoreDeprecations 6.0 && tsc --project e2e/tsconfig.runtime.json --noEmit --ignoreDeprecations 6.0",
     "audit:high": "pnpm audit --audit-level high",
     "yalc:publish": "cd /mnt/ssd/react_on_rails_v16.3 && pnpm build && cd packages/react-on-rails && yalc publish --force && cd ../react-on-rails-pro && yalc publish --force && cd ../react-on-rails-pro-node-renderer && yalc publish --force",
     "yalc:link": "yalc add react-on-rails-pro react-on-rails-pro-node-renderer",
@@ -26,6 +28,7 @@
     "smoke:routes": "node .verify-routes.js",
     "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs",
     "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
+    "test:e2e:unit": "node --test e2e/playwright/support/*.test.mjs",
     "test:e2e": "bash e2e/run-playwright"
   },
   "dependencies": {

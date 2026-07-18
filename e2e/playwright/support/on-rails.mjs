@@ -1,5 +1,3 @@
-/* global URL, fetch, process */
-
 const railsBaseURL = process.env.E2E_BASE_URL || 'http://127.0.0.1:5017';
 const railsToken = process.env.E2E_RAILS_TOKEN;
 

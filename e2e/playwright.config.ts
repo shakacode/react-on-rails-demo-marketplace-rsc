@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import { withoutRailsCapability } from './playwright/support/browser-env.mjs';
+
 export default defineConfig({
   testDir: './playwright/e2e',
   outputDir: './test-results',
@@ -13,6 +15,9 @@ export default defineConfig({
   ],
   use: {
     baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:5017',
+    launchOptions: {
+      env: withoutRailsCapability(process.env),
+    },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     video: 'retain-on-failure',

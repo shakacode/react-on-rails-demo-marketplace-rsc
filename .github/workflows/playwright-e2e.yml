@@ -66,6 +66,9 @@ jobs:
       - name: Install JavaScript dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check Playwright types and lint
+        run: pnpm type-check:e2e && pnpm lint:e2e && pnpm test:e2e:unit
+
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 

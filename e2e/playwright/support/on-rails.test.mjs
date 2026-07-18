@@ -1,5 +1,3 @@
-/* global Response, process */
-
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
@@ -14,7 +12,9 @@ test('posts Rails commands with native fetch', async (t) => {
     globalThis.fetch = originalFetch;
   });
 
+  /** @type {RequestInfo | URL | undefined} */
   let receivedInput;
+  /** @type {RequestInit | undefined} */
   let receivedInit;
   globalThis.fetch = async (input, init) => {
     receivedInput = input;
