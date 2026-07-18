@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'open3'
+require 'socket'
 require 'stringio'
 require_relative '../spec/rails_helper'
 require_relative 'e2e_helper'
@@ -117,6 +118,66 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(runner).to match(
       %r{curl .*"\$\{E2E_BASE_URL\}/up".*&&.*/dev/tcp/\$\{RENDERER_HOST\}/\$\{RENDERER_PORT\}}m
     )
+  end
+
+  it 'refuses to continue when a managed loopback port already has a listener' do
+    listener = TCPServer.new('127.0.0.1', 0)
+    port = listener.local_address.ip_port
+    port_guard = Rails.root.join('e2e/bin/require-open-port').to_s
+
+    stdout, stderr, status = Open3.capture3(port_guard, '127.0.0.1', port.to_s)
+
+    expect(status).not_to be_success
+    expect([stdout, stderr].join("\n")).to include("127.0.0.1:#{port} is already in use")
+  ensure
+    listener&.close
+  end
+
+  it 'allows only one runner to own the shared E2E stack' do
+    lock_helper = Rails.root.join('e2e/bin/with-runner-lock').to_s
+    lock_name = "marketplace-rsc-playwright-spec-#{Process.pid}"
+    first_stdin, first_stdout, first_stderr, first_wait = Open3.popen3(
+      lock_helper,
+      lock_name,
+      RbConfig.ruby,
+      '-e',
+      '$stdout.sync = true; puts "locked"; sleep 30'
+    )
+    expect(first_stdout.gets).to eq("locked\n")
+
+    second_stdout, second_stderr, second_status = Open3.capture3(
+      lock_helper,
+      lock_name,
+      RbConfig.ruby,
+      '-e',
+      'abort "second runner executed"'
+    )
+
+    expect(second_status).not_to be_success
+    expect([second_stdout, second_stderr].join("\n")).to include('another Playwright E2E runner is active')
+  ensure
+    first_stdin&.close
+    Process.kill('TERM', first_wait.pid) if first_wait&.alive?
+    first_wait&.value
+    first_stdout&.close
+    first_stderr&.close
+  end
+
+  it 'locks the shared stack and checks both managed ports before destructive setup' do
+    runner = Rails.root.join('e2e/run-playwright').read
+    runner_lock_offset = runner.index('with-runner-lock marketplace-rsc-playwright-5017-3800')
+    rails_port_guard_offset = runner.index('require-open-port 127.0.0.1 5017')
+    renderer_port_guard_offset = runner.index('require-open-port 127.0.0.1 3800')
+    database_preflight_offset = runner.index('database_name=')
+
+    expect(runner_lock_offset).not_to be_nil
+    expect(rails_port_guard_offset).not_to be_nil
+    expect(renderer_port_guard_offset).not_to be_nil
+    expect(database_preflight_offset).not_to be_nil
+    expect(runner_lock_offset).to be < rails_port_guard_offset
+    expect(runner_lock_offset).to be < renderer_port_guard_offset
+    expect(rails_port_guard_offset).to be < database_preflight_offset
+    expect(renderer_port_guard_offset).to be < database_preflight_offset
   end
 
   it 'generates React on Rails packs before compiling the E2E bundles' do

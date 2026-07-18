@@ -6,6 +6,10 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${repo_root}"
 export PATH="${repo_root}/e2e/bin:${PATH}"
 
+if [[ "${E2E_RUNNER_LOCK_HELD:-}" != "1" ]]; then
+  exec with-runner-lock marketplace-rsc-playwright-5017-3800 "${repo_root}/e2e/run-playwright" "$@"
+fi
+
 if [[ "$(pnpm --version)" != "9.15.2" ]]; then
   echo "Playwright E2E requires the package.json-pinned pnpm 9.15.2"
   exit 1
@@ -24,6 +28,9 @@ export RENDERER_PASSWORD=e2e-local-renderer
 export RENDERER_LOG_LEVEL=warn
 export RENDERER_WORKERS_COUNT=1
 export SHAKAPACKER_ASSETS_BUNDLER=rspack
+
+require-open-port 127.0.0.1 5017
+require-open-port 127.0.0.1 3800
 
 log_dir="${repo_root}/e2e/server-logs"
 mkdir -p "${log_dir}"
@@ -51,6 +58,9 @@ esac
 bin/rails db:prepare
 bundle exec rake react_on_rails:generate_packs
 bin/shakapacker
+
+require-open-port 127.0.0.1 5017
+require-open-port 127.0.0.1 3800
 
 node node-renderer.js > "${log_dir}/node-renderer.log" 2>&1 &
 renderer_pid=$!
