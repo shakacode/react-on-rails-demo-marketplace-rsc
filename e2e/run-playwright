@@ -5,6 +5,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${repo_root}"
 export PATH="${repo_root}/e2e/bin:${PATH}"
+source "${repo_root}/e2e/bin/process-cleanup"
 
 if [[ "${E2E_RUNNER_LOCK_HELD:-}" != "1" ]]; then
   exec with-runner-lock marketplace-rsc-playwright-5017-3800 "${repo_root}/e2e/run-playwright" "$@"
@@ -36,11 +37,17 @@ log_dir="${repo_root}/e2e/server-logs"
 mkdir -p "${log_dir}"
 
 renderer_pid=""
+renderer_pgid=""
 rails_pid=""
+rails_pgid=""
 
 cleanup() {
-  [[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
-  [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true
+  local exit_status=$?
+
+  trap - EXIT
+  trap '' INT TERM
+  stop_children "${renderer_pid}:${renderer_pgid}" "${rails_pid}:${rails_pgid}"
+  exit "${exit_status}"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
@@ -62,10 +69,14 @@ bin/shakapacker
 require-open-port 127.0.0.1 5017
 require-open-port 127.0.0.1 3800
 
+set -m
 env -u E2E_RAILS_TOKEN node node-renderer.js > "${log_dir}/node-renderer.log" 2>&1 &
 renderer_pid=$!
+renderer_pgid="${renderer_pid}"
 bundle exec rails server -b 127.0.0.1 -p 5017 > "${log_dir}/rails.log" 2>&1 &
 rails_pid=$!
+rails_pgid="${rails_pid}"
+set +m
 
 ready=false
 for _ in {1..60}; do

@@ -218,6 +218,182 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     first_stderr&.close
   end
 
+  it 'boundedly terminates and reaps every managed child during cleanup' do
+    cleanup_helper = Rails.root.join('e2e/bin/process-cleanup')
+    runner = Rails.root.join('e2e/run-playwright').read
+
+    expect(cleanup_helper).to exist
+    expect(runner).to include('source "${repo_root}/e2e/bin/process-cleanup"')
+    expect(runner).to include('local exit_status=$?')
+    expect(runner).to include('trap - EXIT')
+    expect(runner).to include(
+      'stop_children "${renderer_pid}:${renderer_pgid}" "${rails_pid}:${rails_pgid}"'
+    )
+    expect(runner).to include('exit "${exit_status}"')
+    expect(runner).to include("trap 'exit 130' INT")
+    expect(runner).to include("trap 'exit 143' TERM")
+    expect(runner).to match(
+      /set\ -m\n
+       .*renderer_pid=\$!\n
+       renderer_pgid="\$\{renderer_pid\}"
+       .*rails_pid=\$!\n
+       rails_pgid="\$\{rails_pid\}"\n
+       set\ \+m/mx
+    )
+
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    stdout, stderr, status = Open3.capture3(
+      { 'E2E_CHILD_STOP_TIMEOUT_SECONDS' => '1' },
+      'bash',
+      '-c',
+      <<~'BASH',
+        set -euo pipefail
+
+        source "$1"
+        temp_dir="$(mktemp -d)"
+        fixture_pids=()
+
+        cleanup_fixtures() {
+          local pid
+
+          trap - EXIT
+          for pid in "${fixture_pids[@]}"; do
+            kill -KILL -- "-${pid}" 2>/dev/null || kill -KILL "${pid}" 2>/dev/null || true
+          done
+          for pid in "${fixture_pids[@]}"; do
+            wait "${pid}" 2>/dev/null || true
+          done
+          rm -rf "${temp_dir}"
+        }
+        trap cleanup_fixtures EXIT
+
+        start_child() {
+          local mode="$1"
+          local child_group
+          local port_file="${temp_dir}/${mode}.port"
+
+          ruby -rsocket -e '
+            mode, port_file = ARGV
+            mode == "cooperative" ? trap("TERM") { exit } : trap("TERM", "IGNORE")
+            listener = TCPServer.new("127.0.0.1", 0)
+            worker_pid =
+              if mode != "cooperative"
+                fork do
+                  trap("TERM", "IGNORE")
+                  sleep
+                end
+              end
+            File.write(port_file, "#{listener.local_address.ip_port} #{worker_pid || "-"}\n")
+            exit if mode == "exited-leader"
+            sleep
+          ' "${mode}" "${port_file}" &
+          child_pid=$!
+          fixture_pids+=("${child_pid}")
+
+          for _ in {1..50}; do
+            [[ -s "${port_file}" ]] && break
+            sleep 0.05
+          done
+          [[ -s "${port_file}" ]]
+
+          if [[ "${mode}" == "exited-leader" ]]; then
+            wait "${child_pid}"
+            read -r _ descendant_pid < "${port_file}"
+            child_group="$(ps -o pgid= -p "${descendant_pid}" | tr -d '[:space:]')"
+          else
+            child_group="$(ps -o pgid= -p "${child_pid}" | tr -d '[:space:]')"
+          fi
+          [[ "${child_group}" == "${child_pid}" ]]
+          [[ "${child_group}" != "$(ps -o pgid= -p "$$" | tr -d '[:space:]')" ]]
+        }
+
+        verify_stopped_child() {
+          local mode="$1"
+          local child_pid="$2"
+          local descendant_pid
+          local port
+
+          ! kill -0 "${child_pid}" 2>/dev/null
+          read -r port descendant_pid < "${temp_dir}/${mode}.port"
+          if [[ "${descendant_pid}" != "-" ]]; then
+            for _ in {1..50}; do
+              ! kill -0 "${descendant_pid}" 2>/dev/null && break
+              sleep 0.05
+            done
+            ! kill -0 "${descendant_pid}" 2>/dev/null
+          fi
+          ruby -rsocket -e '
+            listener = TCPServer.new("127.0.0.1", ARGV.fetch(0).to_i)
+            listener.close
+          ' "${port}"
+        }
+
+        set -m
+        start_child cooperative
+        cooperative_pid="${child_pid}"
+        start_child ignoring
+        ignoring_pid="${child_pid}"
+        start_child exited-leader
+        exited_leader_pid="${child_pid}"
+        set +m
+        true &
+        already_exited_pid=$!
+        sleep 0.05
+
+        stop_children \
+          "" \
+          "${already_exited_pid}" \
+          "${cooperative_pid}:${cooperative_pid}" \
+          "${ignoring_pid}:${ignoring_pid}" \
+          "${exited_leader_pid}:${exited_leader_pid}"
+        ! kill -0 "${already_exited_pid}" 2>/dev/null
+        verify_stopped_child cooperative "${cooperative_pid}"
+        verify_stopped_child ignoring "${ignoring_pid}"
+        verify_stopped_child exited-leader "${exited_leader_pid}"
+      BASH
+      'process-cleanup-spec',
+      cleanup_helper.to_s
+    )
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+
+    expect(status).to be_success, [stdout, stderr].join("\n")
+    expect(elapsed).to be < 4
+
+    exit_stdout, exit_stderr, exit_status = Open3.capture3(
+      { 'E2E_CHILD_STOP_TIMEOUT_SECONDS' => '1' },
+      'bash',
+      '-c',
+      <<~'BASH',
+        set -euo pipefail
+
+        source "$1"
+        child_pid=""
+        cleanup() {
+          local original_status=$?
+
+          trap - EXIT
+          trap '' INT TERM
+          stop_children "${child_pid}"
+          exit "${original_status}"
+        }
+        trap cleanup EXIT
+
+        set -m
+        sleep 30 &
+        child_pid=$!
+        set +m
+        printf '%s\n' "${child_pid}"
+        exit 42
+      BASH
+      'process-cleanup-status-spec',
+      cleanup_helper.to_s
+    )
+    cleaned_pid = Integer(exit_stdout)
+
+    expect(exit_status.exitstatus).to eq(42), exit_stderr
+    expect { Process.kill(0, cleaned_pid) }.to raise_error(Errno::ESRCH)
+  end
+
   it 'locks the shared stack and checks both managed ports before destructive setup' do
     runner = Rails.root.join('e2e/run-playwright').read
     runner_lock_offset = runner.index('with-runner-lock marketplace-rsc-playwright-5017-3800')
