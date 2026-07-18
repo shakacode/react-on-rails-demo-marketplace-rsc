@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'open3'
 require 'rails_helper'
 
 RSpec.describe 'Public route rendering isolation' do
@@ -63,6 +64,37 @@ RSpec.describe 'Public routes', type: :request, public_route_contract: true do
       expect(
         PublicRouteContract.uncovered_get_route_patterns(exercised_patterns - ['/why-rsc'])
       ).to include('/why-rsc')
+    end
+
+    it 'derives Chromium paths from every rendered route and excludes redirects' do
+      rendered_route_count = PublicRouteContract.routes.count do |route_case|
+        route_case.fetch('expected_status') == 200
+      end
+
+      expect(PublicRouteContract.browser_route_paths.length).to eq(rendered_route_count)
+      expect(PublicRouteContract.browser_route_paths).to include(
+        '/restaurant/1/ssr-cached',
+        '/how-rsc-works',
+        '/lh-compare?left=blog_ssr-desktop&right=blog_rsc-desktop',
+        '/media-gallery/rsc',
+        '/css-demo/two/rsc-client',
+        '/product-search/client'
+      )
+      expect(PublicRouteContract.browser_route_paths).not_to include('/source', '/search-performance')
+      expect(PublicRouteContract.browser_route_paths).not_to include(a_string_matching(/:\w+/))
+    end
+
+    it 'keeps the Chromium verifier inventory identical to the canonical contract' do
+      stdout, stderr, status = Open3.capture3(
+        { 'PUPPETEER_EXECUTABLE_PATH' => '/bin/false' },
+        'node',
+        '.verify-routes.js',
+        '--list-routes',
+        chdir: Rails.root.to_s
+      )
+
+      expect(status).to be_success, stderr
+      expect(JSON.parse(stdout)).to eq(PublicRouteContract.browser_route_paths)
     end
   end
 

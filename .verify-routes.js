@@ -6,25 +6,50 @@
 // - reports anything that's not a clean load
 
 const puppeteer = require('puppeteer');
+const publicRouteContract = require('./config/public_routes.json');
 
 const BASE = process.env.BASE_URL || 'http://localhost:3010';
-const DEFAULT_ROUTES = [
-  '/',
-  '/products',
-  '/why-rsc',
-  '/measure',
-  '/rsc-performance',
-  '/rsc',
-  '/restaurant/1/ssr', '/restaurant/1/client', '/restaurant/1/rsc',
-  '/product/ssr', '/product/client', '/product/rsc',
-  '/product-search/ssr', '/product-search/client', '/product-search/rsc',
-  '/blog/ssr', '/blog/client', '/blog/rsc', '/blog/rsc-simple',
-  '/blog/rsc-step1', '/blog/rsc-step1b', '/blog/rsc-step1c',
-  '/blog/rsc-step2', '/blog/rsc-step3', '/blog/rsc-step4', '/blog/rsc-step5',
-];
+const BROWSER_PARAMETER_VALUES = { restaurant: '1' };
+const PERSISTENT_MEDIA_ROUTES = new Set(['/media-gallery', '/media-gallery/rsc']);
+
+function browserRouteFor(routeCase) {
+  const route = Object.entries(routeCase.parameters || {}).reduce(
+    (path, [parameter, fixtureName]) => {
+      const parameterValue = BROWSER_PARAMETER_VALUES[fixtureName];
+      if (parameterValue === undefined) {
+        throw new Error(
+          `No deterministic browser value for ${fixtureName} (${routeCase.path} :${parameter})`
+        );
+      }
+
+      return path.replace(`:${parameter}`, encodeURIComponent(parameterValue));
+    },
+    routeCase.request_path || routeCase.path
+  );
+
+  if (/:[A-Za-z_][A-Za-z0-9_]*/.test(route)) {
+    throw new Error(`Unresolved browser route parameter in ${route}`);
+  }
+
+  return route;
+}
+
+const DEFAULT_ROUTES = publicRouteContract.routes.flatMap((routeCase) => {
+  if (routeCase.expected_status === 200) return [browserRouteFor(routeCase)];
+  if (routeCase.expected_location) return [];
+
+  throw new Error(
+    `Public route ${routeCase.path} is neither browser-rendered nor an explicit redirect`
+  );
+});
+
+if (process.argv.includes('--list-routes')) {
+  console.log(JSON.stringify(DEFAULT_ROUTES));
+  process.exit(0);
+}
 
 // A harness can scope the run to a subset (e.g. just the RSC client-boundary
-// routes) via a comma-separated ROUTES env var; default is the full list above.
+// routes) via a comma-separated ROUTES env var; default is the canonical list.
 const ROUTES = process.env.ROUTES
   ? process.env.ROUTES.split(',').map((r) => r.trim()).filter(Boolean)
   : DEFAULT_ROUTES;
@@ -55,10 +80,20 @@ async function checkProductSearchInteraction(page) {
   };
 
   await page.waitForSelector(inputSelector, { visible: true, timeout: 5000 });
-  await page.click(inputSelector);
+  await page.focus(inputSelector);
+  const inputIsFocused = await page.evaluate(
+    (selector) => document.activeElement === document.querySelector(selector),
+    inputSelector
+  );
+  if (!inputIsFocused) {
+    throw new Error('search input did not receive focus');
+  }
 
+  // The explicit API waits below are the readiness gate for the updated
+  // search page; waiting for all network activity to stop is broader than the
+  // interaction contract and can remain unsettled in current Chromium.
   const [response, resultsResponse, facetsResponse] = await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 25000 }),
+    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 25000 }),
     page.waitForResponse(
       (candidate) => isSearchApiResponse(candidate, '/api/product_search/results'),
       { timeout: 25000 }
@@ -192,9 +227,15 @@ async function checkRoute(browser, route) {
   let httpStatus = null;
   let interactionError = null;
   try {
-    const resp = await page.goto(BASE + route, { waitUntil: 'networkidle0', timeout: 25000 });
+    // These two media pages keep requests active and media elements loading,
+    // so neither networkidle0 nor load completes. They still run every
+    // post-paint, HTTP, page/console error, and duplicate-script check. The
+    // pre-existing route set retains the stricter networkidle0 condition.
+    const waitUntil = PERSISTENT_MEDIA_ROUTES.has(route) ? 'domcontentloaded' : 'networkidle0';
+    const resp = await page.goto(BASE + route, { waitUntil, timeout: 25000 });
     httpStatus = resp ? resp.status() : null;
   } catch (e) {
+    await page.close().catch(() => {});
     return {
       route, httpStatus, ok: false, navError: e.message,
       bodyTextLength: 0, hasErrorPanel: false,
@@ -261,14 +302,16 @@ async function checkRoute(browser, route) {
   });
 
   const results = [];
-  for (const route of ROUTES) {
-    process.stderr.write(`checking ${route} ... `);
-    const r = await checkRoute(browser, route);
-    process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
-    results.push(r);
+  try {
+    for (const route of ROUTES) {
+      process.stderr.write(`checking ${route} ... `);
+      const r = await checkRoute(browser, route);
+      process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
+      results.push(r);
+    }
+  } finally {
+    await browser.close();
   }
-
-  await browser.close();
 
   // Summary
   console.log('\n========== SUMMARY ==========');

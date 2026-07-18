@@ -6,6 +6,7 @@ require 'json'
 module PublicRouteContract
   CONTRACT_PATH = Rails.root.join('config/public_routes.json')
   FORMAT_SUFFIX = '(.:format)'
+  BROWSER_PARAMETER_VALUES = { 'restaurant' => '1' }.freeze
 
   module_function
 
@@ -19,6 +20,18 @@ module PublicRouteContract
 
   def exclusions
     data.fetch('exclusions')
+  end
+
+  def browser_route_paths
+    routes.filter_map do |route_case|
+      next unless route_case.fetch('expected_status') == 200
+
+      route_case.fetch('parameters', {}).reduce(
+        route_case.fetch('request_path', route_case.fetch('path')).dup
+      ) do |path, (parameter, fixture_name)|
+        path.sub(":#{parameter}", BROWSER_PARAMETER_VALUES.fetch(fixture_name))
+      end
+    end
   end
 
   def route_patterns
