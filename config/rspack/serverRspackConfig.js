@@ -1,7 +1,10 @@
 /* eslint-disable no-param-reassign */
-const { RSCRspackPlugin } = require('react-on-rails-rsc/RspackPlugin');
 const path = require('path');
 const commonRspackConfig = require('./commonRspackConfig');
+const {
+  getRspackRscImplementation,
+  rspackDefaultClientReferences,
+} = require('../rsc-implementations');
 
 function extractLoader(rule, loaderName) {
   if (!Array.isArray(rule.use)) return undefined;
@@ -20,6 +23,7 @@ function extractLoader(rule, loaderName) {
 
 const configureServer = (rscBundle = false) => {
   const serverConfig = commonRspackConfig();
+  const rscImplementation = getRspackRscImplementation();
 
   const serverEntry = {
     'server-bundle': serverConfig.entry['server-bundle'],
@@ -55,16 +59,11 @@ const configureServer = (rscBundle = false) => {
   };
 
   if (!rscBundle) {
-    serverConfig.plugins.push(new RSCRspackPlugin({
-      isServer: true,
-      clientReferences: [
-        {
-          directory: './app/javascript',
-          recursive: true,
-          include: /\.[cm]?[jt]sx?$/,
-        },
-      ],
-    }));
+    serverConfig.plugins.push(
+      rscImplementation.createServerPlugin({
+        clientReferences: rspackDefaultClientReferences,
+      }),
+    );
   }
 
   // Rspack has LimitChunkCountPlugin at the same path

@@ -7,11 +7,13 @@ interface Props {
 
 export function SearchInput({ initialQuery, onSearch }: Props) {
   const [query, setQuery] = useState(initialQuery);
+  const [previousInitialQuery, setPreviousInitialQuery] = useState(initialQuery);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  if (initialQuery !== previousInitialQuery) {
+    setPreviousInitialQuery(initialQuery);
     setQuery(initialQuery);
-  }, [initialQuery]);
+  }
 
   useEffect(() => () => {
     if (debounceRef.current) {
