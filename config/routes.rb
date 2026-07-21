@@ -40,6 +40,7 @@ Rails.application.routes.draw do
   get '/product/client', to: 'products#show_client'   # V2: Loadable components, client-side fetch
   get '/product/rsc', to: 'products#show_rsc'         # V3: RSC streaming
   get '/product/rsc-cached', to: 'products#show_rsc_cached' # V3 + cached_stream_react_component_with_async_props
+  get '/product/ppr', to: 'products#show_ppr'         # V4: PPR — cached shell + dynamic streaming
 
   # Product search results — three versions demonstrating search page RSC gains
   get '/product-search/ssr', to: 'product_search#search_ssr'       # V1: Full SSR

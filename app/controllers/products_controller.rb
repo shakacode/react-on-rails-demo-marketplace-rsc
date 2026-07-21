@@ -5,14 +5,15 @@ class ProductsController < ApplicationController
   include ReactOnRailsPro::AsyncRendering
   include ProductSerialization
 
-  enable_async_react_rendering only: %i[show_rsc show_rsc_cached]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_ppr]
 
   before_action :set_seo_meta
 
   SEO_VARIANTS = {
     "show_ssr" => "Server-Side Rendering (SSR)",
     "show_client" => "Client-Side Rendering",
-    "show_rsc" => "React Server Components (RSC)"
+    "show_rsc" => "React Server Components (RSC)",
+    "show_ppr" => "Partial Prerendering (PPR)"
   }.freeze
 
   # V1: Full Server SSR — fetch ALL data, return complete page
@@ -59,6 +60,17 @@ class ProductsController < ApplicationController
     @product = find_product
     @product_data = serialize_product(@product).except(:description, :features, :specs)
     stream_view_containing_react_components(template: "products/show_rsc_cached")
+  end
+
+  # V4: PPR — static shell cached, dynamic content streams fresh.
+  # The prerender phase runs the full component tree but aborts before suspended
+  # boundaries resolve, caching the shell (hero + skeletons). On subsequent
+  # requests the cached shell serves instantly while only the dynamic Suspense
+  # boundaries (reviews, related, etc.) stream fresh from the server.
+  def show_ppr
+    @product = find_product
+    @product_data = serialize_product(@product)
+    stream_view_containing_react_components(template: "products/show_ppr")
   end
 
   private

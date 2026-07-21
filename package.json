@@ -25,7 +25,8 @@
     "verify:rsc": "node scripts/check-rsc-chunks.mjs",
     "smoke:routes": "node .verify-routes.js",
     "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs",
-    "test:renderer-context": "node --test scripts/renderer-context.test.mjs"
+    "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
+    "postinstall": "node scripts/apply-ppr-patches.js"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
@@ -109,6 +110,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.7.0",
     "mini-css-extract-plugin": "^2.10.2",
+    "patch-package": "^8.0.1",
     "postcss": "^8.5.16",
     "postcss-loader": "^8.1.0",
     "postcss-preset-env": "^11.3.2",
