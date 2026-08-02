@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module PPRPatches
+  # Adds Partial Prerendering render modes to React on Rails render options.
   module RenderOptionsPatch
     def streaming?
       %i[html_streaming rsc_payload_streaming ppr_prerender ppr_resume].include?(render_mode)
