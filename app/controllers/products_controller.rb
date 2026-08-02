@@ -5,7 +5,7 @@ class ProductsController < ApplicationController
   include ReactOnRailsPro::AsyncRendering
   include ProductSerialization
 
-  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_ppr]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_rsc_pull show_ppr]
 
   before_action :set_seo_meta
 
@@ -13,6 +13,7 @@ class ProductsController < ApplicationController
     "show_ssr" => "Server-Side Rendering (SSR)",
     "show_client" => "Client-Side Rendering",
     "show_rsc" => "React Server Components (RSC)",
+    "show_rsc_pull" => "RSC Pull-Mode (Bidirectional Async Props)",
     "show_ppr" => "Partial Prerendering (PPR)"
   }.freeze
 
@@ -60,6 +61,16 @@ class ProductsController < ApplicationController
     @product = find_product
     @product_data = serialize_product(@product).except(:description, :features, :specs)
     stream_view_containing_react_components(template: "products/show_rsc_cached")
+  end
+
+  # V5: RSC Pull-Mode — bidirectional async props with unstable_cache.
+  # Uses push_props: [] so Rails waits for React to request each prop via propRequest
+  # instead of eagerly pushing everything. Combined with unstable_cache on the JS side,
+  # cached components never request their prop → Rails never queries the DB for it.
+  def show_rsc_pull
+    @product = find_product
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
+    stream_view_containing_react_components(template: "products/show_rsc_pull")
   end
 
   # V4: PPR — static shell cached, dynamic content streams fresh.

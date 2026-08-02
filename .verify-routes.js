@@ -16,7 +16,7 @@ const DEFAULT_ROUTES = [
   '/rsc-performance',
   '/rsc',
   '/restaurant/1/ssr', '/restaurant/1/client', '/restaurant/1/rsc',
-  '/product/ssr', '/product/client', '/product/rsc',
+  '/product/ssr', '/product/client', '/product/rsc', '/product/rsc-pull',
   '/product-search/ssr', '/product-search/client', '/product-search/rsc',
   '/blog/ssr', '/blog/client', '/blog/rsc', '/blog/rsc-simple',
   '/blog/rsc-step1', '/blog/rsc-step1b', '/blog/rsc-step1c',
