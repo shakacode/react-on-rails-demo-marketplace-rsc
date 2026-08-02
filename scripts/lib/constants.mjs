@@ -23,6 +23,7 @@ export const PAGES = {
   'rsc-cached': { path: '/blog/rsc-cached', label: 'RSC cached', hasStreaming: true },
   'product-ssr-cached': { path: '/product/ssr-cached', label: 'Product SSR cached', hasStreaming: false, selectors: { likeButton: 'button', relatedHeadingText: 'Customers Also Viewed' } },
   'product-rsc-cached': { path: '/product/rsc-cached', label: 'Product RSC cached', hasStreaming: true, selectors: { likeButton: 'button', relatedHeadingText: 'Customers Also Viewed' } },
+  'product-rsc-pull': { path: '/product/rsc-pull', label: 'Product RSC Pull', hasStreaming: true, selectors: { likeButton: 'button', relatedHeadingText: 'Customers Also Viewed' } },
   'product-ppr': { path: '/product/ppr', label: 'Product PPR', hasStreaming: true, selectors: { likeButton: 'button', relatedHeadingText: 'Customers Also Viewed' } },
   'search-ssr-cached': { path: '/product-search/ssr-cached', label: 'Search SSR cached', hasStreaming: false },
   'search-rsc-cached': { path: '/product-search/rsc-cached', label: 'Search RSC cached', hasStreaming: true },
