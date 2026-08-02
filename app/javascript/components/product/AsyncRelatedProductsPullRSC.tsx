@@ -13,10 +13,24 @@ interface Props {
   productId: number;
 }
 
+interface RelatedProduct {
+  id: number;
+  name: string;
+  price: number;
+  original_price: number | null;
+  category: string;
+  brand: string;
+  images: { url: string; alt: string; position: number }[];
+  average_rating: number;
+  review_count: number;
+  in_stock: boolean;
+  discount_percentage: number | null;
+}
+
 const CachedPullRelatedProducts = cacheComponent(
   async ({ productId }: { productId: number }) => {
     const data = await getAsyncProp('related_products');
-    return <RelatedProducts products={data.products} />;
+    return <RelatedProducts products={data.products as RelatedProduct[]} />;
   },
   { id: 'pull-product-related', revalidate: 60 },
 );
