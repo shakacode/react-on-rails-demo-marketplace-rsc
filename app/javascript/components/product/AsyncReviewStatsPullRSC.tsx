@@ -10,8 +10,12 @@ import { cacheComponent } from '../../utils/rscCache';
 import { getAsyncProp } from '../../utils/asyncPropStore';
 import { ReviewDistributionChart } from './ReviewDistributionChart';
 
+interface Props {
+  productId: number;
+}
+
 const CachedPullReviewStats = cacheComponent(
-  async (_props: Record<string, never>) => {
+  async ({ productId }: { productId: number }) => {
     const data = await getAsyncProp('review_stats');
     return (
       <ReviewDistributionChart
@@ -24,6 +28,6 @@ const CachedPullReviewStats = cacheComponent(
   { id: 'pull-product-review-stats', revalidate: 60 },
 );
 
-export default async function AsyncReviewStatsPullRSC() {
-  return <CachedPullReviewStats />;
+export default async function AsyncReviewStatsPullRSC({ productId }: Props) {
+  return <CachedPullReviewStats productId={productId} />;
 }

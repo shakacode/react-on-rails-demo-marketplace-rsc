@@ -99,19 +99,19 @@ export default function ProductPagePullRSC({ product, getReactOnRailsAsyncProp }
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
 
           <Suspense fallback={<ReviewStatsSkeleton />}>
-            <AsyncReviewStatsPullRSC />
+            <AsyncReviewStatsPullRSC productId={product.id} />
           </Suspense>
 
           <div className="mt-8">
             <Suspense fallback={<ReviewsSkeleton />}>
-              <AsyncReviewsPullRSC />
+              <AsyncReviewsPullRSC productId={product.id} />
             </Suspense>
           </div>
         </section>
 
         {/* Related products — pull-cached: on HIT, related_products prop is never requested */}
         <Suspense fallback={<RelatedProductsSkeleton />}>
-          <AsyncRelatedProductsPullRSC />
+          <AsyncRelatedProductsPullRSC productId={product.id} />
         </Suspense>
 
         {/* Long-form spec sheet — uses regular cacheComponent (sync data from product) */}

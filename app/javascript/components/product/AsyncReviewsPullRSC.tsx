@@ -10,14 +10,18 @@ import { getAsyncProp } from '../../utils/asyncPropStore';
 import { ProductReview } from '../../types/product';
 import { ReviewsList } from './ReviewsList';
 
+interface Props {
+  productId: number;
+}
+
 const CachedPullReviewsList = cacheComponent(
-  async (_props: Record<string, never>) => {
+  async ({ productId }: { productId: number }) => {
     const data = await getAsyncProp('reviews');
     return <ReviewsList reviews={data.reviews as ProductReview[]} />;
   },
   { id: 'pull-product-reviews', revalidate: 60 },
 );
 
-export default async function AsyncReviewsPullRSC() {
-  return <CachedPullReviewsList />;
+export default async function AsyncReviewsPullRSC({ productId }: Props) {
+  return <CachedPullReviewsList productId={productId} />;
 }
