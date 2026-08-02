@@ -117,7 +117,7 @@
     "globals": "^17.7.0",
     "mini-css-extract-plugin": "^2.10.2",
     "patch-package": "^8.0.1",
-    "postcss": "8.5.18",
+    "postcss": "^8.5.18",
     "postcss-loader": "^8.1.0",
     "postcss-preset-env": "^11.3.2",
     "puppeteer": "^25.3.0",
