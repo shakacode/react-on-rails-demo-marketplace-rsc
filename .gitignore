@@ -121,6 +121,9 @@ test-*.js
 .mcp.json
 .psi-key
 
+# Playwright MCP server artifacts
+.playwright-mcp/
+
 # Claude Code worktrees and session state
 .claude/
 

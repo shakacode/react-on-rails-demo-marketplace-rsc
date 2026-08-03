@@ -26,6 +26,7 @@
     "smoke:routes": "node .verify-routes.js",
     "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs",
     "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
+    "test:pull-mode": "node scripts/verify-pull-mode-e2e.js",
     "postinstall": "node scripts/apply-ppr-patches.js"
   },
   "dependencies": {
