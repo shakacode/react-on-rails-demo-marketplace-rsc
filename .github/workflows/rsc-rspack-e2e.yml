@@ -148,7 +148,13 @@ jobs:
         working-directory: .pkgsrc/rsc
         run: |
           corepack enable
-          yarn install --frozen-lockfile
+          # --no-frozen-lockfile: the upstream repo's yarn.lock occasionally
+          # lags its package.json (e.g. react_on_rails_rsc@fd5cf50 added
+          # es-module-lexer without a lockfile entry), which would fail every
+          # run here. This step only builds the upstream package as an input
+          # to the gate; enforcing upstream's lockfile freshness is that
+          # repo's CI's job, not this one's.
+          yarn install --no-frozen-lockfile
           yarn build
           yalc publish
 
