@@ -56,6 +56,8 @@ module PPRPatches
     def resolve_render_function_name(render_options)
       base = base_render_function(render_options)
 
+      # streaming? (from RenderOptionsPatch) includes :ppr_prerender and :ppr_resume,
+      # so this condition covers both PPR and non-PPR streaming modes.
       if ReactOnRailsPro.configuration.enable_rsc_support && render_options.streaming?
         "ReactOnRails.isRSCBundle ? 'serverRenderRSCReactComponent' : '#{base}'"
       else
