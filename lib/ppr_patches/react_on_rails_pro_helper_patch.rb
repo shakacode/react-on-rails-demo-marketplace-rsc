@@ -1,131 +1,121 @@
 # frozen_string_literal: true
 
 module PPRPatches
+  # Adds ppr_react_component to the ReactOnRailsPro helper, implementing
+  # Partial Prerendering with a two-phase render: prerender (shell + postponed
+  # state) and resume (streamed dynamic content). Caches the shell to skip the
+  # prerender phase on subsequent requests.
   module ReactOnRailsProHelperPatch
-    PPR_POSTPONED_STATE_DELIMITER = "<!--PPR_POSTPONED_STATE-->"
+    PPR_POSTPONED_STATE_DELIMITER = '<!--PPR_POSTPONED_STATE-->'
 
     def ppr_react_component(component_name, raw_options = {}, &block)
       ReactOnRailsPro::Utils.with_trace(component_name) do
         check_caching_options!(raw_options, block)
-        render_options = options_with_auto_load_bundle(raw_options)
-
-        cache_key = ppr_cache_key(component_name, render_options)
-        raw_cache_options = render_options[:cache_options] || {}
-        cache_write_options = ReactOnRailsPro::Cache.cache_write_options(raw_cache_options)
-
-        cached_entry = Rails.cache.read(cache_key, cache_write_options)
-
-        if cached_entry.is_a?(Hash) && cached_entry[:shell_html] && cached_entry[:postponed_state]
-          ppr_cache_hit(component_name, render_options, cached_entry, cache_write_options, &block)
-        else
-          ppr_cache_miss(component_name, render_options, cache_key, cache_write_options, &block)
-        end
+        ppr_render_with_cache(component_name, options_with_auto_load_bundle(raw_options), &block)
       end
     end
 
     private
 
-    def ppr_cache_key(component_name, render_options)
+    def ppr_render_with_cache(component_name, render_options, &block)
+      cache_key, write_opts = ppr_cache_key_and_options(component_name, render_options)
+      cached = Rails.cache.read(cache_key, write_opts)
+
+      if ppr_valid_cache?(cached)
+        ppr_cache_hit(component_name, render_options, cached, &block)
+      else
+        ppr_cache_miss(component_name, render_options, cache_key, write_opts, &block)
+      end
+    end
+
+    def ppr_cache_key_and_options(component_name, render_options)
       raw_cache_key = render_options[:cache_key]
       cache_key_value = raw_cache_key.respond_to?(:call) ? raw_cache_key.call : raw_cache_key
 
-      ReactOnRailsPro::Cache.react_component_cache_key(
+      key = ReactOnRailsPro::Cache.react_component_cache_key(
         component_name,
-        render_options.merge(
-          cache_key: ["ppr_react_component", cache_key_value],
-          prerender: true
-        )
+        render_options.merge(cache_key: ['ppr_react_component', cache_key_value], prerender: true)
       )
+      write_opts = ReactOnRailsPro::Cache.cache_write_options(render_options[:cache_options] || {})
+      [key, write_opts]
     end
 
-    def ppr_cache_hit(component_name, render_options, cached_entry, _cache_write_options, &block)
+    def ppr_valid_cache?(entry)
+      entry.is_a?(Hash) && entry[:shell_html] && entry[:postponed_state]
+    end
+
+    def ppr_cache_hit(component_name, render_options, cached_entry)
       load_pack_for_cached_react_component(component_name, render_options)
 
-      shell_html = cached_entry[:shell_html]
-      postponed_state = cached_entry[:postponed_state]
-
-      props = block ? yield : {}
+      props = block_given? ? yield : {}
       options = render_options.merge(props:, prerender: true, skip_prerender_cache: true)
 
-      on_complete = options.delete(:on_complete)
-      first_resume_chunk = consumer_stream_async(on_complete:) do
-        ppr_resume_stream(component_name, options, postponed_state)
-      end
-      @main_output_queue.enqueue(first_resume_chunk) if first_resume_chunk.present?
-
-      shell_html.html_safe
+      ppr_schedule_resume(component_name, options, cached_entry[:postponed_state])
+      ActiveSupport::SafeBuffer.new(cached_entry[:shell_html])
     end
 
     def ppr_cache_miss(component_name, render_options, cache_key, cache_write_options)
       props = yield
-      options = render_options.merge(
-        props:,
-        prerender: true,
-        skip_prerender_cache: true
-      )
-
+      options = render_options.merge(props:, prerender: true, skip_prerender_cache: true)
       shell_html, postponed_state = ppr_prerender(component_name, options)
 
-      normalized_cache_tags = ReactOnRailsPro::Cache.normalize_tags(render_options[:cache_tags])
-      Rails.cache.write(
-        cache_key,
-        { shell_html:, postponed_state: },
-        cache_write_options
-      )
-      ReactOnRailsPro::Cache.register_normalized_tags(normalized_cache_tags, cache_key, cache_write_options)
+      ppr_write_cache(cache_key, shell_html, postponed_state, render_options, cache_write_options)
+      ppr_schedule_resume(component_name, options, postponed_state)
+      ActiveSupport::SafeBuffer.new(shell_html)
+    end
 
+    def ppr_schedule_resume(component_name, options, postponed_state)
       on_complete = options.delete(:on_complete)
-      first_resume_chunk = consumer_stream_async(on_complete:) do
+      first_chunk = consumer_stream_async(on_complete:) do
         ppr_resume_stream(component_name, options, postponed_state)
       end
-      @main_output_queue.enqueue(first_resume_chunk) if first_resume_chunk.present?
+      @main_output_queue.enqueue(first_chunk) if first_chunk.present?
+    end
 
-      shell_html.html_safe
+    def ppr_write_cache(key, shell_html, postponed_state, render_options, write_opts)
+      Rails.cache.write(key, { shell_html:, postponed_state: }, write_opts)
+      tags = ReactOnRailsPro::Cache.normalize_tags(render_options[:cache_tags])
+      ReactOnRailsPro::Cache.register_normalized_tags(tags, key, write_opts)
     end
 
     def ppr_prerender(component_name, options)
-      prerender_options = options.merge(render_mode: :ppr_prerender)
-      result = internal_react_component(component_name, prerender_options)
+      result = internal_react_component(component_name, options.merge(render_mode: :ppr_prerender))
 
-      buffer = +""
-      result[:result].each_chunk do |chunk_json|
-        buffer << (chunk_json["html"] || "")
-      end
+      buffer = +''
+      result[:result].each_chunk { |chunk| buffer << (chunk['html'] || '') }
 
       ppr_parse_prerender_response(buffer)
     end
 
     def ppr_parse_prerender_response(buffer)
-      delimiter_index = buffer.index(PPR_POSTPONED_STATE_DELIMITER)
-      unless delimiter_index
+      idx = buffer.index(PPR_POSTPONED_STATE_DELIMITER)
+      raise ReactOnRailsPro::Error, ppr_missing_delimiter_message unless idx
+
+      postponed = buffer[(idx + PPR_POSTPONED_STATE_DELIMITER.length)..]&.strip
+      if postponed.blank?
         raise ReactOnRailsPro::Error,
-              "PPR prerender response missing #{PPR_POSTPONED_STATE_DELIMITER} delimiter. " \
-              "Ensure the Node renderer returns shell HTML followed by the delimiter and PostponedState JSON."
+              'PPR prerender response has empty PostponedState after delimiter.'
       end
 
-      shell_html = buffer[0...delimiter_index]
-      postponed_state_json = buffer[(delimiter_index + PPR_POSTPONED_STATE_DELIMITER.length)..]&.strip
+      [buffer[0...idx], postponed]
+    end
 
-      if postponed_state_json.blank?
-        raise ReactOnRailsPro::Error,
-              "PPR prerender response has empty PostponedState after delimiter."
-      end
-
-      [shell_html, postponed_state_json]
+    def ppr_missing_delimiter_message
+      "PPR prerender response missing #{PPR_POSTPONED_STATE_DELIMITER} delimiter. " \
+        'Ensure the Node renderer returns shell HTML followed by the delimiter and PostponedState JSON.'
     end
 
     def ppr_resume_stream(component_name, options, postponed_state)
-      resume_options = options.merge(
-        render_mode: :ppr_resume,
-        ppr_postponed_state: postponed_state
+      result = internal_react_component(
+        component_name,
+        options.merge(render_mode: :ppr_resume, ppr_postponed_state: postponed_state)
       )
-      result = internal_react_component(component_name, resume_options)
       render_opts = result[:render_options]
-      result[:result].transform do |chunk_json_result|
-        html = chunk_json_result["html"] || ""
-        console_script = chunk_json_result["consoleReplayScript"]
-        result_console_script = render_opts.replay_console ? wrap_console_script_with_nonce(console_script) : ""
-        compose_react_component_html_with_spec_and_console("", html, result_console_script)
+
+      result[:result].transform do |chunk|
+        html = chunk['html'] || ''
+        console = render_opts.replay_console ? wrap_console_script_with_nonce(chunk['consoleReplayScript']) : ''
+        compose_react_component_html_with_spec_and_console('', html, console)
       end
     end
   end
