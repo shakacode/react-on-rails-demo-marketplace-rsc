@@ -64,10 +64,14 @@ module PPRPatches
     end
 
     def base_render_function(render_options)
-      if render_options.ppr_prerender? then 'pprPrerenderServerRenderedReactComponent'
-      elsif render_options.ppr_resume? then 'pprResumeServerRenderedReactComponent'
-      elsif render_options.streaming? then 'streamServerRenderedReactComponent'
-      else 'serverRenderReactComponent'
+      if render_options.ppr_prerender?
+        'pprPrerenderServerRenderedReactComponent'
+      elsif render_options.ppr_resume?
+        'pprResumeServerRenderedReactComponent'
+      elsif ReactOnRailsPro.configuration.enable_rsc_support && render_options.streaming?
+        'streamServerRenderedReactComponent'
+      else
+        'serverRenderReactComponent'
       end
     end
 
