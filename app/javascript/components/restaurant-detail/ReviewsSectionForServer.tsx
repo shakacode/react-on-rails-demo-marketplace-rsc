@@ -46,7 +46,7 @@ function RatingDistribution({ reviews, averageRating, reviewCount }: { reviews: 
       <div className="text-center sm:text-left">
         <div className="text-5xl font-extrabold text-slate-900 leading-none">{averageRating.toFixed(1)}</div>
         <Stars value={Math.round(averageRating)} />
-        <div className="text-xs text-slate-500 mt-1">{reviewCount.toLocaleString()} total reviews</div>
+        <div className="text-xs text-slate-500 mt-1">{reviewCount.toLocaleString('en-US')} total reviews</div>
       </div>
       <div className="space-y-1.5">
         {buckets.map(({ rating, count }) => (
@@ -105,7 +105,7 @@ export function ReviewsSection({ reviews, averageRating, reviewCount }: Props) {
           <p className="text-xs uppercase tracking-[0.18em] text-amber-600 font-semibold mb-1">From Our Guests</p>
           <h2 className="text-3xl font-bold text-slate-900">Reviews</h2>
         </div>
-        <p className="text-sm text-slate-500">Most recent {reviews.length} of {reviewCount.toLocaleString()}</p>
+        <p className="text-sm text-slate-500">Most recent {reviews.length} of {reviewCount.toLocaleString('en-US')}</p>
       </div>
       <RatingDistribution reviews={reviews} averageRating={averageRating} reviewCount={reviewCount} />
       <div className="grid md:grid-cols-2 gap-4">
