@@ -50,7 +50,7 @@ function RatingDistribution({ reviews, averageRating, reviewCount }: { reviews: 
       <div className="text-center sm:text-left">
         <div className="text-5xl font-extrabold text-slate-900 leading-none">{averageRating.toFixed(1)}</div>
         <Stars value={Math.round(averageRating)} />
-        <div className="text-xs text-slate-500 mt-1">{reviewCount.toLocaleString()} total reviews</div>
+        <div className="text-xs text-slate-500 mt-1">{reviewCount.toLocaleString('en-US')} total reviews</div>
       </div>
       <div className="space-y-1.5">
         {buckets.map(({ rating, count }) => (

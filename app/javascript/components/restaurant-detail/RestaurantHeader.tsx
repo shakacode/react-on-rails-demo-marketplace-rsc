@@ -102,7 +102,7 @@ export function RestaurantHeader({ restaurant, stats, hours, variant }: Props) {
             <span className="inline-flex items-center gap-1.5">
               <StarRow value={restaurant.average_rating} />
               <span className="font-semibold">{restaurant.average_rating.toFixed(1)}</span>
-              <span className="text-slate-300">({restaurant.review_count.toLocaleString()} reviews)</span>
+              <span className="text-slate-300">({restaurant.review_count.toLocaleString('en-US')} reviews)</span>
             </span>
             <span className="inline-flex items-center gap-1.5 text-slate-200">
               <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
