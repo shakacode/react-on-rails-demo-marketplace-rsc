@@ -40,11 +40,20 @@ shift 2
 # Run preflight
 "$SCRIPT_DIR/perf-preflight.sh"
 
-# Port configuration — use env vars or config defaults
+# Port configuration — use env vars or config defaults.
+# These must match the ports in abtests.config.ts when not overridden via env.
 CONTROL_PORT="${SHAKAPERF_CONTROL_PORT:-4020}"
 EXPERIMENT_PORT="${SHAKAPERF_EXPERIMENT_PORT:-4030}"
 CONTROL_RENDERER_PORT="${SHAKAPERF_CONTROL_RENDERER_PORT:-4820}"
 EXPERIMENT_RENDERER_PORT="${SHAKAPERF_EXPERIMENT_RENDERER_PORT:-4830}"
+
+# Verify chosen ports are not already in use before starting servers
+for port in "$CONTROL_PORT" "$EXPERIMENT_PORT" "$CONTROL_RENDERER_PORT" "$EXPERIMENT_RENDERER_PORT"; do
+  if curl -s -o /dev/null "http://localhost:$port" 2>/dev/null; then
+    echo "ERROR: Port $port is already in use. Stop the process on that port or set SHAKAPERF_*_PORT env vars." >&2
+    exit 2
+  fi
+done
 
 echo "==> Comparing $CONTROL_REF vs $EXPERIMENT_REF"
 echo "    Control:    port $CONTROL_PORT (renderer $CONTROL_RENDERER_PORT)"
@@ -54,8 +63,20 @@ echo ""
 # Resolve refs to full SHAs for determinism
 cd "$PROJECT_ROOT"
 git fetch origin --quiet
-CONTROL_SHA=$(git rev-parse "$CONTROL_REF")
-EXPERIMENT_SHA=$(git rev-parse "$EXPERIMENT_REF")
+# Resolve refs: prefer origin/<ref> for branch names so we use the freshly
+# fetched remote state, not a potentially stale local branch pointer.
+resolve_ref() {
+  local ref="$1"
+  # Try origin/<ref> first (works for branch names like "main")
+  if git rev-parse --verify "origin/$ref" &>/dev/null; then
+    git rev-parse "origin/$ref"
+  else
+    # Fall back to the ref as given (works for SHAs, tags, full refs)
+    git rev-parse "$ref"
+  fi
+}
+CONTROL_SHA=$(resolve_ref "$CONTROL_REF")
+EXPERIMENT_SHA=$(resolve_ref "$EXPERIMENT_REF")
 echo "    Control SHA:    $CONTROL_SHA"
 echo "    Experiment SHA: $EXPERIMENT_SHA"
 echo ""
