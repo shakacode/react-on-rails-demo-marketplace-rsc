@@ -26,8 +26,9 @@ echo "==> Running ShakaPerf audit..."
 echo "    Results will be written to audit-results/"
 echo ""
 
-pnpm exec shaka-perf audit "$@"
-exit_code=$?
+# Capture exit code without triggering set -e
+exit_code=0
+pnpm exec shaka-perf audit "$@" || exit_code=$?
 
 if [[ $exit_code -eq 0 ]]; then
   echo ""

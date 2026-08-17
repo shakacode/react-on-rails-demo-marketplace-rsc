@@ -24,9 +24,9 @@ echo "==> Running ShakaPerf compare..."
 echo "    Results will be written to compare-results/"
 echo ""
 
-# Pass through any extra arguments (--control-url, --experiment-url, etc.)
-pnpm exec shaka-perf compare "$@"
-exit_code=$?
+# Capture exit code without triggering set -e
+exit_code=0
+pnpm exec shaka-perf compare "$@" || exit_code=$?
 
 if [[ $exit_code -eq 0 ]]; then
   echo ""

@@ -65,24 +65,39 @@ WORKTREE_BASE="$PROJECT_ROOT/.perf-worktrees"
 CONTROL_DIR="$WORKTREE_BASE/control-${CONTROL_SHA:0:8}"
 EXPERIMENT_DIR="$WORKTREE_BASE/experiment-${EXPERIMENT_SHA:0:8}"
 
+# Track PIDs in files for reliable cleanup
+PID_DIR="$WORKTREE_BASE/.pids"
+
 cleanup() {
   echo "==> Cleaning up..."
-  # Kill backgrounded servers
-  kill $CONTROL_PID $CONTROL_RENDERER_PID $EXPERIMENT_PID $EXPERIMENT_RENDERER_PID 2>/dev/null || true
-  wait $CONTROL_PID $CONTROL_RENDERER_PID $EXPERIMENT_PID $EXPERIMENT_RENDERER_PID 2>/dev/null || true
+  # Kill backgrounded servers using saved PID files
+  for pidfile in "$PID_DIR"/*.pid; do
+    if [[ -f "$pidfile" ]]; then
+      local pid
+      pid=$(cat "$pidfile")
+      kill "$pid" 2>/dev/null || true
+    fi
+  done
+  # Wait briefly for processes to exit
+  sleep 2
+  # Force-kill any remaining
+  for pidfile in "$PID_DIR"/*.pid; do
+    if [[ -f "$pidfile" ]]; then
+      local pid
+      pid=$(cat "$pidfile")
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+  done
   # Remove worktrees
   git worktree remove --force "$CONTROL_DIR" 2>/dev/null || true
   git worktree remove --force "$EXPERIMENT_DIR" 2>/dev/null || true
+  rm -rf "$PID_DIR" 2>/dev/null || true
   rmdir "$WORKTREE_BASE" 2>/dev/null || true
 }
 
-CONTROL_PID=""
-CONTROL_RENDERER_PID=""
-EXPERIMENT_PID=""
-EXPERIMENT_RENDERER_PID=""
 trap cleanup EXIT
 
-mkdir -p "$WORKTREE_BASE"
+mkdir -p "$WORKTREE_BASE" "$PID_DIR"
 
 echo "==> Creating worktrees..."
 git worktree add --detach "$CONTROL_DIR" "$CONTROL_SHA"
@@ -99,14 +114,14 @@ build_side() {
   echo "    $label build complete."
 }
 
-# Start function — starts Rails + node renderer
+# Start function — starts Rails + node renderer, writes PIDs to files
 start_side() {
   local dir="$1" port="$2" renderer_port="$3" label="$4"
   cd "$dir"
 
   echo "==> Starting $label renderer on port $renderer_port..."
   NODE_ENV=production RENDERER_PORT="$renderer_port" node node-renderer.js &
-  local renderer_pid=$!
+  echo $! > "$PID_DIR/${label}-renderer.pid"
 
   echo "==> Starting $label Rails on port $port..."
   RAILS_ENV=production \
@@ -115,10 +130,8 @@ start_side() {
     PORT="$port" \
     RENDERER_PORT="$renderer_port" \
     RENDERER_URL="http://localhost:$renderer_port" \
-    bundle exec rails server -p "$port" -b 0.0.0.0 &
-  local rails_pid=$!
-
-  echo "$renderer_pid $rails_pid"
+    bundle exec rails server -p "$port" -b 127.0.0.1 &
+  echo $! > "$PID_DIR/${label}-rails.pid"
 }
 
 # Build both sides
@@ -126,8 +139,8 @@ build_side "$CONTROL_DIR" "control"
 build_side "$EXPERIMENT_DIR" "experiment"
 
 # Start both sides
-read CONTROL_RENDERER_PID CONTROL_PID <<< "$(start_side "$CONTROL_DIR" "$CONTROL_PORT" "$CONTROL_RENDERER_PORT" "control")"
-read EXPERIMENT_RENDERER_PID EXPERIMENT_PID <<< "$(start_side "$EXPERIMENT_DIR" "$EXPERIMENT_PORT" "$EXPERIMENT_RENDERER_PORT" "experiment")"
+start_side "$CONTROL_DIR" "$CONTROL_PORT" "$CONTROL_RENDERER_PORT" "control"
+start_side "$EXPERIMENT_DIR" "$EXPERIMENT_PORT" "$EXPERIMENT_RENDERER_PORT" "experiment"
 
 # Wait for servers to be ready
 echo "==> Waiting for servers..."
@@ -149,12 +162,12 @@ echo ""
 echo "==> Both servers running. Starting comparison..."
 cd "$PROJECT_ROOT"
 
-# Run compare with explicit URLs
+# Capture exit code without triggering set -e
+exit_code=0
 pnpm exec shaka-perf compare \
   --controlURL "http://localhost:$CONTROL_PORT" \
   --experimentURL "http://localhost:$EXPERIMENT_PORT" \
-  "$@"
-exit_code=$?
+  "$@" || exit_code=$?
 
 if [[ $exit_code -eq 0 ]]; then
   echo ""

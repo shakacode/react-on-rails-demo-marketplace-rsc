@@ -28,10 +28,12 @@ if ! pnpm exec shaka-perf --version &>/dev/null; then
   missing=1
 fi
 
-# Playwright browsers
-if ! pnpm exec playwright install --dry-run chromium &>/dev/null 2>&1; then
-  # Playwright doesn't have --dry-run; check if the browser binary exists
-  if ! pnpm exec playwright chromium --version &>/dev/null 2>&1; then
+# Playwright Chromium browser — check if the binary is installed by listing
+# browsers and looking for chromium in Playwright's registry.
+if ! pnpm exec playwright install --dry-run 2>&1 | grep -qi "chromium" 2>/dev/null; then
+  # Fallback: try to detect installed browsers directory
+  chromium_dir=$(find "$(pnpm exec node -e 'console.log(require("playwright-core").chromium.executablePath())' 2>/dev/null | xargs dirname 2>/dev/null)" -maxdepth 0 -type d 2>/dev/null || true)
+  if [[ -z "$chromium_dir" ]]; then
     echo "MISSING: Playwright Chromium browser — run: pnpm exec playwright install chromium" >&2
     missing=1
   fi
@@ -41,10 +43,12 @@ fi
 check psql "Install PostgreSQL (brew install postgresql or your OS package manager)"
 
 # Platform check
-if [[ "$(uname -s)" == "MINGW"* ]] || [[ "$(uname -s)" == "CYGWIN"* ]]; then
-  echo "WARNING: ShakaPerf requires macOS or Linux (native addon via node-gyp). Windows is not supported." >&2
-  missing=1
-fi
+case "$(uname -s)" in
+  MINGW*|CYGWIN*|MSYS*)
+    echo "WARNING: ShakaPerf requires macOS or Linux (native addon via node-gyp). Windows is not supported." >&2
+    missing=1
+    ;;
+esac
 
 if [[ $missing -ne 0 ]]; then
   echo "" >&2
