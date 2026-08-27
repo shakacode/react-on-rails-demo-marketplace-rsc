@@ -84,7 +84,11 @@ metrics:
 | JS heap (post-load / post-scroll) | `usedJSHeapSize` after a forced GC |
 
 A lane that declares an interaction selector fails loudly when the target is
-missing instead of silently reporting no INP.
+missing instead of silently reporting no INP. The scroll cycle likewise
+asserts completion — its step budget adapts to the measured document height,
+`scrollCycleComplete`/`scrollCoverage` land in the results JSON, and a
+traversal that cannot reach the bottom and return fails the lane rather than
+recording partial bottom-of-page metrics.
 
 ### Compare Results: `pnpm vitals:compare`
 

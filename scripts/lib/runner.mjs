@@ -205,7 +205,16 @@ async function measureInContext(context, pageConfig, options, pagePath, url) {
 }
 
 const SCROLL_STEP_PAUSE_MS = 80;
-const SCROLL_MAX_STEPS = 150; // safety valve for very long (?count=500) pages
+// Absolute safety valve only. The per-leg step allowance ADAPTS to the
+// measured document height (2x headroom, re-derived every step because a
+// virtualized list corrects its geometry mid-scroll), so a taller page gets
+// more steps instead of a silent truncation. A page needing more than the
+// hard cap (~an hour-long fling) fails the lane loudly instead.
+const SCROLL_HARD_CAP_STEPS = 1200;
+
+function stepAllowance(docHeight, step) {
+  return Math.min(SCROLL_HARD_CAP_STEPS, Math.ceil(docHeight / step) * 2 + 10);
+}
 
 async function countDomNodes(page) {
   return page.evaluate(() => document.getElementsByTagName('*').length);
@@ -235,14 +244,24 @@ async function runScrollCycle(page, cdp) {
   const started = Date.now();
 
   // Down. The document can GROW while a virtualized list corrects its
-  // geometry, so the bottom is re-read every step.
+  // geometry, so both the bottom and the step allowance are re-derived every
+  // step.
   let downSteps = 0;
-  while (downSteps < SCROLL_MAX_STEPS) {
+  let reachedBottom = false;
+  let maxBottomSeen = 0;
+  let docHeight = 0;
+  for (;;) {
     const { bottom, max } = await page.evaluate(() => ({
       bottom: window.scrollY + window.innerHeight,
       max: document.documentElement.scrollHeight,
     }));
-    if (bottom >= max - 4) break;
+    docHeight = max;
+    if (bottom > maxBottomSeen) maxBottomSeen = bottom;
+    if (bottom >= max - 4) {
+      reachedBottom = true;
+      break;
+    }
+    if (downSteps >= stepAllowance(max, step)) break;
     await page.mouse.wheel({ deltaY: step });
     downSteps += 1;
     await sleep(SCROLL_STEP_PAUSE_MS);
@@ -252,9 +271,14 @@ async function runScrollCycle(page, cdp) {
 
   // And back up.
   let upSteps = 0;
-  while (upSteps < SCROLL_MAX_STEPS) {
+  let reachedTop = false;
+  for (;;) {
     const y = await page.evaluate(() => window.scrollY);
-    if (y <= 4) break;
+    if (y <= 4) {
+      reachedTop = true;
+      break;
+    }
+    if (upSteps >= stepAllowance(docHeight, step)) break;
     await page.mouse.wheel({ deltaY: -step });
     upSteps += 1;
     await sleep(SCROLL_STEP_PAUSE_MS);
@@ -262,6 +286,18 @@ async function runScrollCycle(page, cdp) {
   await sleep(300); // let observers flush before the phase flag drops
   await page.evaluate(() => window.__vitals.endScrollPhase());
   const scrollDuration = Date.now() - started;
+
+  // An incomplete traversal must fail the lane (the R1 isolation records it),
+  // never masquerade as bottom-of-page numbers.
+  const scrollCoverage = docHeight > 0 ? Math.min(1, maxBottomSeen / docHeight) : 0;
+  if (!reachedBottom || !reachedTop) {
+    throw new Error(
+      `Scroll cycle incomplete (reachedBottom=${reachedBottom}, reachedTop=${reachedTop}): ` +
+        `covered ${Math.round(maxBottomSeen)} of ${Math.round(docHeight)}px ` +
+        `(${(scrollCoverage * 100).toFixed(1)}%) in ${downSteps}+${upSteps} steps of ${step}px — ` +
+        `bottom-of-page metrics would be fiction, so the lane fails instead.`,
+    );
+  }
 
   const domNodesPostScroll = await countDomNodes(page);
   const heapUsedPostScroll = await sampleHeapUsed(page, cdp);
@@ -283,6 +319,8 @@ async function runScrollCycle(page, cdp) {
     heapUsedPostScroll,
     scrollDuration,
     scrollSteps: downSteps + upSteps,
+    scrollCycleComplete: 1,
+    scrollCoverage,
   };
 }
 

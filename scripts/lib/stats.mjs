@@ -50,7 +50,7 @@ export function aggregateRuns(runs, warmupCount) {
     'heapUsedPostLoad', 'heapUsedPostScroll',
     'scrollLongTaskTime', 'scrollLongTaskCount',
     'scrollLoafTime', 'scrollLoafCount', 'scrollLoafMax',
-    'scrollDuration', 'scrollSteps',
+    'scrollDuration', 'scrollSteps', 'scrollCycleComplete', 'scrollCoverage',
   ];
 
   const result = {};

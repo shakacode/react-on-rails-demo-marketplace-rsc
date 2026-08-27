@@ -75,7 +75,13 @@ the lanes could never record INP.
   and long animation frames during the cycle are reported as scroll-phase
   metrics, **not** TBT), DOM-node counts (post-hydration / at bottom /
   post-scroll), GC'd JS heap (post-load / post-scroll), and a real Helpful
-  click for INP after the cycle.
+  click for INP after the cycle. The cycle asserts completion: the
+  step budget adapts to the measured document height, coverage is recorded per
+  run (`scrollCycleComplete`/`scrollCoverage` in the JSON), and a traversal
+  that cannot reach the bottom and return fails the lane instead of reporting
+  partial numbers as "bottom-of-page". Every published lane completed
+  (recorded steps: ≤224 of an adaptive budget; tallest measured page,
+  mobile `?count=500`, is ~273k px ≈ 146 steps).
 - Run matrix and iteration counts are stated with each table; medians shown,
   p75 in the JSON. Raw results: `.vitals-results/*-desktop-default.json`,
   `*-mobile-default.json`, `*-desktop-throttle.json`, `*-count500.json`,
