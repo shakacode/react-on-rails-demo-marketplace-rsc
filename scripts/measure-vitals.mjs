@@ -80,63 +80,66 @@ async function main() {
 
   const userAgent = await browser.userAgent();
   const allResults = {};
+  // A lane that throws (e.g. a declared interaction selector that cannot be
+  // found — deliberately a hard failure per lane) is recorded here instead of
+  // aborting the whole run: remaining lanes still measure, collected results
+  // are still written, and the process exits non-zero at the end.
+  const failedLanes = {};
 
-  for (const key of pageKeys) {
-    const config = PAGES[key];
-    if (!config) {
-      console.warn(`Skipping unknown page key: ${key}`);
-      continue;
-    }
+  try {
+    for (const key of pageKeys) {
+      const config = PAGES[key];
+      if (!config) {
+        console.warn(`Skipping unknown page key: ${key}`);
+        continue;
+      }
 
-    console.log(`Measuring ${config.label} (${iterations} iterations)...`);
-    const runs = [];
+      console.log(`Measuring ${config.label} (${iterations} iterations)...`);
+      const runs = [];
 
-    for (let i = 0; i < iterations; i++) {
-      const isWarmup = i < warmup;
-      const prefix = isWarmup ? `  [warmup ${i + 1}/${warmup}]` : `  [run ${i - warmup + 1}/${iterations - warmup}]`;
+      try {
+        for (let i = 0; i < iterations; i++) {
+          const isWarmup = i < warmup;
+          const prefix = isWarmup ? `  [warmup ${i + 1}/${warmup}]` : `  [run ${i - warmup + 1}/${iterations - warmup}]`;
 
-      if (verbose) console.log(`${prefix} starting...`);
+          if (verbose) console.log(`${prefix} starting...`);
 
-      const result = await measurePage(browser, config, {
-        baseUrl,
-        timeout: DEFAULTS.timeout,
-        throttle: args.throttle,
-        verbose,
-        mobile: args.mobile,
-        query: args.query,
-      });
+          const result = await measurePage(browser, config, {
+            baseUrl,
+            timeout: DEFAULTS.timeout,
+            throttle: args.throttle,
+            verbose,
+            mobile: args.mobile,
+            query: args.query,
+          });
 
-      runs.push(result);
+          runs.push(result);
 
-      if (verbose) {
-        console.log(`${prefix} FCP=${result.fcp?.toFixed(0)}ms LCP=${result.lcp?.toFixed(0)}ms Hydration=${result.hydrationDuration?.toFixed(0)}ms`);
-      } else {
-        process.stdout.write('.');
+          if (verbose) {
+            console.log(`${prefix} FCP=${result.fcp?.toFixed(0)}ms LCP=${result.lcp?.toFixed(0)}ms Hydration=${result.hydrationDuration?.toFixed(0)}ms`);
+          } else {
+            process.stdout.write('.');
+          }
+        }
+        if (!verbose) console.log(' done');
+      } catch (err) {
+        if (!verbose) console.log('');
+        console.error(`  Lane ${key} FAILED after ${runs.length}/${iterations} run(s): ${err.message}`);
+        failedLanes[key] = { error: err.message, completedRuns: runs.length };
+        continue;
+      }
+
+      const aggregated = aggregateRuns(runs, warmup);
+      if (aggregated) {
+        aggregated._label = config.label;
+        allResults[key] = aggregated;
       }
     }
-    if (!verbose) console.log(' done');
-
-    const aggregated = aggregateRuns(runs, warmup);
-    if (aggregated) {
-      aggregated._label = config.label;
-      allResults[key] = aggregated;
-    }
+  } finally {
+    await browser.close().catch(() => {});
   }
 
-  await browser.close();
-
-  // Display comparison table
-  console.log('\n' + formatComparisonTable(allResults));
-
-  // Display JS breakdowns if verbose
-  if (verbose) {
-    for (const [version, data] of Object.entries(allResults)) {
-      const breakdown = formatJsBreakdownTable(version, data);
-      if (breakdown) console.log(breakdown);
-    }
-  }
-
-  // Save JSON output
+  // Save JSON output first — a formatting hiccup must not lose the data.
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const outputDir = join(process.cwd(), '.vitals-results');
   const outputFile = args.output || join(outputDir, `${timestamp}${args.label ? '-' + args.label : ''}.json`);
@@ -160,10 +163,33 @@ async function main() {
     const { _label, ...metrics } = data;
     output.results[key] = metrics;
   }
+  if (Object.keys(failedLanes).length > 0) {
+    output.failures = failedLanes;
+  }
 
   await mkdir(outputDir, { recursive: true });
   await writeFile(outputFile, JSON.stringify(output, null, 2));
+
+  // Display comparison table
+  console.log('\n' + formatComparisonTable(allResults));
+
+  // Display JS breakdowns if verbose
+  if (verbose) {
+    for (const [version, data] of Object.entries(allResults)) {
+      const breakdown = formatJsBreakdownTable(version, data);
+      if (breakdown) console.log(breakdown);
+    }
+  }
+
+  for (const [key, failure] of Object.entries(failedLanes)) {
+    console.error(`FAILED lane ${key}: ${failure.error} (after ${failure.completedRuns} completed run(s))`);
+  }
+
   console.log(`\nResults saved to: ${outputFile}`);
+
+  if (Object.keys(failedLanes).length > 0) {
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {

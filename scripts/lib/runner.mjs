@@ -16,6 +16,18 @@ export async function measurePage(browser, pageConfig, options) {
   const url = `${baseUrl}${pagePath}`;
 
   const context = await browser.createBrowserContext();
+  try {
+    return await measureInContext(context, pageConfig, options, pagePath, url);
+  } finally {
+    // A lane failure (e.g. missing declared interaction target) must not leak
+    // the per-run incognito context — the caller keeps the browser alive for
+    // the remaining lanes.
+    await context.close().catch(() => {});
+  }
+}
+
+async function measureInContext(context, pageConfig, options, pagePath, url) {
+  const { timeout, throttle, verbose, mobile } = options;
   const page = await context.newPage();
 
   if (mobile) {
@@ -178,8 +190,6 @@ export async function measurePage(browser, pageConfig, options) {
   const resources = Array.from(jsResources.values());
   const jsTransferSize = resources.reduce((sum, r) => sum + r.transferSize, 0);
   const jsDecodedSize = resources.reduce((sum, r) => sum + r.decodedBodySize, 0);
-
-  await context.close();
 
   return {
     ...vitals,
