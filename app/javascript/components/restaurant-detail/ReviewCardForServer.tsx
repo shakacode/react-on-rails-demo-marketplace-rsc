@@ -6,31 +6,8 @@ import React from 'react';
 import { Review } from './types';
 import { renderSanitizedMarkdown } from '../../utils/sanitizeAndRender';
 import { HelpfulButton } from './HelpfulButtonForServer';
+import { avatarFor, Stars } from './reviewCardShared';
 
-const AVATAR_PALETTE = [
-  ['bg-rose-100',    'text-rose-700'],
-  ['bg-amber-100',   'text-amber-700'],
-  ['bg-emerald-100', 'text-emerald-700'],
-  ['bg-sky-100',     'text-sky-700'],
-  ['bg-fuchsia-100', 'text-fuchsia-700'],
-  ['bg-orange-100',  'text-orange-700'],
-];
-
-function avatarFor(reviewer: string) {
-  const initial = reviewer.trim().charAt(0).toUpperCase();
-  let h = 0;
-  for (let i = 0; i < reviewer.length; i++) h = (h + reviewer.charCodeAt(i)) % AVATAR_PALETTE.length;
-  return { initial, palette: AVATAR_PALETTE[h] };
-}
-
-function Stars({ value }: { value: number }) {
-  return (
-    <span className="text-amber-500 text-sm" aria-label={`${value} of 5`}>
-      {'★'.repeat(value)}
-      <span className="text-slate-300">{'★'.repeat(5 - value)}</span>
-    </span>
-  );
-}
 
 export function RatingDistribution({ reviews, averageRating, reviewCount }: { reviews: Review[]; averageRating: number; reviewCount: number }) {
   const buckets = [5, 4, 3, 2, 1].map((rating) => ({
