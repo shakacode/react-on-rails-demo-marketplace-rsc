@@ -33,7 +33,10 @@ is a 2-column `md:grid-cols-2` grid and a flat Virtuoso stacks one item per
 row. `VirtuosoGrid` was rejected — it requires same-size items and review
 heights vary ~5x.
 
-Experiment knobs (defaults preserve the benchmark story):
+Experiment knobs (defaults preserve the benchmark story; measurement-only —
+they are honored only when the Rails server is started with
+`ENABLE_BENCH_PARAMS=1`, as the flow below does, and are no-ops on the public
+deployment):
 
 - `?count=` — synthesized review count, default 40, clamped to 500. The
   generator consumes its seeded rng in build order, so the first 40 reviews of
@@ -341,8 +344,8 @@ of "ship data + code". Documented here as the designed-but-not-built option.
 ```bash
 SHAKAPACKER_ASSETS_BUNDLER=webpack SECRET_KEY_BASE=... bin/build-production
 NODE_ENV=production node node-renderer.js &          # port 3800 (or RENDERER_PORT)
-RAILS_ENV=production RAILS_SERVE_STATIC_FILES=true SECRET_KEY_BASE=... \
-  bundle exec rails server -p 3000 &
+ENABLE_BENCH_PARAMS=1 RAILS_ENV=production RAILS_SERVE_STATIC_FILES=true SECRET_KEY_BASE=... \
+  bundle exec rails server -p 3000 &   # ENABLE_BENCH_PARAMS=1 arms ?count/?initial
 pnpm vitals -- --pages restaurant-ssr,restaurant-client,restaurant-rsc,restaurant-ssr-virtual,restaurant-rsc-virtual
 pnpm vitals -- --pages restaurant-rsc,restaurant-rsc-virtual --throttle
 pnpm vitals -- --pages restaurant-ssr,restaurant-rsc,restaurant-ssr-virtual,restaurant-rsc-virtual --query "count=500"

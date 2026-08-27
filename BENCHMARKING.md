@@ -66,7 +66,7 @@ The server must be running before executing any benchmarking script.
 | `--label` | `-l` | | Label for the output JSON file |
 | `--output` | `-o` | auto-generated | Custom output file path |
 | `--mobile` | | `false` | Emulate a phone (390×844, DPR 3, touch, mobile UA) |
-| `--query` | | | Query string appended to every measured path (e.g. `--query "count=500"`) |
+| `--query` | | | Query string appended to every measured path (e.g. `--query "count=500"`). The restaurant `count`/`initial` knobs are measurement-only: the Rails server must be started with `ENABLE_BENCH_PARAMS=1` or they are ignored |
 
 ### Scroll-heavy lanes (issue #184)
 

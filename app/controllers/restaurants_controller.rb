@@ -20,6 +20,10 @@ class RestaurantsController < ApplicationController
   # synthesized review count for measurement (default 40 keeps the benchmark
   # story untouched); ?initial= sets how many rows of two cards the server
   # renders into the HTML (react-virtuoso's initialItemCount; 0 = none).
+  # Measurement-only: both knobs are honored only when the server was started
+  # with ENABLE_BENCH_PARAMS=1 (the documented local benchmark flow) and are
+  # no-ops on the public deployment.
+  BENCH_PARAMS_ENV = "ENABLE_BENCH_PARAMS"
   MAX_REVIEWS_COUNT = 500
   DEFAULT_INITIAL_ROWS = 3
   MAX_INITIAL_ROWS = 20
@@ -85,7 +89,13 @@ class RestaurantsController < ApplicationController
     detail.merge(virtualization: { initial_rows: initial_rows_param })
   end
 
+  def bench_params_enabled?
+    ENV[BENCH_PARAMS_ENV] == "1"
+  end
+
   def reviews_count_param
+    return RestaurantDetailData::DEFAULT_REVIEWS_COUNT unless bench_params_enabled?
+
     count = Integer(params[:count], 10, exception: false)
     return RestaurantDetailData::DEFAULT_REVIEWS_COUNT unless count&.positive?
 
@@ -93,6 +103,8 @@ class RestaurantsController < ApplicationController
   end
 
   def initial_rows_param
+    return DEFAULT_INITIAL_ROWS unless bench_params_enabled?
+
     initial = Integer(params[:initial], 10, exception: false)
     return DEFAULT_INITIAL_ROWS if initial.nil?
 
