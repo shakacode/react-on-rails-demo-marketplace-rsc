@@ -120,22 +120,41 @@ export async function measurePage(browser, pageConfig, options) {
     }, anchorText);
   }
 
-  let likeBtn = null;
-  if (pageConfig.selectors?.likeButton) {
-    likeBtn = await page.waitForSelector(btnSelector, { timeout: 5_000 }).catch(() => null);
-    if (!likeBtn) {
-      throw new Error(
-        `Interaction target "${btnSelector}" not found on ${pageConfig.label} (${pagePath}) — ` +
-          'a lane that declares selectors.likeButton must be able to click it.',
-      );
-    }
-  } else {
-    likeBtn = await page.$(btnSelector);
+  const declared = Boolean(pageConfig.selectors?.likeButton);
+  const found = declared
+    ? await page.waitForSelector(btnSelector, { timeout: 5_000 }).then(() => true).catch(() => false)
+    : (await page.$(btnSelector)) !== null;
+
+  if (!found && declared) {
+    throw new Error(
+      `Interaction target "${btnSelector}" not found on ${pageConfig.label} (${pagePath}) — ` +
+        'a lane that declares selectors.likeButton must be able to click it.',
+    );
   }
 
-  if (likeBtn) {
-    await likeBtn.click();
-    await sleep(300); // let event timing observer capture
+  if (found) {
+    // Click through fresh viewport coordinates with a real (trusted) input
+    // event: element handles can go stale when a virtualized row remounts
+    // between query and click, and ElementHandle.click misfires under mobile
+    // emulation. Synthetic element.click() would not count for INP.
+    await page.evaluate((sel) => {
+      document.querySelector(sel)?.scrollIntoView({ block: 'center' });
+    }, btnSelector);
+    await sleep(250); // let the scroll (and any row remounting) settle
+    const point = await page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    }, btnSelector);
+    if (point) {
+      await page.mouse.click(point.x, point.y);
+      await sleep(300); // let event timing observer capture
+    } else if (declared) {
+      throw new Error(
+        `Interaction target "${btnSelector}" disappeared before the click on ${pageConfig.label} (${pagePath}).`,
+      );
+    }
   } else if (verbose) {
     console.log('  Like button not found');
   }
