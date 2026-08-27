@@ -1,11 +1,17 @@
 // The repo-owned react-virtuoso seam (issue #184). react-virtuoso ships NO
-// 'use client' directive, so this wrapper is the only module allowed to import
-// it — server components pass pre-rendered element arrays across the boundary
-// (elements are serializable; functions are not), client trees pass elements
-// they created locally. Either way the itemContent callback lives HERE and
-// never crosses the RSC boundary.
-'use client';
-
+// 'use client' directive, so this pair of files is the only place allowed to
+// import it. Client trees import this implementation directly; server
+// components import VirtualElementListForServer — the 'use client' re-export
+// that forms the RSC boundary. The split matters: the flight manifest lists a
+// referenced module's chunks as the union of every chunk group containing it,
+// so referencing THIS file (which client entries also bundle) from an RSC
+// page would drag the whole client entry's chunk group — markdown-libs
+// included — onto the RSC route. The ForServer re-export lives in no client
+// entry, so its chunk list stays clean (same trick as AddToCartSectionForServer).
+//
+// Server components pass pre-rendered element arrays across the boundary
+// (elements are serializable; functions are not) and the itemContent callback
+// stays inside this module — it never crosses the RSC boundary.
 import React, { ReactElement } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 

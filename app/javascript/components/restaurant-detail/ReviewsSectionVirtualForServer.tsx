@@ -6,7 +6,7 @@
 // mounts only the visible window; the RSC payload still carries every row.
 import React from 'react';
 import { Review, VirtualizationConfig } from './types';
-import VirtualElementList from '../shared/VirtualElementList';
+import VirtualElementList from '../shared/VirtualElementListForServer';
 import { RatingDistribution, ReviewCard } from './ReviewCardForServer';
 import { chunkPairs } from './chunkPairs';
 
