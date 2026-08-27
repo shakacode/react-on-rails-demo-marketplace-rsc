@@ -7,18 +7,18 @@ cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 
 : "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
 
+# Validate QA_RUN_ID: only alphanumeric, hyphens, and underscores allowed.
+# Prevents path traversal and SQL injection via the DB name / log paths.
+if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
+  printf '       Only letters, digits, hyphens, and underscores are allowed.\n' >&2
+  exit 1
+fi
+
 readonly RAILS_PORT="${QA_RAILS_PORT:-3020}"
 readonly RENDERER_PORT="${QA_RENDERER_PORT:-3821}"
 readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
 readonly TIMEOUT_SECS=60
-
-# Guard: refuse to serve against the development or production database
-case "${RUN_DB}" in
-  localhub_demo_development|localhub_demo_production)
-    printf 'FATAL: QA_RUN_ID resolved to a protected database name: %s\n' "${RUN_DB}" >&2
-    exit 1
-    ;;
-esac
 
 # Generate synthetic secrets — never reuse real credentials
 export SECRET_KEY_BASE
@@ -36,8 +36,16 @@ export RAILS_SERVE_STATIC_FILES=true
 export RENDERER_LOG_LEVEL=warn
 export RENDERER_PORT
 
+# Tell Rails where to find the renderer — must match the port the renderer
+# actually binds to. Without this, react_on_rails_pro falls back to
+# http://localhost:3800 and never reaches the run-scoped renderer.
+export RENDERER_URL="http://localhost:${RENDERER_PORT}"
+
 # Pin worker restart interval high to prevent false negatives in memory slope
 # measurements — we do not want a scheduled restart resetting RSS mid-run.
+# Note: node-renderer.js overrides this when CI=1 (to 2 min). We explicitly
+# unset CI so our pinned value sticks even if the outer shell has CI set.
+unset CI
 export RENDERER_ALL_WORKERS_RESTART_INTERVAL=9999
 
 renderer_pid=""
@@ -74,7 +82,7 @@ for _ in $(seq 1 "${TIMEOUT_SECS}"); do
   rails_ready=false
   renderer_ready=false
 
-  if curl -fsS "http://127.0.0.1:${RAILS_PORT}/up" >/dev/null 2>&1; then
+  if curl -fsS --max-time 3 "http://127.0.0.1:${RAILS_PORT}/up" >/dev/null 2>&1; then
     rails_ready=true
   fi
 

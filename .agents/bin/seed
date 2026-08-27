@@ -6,15 +6,13 @@ cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 
 : "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
 
-readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
+# Validate QA_RUN_ID format
+if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
+  exit 1
+fi
 
-# Guard: never touch the development or production database
-case "${RUN_DB}" in
-  localhub_demo_development|localhub_demo_production)
-    printf 'FATAL: QA_RUN_ID resolved to a protected database name: %s\n' "${RUN_DB}" >&2
-    exit 1
-    ;;
-esac
+readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
 
 export DATABASE_URL="postgres://localhost/${RUN_DB}"
 export RAILS_ENV=production

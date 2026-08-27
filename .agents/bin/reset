@@ -6,15 +6,13 @@ cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 
 : "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
 
-readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
+# Validate QA_RUN_ID format
+if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
+  exit 1
+fi
 
-# Guard: never touch the development or production database
-case "${RUN_DB}" in
-  localhub_demo_development|localhub_demo_production)
-    printf 'FATAL: QA_RUN_ID resolved to a protected database name: %s\n' "${RUN_DB}" >&2
-    exit 1
-    ;;
-esac
+readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
 
 export DATABASE_URL="postgres://localhost/${RUN_DB}"
 export RAILS_ENV=production
@@ -25,7 +23,16 @@ export SECRET_KEY_BASE
 SECRET_KEY_BASE="$(openssl rand -hex 64)"
 
 printf 'reset: dropping database %s\n' "${RUN_DB}"
-bin/rails db:drop || true
+# Drop the database. Tolerate "does not exist" (first run or already dropped),
+# but fail on real errors like active connections.
+if ! drop_output="$(bin/rails db:drop 2>&1)"; then
+  if echo "${drop_output}" | grep -qi 'does not exist'; then
+    printf 'reset: database %s did not exist — continuing with create\n' "${RUN_DB}"
+  else
+    printf 'FATAL: failed to drop database %s:\n%s\n' "${RUN_DB}" "${drop_output}" >&2
+    exit 1
+  fi
+fi
 
 printf 'reset: recreating and seeding database %s (SEED_MODE=%s)\n' "${RUN_DB}" "${SEED_MODE}"
 bin/rails db:prepare
