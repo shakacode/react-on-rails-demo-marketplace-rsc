@@ -1,19 +1,28 @@
-import { SELECTORS, DEFAULTS, THROTTLE } from './constants.mjs';
+import { SELECTORS, DEFAULTS, THROTTLE, MOBILE } from './constants.mjs';
 import { getCollectorScript } from './collectors.mjs';
 
 /**
  * Measure a single page load.
  * @param {import('puppeteer').Browser} browser
- * @param {{ path: string, label: string, hasStreaming: boolean }} pageConfig
- * @param {{ baseUrl: string, timeout: number, throttle: boolean, verbose: boolean }} options
+ * @param {{ path: string, label: string, hasStreaming: boolean, scroll?: boolean, selectors?: object }} pageConfig
+ * @param {{ baseUrl: string, timeout: number, throttle: boolean, verbose: boolean, mobile?: boolean, query?: string }} options
  * @returns {Promise<object>} Raw metrics for one run
  */
 export async function measurePage(browser, pageConfig, options) {
-  const { baseUrl, timeout, throttle, verbose } = options;
-  const url = `${baseUrl}${pageConfig.path}`;
+  const { baseUrl, timeout, throttle, verbose, mobile, query } = options;
+  const pagePath = query
+    ? `${pageConfig.path}${pageConfig.path.includes('?') ? '&' : '?'}${query}`
+    : pageConfig.path;
+  const url = `${baseUrl}${pagePath}`;
 
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
+
+  if (mobile) {
+    await page.setUserAgent(MOBILE.userAgent);
+    await page.setViewport(MOBILE.viewport);
+  }
+
   const cdp = await page.createCDPSession();
 
   // Disable cache so each run is a cold load
@@ -90,9 +99,40 @@ export async function measurePage(browser, pageConfig, options) {
   // Small pause to let event observers settle
   await sleep(200);
 
-  // Click button for INP measurement
+  // Optional scripted scroll cycle (issue #184): to the bottom of the page and
+  // back, sampling DOM node counts and the JS heap along the way. Long tasks
+  // and long animation frames raised while the cycle runs are collected as
+  // scroll-phase metrics instead of TBT (see collectors.mjs).
+  const scrollMetrics = pageConfig.scroll ? await runScrollCycle(page, cdp) : {};
+
+  // Click the interaction target for INP measurement. Lanes whose config
+  // declares a selector require it to resolve — silently skipping would just
+  // report "no INP" and mask a broken lane.
   const btnSelector = pageConfig.selectors?.likeButton || SELECTORS.likeButton;
-  const likeBtn = await page.$(btnSelector);
+  const anchorText = pageConfig.selectors?.interactionAnchorText;
+  if (anchorText) {
+    // Bring the target section into view first — on virtualized lanes the
+    // button only exists once the row is mounted near the viewport.
+    await page.evaluate((text) => {
+      const headings = Array.from(document.querySelectorAll('h2'));
+      const target = headings.find((h) => h.textContent && h.textContent.includes(text));
+      if (target) target.scrollIntoView({ block: 'start' });
+    }, anchorText);
+  }
+
+  let likeBtn = null;
+  if (pageConfig.selectors?.likeButton) {
+    likeBtn = await page.waitForSelector(btnSelector, { timeout: 5_000 }).catch(() => null);
+    if (!likeBtn) {
+      throw new Error(
+        `Interaction target "${btnSelector}" not found on ${pageConfig.label} (${pagePath}) — ` +
+          'a lane that declares selectors.likeButton must be able to click it.',
+      );
+    }
+  } else {
+    likeBtn = await page.$(btnSelector);
+  }
+
   if (likeBtn) {
     await likeBtn.click();
     await sleep(300); // let event timing observer capture
@@ -124,6 +164,7 @@ export async function measurePage(browser, pageConfig, options) {
 
   return {
     ...vitals,
+    ...scrollMetrics,
     jsTransferSize,
     jsDecodedSize,
     jsResources: resources.map((r) => ({
@@ -131,6 +172,88 @@ export async function measurePage(browser, pageConfig, options) {
       transferSize: r.transferSize,
       decodedBodySize: r.decodedBodySize,
     })),
+  };
+}
+
+const SCROLL_STEP_PAUSE_MS = 80;
+const SCROLL_MAX_STEPS = 150; // safety valve for very long (?count=500) pages
+
+async function countDomNodes(page) {
+  return page.evaluate(() => document.getElementsByTagName('*').length);
+}
+
+async function sampleHeapUsed(page, cdp) {
+  // GC first so retained size is compared, not allocation noise.
+  await cdp.send('HeapProfiler.collectGarbage').catch(() => {});
+  await sleep(150);
+  return page.evaluate(() => (performance.memory ? performance.memory.usedJSHeapSize : null));
+}
+
+async function runScrollCycle(page, cdp) {
+  await cdp.send('HeapProfiler.enable').catch(() => {});
+
+  const domNodesPostHydration = await countDomNodes(page);
+  const heapUsedPostLoad = await sampleHeapUsed(page, cdp);
+
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  const step = Math.max(600, Math.round(viewportHeight * 2.5));
+
+  // Wheel events need a mouse position over the page.
+  const { width, height } = page.viewport() ?? { width: 800, height: 600 };
+  await page.mouse.move(width / 2, height / 2);
+
+  await page.evaluate(() => window.__vitals.beginScrollPhase());
+  const started = Date.now();
+
+  // Down. The document can GROW while a virtualized list corrects its
+  // geometry, so the bottom is re-read every step.
+  let downSteps = 0;
+  while (downSteps < SCROLL_MAX_STEPS) {
+    const { bottom, max } = await page.evaluate(() => ({
+      bottom: window.scrollY + window.innerHeight,
+      max: document.documentElement.scrollHeight,
+    }));
+    if (bottom >= max - 4) break;
+    await page.mouse.wheel({ deltaY: step });
+    downSteps += 1;
+    await sleep(SCROLL_STEP_PAUSE_MS);
+  }
+  await sleep(300); // dwell at the bottom
+  const domNodesAtBottom = await countDomNodes(page);
+
+  // And back up.
+  let upSteps = 0;
+  while (upSteps < SCROLL_MAX_STEPS) {
+    const y = await page.evaluate(() => window.scrollY);
+    if (y <= 4) break;
+    await page.mouse.wheel({ deltaY: -step });
+    upSteps += 1;
+    await sleep(SCROLL_STEP_PAUSE_MS);
+  }
+  await sleep(300); // let observers flush before the phase flag drops
+  await page.evaluate(() => window.__vitals.endScrollPhase());
+  const scrollDuration = Date.now() - started;
+
+  const domNodesPostScroll = await countDomNodes(page);
+  const heapUsedPostScroll = await sampleHeapUsed(page, cdp);
+
+  const scrollVitals = await page.evaluate(() => ({
+    scrollLongTaskTime: window.__vitals.scrollLongTaskTime,
+    scrollLongTaskCount: window.__vitals.scrollLongTaskCount,
+    scrollLoafTime: window.__vitals.scrollLoafTime,
+    scrollLoafCount: window.__vitals.scrollLoafCount,
+    scrollLoafMax: window.__vitals.scrollLoafMax,
+  }));
+
+  return {
+    ...scrollVitals,
+    domNodesPostHydration,
+    domNodesAtBottom,
+    domNodesPostScroll,
+    heapUsedPostLoad,
+    heapUsedPostScroll,
+    scrollDuration,
+    scrollSteps: downSteps + upSteps,
   };
 }
 

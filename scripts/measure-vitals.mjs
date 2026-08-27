@@ -20,6 +20,11 @@ const { values: args } = parseArgs({
     throttle: { type: 'boolean', default: false },
     headless: { type: 'boolean', default: true },
     verbose: { type: 'boolean', short: 'v', default: false },
+    // Mobile emulation (viewport/UA/touch) — see MOBILE in lib/constants.mjs.
+    mobile: { type: 'boolean', default: false },
+    // Extra query string appended to every measured page path, e.g.
+    // --query "count=500&initial=0" for the issue #184 sweeps.
+    query: { type: 'string', default: '' },
   },
   strict: false,
 });
@@ -46,6 +51,8 @@ async function main() {
   console.log(`Pages:       ${pageKeys.join(', ')}`);
   console.log(`Iterations:  ${iterations} (warmup: ${warmup})`);
   console.log(`Throttle:    ${args.throttle ? 'ON (4x CPU, Slow 3G)' : 'OFF'}`);
+  console.log(`Profile:     ${args.mobile ? 'mobile (390x844, DPR 3, touch)' : 'desktop (default viewport)'}`);
+  if (args.query) console.log(`Query:       ?${args.query}`);
   if (args.label) console.log(`Label:       ${args.label}`);
   console.log('');
 
@@ -66,7 +73,9 @@ async function main() {
   // Launch browser
   const browser = await puppeteer.launch({
     headless: args.headless ? 'new' : false,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    // --enable-precise-memory-info: un-quantizes performance.memory so the
+    // JS-heap samples from the scroll cycle are comparable between lanes.
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--enable-precise-memory-info'],
   });
 
   const userAgent = await browser.userAgent();
@@ -93,6 +102,8 @@ async function main() {
         timeout: DEFAULTS.timeout,
         throttle: args.throttle,
         verbose,
+        mobile: args.mobile,
+        query: args.query,
       });
 
       runs.push(result);
@@ -138,6 +149,8 @@ async function main() {
       iterations,
       warmup,
       throttle: args.throttle,
+      mobile: args.mobile,
+      query: args.query || null,
       userAgent,
     },
     results: {},
