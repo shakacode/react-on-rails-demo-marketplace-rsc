@@ -1,19 +1,11 @@
-// 'use client' — adds sort + filter interactivity, runs markdown rendering
-// in the browser. Used by SSR/Client variants.
-'use client';
-
-import React, { useMemo, useState } from 'react';
+// Server-only review-card building blocks, extracted from
+// ReviewsSectionForServer so the virtualized variant (issue #184) can render
+// the same cards server-side and pass the elements across the RSC boundary.
+// marked/highlight.js/sanitize-html stay server-side with them.
+import React from 'react';
 import { Review } from './types';
 import { renderSanitizedMarkdown } from '../../utils/sanitizeAndRender';
-import { HelpfulButton } from './HelpfulButton';
-
-type SortKey = 'newest' | 'rating' | 'helpful';
-
-interface Props {
-  reviews: Review[];
-  averageRating: number;
-  reviewCount: number;
-}
+import { HelpfulButton } from './HelpfulButtonForServer';
 
 const AVATAR_PALETTE = [
   ['bg-rose-100',    'text-rose-700'],
@@ -69,7 +61,7 @@ export function RatingDistribution({ reviews, averageRating, reviewCount }: { re
 }
 
 export function ReviewCard({ review }: { review: Review }) {
-  const html = useMemo(() => renderSanitizedMarkdown(review.body), [review.body]);
+  const html = renderSanitizedMarkdown(review.body);
   const date = new Date(review.created_at).toLocaleDateString('en-US', {
     timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
   });
@@ -93,53 +85,5 @@ export function ReviewCard({ review }: { review: Review }) {
       <div className="prose prose-sm prose-slate max-w-none prose-p:my-2 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-code:before:content-none prose-code:after:content-none" dangerouslySetInnerHTML={{ __html: html }} />
       <HelpfulButton helpfulCount={review.helpful_count} />
     </article>
-  );
-}
-
-export function ReviewsSection({ reviews, averageRating, reviewCount }: Props) {
-  const [sortKey, setSortKey] = useState<SortKey>('newest');
-  const [minRating, setMinRating] = useState(0);
-
-  const visible = useMemo(() => {
-    const filtered = reviews.filter((r) => r.rating >= minRating);
-    const sorted = [...filtered];
-    if (sortKey === 'newest') sorted.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
-    else if (sortKey === 'rating') sorted.sort((a, b) => b.rating - a.rating);
-    else if (sortKey === 'helpful') sorted.sort((a, b) => b.helpful_count - a.helpful_count);
-    return sorted;
-  }, [reviews, sortKey, minRating]);
-
-  return (
-    <section className="container mx-auto px-4 mb-14">
-      <div className="flex items-end justify-between flex-wrap gap-2 mb-6 border-b border-slate-200 pb-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-amber-600 font-semibold mb-1">From Our Guests</p>
-          <h2 className="text-3xl font-bold text-slate-900">Reviews</h2>
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          <label className="text-slate-600">Sort:
-            <select className="ml-2 rounded border border-slate-300 px-2 py-1" value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
-              <option value="newest">Newest</option>
-              <option value="rating">Rating</option>
-              <option value="helpful">Most helpful</option>
-            </select>
-          </label>
-          <label className="text-slate-600">Min rating:
-            <select className="ml-2 rounded border border-slate-300 px-2 py-1" value={minRating} onChange={(e) => setMinRating(Number(e.target.value))}>
-              <option value={0}>Any</option>
-              <option value={3}>3★</option>
-              <option value={4}>4★</option>
-              <option value={5}>5★</option>
-            </select>
-          </label>
-        </div>
-      </div>
-      <RatingDistribution reviews={reviews} averageRating={averageRating} reviewCount={reviewCount} />
-      <div className="grid md:grid-cols-2 gap-4">
-        {visible.map((r) => (
-          <ReviewCard key={r.id} review={r} />
-        ))}
-      </div>
-    </section>
   );
 }
