@@ -86,16 +86,17 @@ class RestaurantsController < ApplicationController
   end
 
   def reviews_count_param
-    count = params[:count].to_i
-    return RestaurantDetailData::DEFAULT_REVIEWS_COUNT unless count.positive?
+    count = Integer(params[:count], 10, exception: false)
+    return RestaurantDetailData::DEFAULT_REVIEWS_COUNT unless count&.positive?
 
     [count, MAX_REVIEWS_COUNT].min
   end
 
   def initial_rows_param
-    return DEFAULT_INITIAL_ROWS unless params.key?(:initial)
+    initial = Integer(params[:initial], 10, exception: false)
+    return DEFAULT_INITIAL_ROWS if initial.nil?
 
-    params[:initial].to_i.clamp(0, MAX_INITIAL_ROWS)
+    initial.clamp(0, MAX_INITIAL_ROWS)
   end
 
   def set_seo_meta
