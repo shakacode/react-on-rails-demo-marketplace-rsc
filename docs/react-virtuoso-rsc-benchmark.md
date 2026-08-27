@@ -37,7 +37,8 @@ Experiment knobs (defaults preserve the benchmark story):
 
 - `?count=` — synthesized review count, default 40, clamped to 500. The
   generator consumes its seeded rng in build order, so the first 40 reviews of
-  `?count=500` are byte-identical to the default page.
+  `?count=500` carry identical rng-derived content to the default page (only
+  the request-relative `created_at` timestamps differ).
 - `?initial=` — rows of two cards rendered into the server HTML
   (`initialItemCount`), default 3, `0` = no server-rendered rows. The reviews
   sit far below the fold (bio + 80 menu items first), so this knob is a
@@ -123,7 +124,7 @@ behavior, untouched here.
 | INP (ms) | 96 | 108 | 88 | 52 | 64 |
 | Hydration (ms) | 4597 | 4818 | 41 | 4715 | 31 |
 | Scroll long tasks (ms) | 230 | 74 | 236 | 1002 | 1163 |
-| Scroll long tasks (#) | 13 | 8 | 8 | 20 | 25 |
+| Scroll long tasks (#) | 13 | 7 | 8 | 20 | 25 |
 
 The throttled run exposes the core trade at N=40. **Scroll cost**: the
 baselines scroll almost entirely on the compositor; the virtual lanes run
@@ -329,7 +330,7 @@ of "ship data + code". Documented here as the designed-but-not-built option.
 | --- | --- | --- |
 | D1 | Route to virtualize | Restaurant reviews (40 markdown+hljs cards; heaviest per-item cost; the `ForServer` twin seam already existed) |
 | D2 | Which shapes ship | A (`ssr-virtual`) + B (`rsc-virtual`) as routes; C designed-but-not-built (above). On the SSR variant Shape A adds no *new* contamination — the markdown libs are already that baseline's client bundle |
-| D3 | Raise the list cap? | Default stays 40; `?count=` (≤500) parameterizes the synthesized generator for measurement. First 40 reviews stay byte-identical |
+| D3 | Raise the list cap? | Default stays 40; `?count=` (≤500) parameterizes the synthesized generator for measurement. First 40 reviews keep identical rng-derived content (timestamps are request-relative) |
 | D4 | SSR / `initialItemCount` | Default 3 rows (6 cards) as a no-JS/SEO preview; `?initial=0` measured as its own lane. No `defaultItemHeight` (responsive row heights; probe seeds per breakpoint) |
 | D5 | Route naming | New sibling routes, matching `ssr-cached` / `rsc-pull` / `ppr` convention; header banners added for both variants |
 | D6 | Harness | Extended `measure-vitals` (restaurant lanes, scroll cycle, DOM/heap sampling, scroll-phase long tasks + LoAF, `--mobile`, `--query`, fail-loud interaction selectors). Measured on the webpack build (see rspack finding) |
