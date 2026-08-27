@@ -56,6 +56,7 @@
     "react-on-rails-rsc": "19.2.1",
     "react-player": "^3.4.0",
     "react-server-dom-webpack": "19.2.8",
+    "react-virtuoso": "^4.18.12",
     "sanitize-html": "^2.17.5",
     "simple-statistics": "^7.9.3",
     "web-vitals": "^5.3.0",
