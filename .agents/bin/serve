@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# Boot Rails + node-renderer on run-scoped ports for QA-stress testing.
+# Requires: QA_RUN_ID (for database isolation), built assets (run .agents/bin/build first).
+# Env overrides: QA_RAILS_PORT (default 3020), QA_RENDERER_PORT (default 3821).
+set -euo pipefail
+cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+
+: "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
+
+readonly RAILS_PORT="${QA_RAILS_PORT:-3020}"
+readonly RENDERER_PORT="${QA_RENDERER_PORT:-3821}"
+readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
+readonly TIMEOUT_SECS=60
+
+# Guard: refuse to serve against the development or production database
+case "${RUN_DB}" in
+  localhub_demo_development|localhub_demo_production)
+    printf 'FATAL: QA_RUN_ID resolved to a protected database name: %s\n' "${RUN_DB}" >&2
+    exit 1
+    ;;
+esac
+
+# Generate synthetic secrets — never reuse real credentials
+export SECRET_KEY_BASE
+SECRET_KEY_BASE="$(openssl rand -hex 64)"
+export RENDERER_PASSWORD
+RENDERER_PASSWORD="$(openssl rand -hex 32)"
+
+# Point at the run-scoped database
+export DATABASE_URL="postgres://localhost/${RUN_DB}"
+
+# Production-like environment
+export RAILS_ENV=production
+export NODE_ENV=production
+export RAILS_SERVE_STATIC_FILES=true
+export RENDERER_LOG_LEVEL=warn
+export RENDERER_PORT
+
+# Pin worker restart interval high to prevent false negatives in memory slope
+# measurements — we do not want a scheduled restart resetting RSS mid-run.
+export RENDERER_ALL_WORKERS_RESTART_INTERVAL=9999
+
+renderer_pid=""
+rails_pid=""
+cleanup() {
+  [[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
+  [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# --- Start node-renderer ---
+node node-renderer.js > /tmp/qa-renderer-"${QA_RUN_ID}".log 2>&1 &
+renderer_pid=$!
+
+# --- Start Rails ---
+bundle exec rails server -b 127.0.0.1 -p "${RAILS_PORT}" > /tmp/qa-rails-"${QA_RUN_ID}".log 2>&1 &
+rails_pid=$!
+
+# --- Health probes ---
+ready=false
+for _ in $(seq 1 "${TIMEOUT_SECS}"); do
+  # Bail if either process has already crashed
+  if ! kill -0 "${renderer_pid}" 2>/dev/null; then
+    printf 'Node renderer exited before becoming ready.\n' >&2
+    cat /tmp/qa-renderer-"${QA_RUN_ID}".log >&2
+    exit 1
+  fi
+  if ! kill -0 "${rails_pid}" 2>/dev/null; then
+    printf 'Rails exited before becoming ready.\n' >&2
+    cat /tmp/qa-rails-"${QA_RUN_ID}".log >&2
+    exit 1
+  fi
+
+  rails_ready=false
+  renderer_ready=false
+
+  if curl -fsS "http://127.0.0.1:${RAILS_PORT}/up" >/dev/null 2>&1; then
+    rails_ready=true
+  fi
+
+  if (: >"/dev/tcp/127.0.0.1/${RENDERER_PORT}") 2>/dev/null; then
+    renderer_ready=true
+  fi
+
+  if [[ "${rails_ready}" == "true" && "${renderer_ready}" == "true" ]]; then
+    ready=true
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "${ready}" != "true" ]]; then
+  printf 'Rails and node-renderer did not become ready within %ds.\n' "${TIMEOUT_SECS}" >&2
+  printf '--- renderer log ---\n' >&2
+  cat /tmp/qa-renderer-"${QA_RUN_ID}".log >&2
+  printf '--- rails log ---\n' >&2
+  cat /tmp/qa-rails-"${QA_RUN_ID}".log >&2
+  exit 1
+fi
+
+printf 'QA serve ready (run_id=%s)\n' "${QA_RUN_ID}"
+printf '  Rails:     http://127.0.0.1:%s  (pid %s)\n' "${RAILS_PORT}" "${rails_pid}"
+printf '  Renderer:  port %s                (pid %s)\n' "${RENDERER_PORT}" "${renderer_pid}"
+printf '  Database:  %s\n' "${RUN_DB}"
+printf '  Logs:      /tmp/qa-rails-%s.log  /tmp/qa-renderer-%s.log\n' "${QA_RUN_ID}" "${QA_RUN_ID}"
+
+# Keep running until killed — the trap cleans up both processes
+wait
