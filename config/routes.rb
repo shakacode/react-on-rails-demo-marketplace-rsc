@@ -33,6 +33,10 @@ Rails.application.routes.draw do
   get '/restaurant/:id/client', to: 'restaurants#show_client', as: :restaurant_show_client
   get '/restaurant/:id/rsc', to: 'restaurants#show_rsc', as: :restaurant_show_rsc
   get '/restaurant/:id/rsc-cached', to: 'restaurants#show_rsc_cached' # RSC + cached_stream_react_component
+  # Virtualized review-list siblings (issue #184): SSR + react-virtuoso (Shape A)
+  # and RSC + react-virtuoso (Shape B). ?count= / ?initial= tune the experiment.
+  get '/restaurant/:id/ssr-virtual', to: 'restaurants#show_ssr_virtual', as: :restaurant_show_ssr_virtual
+  get '/restaurant/:id/rsc-virtual', to: 'restaurants#show_rsc_virtual', as: :restaurant_show_rsc_virtual
 
   # Product page routes — three versions demonstrating e-commerce RSC gains
   get '/product/ssr', to: 'products#show_ssr'        # V1: All data fetched on server, returned at once
