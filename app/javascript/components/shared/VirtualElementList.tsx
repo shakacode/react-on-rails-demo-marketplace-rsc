@@ -40,7 +40,12 @@ export default function VirtualElementList({ items, keys, initialRows = 0 }: Pro
       useWindowScroll
       data={items}
       initialItemCount={initialRows > 0 ? Math.min(initialRows, items.length) : undefined}
-      increaseViewportBy={{ top: 200, bottom: 600 }}
+      // Generous below: rows are heavy (markdown + hljs), and under window
+      // scrolling every estimate→real correction that lands inside the
+      // viewport is a layout shift. Measuring rows ~2 viewports before they
+      // (and the section below the list) become visible keeps the final
+      // geometry correction off-screen, which is what holds CLS at 0.
+      increaseViewportBy={{ top: 300, bottom: 2400 }}
       computeItemKey={(index) => keys[index] ?? index}
       itemContent={(_index, element) => element}
     />
