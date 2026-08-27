@@ -202,17 +202,22 @@ const hasUseClient = (src) => /^['"]use client['"]\s*;?/.test(stripCommentsAtSta
 
 const SOURCE_EXTS = ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.cjs'];
 
+// Three-way result so the walk can fail closed: a relative/'@/' specifier that
+// does not resolve is an audit error, never a silent drop; bare package
+// specifiers are skipped by design (not part of the app source graph).
 function resolveImport(fromFile, spec) {
   let base;
   if (spec.startsWith('.')) base = resolve(dirname(fromFile), spec);
   else if (spec.startsWith('@/')) base = join(JS_APP_ROOT, spec.slice(2));
-  else return null; // package import — not part of the app source graph
-  if (existsSync(base) && statSync(base).isFile()) return base;
-  for (const ext of SOURCE_EXTS) if (existsSync(base + ext)) return base + ext;
+  else return { kind: 'package' };
+  if (existsSync(base) && statSync(base).isFile()) return { kind: 'resolved', path: base };
   for (const ext of SOURCE_EXTS) {
-    if (existsSync(join(base, `index${ext}`))) return join(base, `index${ext}`);
+    if (existsSync(base + ext)) return { kind: 'resolved', path: base + ext };
   }
-  return null;
+  for (const ext of SOURCE_EXTS) {
+    if (existsSync(join(base, `index${ext}`))) return { kind: 'resolved', path: join(base, `index${ext}`) };
+  }
+  return { kind: 'unresolved' };
 }
 
 function findStaticImports(src) {
@@ -221,6 +226,39 @@ function findStaticImports(src) {
   let m;
   while ((m = re.exec(src)) !== null) out.push(m[1]);
   return out;
+}
+
+// Strip comments before scanning for dynamic imports — prose like
+// "we import('react-player') lazily" or "import()ed" in a comment must not
+// count. Not a full lexer: a '//' inside a string literal followed by real
+// code on the same line would be over-stripped, which can only hide (never
+// invent) an import — and the static-import pass above is unaffected.
+function stripAllComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+// Dynamic import(...) occurrences: literal specifiers are resolved and walked
+// like static imports; a non-literal specifier cannot be resolved statically,
+// so the audit fails closed on it.
+function findDynamicImports(strippedSrc) {
+  const literals = [];
+  let nonLiteralCount = 0;
+  const re = /\bimport\s*\(\s*(['"]?)/g;
+  let m;
+  while ((m = re.exec(strippedSrc)) !== null) {
+    if (m[1]) {
+      const rest = strippedSrc.slice(m.index + m[0].length);
+      const end = rest.indexOf(m[1]);
+      if (end > 0) {
+        literals.push(rest.slice(0, end));
+        continue;
+      }
+    }
+    nonLiteralCount += 1;
+  }
+  return { literals, nonLiteralCount };
 }
 
 // RSC page roots: auto-bundled startup components without 'use client'.
@@ -232,6 +270,7 @@ const rscRoots = readdirSync(startupDir)
 
 function clientBoundariesFor(root) {
   const boundaries = new Set();
+  const errors = [];
   const seen = new Set();
   const queue = [root];
   while (queue.length > 0) {
@@ -243,19 +282,46 @@ function clientBoundariesFor(root) {
       boundaries.add(file);
       continue; // everything past the boundary loads via the boundary's chunks
     }
-    for (const spec of findStaticImports(src)) {
+    const { literals: dynamicSpecs, nonLiteralCount } = findDynamicImports(stripAllComments(src));
+    if (nonLiteralCount > 0) {
+      errors.push({
+        file,
+        reason: `${nonLiteralCount} dynamic import(...) with a non-literal specifier — the audit cannot resolve it statically`,
+      });
+    }
+    for (const spec of [...findStaticImports(src), ...dynamicSpecs]) {
       const resolved = resolveImport(file, spec);
-      if (resolved) queue.push(resolved);
+      if (resolved.kind === 'resolved') queue.push(resolved.path);
+      else if (resolved.kind === 'unresolved') errors.push({ file, reason: `cannot resolve import "${spec}"` });
+      // kind 'package': bare specifier, skipped by design
     }
   }
-  return boundaries;
+  return { boundaries, errors };
+}
+
+// One traversal per root — the walk result feeds both the violation check and
+// the summary counts.
+const boundariesByRoot = new Map();
+const auditErrors = [];
+{
+  const seenErrors = new Set();
+  for (const root of rscRoots) {
+    const { boundaries, errors } = clientBoundariesFor(root);
+    boundariesByRoot.set(root, boundaries);
+    for (const e of errors) {
+      const key = `${e.file}|${e.reason}`;
+      if (seenErrors.has(key)) continue;
+      seenErrors.add(key);
+      auditErrors.push({ root: basename(root), file: relative(ROOT, e.file), reason: e.reason });
+    }
+  }
 }
 
 const flightViolations = [];
 if (existsSync(MANIFEST_PATH)) {
   const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')).filePathToModuleMetadata ?? {};
-  for (const root of rscRoots) {
-    for (const boundary of clientBoundariesFor(root)) {
+  for (const [root, boundaries] of boundariesByRoot) {
+    for (const boundary of boundaries) {
       const meta = manifest[`file://${boundary}`];
       const rootName = basename(root);
       const boundaryRel = relative(ROOT, boundary);
@@ -325,10 +391,24 @@ if (flightViolations.length > 0) {
   );
 }
 
-if (violations.length > 0 || flightViolations.length > 0) {
+if (auditErrors.length > 0) {
+  console.error(`✗ ${auditErrors.length} flight-audit error(s) — the client-boundary walk cannot prove the graph:`);
+  for (const e of auditErrors) {
+    console.error(`    ${e.file}`);
+    console.error(`      ${e.reason}  (reached from ${e.root})`);
+  }
+  console.error(
+    `\nThe audit fails closed: fix the import so it resolves, make the ` +
+      `dynamic specifier a string literal, or move the code behind a ` +
+      `'use client' boundary.`,
+  );
+}
+
+if (violations.length > 0 || flightViolations.length > 0 || auditErrors.length > 0) {
   process.exit(1);
 }
 
 console.log(`✓ ${rscEntries.length} RSC entry pack(s) checked — no heavy-lib chunks reachable from any of them`);
-const boundaryTotal = rscRoots.reduce((sum, root) => sum + clientBoundariesFor(root).size, 0);
+let boundaryTotal = 0;
+for (const boundaries of boundariesByRoot.values()) boundaryTotal += boundaries.size;
 console.log(`✓ ${rscRoots.length} RSC page(s) audited via react-client-manifest.json — no heavy-lib chunks behind any of their ${boundaryTotal} client boundaries`);
