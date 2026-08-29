@@ -1,0 +1,79 @@
+name: RSpec request & routing specs
+
+# Fast, every-PR safety net for ordinary app-level changes. The existing browser
+# gates prove the pages render and hydrate, but both need the full toolchain:
+# browser-smoke.yml builds production assets and boots Rails + the Node renderer
+# (~20 min), and rsc-rspack-e2e.yml additionally builds the Pro packages from
+# source (~40 min, narrow path triggers). This job needs only Ruby + Postgres —
+# no pnpm, no webpack build, no Node renderer — so a controller / helper /
+# route / serializer regression fails CI in seconds instead of tens of minutes.
+#
+# It GETs every renderer-free route (marketing pages, redirects, health, the
+# JSON API) and asserts each feature route still dispatches to the right
+# controller#action. Render + hydration of the React pages stays with the
+# browser gates; see spec/routing/routes_spec.rb for that split.
+#
+# The suite is deliberately NOT wired into `bundle exec rake` — see the comment
+# in the Rakefile for why.
+on:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'config/**'
+      - 'lib/**'
+      - 'db/schema.rb'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'spec/**'
+      - '.rspec'
+      - '.github/workflows/specs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: specs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rspec:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      CI: 'true'
+      # host/user/password for the Postgres service; database.yml names the DB.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432
+
+    steps:
+      - name: Checkout
+        # Pinned to the same immutable SHAs the other workflows in this repo use,
+        # so a moved upstream tag cannot change what CI executes.
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1
+        with:
+          bundler-cache: true
+
+      - name: Load test schema
+        run: bin/rails db:test:prepare
+
+      - name: Run request & routing specs
+        run: bundle exec rspec spec/requests spec/routing
