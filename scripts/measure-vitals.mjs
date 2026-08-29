@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import puppeteer from 'puppeteer';
-import { DEFAULTS, PAGES } from './lib/constants.mjs';
+import { DEFAULTS, MOBILE, PAGES } from './lib/constants.mjs';
 import { measurePage } from './lib/runner.mjs';
 import { aggregateRuns } from './lib/stats.mjs';
 import { formatComparisonTable, formatJsBreakdownTable } from './lib/formatters.mjs';
@@ -78,7 +78,9 @@ async function main() {
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--enable-precise-memory-info'],
   });
 
-  const userAgent = await browser.userAgent();
+  // Record the UA the measured pages actually see: --mobile runs override the
+  // page UA with MOBILE.userAgent (lib/runner.mjs), not the browser default.
+  const userAgent = args.mobile ? MOBILE.userAgent : await browser.userAgent();
   const allResults = {};
   // A lane that throws (e.g. a declared interaction selector that cannot be
   // found — deliberately a hard failure per lane) is recorded here instead of
