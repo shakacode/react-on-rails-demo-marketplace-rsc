@@ -62,12 +62,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# --- Log directory inside the workspace (not /tmp) ---
+readonly QA_LOG_DIR="${QA_LOG_DIR:-.qa-stress-workspace/logs/${QA_RUN_ID}}"
+mkdir -p "${QA_LOG_DIR}"
+
 # --- Start node-renderer ---
-node node-renderer.js > /tmp/qa-renderer-"${QA_RUN_ID}".log 2>&1 &
+node node-renderer.js > "${QA_LOG_DIR}/renderer.log" 2>&1 &
 renderer_pid=$!
 
 # --- Start Rails ---
-bundle exec rails server -b 127.0.0.1 -p "${RAILS_PORT}" > /tmp/qa-rails-"${QA_RUN_ID}".log 2>&1 &
+bundle exec rails server -b 127.0.0.1 -p "${RAILS_PORT}" > "${QA_LOG_DIR}/rails.log" 2>&1 &
 rails_pid=$!
 
 # --- Health probes ---
@@ -76,12 +80,12 @@ for _ in $(seq 1 "${TIMEOUT_SECS}"); do
   # Bail if either process has already crashed
   if ! kill -0 "${renderer_pid}" 2>/dev/null; then
     printf 'Node renderer exited before becoming ready.\n' >&2
-    cat /tmp/qa-renderer-"${QA_RUN_ID}".log >&2
+    cat ${QA_LOG_DIR}/renderer.log >&2
     exit 1
   fi
   if ! kill -0 "${rails_pid}" 2>/dev/null; then
     printf 'Rails exited before becoming ready.\n' >&2
-    cat /tmp/qa-rails-"${QA_RUN_ID}".log >&2
+    cat ${QA_LOG_DIR}/rails.log >&2
     exit 1
   fi
 
@@ -107,9 +111,9 @@ done
 if [[ "${ready}" != "true" ]]; then
   printf 'Rails and node-renderer did not become ready within %ds.\n' "${TIMEOUT_SECS}" >&2
   printf '--- renderer log ---\n' >&2
-  cat /tmp/qa-renderer-"${QA_RUN_ID}".log >&2
+  cat ${QA_LOG_DIR}/renderer.log >&2
   printf '--- rails log ---\n' >&2
-  cat /tmp/qa-rails-"${QA_RUN_ID}".log >&2
+  cat ${QA_LOG_DIR}/rails.log >&2
   exit 1
 fi
 
@@ -117,16 +121,19 @@ printf 'QA serve ready (run_id=%s)\n' "${QA_RUN_ID}"
 printf '  Rails:     http://127.0.0.1:%s  (pid %s)\n' "${RAILS_PORT}" "${rails_pid}"
 printf '  Renderer:  port %s                (pid %s)\n' "${RENDERER_PORT}" "${renderer_pid}"
 printf '  Database:  %s\n' "${RUN_DB}"
-printf '  Logs:      /tmp/qa-rails-%s.log  /tmp/qa-renderer-%s.log\n' "${QA_RUN_ID}" "${QA_RUN_ID}"
+printf '  Logs:      %s/rails.log  %s/renderer.log\n' "${QA_LOG_DIR}" "${QA_LOG_DIR}"
 
 # Keep running until either process exits — if one crashes after readiness,
 # exit immediately so QA-stress doesn't continue against a degraded target.
-# wait -n returns as soon as *either* child exits.
+# wait -n returns as soon as *either* child exits. Disable set -e so the
+# diagnostic output below is reached even on non-zero exit.
+set +e
 wait -n
 exit_code=$?
+set -e
 printf 'FATAL: a child process exited unexpectedly (exit %d).\n' "${exit_code}" >&2
-printf '--- renderer log (tail) ---\n' >&2
-tail -20 /tmp/qa-renderer-"${QA_RUN_ID}".log >&2 2>/dev/null || true
-printf '--- rails log (tail) ---\n' >&2
-tail -20 /tmp/qa-rails-"${QA_RUN_ID}".log >&2 2>/dev/null || true
+printf '%s\n' "--- renderer log (tail) ---" >&2
+tail -20 "${QA_LOG_DIR}/renderer.log" >&2 2>/dev/null || true
+printf '%s\n' "--- rails log (tail) ---" >&2
+tail -20 "${QA_LOG_DIR}/rails.log" >&2 2>/dev/null || true
 exit "${exit_code}"

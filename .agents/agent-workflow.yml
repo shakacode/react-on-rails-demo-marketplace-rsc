@@ -29,6 +29,7 @@ qa_stress:
 
   # --- target application ---
   app_type: rails-with-node-renderer
+  install_command: .agents/bin/install
   serve_command: .agents/bin/serve
   seed_command: .agents/bin/seed
   reset_command: .agents/bin/reset
@@ -96,7 +97,7 @@ qa_stress:
     standard:
       max_duration_minutes: 20
       max_concurrent_requests: 10
-      max_routes: 27
+      max_routes: 37
       memory_samples: 10
       lighthouse_runs: 1
       browser_interaction_tests: true
@@ -110,7 +111,7 @@ qa_stress:
     deep:
       max_duration_minutes: 60
       max_concurrent_requests: 25
-      max_routes: 27
+      max_routes: 37
       memory_samples: 30
       lighthouse_runs: 3
       browser_interaction_tests: true
@@ -147,26 +148,39 @@ qa_stress:
         - /restaurant/1/ssr
         - /restaurant/1/client
         - /restaurant/1/rsc
-      rendering: ssr,client,rsc
+        - /restaurant/1/ssr-cached
+        - /restaurant/1/rsc-cached
+      rendering: ssr,client,rsc,cached
       data_dependency: seeded restaurant with reviews
       notes: >-
         RSC variant uses stream_react_component_with_async_props;
-        async-props streaming is the primary stress surface
+        async-props streaming is the primary stress surface.
+        Cached variants use cached_react_component and
+        cached_stream_react_component — primary cache-leak test surface.
     product:
       routes:
         - /product/ssr
         - /product/client
         - /product/rsc
         - /product/rsc-pull
-      rendering: ssr,client,rsc,rsc-pull
+        - /product/ssr-cached
+        - /product/rsc-cached
+        - /product/ppr
+      rendering: ssr,client,rsc,rsc-pull,cached,ppr
       data_dependency: seeded products
-      notes: rsc-pull uses bidirectional pull-mode async props with unstable_cache
+      notes: >-
+        rsc-pull uses bidirectional pull-mode async props with
+        unstable_cache. Cached variants use cached_react_component and
+        cached_stream_react_component_with_async_props. /product/ppr is the
+        PPR route (requires ENABLE_PPR=true install variant).
     product_search:
       routes:
         - /product-search/ssr
         - /product-search/client
         - /product-search/rsc
-      rendering: ssr,client,rsc
+        - /product-search/ssr-cached
+        - /product-search/rsc-cached
+      rendering: ssr,client,rsc,cached
       data_dependency: seeded search products
       has_interaction_test: true
       notes: Client variant has a search interaction exercised by .verify-routes.js
@@ -176,9 +190,15 @@ qa_stress:
         - /blog/client
         - /blog/rsc
         - /blog/rsc-simple
-      rendering: ssr,client,rsc
+        - /blog/ssr-cached
+        - /blog/rsc-cached
+        - /blog/rsc-simple-cached
+      rendering: ssr,client,rsc,cached
       data_dependency: seeded blog posts
-      notes: Base blog variants
+      notes: >-
+        Base blog variants plus cached endpoints. Cached variants use
+        cached_react_component, cached_stream_react_component_with_async_props,
+        and cached_stream_react_component respectively.
     blog_steps:
       routes:
         - /blog/rsc-step1
@@ -195,11 +215,13 @@ qa_stress:
   # --- PPR variant (F7) ---
   ppr:
     env_flag: ENABLE_PPR=true
+    route: /product/ppr
     notes: >-
       PPR (Partial Prerendering) variant requires the ENABLE_PPR=true
-      environment variable. The /product/rsc route is the primary PPR
-      surface. PPR is experimental and may not be available in all
-      environments.
+      environment variable at install time (patches node_modules via
+      postinstall). The /product/ppr route invokes show_ppr and
+      ppr_react_component; /product/rsc is NOT a PPR route. PPR is
+      experimental and may not be available in all environments.
 
   # --- environment variable contract ---
   env_vars:

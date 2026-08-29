@@ -22,6 +22,11 @@ fi
 export RAILS_ENV=production
 export SEED_MODE="${SEED_MODE:-small}"
 
+# Rails protects production databases from destructive actions by default.
+# Since QA_RUN_ID validation already guarantees this is a qa_-prefixed DB,
+# bypass the protected-environment check so db:drop works.
+export DISABLE_DATABASE_ENVIRONMENT_CHECK=1
+
 # Generate a throwaway secret so Rails boots in production mode
 export SECRET_KEY_BASE
 SECRET_KEY_BASE="$(openssl rand -hex 64)"
