@@ -183,8 +183,11 @@ async function measureInContext(context, pageConfig, options, pagePath, url) {
       inp: v.inp,
       hydrationDuration: v.hydrationDuration,
       streamingDuration: v.streamingDuration,
+      postFreezeLongTaskTime: v.postFreezeLongTaskTime,
     };
   });
+  // The freeze only happens on scroll lanes; keep other lanes' JSON unchanged.
+  if (!pageConfig.scroll) delete vitals.postFreezeLongTaskTime;
 
   // Compute JS sizes from CDP data
   const resources = Array.from(jsResources.values());
@@ -228,6 +231,10 @@ async function sampleHeapUsed(page, cdp) {
 }
 
 async function runScrollCycle(page, cdp) {
+  // Freeze TBT before ANY scroll-cycle work — the forced GCs, the anchor
+  // jump and the click plumbing below are harness activity, not page load.
+  // From here on, non-scroll long tasks land in postFreezeLongTaskTime.
+  await page.evaluate(() => window.__vitals.freezeTbt());
   await cdp.send('HeapProfiler.enable').catch(() => {});
 
   const domNodesPostHydration = await countDomNodes(page);

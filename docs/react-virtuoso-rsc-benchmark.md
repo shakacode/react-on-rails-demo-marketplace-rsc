@@ -75,7 +75,14 @@ the lanes could never record INP.
   and long animation frames during the cycle are reported as scroll-phase
   metrics, **not** TBT), DOM-node counts (post-hydration / at bottom /
   post-scroll), GC'd JS heap (post-load / post-scroll), and a real Helpful
-  click for INP after the cycle. The cycle asserts completion: the
+  click for INP after the cycle. TBT is frozen at the start of the scroll
+  cycle — before the first forced GC — so it means exactly "load-phase
+  blocking time" (the freeze boundary is `startTime`-exact; later non-scroll
+  long tasks from harness activity land in a `postFreezeLongTaskTime`
+  diagnostic instead). Instrumented replays across the matrix measured that
+  harness contamination at 0.0 ms for every published TBT cell (evidence:
+  `.dev-logs/qa-184/validation/`), so the published tables did not need
+  re-measuring when the freeze landed. The cycle asserts completion: the
   step budget adapts to the measured document height, coverage is recorded per
   run (`scrollCycleComplete`/`scrollCoverage` in the JSON), and a traversal
   that cannot reach the bottom and return fails the lane instead of reporting

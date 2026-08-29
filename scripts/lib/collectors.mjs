@@ -52,11 +52,26 @@ export function getCollectorScript(overrides = {}) {
       scrollLoafTime: 0,
       scrollLoafCount: 0,
       scrollLoafMax: 0,
+      // Post-freeze non-scroll long tasks (forced GCs, the anchor jump, click
+      // plumbing) land here as a diagnostic instead of contaminating TBT —
+      // validated at 0.0ms across the published matrix, and this bucket keeps
+      // it observable if a future harness change moves it off zero.
+      postFreezeLongTaskTime: 0,
       _scrollPhase: false,
+      _tbtFrozen: false,
+      _tbtFreezeAt: Infinity,
     };
 
     window.__vitals.beginScrollPhase = () => { window.__vitals._scrollPhase = true; };
     window.__vitals.endScrollPhase = () => { window.__vitals._scrollPhase = false; };
+    // TBT freeze (issue #184 closeout): the runner calls this at the start of
+    // the scroll cycle, BEFORE the first forced GC, so TBT means exactly
+    // "load-phase blocking time". The startTime comparison keeps the boundary
+    // exact even for a long task delivered after the freeze call.
+    window.__vitals.freezeTbt = () => {
+      window.__vitals._tbtFrozen = true;
+      window.__vitals._tbtFreezeAt = performance.now();
+    };
 
     // --- web-vitals library callbacks (accurate metric definitions) ---
 
@@ -91,8 +106,10 @@ export function getCollectorScript(overrides = {}) {
           if (window.__vitals._scrollPhase) {
             window.__vitals.scrollLongTaskTime += blocking;
             window.__vitals.scrollLongTaskCount += 1;
-          } else {
+          } else if (!window.__vitals._tbtFrozen || entry.startTime < window.__vitals._tbtFreezeAt) {
             window.__vitals.tbt += blocking;
+          } else {
+            window.__vitals.postFreezeLongTaskTime += blocking;
           }
         }
       }
