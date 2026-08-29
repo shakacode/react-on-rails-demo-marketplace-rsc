@@ -5,23 +5,53 @@
 // - captures all console messages, page errors, request failures
 // - reports anything that's not a clean load
 
-const puppeteer = require('puppeteer');
-
 const BASE = process.env.BASE_URL || 'http://localhost:3010';
+// Keep in sync with RouteContract in spec/support/route_contract.rb — every
+// rendered page and renderer-backed route, with the id-scoped routes resolved to
+// the seeded id 1. spec/routing/browser_route_parity_spec.rb fails if this list
+// and the contract disagree in either direction, so a new page cannot be added
+// without either browser coverage or a documented reason.
 const DEFAULT_ROUTES = [
+  // Marketing / content pages
   '/',
-  '/products',
-  '/why-rsc',
+  '/how-rsc-works',
   '/measure',
   '/rsc-performance',
+  '/ssr-rsc-playground',
+  '/why-rsc',
+  // RSC entry points
+  '/products',
   '/rsc',
-  '/restaurant/1/ssr', '/restaurant/1/client', '/restaurant/1/rsc',
-  '/product/ssr', '/product/client', '/product/rsc', '/product/rsc-pull',
-  '/product-search/ssr', '/product-search/client', '/product-search/rsc',
-  '/blog/ssr', '/blog/client', '/blog/rsc', '/blog/rsc-simple',
+  // Media gallery — both paths hit the same RSC action
+  '/media-gallery', '/media-gallery/rsc',
+  // Restaurant detail
+  '/restaurant/1/ssr', '/restaurant/1/ssr-cached', '/restaurant/1/client',
+  '/restaurant/1/rsc', '/restaurant/1/rsc-cached',
+  // Product detail
+  '/product/ssr', '/product/ssr-cached', '/product/client',
+  '/product/rsc', '/product/rsc-cached', '/product/rsc-pull',
+  // Product search
+  '/product-search/ssr', '/product-search/ssr-cached', '/product-search/client',
+  '/product-search/rsc', '/product-search/rsc-cached',
+  // Blog
+  '/blog/ssr', '/blog/ssr-cached', '/blog/client',
+  '/blog/rsc', '/blog/rsc-cached', '/blog/rsc-simple', '/blog/rsc-simple-cached',
   '/blog/rsc-step1', '/blog/rsc-step1b', '/blog/rsc-step1c',
   '/blog/rsc-step2', '/blog/rsc-step3', '/blog/rsc-step4', '/blog/rsc-step5',
+  // CSS code-splitting experiment
+  '/css-demo/one/ssr', '/css-demo/one/rsc-server', '/css-demo/one/rsc-client',
+  '/css-demo/two/ssr', '/css-demo/two/rsc-server', '/css-demo/two/rsc-client',
 ];
+
+
+// Answering --list-routes must not need Puppeteer installed: the parity spec runs in
+// the Ruby-only specs.yml job, which never runs `pnpm install`.
+if (process.argv.includes('--list-routes')) {
+  console.log(JSON.stringify(DEFAULT_ROUTES));
+  process.exit(0);
+}
+
+const puppeteer = require('puppeteer');
 
 // A harness can scope the run to a subset (e.g. just the RSC client-boundary
 // routes) via a comma-separated ROUTES env var; default is the full list above.
