@@ -86,6 +86,12 @@ qa_stress:
       memory_samples: 3
       lighthouse_runs: 0
       browser_interaction_tests: false
+      request_count: 20
+      loop_count: 5
+      concurrency_list: [1, 4]
+      target_count_cap: 1
+      drain_window_seconds: 30
+      max_parallel_agents: 2
       description: Fast smoke — port conflicts, crash-on-boot, obvious leaks
     standard:
       max_duration_minutes: 20
@@ -94,6 +100,12 @@ qa_stress:
       memory_samples: 10
       lighthouse_runs: 1
       browser_interaction_tests: true
+      request_count: 100
+      loop_count: 30
+      concurrency_list: [1, 5, 10]
+      target_count_cap: 1
+      drain_window_seconds: 60
+      max_parallel_agents: 3
       description: Full route coverage with single-pass memory slope and one Lighthouse audit
     deep:
       max_duration_minutes: 60
@@ -102,6 +114,13 @@ qa_stress:
       memory_samples: 30
       lighthouse_runs: 3
       browser_interaction_tests: true
+      request_count: 500
+      loop_count: 100
+      concurrency_list: [1, 5, 10, 25]
+      target_count_cap: 1
+      drain_window_seconds: 120
+      max_parallel_agents: 4
+      heap_artifact_policy: capture-on-regression
       description: Sustained load, multi-sample memory regression, hostile inputs
     exhaustive:
       available: false
