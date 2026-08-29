@@ -39,7 +39,11 @@ export default function VirtualElementList({ items, keys, initialRows = 0 }: Pro
     <Virtuoso
       useWindowScroll
       data={items}
-      initialItemCount={initialRows > 0 ? Math.min(initialRows, items.length) : undefined}
+      // Always a number: with useWindowScroll, an explicit undefined makes
+      // 4.18.12's SSR emit height:NaNpx / padding-bottom:NaNpx (and a React
+      // css-value error); 0 is the library's designed "no SSR rows" sentinel,
+      // behaviorally identical to omitting the prop.
+      initialItemCount={Math.min(Math.max(initialRows, 0), items.length)}
       // Generous below: rows are heavy (markdown + hljs), and under window
       // scrolling every estimate→real correction that lands inside the
       // viewport is a layout shift. Measuring rows ~2 viewports before they
