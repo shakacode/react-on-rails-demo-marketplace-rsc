@@ -111,6 +111,32 @@ async function measureInContext(context, pageConfig, options, pagePath, url) {
   // Small pause to let event observers settle
   await sleep(200);
 
+  // Content readiness for scroll lanes (issue #184 closeout): the client
+  // variant renders a placeholder shell and commits the real page only after
+  // its /api detail fetch resolves — networkidle2 tolerates that single
+  // in-flight fetch and the hydration probe matches the placeholder's h1, so
+  // without this wait a throttled run scrolls (and samples "post-hydration"
+  // DOM/heap) against the 169-node placeholder. The collector stamps
+  // streamingDuration when the reviews h2 appears on every restaurant lane —
+  // the heading lives outside the virtualized list, so ?initial=0 stamps too.
+  // Must resolve BEFORE runScrollCycle freezes TBT, with the lane's full
+  // timeout; a scroll lane whose content never arrives fails loudly instead
+  // of measuring a shell.
+  if (pageConfig.scroll) {
+    try {
+      await page.waitForFunction(
+        () => window.__vitals && window.__vitals.streamingDuration !== null,
+        { timeout },
+      );
+    } catch {
+      throw new Error(
+        `Content readiness timed out after ${timeout}ms on ${pageConfig.label} (${pagePath}) — ` +
+          'the reviews heading never appeared, so the scroll cycle would sample a placeholder shell.',
+      );
+    }
+    await sleep(200); // let the committed content settle before the cycle
+  }
+
   // Optional scripted scroll cycle (issue #184): to the bottom of the page and
   // back, sampling DOM node counts and the JS heap along the way. Long tasks
   // and long animation frames raised while the cycle runs are collected as
