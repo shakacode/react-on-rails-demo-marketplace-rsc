@@ -110,10 +110,10 @@ done
 
 if [[ "${ready}" != "true" ]]; then
   printf 'Rails and node-renderer did not become ready within %ds.\n' "${TIMEOUT_SECS}" >&2
-  printf '--- renderer log ---\n' >&2
-  cat ${QA_LOG_DIR}/renderer.log >&2
-  printf '--- rails log ---\n' >&2
-  cat ${QA_LOG_DIR}/rails.log >&2
+  printf '%s\n' "--- renderer log ---" >&2
+  cat "${QA_LOG_DIR}/renderer.log" >&2
+  printf '%s\n' "--- rails log ---" >&2
+  cat "${QA_LOG_DIR}/rails.log" >&2
   exit 1
 fi
 

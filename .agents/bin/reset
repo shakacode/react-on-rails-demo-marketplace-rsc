@@ -32,8 +32,18 @@ export SECRET_KEY_BASE
 SECRET_KEY_BASE="$(openssl rand -hex 64)"
 
 printf 'reset: dropping database %s\n' "${RUN_DB}"
+
+# Terminate active connections to the QA database so db:drop succeeds even
+# when serve is still running (the QA-stress skill may call reset between
+# hypotheses without stopping the server).
+if command -v psql >/dev/null 2>&1; then
+  psql -d postgres -c \
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${RUN_DB}' AND pid <> pg_backend_pid();" \
+    >/dev/null 2>&1 || true
+fi
+
 # Drop the database. Tolerate "does not exist" (first run or already dropped),
-# but fail on real errors like active connections.
+# but fail on real errors.
 if ! drop_output="$(bin/rails db:drop 2>&1)"; then
   if echo "${drop_output}" | grep -qi 'does not exist'; then
     printf 'reset: database %s did not exist — continuing with create\n' "${RUN_DB}"
