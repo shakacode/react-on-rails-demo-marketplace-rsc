@@ -26,6 +26,8 @@ on:
       - 'Gemfile.lock'
       - 'spec/**'
       - '.rspec'
+      # The browser-route parity spec reads this file's inventory.
+      - '.verify-routes.js'
       - '.github/workflows/specs.yml'
   workflow_dispatch:
 

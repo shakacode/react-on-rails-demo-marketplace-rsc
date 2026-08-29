@@ -159,6 +159,22 @@ module RouteContract
     EXCLUSIONS.any? { |exclusion| exclusion[:pattern].match?(spec) }
   end
 
+  # The Puppeteer gate runs against a `db:prepare`-seeded database rather than
+  # spec-built records, so its id-scoped routes use the seeded id rather than
+  # DYNAMIC_SEGMENT_EXAMPLES.
+  BROWSER_SEGMENT_VALUES = { id: '1' }.freeze
+
+  # Every route the browser gate should open: the pages that render HTML, minus the
+  # ones behind a flag. Redirects, the health endpoint and the JSON API are excluded
+  # because there is nothing for a browser to render.
+  def self.browser_route_paths
+    specs = RENDERED_PAGES + RENDERER_BACKED.keys - FLAG_GATED.keys
+
+    specs.map { |spec| spec.gsub(/:(\w+)/) { BROWSER_SEGMENT_VALUES.fetch(Regexp.last_match(1).to_sym) } }
+         .uniq
+         .sort
+  end
+
   # The controller classes behind the contract's page routes. spec/support/renderer_stub.rb
   # scopes its stubs to exactly these, so a controller outside the contract keeps its
   # real rendering behaviour.
