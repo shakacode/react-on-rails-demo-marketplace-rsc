@@ -83,7 +83,8 @@ module RouteContract
     # Both paths intentionally hit the same RSC action.
     '/media-gallery' => 'media_gallery#show_rsc',
     '/media-gallery/rsc' => 'media_gallery#show_rsc',
-    **variants('/restaurant/:id', %w[ssr client rsc ssr-cached rsc-cached], 'restaurants', 'show'),
+    **variants('/restaurant/:id', %w[ssr client rsc ssr-cached rsc-cached ssr-virtual rsc-virtual],
+               'restaurants', 'show'),
     **variants('/product', %w[ssr client rsc ssr-cached rsc-cached rsc-pull ppr], 'products', 'show'),
     **variants('/product-search', %w[ssr client rsc ssr-cached rsc-cached], 'product_search', 'search'),
     **variants('/blog', BLOG_VARIANTS, 'blog', 'post'),
