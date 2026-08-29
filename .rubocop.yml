@@ -42,3 +42,13 @@ Metrics/MethodLength:
       - Exclude
   Exclude:
     - 'spec/**/*'
+
+# The route contract is a declarative inventory of every public GET route, so its
+# length tracks the size of the app's route table rather than any complexity worth
+# splitting up.
+Metrics/ModuleLength:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - 'spec/support/route_contract.rb'
