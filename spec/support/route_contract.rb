@@ -90,6 +90,15 @@ module RouteContract
     **CSS_DEMO.reduce({}) { |acc, (page, shapes)| acc.merge(variants("/css-demo/#{page}", shapes, 'css_demo', page)) }
   }.freeze
 
+  # Routes declared unconditionally in config/routes.rb whose implementation is behind
+  # an environment flag. They keep dispatch coverage, but rendering them needs the flag,
+  # so spec/requests/feature_pages_spec.rb skips them with the reason attached.
+  FLAG_GATED = {
+    '/product/ppr' => 'Partial Prerendering patches load only when ENABLE_PPR=true ' \
+                      '(config/initializers/ppr_patches.rb). Without it the view calls an ' \
+                      'undefined ppr_react_component and the route 500s.'
+  }.freeze
+
   # JSON endpoints, covered by request specs against real payloads.
   API_GET_ENDPOINTS = {
     '/api/restaurants/:id/detail' => 'api/restaurants#detail',
@@ -148,6 +157,26 @@ module RouteContract
 
   def self.excluded?(spec)
     EXCLUSIONS.any? { |exclusion| exclusion[:pattern].match?(spec) }
+  end
+
+  # The controller classes behind the contract's page routes. spec/support/renderer_stub.rb
+  # scopes its stubs to exactly these, so a controller outside the contract keeps its
+  # real rendering behaviour.
+  def self.controller_classes
+    (RENDERER_BACKED.values + page_controller_targets)
+      .map { |target| "#{target.split('#').first.camelize}Controller".constantize }
+      .uniq
+  end
+
+  # Controllers behind RENDERED_PAGES / CONDITIONAL_REDIRECT_PAGES, which the router
+  # resolves rather than the contract naming them directly.
+  def self.page_controller_targets
+    (RENDERED_PAGES + CONDITIONAL_REDIRECT_PAGES.keys).filter_map do |path|
+      route = Rails.application.routes.recognize_path(path, method: :get)
+      "#{route[:controller]}##{route[:action]}"
+    rescue ActionController::RoutingError
+      nil
+    end
   end
 
   # '/restaurant/:id/ssr' => '/restaurant/7/ssr'
