@@ -26,8 +26,14 @@ SECRET_KEY_BASE="$(openssl rand -hex 64)"
 export RENDERER_PASSWORD
 RENDERER_PASSWORD="$(openssl rand -hex 32)"
 
-# Point at the run-scoped database
-export DATABASE_URL="postgres://localhost/${RUN_DB}"
+# Point at the run-scoped database.
+# Include credentials when available (CI uses postgres:postgres); fall back to
+# no-auth for local peer/trust setups.
+if [[ -n "${DATABASE_USERNAME:-}" ]]; then
+  export DATABASE_URL="postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD:-}@localhost/${RUN_DB}"
+else
+  export DATABASE_URL="postgres://localhost/${RUN_DB}"
+fi
 
 # Production-like environment
 export RAILS_ENV=production
@@ -113,5 +119,14 @@ printf '  Renderer:  port %s                (pid %s)\n' "${RENDERER_PORT}" "${re
 printf '  Database:  %s\n' "${RUN_DB}"
 printf '  Logs:      /tmp/qa-rails-%s.log  /tmp/qa-renderer-%s.log\n' "${QA_RUN_ID}" "${QA_RUN_ID}"
 
-# Keep running until killed — the trap cleans up both processes
-wait
+# Keep running until either process exits — if one crashes after readiness,
+# exit immediately so QA-stress doesn't continue against a degraded target.
+# wait -n returns as soon as *either* child exits.
+wait -n
+exit_code=$?
+printf 'FATAL: a child process exited unexpectedly (exit %d).\n' "${exit_code}" >&2
+printf '--- renderer log (tail) ---\n' >&2
+tail -20 /tmp/qa-renderer-"${QA_RUN_ID}".log >&2 2>/dev/null || true
+printf '--- rails log (tail) ---\n' >&2
+tail -20 /tmp/qa-rails-"${QA_RUN_ID}".log >&2 2>/dev/null || true
+exit "${exit_code}"

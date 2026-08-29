@@ -14,7 +14,11 @@ fi
 
 readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
 
-export DATABASE_URL="postgres://localhost/${RUN_DB}"
+if [[ -n "${DATABASE_USERNAME:-}" ]]; then
+  export DATABASE_URL="postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD:-}@localhost/${RUN_DB}"
+else
+  export DATABASE_URL="postgres://localhost/${RUN_DB}"
+fi
 export RAILS_ENV=production
 export SEED_MODE="${SEED_MODE:-small}"
 
