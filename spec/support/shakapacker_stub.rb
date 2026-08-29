@@ -35,3 +35,31 @@ module ShakapackerSpecStub
 end
 
 Shakapacker::Helper.prepend(ShakapackerSpecStub)
+
+# Neutralizing the view helpers is not sufficient on its own.
+#
+# `react_component` reaches Shakapacker through react_on_rails rather than
+# through those helpers: with `auto_load_bundle` enabled it calls
+# `load_pack_for_generated_component`, whose manifest lookup triggers
+# `Shakapacker::Compiler#compile` because the test environment sets
+# `compile: true`. That runs the `rake react_on_rails:generate_packs` precompile
+# hook and then shells out to `pnpm exec webpack` — which this repo does not even
+# have installed, since it builds with rspack. The compile fails, the request
+# still succeeds, and the suite silently pays ~13s per affected example for a
+# build whose output it never uses.
+#
+# Stubbing the compiler keeps that cost out of the suite. Request specs assert
+# that controllers, routes, views, helpers and the layout render without error;
+# actual asset and hydration correctness is covered by the Puppeteer route
+# gate (.verify-routes.js / browser-smoke.yml), which builds for real.
+module ShakapackerCompilerSpecStub
+  def compile
+    true
+  end
+
+  def stale?
+    false
+  end
+end
+
+Shakapacker::Compiler.prepend(ShakapackerCompilerSpecStub)
