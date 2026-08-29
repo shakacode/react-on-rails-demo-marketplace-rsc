@@ -85,10 +85,13 @@ persists server-side.
   cycle — before the first forced GC — so it means exactly "load-phase
   blocking time" (the freeze boundary is `startTime`-exact; later non-scroll
   long tasks from harness activity land in a `postFreezeLongTaskTime`
-  diagnostic instead). Instrumented replays across the matrix measured that
-  harness contamination at 0.0 ms for every published TBT cell (evidence:
-  `.dev-logs/qa-184/validation/`), so the published tables did not need
-  re-measuring when the freeze landed. The cycle asserts completion: the
+  diagnostic instead). Instrumented replays measured that harness
+  contamination at 0.0 ms for the published ssr / rsc / virtual TBT cells
+  across the desktop, throttled, count=500 and mobile profiles (evidence:
+  `.dev-logs/qa-184/validation/`), so those tables did not need re-measuring
+  when the freeze landed. The client lane was not covered by those replays —
+  it instead gained the content-ready wait below and a re-measured throttled
+  column (`.dev-logs/qa-184/validation2/`). The cycle asserts completion: the
   step budget adapts to the measured document height, coverage is recorded per
   run (`scrollCycleComplete`/`scrollCoverage` in the JSON), and a traversal
   that cannot reach the bottom and return fails the lane instead of reporting
@@ -108,7 +111,11 @@ the rerun after the CLS buffer fix (`m184v2-*`, same build, same servers,
 baselines unaffected by the wrapper change). This machine shares load with
 other services — TTFB/FCP/LCP vary run-to-run by up to ±30% (spreads in the
 JSON), so treat load-phase deltas under ~200 ms as noise; DOM, heap, transfer,
-CLS, and the scroll metrics are stable.
+CLS, and the scroll metrics are stable. Reader note for the client column:
+its Hydration value is placeholder-shell hydration by definition (the variant
+hydrates a loading shell, then fetches the detail payload); content readiness
+on that lane is the Streaming row, and the harness waits for it before the
+scroll cycle.
 
 ### Desktop, defaults (count=40, initial=3 rows) — 7 iterations, 2 warmup
 
@@ -139,14 +146,22 @@ behavior, untouched here.
 
 | Median | ssr | client | rsc | ssr-virtual | rsc-virtual |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| FCP (ms) | 6048 | 5840 | 4120 | 6404 | 4258 |
-| LCP (ms) | 6354 | 6068 | 4380 | 6780 | 4654 |
+| FCP (ms) | 6048 | 5656 | 4120 | 6404 | 4258 |
+| LCP (ms) | 6354 | 5918 | 4380 | 6780 | 4654 |
 | CLS | 0 | 0.24 | 0 | 0 | 0 |
-| TBT (ms) | 2955 | 3534 | 1048 | 2862 | 978 |
-| INP (ms) | 96 | 108 | 88 | 52 | 64 |
-| Hydration (ms) | 4597 | 4818 | 41 | 4715 | 31 |
-| Scroll long tasks (ms) | 230 | 74 | 236 | 1002 | 1163 |
-| Scroll long tasks (#) | 13 | 7 | 8 | 20 | 25 |
+| TBT (ms) | 2955 | 1538 | 1048 | 2862 | 978 |
+| INP (ms) | 96 | 40 | 88 | 52 | 64 |
+| Hydration (ms) | 4597 | 4683 | 41 | 4715 | 31 |
+| Scroll long tasks (ms) | 230 | 0 | 236 | 1002 | 1163 |
+| Scroll long tasks (#) | 13 | 0 | 8 | 20 | 25 |
+
+The client column is a re-measured run (`m184v3-desktop-throttle-client`,
+same 5×1 protocol): the original throttled client run raced the variant's
+/api detail fetch and started the scroll cycle against the 169-node
+placeholder shell, so its cycle-dependent cells (TBT, scroll long tasks,
+DOM/heap samples) were re-measured after the harness gained the content-ready
+wait; with the page committed before the cycle, scrolling costs the client
+lane no measurable main-thread time — consistent with the other baselines.
 
 The throttled run exposes the core trade at N=40. **Scroll cost**: the
 baselines scroll almost entirely on the compositor; the virtual lanes run
