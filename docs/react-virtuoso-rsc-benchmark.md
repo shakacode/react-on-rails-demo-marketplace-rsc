@@ -62,7 +62,13 @@ The review-card footer's static "Helpful" `<span>` became a real
 `HelpfulButton` client component on **all** restaurant variants — the route
 previously had no button at all, and INP cannot see scrolling (the Event
 Timing API observes only clicks/taps/keys), so without a discrete interaction
-the lanes could never record INP.
+the lanes could never record INP. Its pressed state is a composition cost
+worth noting: Virtuoso unmounts rows that leave the window, so row-local
+`useState` would silently forget a click on the virtualized routes — any
+interaction state inside a virtualized row must be lifted out, which the demo
+does with a module-level store keyed by review id (`useSyncExternalStore` in
+`HelpfulButton.tsx`); it deliberately resets on a full page load since nothing
+persists server-side.
 
 ## Measurement method
 

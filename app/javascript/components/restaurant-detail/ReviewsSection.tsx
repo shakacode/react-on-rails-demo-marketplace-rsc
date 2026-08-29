@@ -68,7 +68,7 @@ export function ReviewCard({ review }: { review: Review }) {
         </div>
       </header>
       <div className="prose prose-sm prose-slate max-w-none prose-p:my-2 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-code:before:content-none prose-code:after:content-none" dangerouslySetInnerHTML={{ __html: html }} />
-      <HelpfulButton helpfulCount={review.helpful_count} />
+      <HelpfulButton reviewId={review.id} helpfulCount={review.helpful_count} />
     </article>
   );
 }
