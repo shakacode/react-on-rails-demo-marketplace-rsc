@@ -25,3 +25,20 @@ Style/FormatStringToken:
 Style/SymbolArray:
   EnforcedStyle: percent
   MinSize: 10
+
+# RSpec example groups and the request-spec data builders are long by nature;
+# the size metrics target production code, not the spec DSL. `inherit_mode`
+# keeps the .rubocop_todo.yml exclusions for these cops intact.
+Metrics/BlockLength:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/MethodLength:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - 'spec/**/*'
