@@ -38,7 +38,7 @@ on:
         required: false
         default: ''
       rsc_ref:
-        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = default branch.
+        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = the pinned 19.2.1 tag (see the checkout step).
         required: false
         default: ''
 
