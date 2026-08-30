@@ -282,14 +282,23 @@ function clientBoundariesFor(root) {
       boundaries.add(file);
       continue; // everything past the boundary loads via the boundary's chunks
     }
-    const { literals: dynamicSpecs, nonLiteralCount } = findDynamicImports(stripAllComments(src));
+    // Both scans run on comment-stripped source: a block comment spanning a
+    // line-initial `import … from '…'` would otherwise satisfy the static
+    // scanner's ^\s* anchor (a `// import …` line is already immune via that
+    // anchor). Stripping is safe for the static pass because the anchor means
+    // a static import never follows other code on its own line, so the known
+    // //-in-string over-strip corner cannot precede a static import on the
+    // same line. hasUseClient above stays on raw source — it has its own
+    // stripCommentsAtStart.
+    const stripped = stripAllComments(src);
+    const { literals: dynamicSpecs, nonLiteralCount } = findDynamicImports(stripped);
     if (nonLiteralCount > 0) {
       errors.push({
         file,
         reason: `${nonLiteralCount} dynamic import(...) with a non-literal specifier — the audit cannot resolve it statically`,
       });
     }
-    for (const spec of [...findStaticImports(src), ...dynamicSpecs]) {
+    for (const spec of [...findStaticImports(stripped), ...dynamicSpecs]) {
       const resolved = resolveImport(file, spec);
       if (resolved.kind === 'resolved') queue.push(resolved.path);
       else if (resolved.kind === 'unresolved') errors.push({ file, reason: `cannot resolve import "${spec}"` });
