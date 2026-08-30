@@ -8,7 +8,8 @@
 import React, { useMemo, useState } from 'react';
 import { Review, VirtualizationConfig } from './types';
 import VirtualElementList from '../shared/VirtualElementList';
-import { RatingDistribution, ReviewCard } from './ReviewsSection';
+import { ReviewCard } from './ReviewsSection';
+import { RatingDistribution } from './reviewCardShared';
 import { chunkPairs } from './chunkPairs';
 
 type SortKey = 'newest' | 'rating' | 'helpful';

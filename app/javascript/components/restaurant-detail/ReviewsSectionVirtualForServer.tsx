@@ -7,7 +7,8 @@
 import React from 'react';
 import { Review, VirtualizationConfig } from './types';
 import VirtualElementList from '../shared/VirtualElementListForServer';
-import { RatingDistribution, ReviewCard } from './ReviewCardForServer';
+import { ReviewCard } from './ReviewCardForServer';
+import { RatingDistribution } from './reviewCardShared';
 import { chunkPairs } from './chunkPairs';
 
 interface Props {

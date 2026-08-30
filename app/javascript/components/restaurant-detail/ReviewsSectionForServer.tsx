@@ -3,7 +3,8 @@
 // markup lives in ReviewCardForServer (shared with the virtualized variant).
 import React from 'react';
 import { Review } from './types';
-import { RatingDistribution, ReviewCard } from './ReviewCardForServer';
+import { ReviewCard } from './ReviewCardForServer';
+import { RatingDistribution } from './reviewCardShared';
 
 interface Props {
   reviews: Review[];
