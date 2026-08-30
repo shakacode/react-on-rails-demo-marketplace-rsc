@@ -38,7 +38,7 @@ on:
         required: false
         default: ''
       rsc_ref:
-        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = default branch.
+        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = the pinned 19.2.1 tag (see the checkout step).
         required: false
         default: ''
 
@@ -137,11 +137,13 @@ jobs:
         env:
           RSC_REF: ${{ github.event.inputs.rsc_ref }}
         run: |
-          if [ -n "$RSC_REF" ]; then
-            git clone --depth 1 --branch "$RSC_REF" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
-          else
-            git clone --depth 1 https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
-          fi
+          # Default pin: the exact release React on Rails Pro 17.0.0-rc.6 declares
+          # compatible. Upstream's default branch moved to 19.3.0-rc.0 (2026-08-29),
+          # whose version Pro's peer check rejects (the `>= 19.2.1` range is
+          # prerelease-blind), so tracking HEAD failed every run on every branch.
+          # Advance this pin when Pro's compat range accepts the next rsc release;
+          # workflow_dispatch `rsc_ref` still tests any ref on demand.
+          git clone --depth 1 --branch "${RSC_REF:-19.2.1}" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
           echo "react_on_rails_rsc @ $(git -C .pkgsrc/rsc rev-parse --short HEAD)"
 
       - name: Build + yalc publish react-on-rails-rsc
