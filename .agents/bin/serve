@@ -9,9 +9,15 @@ cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 
 # Validate QA_RUN_ID: only alphanumeric, hyphens, and underscores allowed.
 # Prevents path traversal and SQL injection via the DB name / log paths.
+# Max 46 chars so the full DB name (localhub_demo_qa_ prefix = 17 chars)
+# stays within PostgreSQL's 63-byte identifier limit.
 if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
   printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
   printf '       Only letters, digits, hyphens, and underscores are allowed.\n' >&2
+  exit 1
+fi
+if [[ ${#QA_RUN_ID} -gt 46 ]]; then
+  printf 'FATAL: QA_RUN_ID is %d chars (max 46 to stay within PostgreSQL 63-byte identifier limit).\n' "${#QA_RUN_ID}" >&2
   exit 1
 fi
 

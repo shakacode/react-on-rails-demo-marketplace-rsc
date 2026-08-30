@@ -6,9 +6,13 @@ cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 
 : "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
 
-# Validate QA_RUN_ID format
+# Validate QA_RUN_ID format and length (max 46 chars for 63-byte PG limit)
 if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
   printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
+  exit 1
+fi
+if [[ ${#QA_RUN_ID} -gt 46 ]]; then
+  printf 'FATAL: QA_RUN_ID is %d chars (max 46).\n' "${#QA_RUN_ID}" >&2
   exit 1
 fi
 
