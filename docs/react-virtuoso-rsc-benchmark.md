@@ -318,7 +318,7 @@ enforced by the audit: the module that crosses the boundary must be a
 dedicated `'use client'` re-export that no client entry bundles, so it gets
 its own clean chunk group.
 
-## Pre-existing rspack finding (upstream, documented not fixed)
+## Pre-existing rspack finding (documented; since fixed upstream)
 
 On the CI-default **rspack** build (`bin/build-production`), the
 `react-on-rails-rsc` client runtime chunk eagerly `import()`s **every**
@@ -334,6 +334,15 @@ wiring), and no static gate can. It is an upstream `RSCRspackPlugin` issue and
 out of scope here; benchmarks in this document therefore use the webpack
 build. Anyone benchmarking "how much JS does the RSC variant ship" on a local
 rspack build is currently measuring this pathology, not the RSC story.
+
+Upstream has since fixed it:
+[react_on_rails_rsc#210](https://github.com/shakacode/react_on_rails_rsc/pull/210)
+("Keep Rspack client-reference chunks lazy", merged 2026-08-29) ships in
+`react-on-rails-rsc@19.3.0-rc.0`. The catch: React on Rails Pro 17.0.0-rc.6's
+prerelease-blind compat range rejects that rc, so the demo's e2e gate pins
+`react-on-rails-rsc@19.2.1` (PR #195) until the range is fixed — meaning the
+eager-load trait above is still what a demo rspack build exhibits today, and
+the finding and evidence in this section describe that pinned reality.
 
 ## Shape C — designed, not built
 
