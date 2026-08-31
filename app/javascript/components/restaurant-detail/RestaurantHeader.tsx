@@ -6,7 +6,7 @@ interface Props {
   restaurant: DetailRestaurant;
   stats: RestaurantStats;
   hours: HoursEntry[];
-  variant: 'ssr' | 'client' | 'rsc';
+  variant: 'ssr' | 'client' | 'rsc' | 'ssr-virtual' | 'rsc-virtual';
 }
 
 const VARIANT_BANNER: Record<Props['variant'], { color: string; label: string }> = {
@@ -21,6 +21,14 @@ const VARIANT_BANNER: Record<Props['variant'], { color: string; label: string }>
   rsc: {
     color: 'bg-emerald-50 border-emerald-200 text-emerald-800',
     label: 'V3: RSC streaming — markdown, sanitization, currency formatting all run on the server. Browser receives only HTML; no markdown libs ship to the client.',
+  },
+  'ssr-virtual': {
+    color: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+    label: 'V1 + virtualization — same full SSR page, but the review list mounts through react-virtuoso: only the visible rows exist in the DOM. Markdown libs still ship to the browser (the SSR baseline being compared).',
+  },
+  'rsc-virtual': {
+    color: 'bg-teal-50 border-teal-200 text-teal-800',
+    label: 'V3 + virtualization — RSC renders every review card server-side, then passes the element rows to a react-virtuoso client wrapper that mounts only the visible window. Markdown libs stay server-side; the RSC payload still carries all rows.',
   },
 };
 

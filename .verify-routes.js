@@ -27,6 +27,8 @@ const DEFAULT_ROUTES = [
   // Restaurant detail
   '/restaurant/1/ssr', '/restaurant/1/ssr-cached', '/restaurant/1/client',
   '/restaurant/1/rsc', '/restaurant/1/rsc-cached',
+  // Virtualized review-list siblings (issue #184)
+  '/restaurant/1/ssr-virtual', '/restaurant/1/rsc-virtual',
   // Product detail
   '/product/ssr', '/product/ssr-cached', '/product/client',
   '/product/rsc', '/product/rsc-cached', '/product/rsc-pull',

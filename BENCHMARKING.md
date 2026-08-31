@@ -65,6 +65,30 @@ The server must be running before executing any benchmarking script.
 | `--verbose` | `-v` | `false` | Show per-iteration results and JS breakdowns |
 | `--label` | `-l` | | Label for the output JSON file |
 | `--output` | `-o` | auto-generated | Custom output file path |
+| `--mobile` | | `false` | Emulate a phone (390×844, DPR 3, touch, mobile UA) |
+| `--query` | | | Query string appended to every measured path (e.g. `--query "count=500"`). The restaurant `count`/`initial` knobs are measurement-only: the Rails server must be started with `ENABLE_BENCH_PARAMS=1` or they are ignored |
+
+### Scroll-heavy lanes (issue #184)
+
+The restaurant detail lanes (`restaurant-ssr`, `restaurant-client`,
+`restaurant-rsc`, `restaurant-ssr-virtual`, `restaurant-rsc-virtual`) opt into
+a scripted scroll cycle: the runner wheels to the bottom of the page and back,
+then clicks a review's "Helpful" button for INP. These lanes report extra
+metrics:
+
+| Metric | What it measures |
+|--------|------------------|
+| Scroll long tasks (ms/#) | Long-task blocking time raised **during** the scroll cycle — kept out of TBT so load-phase TBT is not double-counted. INP cannot see scrolling (Event Timing only observes discrete interactions), so this is the scroll-responsiveness number |
+| Scroll LoAF blocking/max | Long-animation-frame data during the cycle (rendering-pipeline jank) |
+| DOM nodes (post-hydration / at bottom / post-scroll) | Live DOM size before, during, and after the cycle — the virtualization payoff |
+| JS heap (post-load / post-scroll) | `usedJSHeapSize` after a forced GC |
+
+A lane that declares an interaction selector fails loudly when the target is
+missing instead of silently reporting no INP. The scroll cycle likewise
+asserts completion — its step budget adapts to the measured document height,
+`scrollCycleComplete`/`scrollCoverage` land in the results JSON, and a
+traversal that cannot reach the bottom and return fails the lane rather than
+recording partial bottom-of-page metrics.
 
 ### Compare Results: `pnpm vitals:compare`
 
@@ -149,3 +173,12 @@ CONTENT_DELAY_MS=500 RAILS_ENV=production \
 ```
 
 At 0ms delay, SSR and RSC have similar FCP because data is instant and RSC's double-pass rendering overhead offsets its streaming advantage. As delay increases, RSC's FCP stays flat (shell streams immediately) while SSR's FCP grows proportionally.
+
+## List virtualization (react-virtuoso) investigation
+
+Issue [#184](https://github.com/shakacode/react-on-rails-demo-marketplace-rsc/issues/184)
+asked whether list virtualization composes with the demo's SSR / client / RSC
+variants and at what cost. The measured answer — including the
+`/restaurant/:id/ssr-virtual` and `/restaurant/:id/rsc-virtual` routes, the
+per-shape costs, the `verify:rsc` red-team, and the decision table — lives in
+[`docs/react-virtuoso-rsc-benchmark.md`](./docs/react-virtuoso-rsc-benchmark.md).
