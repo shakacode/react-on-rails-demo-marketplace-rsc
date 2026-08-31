@@ -48,3 +48,4 @@ When running ShakaPerf performance measurements:
 Portable shared skills resolve this repo's commands and policy through:
 - **Commands** — run `.agents/bin/<name>` (`setup`, `validate`, `test`, ...); see `.agents/bin/README.md`. A missing script means that capability is n/a here.
 - **Policy / config** — `.agents/agent-workflow.yml`.
+- **QA-stress seam** — the `qa_stress:` block in `agent-workflow.yml` declares the contract for `/qa-stress` runs. Additional wrappers: `.agents/bin/{serve,seed,reset}`. See `.agents/bin/README.md` for details.

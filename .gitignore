@@ -136,3 +136,9 @@ test-*.js
 /compare-bisect-results/
 /.perf-worktrees/
 
+# QA-stress workspace and agent scratch directories
+.qa-stress-workspace/
+.dev-logs/
+.lh-results/
+.perf-worktrees/
+
