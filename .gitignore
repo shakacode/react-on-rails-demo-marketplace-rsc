@@ -130,3 +130,9 @@ test-*.js
 # macOS extended attribute files
 ._*
 
+# QA-stress workspace and agent scratch directories
+.qa-stress-workspace/
+.dev-logs/
+.lh-results/
+.perf-worktrees/
+
