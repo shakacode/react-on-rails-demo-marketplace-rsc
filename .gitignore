@@ -130,6 +130,12 @@ test-*.js
 # macOS extended attribute files
 ._*
 
+# ShakaPerf results (generated, not committed)
+/audit-results/
+/compare-results/
+/compare-bisect-results/
+/.perf-worktrees/
+
 # QA-stress workspace and agent scratch directories
 .qa-stress-workspace/
 .dev-logs/

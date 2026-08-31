@@ -23,6 +23,26 @@ applicable direct user or maintainer authorization and this repository policy.
 Unavailable or non-portable checks may be recorded as explicit non-blocking
 skips; they never waive a required hosted gate or unresolved blocking feedback.
 
+## ShakaPerf Agent Contract
+
+When running ShakaPerf performance measurements:
+
+- **Never invoke bare `shaka-perf servers`** — it opens an interactive menu
+  that agents cannot navigate. Always use a subcommand:
+  `shaka-perf compare`, `shaka-perf audit`, or `shaka-perf discover-abtests`.
+- **Always background `servers start-servers`** if using the Docker twin-servers
+  path (currently deferred; bare-metal worktrees are the active provisioning).
+- Use `pnpm perf:compare` for branch-vs-main comparison (uses running servers).
+- Use `pnpm perf:compare:commits <refA> <refB>` for two-ref comparison
+  (provisions its own worktree servers).
+- Use `pnpm perf:audit` for single-target problem discovery.
+- Run `pnpm perf:preflight` before any performance run to verify prerequisites.
+- Results are machine-readable in `compare-results/report.json` (schemaVersion 1).
+- Exit codes: `0` = clean, `1` = pipeline completed with failures,
+  `75` = transient state (retry), other non-zero = harness/config problem.
+- Do not rely on per-stage `summary` objects in JSON reports — they are upstream
+  WIP (shakaperf#68). Use the HTML report for numeric detail.
+
 ## Agent Workflow Configuration
 
 Portable shared skills resolve this repo's commands and policy through:

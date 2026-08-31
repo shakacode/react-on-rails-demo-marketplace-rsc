@@ -27,6 +27,10 @@
     "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs",
     "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
     "test:pull-mode": "node scripts/verify-pull-mode-e2e.js",
+    "perf:preflight": "bash scripts/perf-preflight.sh",
+    "perf:audit": "bash scripts/perf-audit.sh",
+    "perf:compare": "bash scripts/perf-compare.sh",
+    "perf:compare:commits": "bash scripts/perf-compare-commits.sh",
     "postinstall": "node scripts/apply-ppr-patches.js"
   },
   "dependencies": {
@@ -76,7 +80,8 @@
       "nanoid": "^3.3.18",
       "react-on-rails": "17.0.0",
       "shakapacker": "10.2.0",
-      "uuid@8": "^11.1.1"
+      "uuid@8": "^11.1.1",
+      "nanoid@3": "^3.3.18"
     }
   },
   "devDependencies": {
@@ -130,6 +135,9 @@
     "rspack-manifest-plugin": "^5.2.2",
     "sass": "^1.101.0",
     "sass-loader": "^17.0.0",
+    "shaka-bundle-size": "0.0.12",
+    "shaka-perf": "0.2.5",
+    "shaka-shared": "0.2.4",
     "shakapacker": "10.2.0",
     "style-loader": "^4.0.0",
     "swc-loader": "^0.2.6",
