@@ -9,7 +9,3 @@
 #   inflect.irregular "person", "people"
 #   inflect.uncountable %w( fish sheep )
 # end
-
-ActiveSupport::Inflector.inflections(:en) do |inflect|
-  inflect.acronym 'PPR'
-end

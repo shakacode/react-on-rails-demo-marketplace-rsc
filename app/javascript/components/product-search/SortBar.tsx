@@ -19,7 +19,7 @@ export function SortBar({ currentSort, totalResults, onSortChange }: Props) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 px-1">
       <p className="text-sm text-gray-600">
-        <span className="font-semibold text-gray-900">{totalResults.toLocaleString()}</span>{' '}
+        <span className="font-semibold text-gray-900">{totalResults.toLocaleString('en-US')}</span>{' '}
         results
       </p>
       <div className="flex items-center gap-2">
