@@ -62,6 +62,13 @@ jobs:
       CI: 'true'
       # host/user/password for the Postgres service; database.yml names the DB.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432
+      # config/application.rb calls Bundler.require(*Rails.groups), and Rails.groups
+      # for RAILS_ENV=test resolves to [:default, :test] — never :development. So
+      # skipping the :development-only group (web-console, rubocop, rubocop-rails)
+      # is safe: nothing in this job's boot path or spec/requests + spec/routing
+      # requires them, and every :test-tagged gem (including the ones also shared
+      # with :development, like rspec-rails) still installs normally.
+      BUNDLE_WITHOUT: development
 
     steps:
       - name: Checkout
