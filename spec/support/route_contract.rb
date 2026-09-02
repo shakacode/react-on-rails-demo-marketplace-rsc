@@ -15,9 +15,9 @@
 # Puppeteer gate (browser-smoke.yml) instead.
 #
 # Deliberately out of scope, so they never appear in the buckets:
-#   * Non-GET endpoints. The two POSTs (`/api/product_search/review_snippets` and the
-#     dead `/api/performance_metrics`, see #189) are not part of a GET page contract;
-#     the former still has its own request spec.
+#   * Non-GET endpoints. `/api/product_search/review_snippets` is not part of a GET
+#     page contract; it has its own request spec. (The dead `/api/performance_metrics`
+#     POST, which had no backing controller, was removed in #189.)
 #   * Framework-owned routes, which are listed in EXCLUSIONS with a rationale.
 module RouteContract
   # Dynamic segments need a deterministic value so the routing assertions are
