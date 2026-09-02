@@ -49,6 +49,7 @@ const configureClient = () => {
   // client config is going to try to load chunks.
   delete clientConfig.entry['server-bundle'];
 
+  rscImplementation.configureClientConfig(clientConfig);
   clientConfig.plugins.push(rscImplementation.createClientPlugin(rscClientReferenceOptions));
 
   if (!isHMR) {

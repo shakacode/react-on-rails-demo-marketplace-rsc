@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module PPRPatches
+  # Extends RenderOptions to recognize PPR-specific render modes (ppr_prerender, ppr_resume)
+  # and include them in the streaming? predicate.
   module RenderOptionsPatch
     def streaming?
       %i[html_streaming rsc_payload_streaming ppr_prerender ppr_resume].include?(render_mode)

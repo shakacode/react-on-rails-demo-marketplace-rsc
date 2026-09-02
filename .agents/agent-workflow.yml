@@ -1,6 +1,7 @@
 ---
 base_branch: main
 follow_up_prefix: 'Follow-up:'
+repo_prefix: RORM
 review_gate: AI reviewers are advisory unless they confirm a blocker. The merge
   gate is every required current-head check green; any unavailable or non-portable
   check must be recorded as an explicit non-blocking skip; all review threads
@@ -15,4 +16,220 @@ merge_ledger: n/a
 ci_parity_environment: n/a — reproduce CI-only failures from the matching job in .github/workflows/**
 hosted_ci_trigger: n/a — CI runs on every PR if configured
 ci_change_detector: n/a
-repo_prefix: RORM
+
+# ---------------------------------------------------------------------------
+# QA-stress seam — consumed by the /qa-stress skill (Phase 0 contract check)
+# ---------------------------------------------------------------------------
+qa_stress:
+  # --- workspace & materialization ---
+  scratch_root: .qa-stress-workspace
+  materialization: git archive HEAD | tar -xf - -C "$QA_SCRATCH"
+  # git-archive exports only committed, tracked files; .env, .psi-key, and
+  # config/react_on_rails_pro_license.key are gitignored so they are excluded
+  # by construction.
+
+  # --- target application ---
+  app_type: rails-with-node-renderer
+  install_command: .agents/bin/install
+  serve_command: .agents/bin/serve
+  seed_command: .agents/bin/seed
+  reset_command: .agents/bin/reset
+  build_command: .agents/bin/build
+  build_strategy: once-per-run
+  health_endpoints:
+    rails: http://127.0.0.1:${QA_RAILS_PORT:-3020}/up
+    renderer: tcp://127.0.0.1:${QA_RENDERER_PORT:-3821}
+
+  # --- database isolation (D1) ---
+  database:
+    name_template: localhub_demo_qa_${QA_RUN_ID}
+    protected_names:
+      - localhub_demo_development
+      - localhub_demo_production
+    seed_mode: small
+
+  # --- identity model (D2) ---
+  identity_model: cache-key-locale-headers
+  identity_fields:
+    - cache_key
+    - accept_language
+    - request_headers
+
+  # --- browser tool (F4) ---
+  browser_tool: puppeteer
+  browser_tool_note: Already a devDependency; Chromium installed via `npx puppeteer browsers install chrome`
+
+  # --- load tool (D3) ---
+  load_tool: autocannon
+  load_tool_note: >-
+    Named here as the seam contract value. Not yet installed as a devDependency;
+    the actual `pnpm add -D autocannon` is a follow-up. Coarse fallback:
+    `for i in $(seq 1 $CONCURRENCY); do curl -s "$URL" >/dev/null & done; wait`
+
+  # --- fault injection (D7) ---
+  fault_injection: forbidden
+
+  # --- reporting (D6) ---
+  reporting:
+    default_destination: workspace-only
+    auto_file_issues: false
+    approval_required_for: non-security-findings
+    security_findings: workspace-only-until-triaged
+
+  # --- workspace cleanup ---
+  workspace_cleanup: delete-after-run
+
+  # --- tier configurations ---
+  tiers:
+    quick:
+      max_duration_minutes: 5
+      max_concurrent_requests: 4
+      max_routes: 6
+      memory_samples: 3
+      lighthouse_runs: 0
+      browser_interaction_tests: false
+      request_count: 20
+      loop_count: 5
+      concurrency_list: [1, 4]
+      target_count_cap: 1
+      drain_window_seconds: 30
+      max_parallel_agents: 2
+      description: Fast smoke — port conflicts, crash-on-boot, obvious leaks
+    standard:
+      max_duration_minutes: 20
+      max_concurrent_requests: 10
+      max_routes: 37
+      memory_samples: 10
+      lighthouse_runs: 1
+      browser_interaction_tests: true
+      request_count: 100
+      loop_count: 30
+      concurrency_list: [1, 5, 10]
+      target_count_cap: 1
+      drain_window_seconds: 60
+      max_parallel_agents: 3
+      description: Full route coverage with single-pass memory slope and one Lighthouse audit
+    deep:
+      max_duration_minutes: 60
+      max_concurrent_requests: 25
+      max_routes: 37
+      memory_samples: 30
+      lighthouse_runs: 3
+      browser_interaction_tests: true
+      request_count: 500
+      loop_count: 100
+      concurrency_list: [1, 5, 10, 25]
+      target_count_cap: 1
+      drain_window_seconds: 120
+      max_parallel_agents: 4
+      heap_artifact_policy: capture-on-regression
+      description: Sustained load, multi-sample memory regression, hostile inputs
+    exhaustive:
+      available: false
+      reason: >-
+        Exhaustive tier is not supported for v1. The demo app's seed data
+        (50K reviews) and single-host topology do not justify multi-hour
+        soak runs. Re-evaluate when the app has auth, payments, or
+        multi-tenant data isolation to stress.
+
+  # --- feature / route matrix (F6, derived from .verify-routes.js) ---
+  feature_matrix:
+    static_pages:
+      routes:
+        - /
+        - /products
+        - /why-rsc
+        - /measure
+        - /rsc-performance
+        - /rsc
+      rendering: static
+      notes: Informational pages; no SSR/RSC rendering variant
+    restaurant:
+      routes:
+        - /restaurant/1/ssr
+        - /restaurant/1/client
+        - /restaurant/1/rsc
+        - /restaurant/1/ssr-cached
+        - /restaurant/1/rsc-cached
+      rendering: ssr,client,rsc,cached
+      data_dependency: seeded restaurant with reviews
+      notes: >-
+        RSC variant uses stream_react_component_with_async_props;
+        async-props streaming is the primary stress surface.
+        Cached variants use cached_react_component and
+        cached_stream_react_component — primary cache-leak test surface.
+    product:
+      routes:
+        - /product/ssr
+        - /product/client
+        - /product/rsc
+        - /product/rsc-pull
+        - /product/ssr-cached
+        - /product/rsc-cached
+        - /product/ppr
+      rendering: ssr,client,rsc,rsc-pull,cached,ppr
+      data_dependency: seeded products
+      notes: >-
+        rsc-pull uses bidirectional pull-mode async props with
+        unstable_cache. Cached variants use cached_react_component and
+        cached_stream_react_component_with_async_props. /product/ppr is the
+        PPR route (requires ENABLE_PPR=true install variant).
+    product_search:
+      routes:
+        - /product-search/ssr
+        - /product-search/client
+        - /product-search/rsc
+        - /product-search/ssr-cached
+        - /product-search/rsc-cached
+      rendering: ssr,client,rsc,cached
+      data_dependency: seeded search products
+      has_interaction_test: true
+      notes: Client variant has a search interaction exercised by .verify-routes.js
+    blog:
+      routes:
+        - /blog/ssr
+        - /blog/client
+        - /blog/rsc
+        - /blog/rsc-simple
+        - /blog/ssr-cached
+        - /blog/rsc-cached
+        - /blog/rsc-simple-cached
+      rendering: ssr,client,rsc,cached
+      data_dependency: seeded blog posts
+      notes: >-
+        Base blog variants plus cached endpoints. Cached variants use
+        cached_react_component, cached_stream_react_component_with_async_props,
+        and cached_stream_react_component respectively.
+    blog_steps:
+      routes:
+        - /blog/rsc-step1
+        - /blog/rsc-step1b
+        - /blog/rsc-step1c
+        - /blog/rsc-step2
+        - /blog/rsc-step3
+        - /blog/rsc-step4
+        - /blog/rsc-step5
+      rendering: rsc
+      data_dependency: seeded blog posts
+      notes: Incremental RSC migration steps; each step adds one RSC concept
+
+  # --- PPR variant (F7) ---
+  ppr:
+    env_flag: ENABLE_PPR=true
+    route: /product/ppr
+    notes: >-
+      PPR (Partial Prerendering) variant requires the ENABLE_PPR=true
+      environment variable at install time (patches node_modules via
+      postinstall). The /product/ppr route invokes show_ppr and
+      ppr_react_component; /product/rsc is NOT a PPR route. PPR is
+      experimental and may not be available in all environments.
+
+  # --- environment variable contract ---
+  env_vars:
+    required:
+      - QA_RUN_ID
+    optional:
+      - QA_RAILS_PORT
+      - QA_RENDERER_PORT
+      - SEED_MODE
+      - ENABLE_PPR

@@ -25,3 +25,30 @@ Style/FormatStringToken:
 Style/SymbolArray:
   EnforcedStyle: percent
   MinSize: 10
+
+# RSpec example groups and the request-spec data builders are long by nature;
+# the size metrics target production code, not the spec DSL. `inherit_mode`
+# keeps the .rubocop_todo.yml exclusions for these cops intact.
+Metrics/BlockLength:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/MethodLength:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - 'spec/**/*'
+
+# The route contract is a declarative inventory of every public GET route, so its
+# length tracks the size of the app's route table rather than any complexity worth
+# splitting up.
+Metrics/ModuleLength:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - 'spec/support/route_contract.rb'

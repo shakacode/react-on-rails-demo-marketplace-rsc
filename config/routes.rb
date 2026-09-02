@@ -33,6 +33,10 @@ Rails.application.routes.draw do
   get '/restaurant/:id/client', to: 'restaurants#show_client', as: :restaurant_show_client
   get '/restaurant/:id/rsc', to: 'restaurants#show_rsc', as: :restaurant_show_rsc
   get '/restaurant/:id/rsc-cached', to: 'restaurants#show_rsc_cached' # RSC + cached_stream_react_component
+  # Virtualized review-list siblings (issue #184): SSR + react-virtuoso (Shape A)
+  # and RSC + react-virtuoso (Shape B). ?count= / ?initial= tune the experiment.
+  get '/restaurant/:id/ssr-virtual', to: 'restaurants#show_ssr_virtual', as: :restaurant_show_ssr_virtual
+  get '/restaurant/:id/rsc-virtual', to: 'restaurants#show_rsc_virtual', as: :restaurant_show_rsc_virtual
 
   # Product page routes — three versions demonstrating e-commerce RSC gains
   get '/product/ssr', to: 'products#show_ssr'        # V1: All data fetched on server, returned at once
@@ -40,6 +44,7 @@ Rails.application.routes.draw do
   get '/product/client', to: 'products#show_client'   # V2: Loadable components, client-side fetch
   get '/product/rsc', to: 'products#show_rsc'         # V3: RSC streaming
   get '/product/rsc-cached', to: 'products#show_rsc_cached' # V3 + cached_stream_react_component_with_async_props
+  get '/product/rsc-pull', to: 'products#show_rsc_pull' # V5: RSC pull-mode — bidirectional async props + unstable_cache
   get '/product/ppr', to: 'products#show_ppr'         # V4: PPR — cached shell + dynamic streaming
 
   # Product search results — three versions demonstrating search page RSC gains

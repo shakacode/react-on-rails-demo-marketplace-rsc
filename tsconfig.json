@@ -20,7 +20,9 @@
   },
   "include": [
     "app/javascript/**/*.ts",
-    "app/javascript/**/*.tsx"
+    "app/javascript/**/*.tsx",
+    "abtests.config.ts",
+    "ab-tests/**/*.ts"
   ],
   "exclude": [
     "node_modules",
