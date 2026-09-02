@@ -28,6 +28,7 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/localhub_demo_smoke
       RAILS_ENV: production
       RAILS_SERVE_STATIC_FILES: "true"
+      RAILS_LOG_TO_STDOUT: "true"
       RENDERER_LOG_LEVEL: warn
 
     steps:
@@ -171,5 +172,7 @@ jobs:
         run: |
           echo "=== Rails log ==="
           cat /tmp/marketplace-rails.log || true
+          echo "=== Rails production.log ==="
+          cat log/production.log || true
           echo "=== Node renderer log ==="
           cat /tmp/marketplace-renderer.log || true
