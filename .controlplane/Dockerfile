@@ -39,8 +39,17 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle config set without 'development test' && \
     bundle install --jobs=4 --retry=3
 
-# Install Node packages
+# Install Node packages.
+# `pnpm install` also runs package.json's `postinstall` hook, which is
+# `node scripts/apply-ppr-patches.js`. That script therefore has to be in the image
+# *before* this layer runs, or the install aborts with MODULE_NOT_FOUND. Only the
+# hook itself is copied, not all of `scripts/`, so that editing an unrelated script
+# does not invalidate the install layer's cache.
+# The hook is a no-op during the image build: it returns early unless ENABLE_PPR=true,
+# which nothing here sets, so the `patches/` tree it would otherwise read is not
+# needed until the `COPY . .` below.
 COPY package.json pnpm-lock.yaml .npmrc ./
+COPY scripts/apply-ppr-patches.js ./scripts/
 RUN pnpm install --frozen-lockfile
 
 # Copy app source

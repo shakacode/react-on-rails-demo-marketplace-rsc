@@ -13,6 +13,10 @@ public/packs-test
 spec
 tasks
 scripts
+# ...except the one script `pnpm install` needs: package.json's `postinstall` hook
+# runs `node scripts/apply-ppr-patches.js`, and the build stage copies it in before
+# installing.
+!scripts/apply-ppr-patches.js
 *.md
 .rspec
 .rubocop*
