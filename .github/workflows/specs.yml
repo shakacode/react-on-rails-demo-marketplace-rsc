@@ -78,4 +78,8 @@ jobs:
         run: bin/rails db:test:prepare
 
       - name: Run request & routing specs
-        run: bundle exec rspec spec/requests spec/routing
+        # spec/ppr_production_boot_spec.rb lives outside spec/requests and
+        # spec/routing but needs only Ruby (it shells out to `bin/rails
+        # runner` in a self-contained production subprocess, no DB access),
+        # so it rides along in this fast job instead of getting its own.
+        run: bundle exec rspec spec/requests spec/routing spec/ppr_production_boot_spec.rb
