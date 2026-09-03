@@ -125,7 +125,7 @@ environment secrets directly.
 
 Leave `CPFLOW_VERSION` unset so the workflow builds cpflow from the same
 checked-out upstream source. If you set `CPFLOW_VERSION`, it must match the
-release tag your wrappers are pinned to: a `CPFLOW_VERSION=5.1.1` runtime
+release tag your wrappers are pinned to: a `CPFLOW_VERSION=5.3.0` runtime
 override goes with a wrapper pinned to `uses: ...@v5.3.0`.
 
 After updating the `cpflow` gem in this repo, update the generated wrappers in
