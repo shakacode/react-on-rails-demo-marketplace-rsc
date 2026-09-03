@@ -70,10 +70,14 @@ doc, section "Phase C".
 ## Failure alerts for non-PR runs
 
 `workflow-failure-alerts.yml` watches `Cleanup Stale Review Apps` (nightly
-cron) and `Deploy Staging to Control Plane` (push to main). On failure it opens
-or updates a `ci-alert` issue mentioning the owners; after two consecutive
-green runs it closes the issue. PR runs are ignored — the PR page already shows
-those.
+cron) and `Deploy Staging to Control Plane` (push to main). On failure (or
+timeout/startup failure) of a non-PR run on `main`, it opens or updates a
+`ci-alert` issue mentioning the owners; after two consecutive green runs it
+closes the issue. PR runs are ignored — the PR page already shows those.
+
+⚠️ The watch list is keyed to workflow display names. **Renaming a watched
+workflow without updating the list silently kills its alerting** — update
+`workflow-failure-alerts.yml` in the same PR as any watched-workflow rename.
 
 To test it end to end (only works after the file is on `main`):
 

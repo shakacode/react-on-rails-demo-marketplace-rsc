@@ -86,9 +86,23 @@ jobs:
 
           # Fail OPEN: if the file listing breaks, run the suite. A wasted
           # spec run is cheap; a silently skipped gate is not.
+          # Renames matter on BOTH sides: a pure rename OUT of a Ruby-relevant
+          # path (lib/foo.rb -> scripts/foo.rb) lists only the new path in
+          # .filename — the old path is in .previous_filename. Missing it would
+          # green-light a PR whose rename breaks require/routing targets.
           if ! files=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" \
-                         --paginate --jq '.[].filename'); then
+                         --paginate --jq '.[] | .filename, (.previous_filename // empty)'); then
             echo "Could not list PR files — running specs to be safe."
+            echo "ruby=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          # The files endpoint silently caps at 3000 entries. If the PR claims
+          # more files than we listed, the list is incomplete — fail open too.
+          declared=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.changed_files' || echo "")
+          listed=$(grep -c . <<< "${files}" || true)
+          if [[ -z "${declared}" || "${listed}" -lt "${declared}" ]]; then
+            echo "File listing incomplete (${listed}/${declared:-unknown}) — running specs to be safe."
             echo "ruby=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi

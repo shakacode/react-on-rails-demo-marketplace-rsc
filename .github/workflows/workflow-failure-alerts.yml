@@ -23,7 +23,12 @@ name: Workflow failure alerts
 
 on:
   workflow_run:
-    # The watched list. Extend by adding a workflow's `name:` here.
+    # The watched list, keyed to each workflow's display `name:`. Extend by
+    # adding a name here. RENAME HAZARD: if a watched workflow's `name:`
+    # changes and this list is not updated, workflow_run silently stops firing
+    # for it — its alerting dies and any open `ci-alert` issue (title also
+    # keyed to the old name) can never auto-close. Update this list in the
+    # same PR as any watched-workflow rename.
     workflows:
       - Cleanup Stale Review Apps
       - Deploy Staging to Control Plane
@@ -46,8 +51,14 @@ env:
 
 jobs:
   alert:
-    # Non-PR runs only (schedule / push / manual dispatch).
-    if: github.event.workflow_run.event != 'pull_request'
+    # Non-PR runs of MAIN only (schedule / push / manual dispatch). The
+    # head_branch guard matters: Deploy Staging also triggers on `master`, and
+    # workflow_dispatch can run from any branch — without it, a non-main
+    # failure would file an issue falsely claiming main is failing, and the
+    # recovery streak below (which only counts main runs) could never close it.
+    if: >-
+      github.event.workflow_run.event != 'pull_request' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -79,7 +90,11 @@ jobs:
             | jq -r --arg t "${title}" '[.[] | select(.title == $t)][0].number // empty')
 
           case "${RUN_CONCLUSION}" in
-            failure)
+            # timed_out and startup_failure are failures for alerting purposes:
+            # a workflow that hangs or cannot even start is exactly the silent
+            # breakage this robot exists to surface. Only `cancelled`/`skipped`
+            # stay neutral (deliberate human/concurrency actions).
+            failure|timed_out|startup_failure)
               if [[ -n "${issue_number}" ]]; then
                 gh issue comment "${issue_number}" --repo "${REPO}" \
                   --body "${MENTIONS} — still failing: ${RUN_URL}"
@@ -99,6 +114,8 @@ jobs:
               [[ -n "${issue_number}" ]] || exit 0
 
               # Close only after TWO consecutive green non-PR runs on main.
+              # timed_out/startup_failure count as failures here too, so an
+              # unhealthy run between two successes blocks the auto-close.
               # Cancelled/skipped runs are ignored — they are neither proof of
               # health nor of sickness.
               recent=$(gh api \
@@ -106,7 +123,8 @@ jobs:
                 --jq '[.workflow_runs[]
                        | select(.event != "pull_request")
                        | select(.head_branch == "main")
-                       | select(.conclusion == "success" or .conclusion == "failure")
+                       | select(.conclusion == "success" or .conclusion == "failure"
+                                or .conclusion == "timed_out" or .conclusion == "startup_failure")
                        | .conclusion][0:2] | join(",")')
 
               if [[ "${recent}" == "success,success" ]]; then
