@@ -241,6 +241,9 @@ importers:
       mini-css-extract-plugin:
         specifier: ^2.10.2
         version: 2.10.2(webpack@5.108.4)
+      minimist:
+        specifier: 1.2.5
+        version: 1.2.5
       patch-package:
         specifier: ^8.0.1
         version: 8.0.1
@@ -5034,6 +5037,9 @@ packages:
   minimatch@9.0.9:
     resolution: {integrity: sha512-OBwBN9AL4dqmETlpS2zasx+vTeWclWzkblfZk7KTA5j3jeOONz/tRCnZomUyvNg83wL5Zv9Ss6HMJXAgL8R2Yg==}
     engines: {node: '>=16 || 14 >=14.17'}
+
+  minimist@1.2.5:
+    resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
@@ -11390,7 +11396,7 @@ snapshots:
 
   handlebars@4.7.9:
     dependencies:
-      minimist: 1.2.8
+      minimist: 1.2.5
       neo-async: 2.6.2
       source-map: 0.6.1
       wordwrap: 1.0.0
@@ -12259,6 +12265,8 @@ snapshots:
   minimatch@9.0.9:
     dependencies:
       brace-expansion: 2.1.4
+
+  minimist@1.2.5: {}
 
   minimist@1.2.8: {}
 
