@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
@@ -62,7 +62,7 @@ jobs:
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
 
       - name: Set up Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .node-version
 
@@ -71,6 +71,7 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           # `pnpm audit` reads package.json + pnpm-lock.yaml and queries the
           # registry's advisory DB — no `pnpm install` needed (~30s job).
@@ -104,6 +105,13 @@ jobs:
 
           audit_json . > /tmp/head-audit.json
           if ! high_ghsas /tmp/head-audit.json > /tmp/head-highs.txt; then
+            # The push arm is documented warn-only — an advisory-DB outage at
+            # merge time must not paint main red (the nightly stays
+            # fail-closed).
+            if [[ "$EVENT_NAME" == "push" ]]; then
+              echo "::warning title=Dependency audit could not complete::Could not parse pnpm audit output on this main push (registry hiccup or malformed JSON). The nightly run owns main's hard signal."
+              exit 0
+            fi
             echo "::error::Could not parse pnpm audit output for this branch"
             exit 1
           fi
@@ -116,7 +124,7 @@ jobs:
           # in-job step ran; its exit code is not the verdict anymore).
           pnpm audit:high > /tmp/head-audit.txt || true
           {
-            echo "## pnpm audit --audit-level high (this branch)"
+            echo "## pnpm audit output (this branch) — informational, all severities; the gate verdict uses the JSON audit's high/critical set"
             echo '```'
             cat /tmp/head-audit.txt
             echo '```'
@@ -132,25 +140,41 @@ jobs:
               # Nightly / manual runs fail loudly so advisories can't rot.
               echo "High-severity advisories present:"
               cat /tmp/head-highs.txt
+              echo "::error title=High-severity dependency advisories::The audit found high or critical advisories (list in the step log and job summary). Remediation is tracked in issue #167 / Dependabot."
               exit 1
               ;;
             pull_request)
               # Differential gate: blame the PR only for advisories its own
               # dependency changes introduce relative to the base branch,
               # with both sides audited at the same moment against the same
-              # advisory DB.
-              git fetch --no-tags --depth=1 origin "$BASE_REF"
+              # advisory DB. The base is pinned to the event payload's
+              # base.sha — the exact snapshot the PR's merge ref was built
+              # against — so a push to the base branch landing between event
+              # and run can no longer produce a false "introduced by this PR"
+              # red. Every fetch/read failure funnels into the crafted
+              # fail-closed error below instead of dying on bash -e with raw
+              # git stderr. BASE_REF is used only in human-facing messages.
+              baseline_unavailable() {
+                echo "::error title=Dependency audit baseline unavailable::Could not fetch or read the base (${BASE_REF} @ ${BASE_SHA}), so this PR's findings cannot be attributed. Re-run this job; if it keeps failing, check GitHub/registry availability."
+                exit 1
+              }
+
+              git fetch --no-tags --depth=1 origin "$BASE_SHA" || baseline_unavailable
               base_dir="$(mktemp -d)"
-              git show FETCH_HEAD:package.json > "$base_dir/package.json"
-              git show FETCH_HEAD:pnpm-lock.yaml > "$base_dir/pnpm-lock.yaml"
-              git show FETCH_HEAD:.npmrc > "$base_dir/.npmrc" 2>/dev/null || true
+              git show "$BASE_SHA":package.json > "$base_dir/package.json" || baseline_unavailable
+              git show "$BASE_SHA":pnpm-lock.yaml > "$base_dir/pnpm-lock.yaml" || baseline_unavailable
+              if git cat-file -e "$BASE_SHA":.npmrc 2>/dev/null; then
+                git show "$BASE_SHA":.npmrc > "$base_dir/.npmrc" || baseline_unavailable
+              fi
 
               audit_json "$base_dir" > /tmp/base-audit.json
               if ! high_ghsas /tmp/base-audit.json > /tmp/base-highs.txt; then
                 # Fail-closed (maintainer decision, 2026-09-03): with no
                 # baseline we cannot prove the PR didn't introduce these
-                # advisories, so we refuse to guess. Re-run the job once the
-                # registry / base fetch recovers.
+                # advisories, so we refuse to guess. Fetch/read failures are
+                # funnelled through baseline_unavailable above; this guard
+                # catches the base audit itself failing (registry hiccup,
+                # malformed JSON). Re-run the job once the registry recovers.
                 echo "::error title=Dependency audit baseline unavailable::Could not audit ${BASE_REF}, so this PR's findings cannot be attributed. Re-run this job; if it keeps failing, check registry availability."
                 exit 1
               fi
@@ -186,8 +210,10 @@ jobs:
   file-tracking-issue:
     needs: dependency-audit
     # `always()` is required: a failed `needs` job otherwise skips dependents
-    # before this condition is even evaluated.
-    if: always() && needs.dependency-audit.result == 'failure' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    # before this condition is even evaluated. Main-only: a workflow_dispatch
+    # hard-fail test on a feature branch must stay red without writing to the
+    # maintainers' tracking issue.
+    if: always() && needs.dependency-audit.result == 'failure' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -218,9 +244,13 @@ jobs:
           EOF
           )"
 
+          # gh --search is best-match, so require exact title equality before
+          # picking a hit — never comment on an unrelated, similarly-titled
+          # issue.
           existing="$(gh issue list --state open \
             --search "in:title \"Nightly dependency audit is failing\"" \
-            --json number --jq '.[0].number // empty')"
+            --json number,title \
+            --jq "[.[] | select(.title == \"$title\")][0].number // empty")"
 
           if [[ -n "$existing" ]]; then
             gh issue comment "$existing" --body "Still failing: ${RUN_URL} (advisories present or the audit could not complete — see the run)"
