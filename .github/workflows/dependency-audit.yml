@@ -39,7 +39,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: dependency-audit-${{ github.ref }}
+  # Keyed by event too: schedule, push-to-main, and dispatch-on-main must not
+  # share a cancel-in-progress group, or a merge landing at ~04:23 UTC would
+  # cancel the in-flight nightly (no hard fail, no tracking issue that night).
+  group: dependency-audit-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -48,7 +51,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-      issues: write # the nightly failure files/updates the tracking issue
 
     steps:
       - name: Checkout code
@@ -83,8 +85,15 @@ jobs:
             node -e '
               const fs = require("fs");
               const j = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              // Fail closed: valid JSON WITHOUT an advisories key (e.g. pnpm
+              // emits {"error":{...}} on registry failure) must not read as
+              // "zero advisories". A present-but-empty advisories object is
+              // the genuine clean case.
+              if (typeof j.advisories !== "object" || j.advisories === null) {
+                process.exit(2);
+              }
               const out = new Set();
-              for (const a of Object.values(j.advisories || {})) {
+              for (const a of Object.values(j.advisories)) {
                 if (a.severity === "high" || a.severity === "critical") {
                   out.add(`${a.github_advisory_id || a.id} ${a.module_name}`);
                 }
@@ -98,6 +107,10 @@ jobs:
             echo "::error::Could not parse pnpm audit output for this branch"
             exit 1
           fi
+          # comm(1) verifies sort order under the runner's locale; re-sort in
+          # C collation so the comparison never depends on JS code-unit order
+          # happening to match that locale.
+          LC_ALL=C sort -o /tmp/head-highs.txt /tmp/head-highs.txt
 
           # Human-readable table for the job summary (same command the old
           # in-job step ran; its exit code is not the verdict anymore).
@@ -141,8 +154,9 @@ jobs:
                 echo "::error title=Dependency audit baseline unavailable::Could not audit ${BASE_REF}, so this PR's findings cannot be attributed. Re-run this job; if it keeps failing, check registry availability."
                 exit 1
               fi
+              LC_ALL=C sort -o /tmp/base-highs.txt /tmp/base-highs.txt
 
-              comm -23 /tmp/head-highs.txt /tmp/base-highs.txt > /tmp/new-highs.txt
+              LC_ALL=C comm -23 /tmp/head-highs.txt /tmp/base-highs.txt > /tmp/new-highs.txt
 
               if [[ -s /tmp/new-highs.txt ]]; then
                 {
@@ -166,8 +180,21 @@ jobs:
               ;;
           esac
 
+  # Separate job so the issues:write token is only ever live on the nightly /
+  # manual failure path — never during PR or push runs (the audit job above
+  # holds contents: read only).
+  file-tracking-issue:
+    needs: dependency-audit
+    # `always()` is required: a failed `needs` job otherwise skips dependents
+    # before this condition is even evaluated.
+    if: always() && needs.dependency-audit.result == 'failure' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+
+    steps:
       - name: File or update the advisory tracking issue
-        if: failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -180,11 +207,11 @@ jobs:
           title="Nightly dependency audit is failing (high-severity advisories)"
 
           body="$(cat <<EOF
-          The scheduled \`pnpm audit:high\` run found high-severity advisories.
+          The scheduled dependency audit failed — either high-severity
+          advisories are present or the audit could not complete. See the
+          run: ${RUN_URL} (the job summary / annotations say which).
 
-          - Run: ${RUN_URL}
-          - Advisory details: see that run's job summary.
-          - Remediation workflow: issue #167 / Dependabot.
+          - Remediation workflow for advisories: issue #167 / Dependabot.
 
           Filed automatically by \`dependency-audit.yml\`; while the nightly
           run keeps failing, this issue gets a comment instead of a duplicate.
@@ -196,7 +223,7 @@ jobs:
             --json number --jq '.[0].number // empty')"
 
           if [[ -n "$existing" ]]; then
-            gh issue comment "$existing" --body "Still failing: ${RUN_URL}"
+            gh issue comment "$existing" --body "Still failing: ${RUN_URL} (advisories present or the audit could not complete — see the run)"
           else
             gh issue create --title "$title" --body "$body" \
               --assignee AbanoubGhadban,justin808
