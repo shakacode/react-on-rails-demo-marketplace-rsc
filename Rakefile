@@ -16,6 +16,6 @@ Rails.application.load_tasks
 #
 # Booting RSpec there would fail on a connection error or an environment
 # mismatch rather than on a real regression, so keep `rake` database-free — the
-# suite has its own isolated job in .github/workflows/specs.yml. Run it directly
-# with `bundle exec rspec`.
+# suite has its own isolated job in .github/workflows/specs.yml (path-filtered
+# on PRs and on push to main). Run it directly with `bundle exec rspec`.
 Rake::Task['default'].clear if Rake::Task.task_defined?('default')
