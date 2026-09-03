@@ -36,9 +36,6 @@ importers:
       '@loadable/server':
         specifier: ^5.16.7
         version: 5.16.7(@loadable/component@5.16.7(react@19.2.8))(react@19.2.8)
-      '@loadable/webpack-plugin':
-        specifier: ^5.15.2
-        version: 5.15.2(webpack@5.108.4)
       d3-array:
         specifier: ^3.2.4
         version: 3.2.4
@@ -139,6 +136,9 @@ importers:
       '@loadable/babel-plugin':
         specifier: ^5.16.1
         version: 5.16.1(@babel/core@7.29.7)
+      '@loadable/webpack-plugin':
+        specifier: ^5.15.2
+        version: 5.15.2(webpack@5.108.4)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: ^0.6.2
         version: 0.6.2(react-refresh@0.18.0)(type-fest@5.8.0)(webpack-dev-server@5.2.6)(webpack@5.108.4)
