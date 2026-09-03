@@ -1,0 +1,203 @@
+name: Dependency Audit
+
+# Why this is a separate workflow — and why PR failures are differential
+# (issue #205):
+#
+# `pnpm audit:high` used to run inside browser-smoke, between lint and the
+# Chromium smoke. `pnpm audit` re-queries a live advisory database on every
+# run, so the same commit can pass one day and fail the next with no code
+# change — and when it failed, every functional step after it was skipped.
+# A transitive advisory in build tooling could silently switch off the only
+# push-time browser gate on main (verified on run 33426195157).
+#
+# The audit therefore lives here, reporting security results independently of
+# the functional gate:
+#   - pull_request: the PR's audit is compared against a same-moment audit of
+#     its base branch. Advisories the PR itself introduces (absent on the
+#     base) FAIL the check. Advisories that also fire on the base (e.g.
+#     published overnight) only WARN — an external clock must not invalidate
+#     unrelated work between PR-open and merge.
+#   - push to main: warn-only; main is the baseline itself, and the nightly
+#     run owns its hard signal.
+#   - schedule / workflow_dispatch: any high advisory FAILS the run and files
+#     or updates (never duplicates) a tracking issue assigned to the
+#     maintainers, so outstanding advisories cannot rot silently.
+#
+# Remediating the advisories themselves is tracked separately (issue #167 and
+# Dependabot); this workflow only owns the reporting mechanism.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Nightly, off-peak minute (GitHub cron runs on the default branch).
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write # the nightly failure files/updates the tracking issue
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+
+      - name: Audit high-severity JavaScript dependencies
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # `pnpm audit` reads package.json + pnpm-lock.yaml and queries the
+          # registry's advisory DB — no `pnpm install` needed (~30s job).
+
+          audit_json() { # $1 = directory; prints JSON; tolerates audit's
+                         # non-zero "advisories found" exit code
+            (cd "$1" && pnpm audit --audit-level high --json) || true
+          }
+
+          high_ghsas() { # $1 = json file; prints sorted "GHSA-id package"
+                         # lines for high/critical advisories
+            node -e '
+              const fs = require("fs");
+              const j = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              const out = new Set();
+              for (const a of Object.values(j.advisories || {})) {
+                if (a.severity === "high" || a.severity === "critical") {
+                  out.add(`${a.github_advisory_id || a.id} ${a.module_name}`);
+                }
+              }
+              for (const line of [...out].sort()) console.log(line);
+            ' "$1"
+          }
+
+          audit_json . > /tmp/head-audit.json
+          if ! high_ghsas /tmp/head-audit.json > /tmp/head-highs.txt; then
+            echo "::error::Could not parse pnpm audit output for this branch"
+            exit 1
+          fi
+
+          # Human-readable table for the job summary (same command the old
+          # in-job step ran; its exit code is not the verdict anymore).
+          pnpm audit:high > /tmp/head-audit.txt || true
+          {
+            echo "## pnpm audit --audit-level high (this branch)"
+            echo '```'
+            cat /tmp/head-audit.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ ! -s /tmp/head-highs.txt ]]; then
+            echo "No advisories at or above the high threshold."
+            exit 0
+          fi
+
+          case "$EVENT_NAME" in
+            schedule|workflow_dispatch)
+              # Nightly / manual runs fail loudly so advisories can't rot.
+              echo "High-severity advisories present:"
+              cat /tmp/head-highs.txt
+              exit 1
+              ;;
+            pull_request)
+              # Differential gate: blame the PR only for advisories its own
+              # dependency changes introduce relative to the base branch,
+              # with both sides audited at the same moment against the same
+              # advisory DB.
+              git fetch --no-tags --depth=1 origin "$BASE_REF"
+              base_dir="$(mktemp -d)"
+              git show FETCH_HEAD:package.json > "$base_dir/package.json"
+              git show FETCH_HEAD:pnpm-lock.yaml > "$base_dir/pnpm-lock.yaml"
+              git show FETCH_HEAD:.npmrc > "$base_dir/.npmrc" 2>/dev/null || true
+
+              audit_json "$base_dir" > /tmp/base-audit.json
+              if ! high_ghsas /tmp/base-audit.json > /tmp/base-highs.txt; then
+                # Fail-closed (maintainer decision, 2026-09-03): with no
+                # baseline we cannot prove the PR didn't introduce these
+                # advisories, so we refuse to guess. Re-run the job once the
+                # registry / base fetch recovers.
+                echo "::error title=Dependency audit baseline unavailable::Could not audit ${BASE_REF}, so this PR's findings cannot be attributed. Re-run this job; if it keeps failing, check registry availability."
+                exit 1
+              fi
+
+              comm -23 /tmp/head-highs.txt /tmp/base-highs.txt > /tmp/new-highs.txt
+
+              if [[ -s /tmp/new-highs.txt ]]; then
+                {
+                  echo "## ❌ New high-severity advisories introduced by this PR"
+                  echo '```'
+                  cat /tmp/new-highs.txt
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"
+                echo "::error title=New high-severity dependency advisories::This PR's lockfile triggers advisories that do not fire on ${BASE_REF} (see the job summary). Avoid or fix the vulnerable versions before merge."
+                exit 1
+              fi
+
+              echo "::warning title=Pre-existing high-severity dependency advisories::All findings also fire on ${BASE_REF}, so they were not caused by this PR. Remediation is tracked in issue #167 / Dependabot — do not bundle it into unrelated PRs."
+              exit 0
+              ;;
+            *)
+              # push to main: main is the baseline; the nightly run owns the
+              # hard signal.
+              echo "::warning title=High-severity dependency advisories on main::See the job summary. Remediation is tracked in issue #167 / Dependabot."
+              exit 0
+              ;;
+          esac
+
+      - name: File or update the advisory tracking issue
+        if: failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Assignees get GitHub email notifications — this is what reliably
+          # reaches both maintainers (the built-in scheduled-failure email
+          # only goes to whoever last edited this file).
+          title="Nightly dependency audit is failing (high-severity advisories)"
+
+          body="$(cat <<EOF
+          The scheduled \`pnpm audit:high\` run found high-severity advisories.
+
+          - Run: ${RUN_URL}
+          - Advisory details: see that run's job summary.
+          - Remediation workflow: issue #167 / Dependabot.
+
+          Filed automatically by \`dependency-audit.yml\`; while the nightly
+          run keeps failing, this issue gets a comment instead of a duplicate.
+          EOF
+          )"
+
+          existing="$(gh issue list --state open \
+            --search "in:title \"Nightly dependency audit is failing\"" \
+            --json number --jq '.[0].number // empty')"
+
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body "Still failing: ${RUN_URL}"
+          else
+            gh issue create --title "$title" --body "$body" \
+              --assignee AbanoubGhadban,justin808
+          fi
