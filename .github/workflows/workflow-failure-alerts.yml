@@ -1,0 +1,123 @@
+name: Workflow failure alerts
+
+# Scheduled and push-to-main workflow failures are invisible by default:
+# GitHub emails scheduled-run failures only to whoever authored the cron line,
+# and push-run failures only to the pusher. That is how "Cleanup Stale Review
+# Apps" failed 96 nights in a row unnoticed (#206). This workflow gives those
+# runs a durable, team-visible voice:
+#
+#   - first failure of a watched workflow -> open a `ci-alert` issue
+#   - every further failure               -> comment on that issue
+#   - two consecutive green runs          -> comment + close the issue
+#
+# PR-triggered runs are deliberately ignored: their results are already visible
+# (and, once #206's ruleset is active, blocking) on the PR itself.
+#
+# The robot sends no email — mentions in the issue/comments drive normal GitHub
+# notifications for the mentioned people.
+#
+# NOTE: `workflow_run` only fires for the copy of this file on the default
+# branch, so this cannot be exercised from a PR. First real test happens right
+# after merge: dispatch "Cleanup Stale Review Apps" (it currently fails) and
+# watch the alert issue appear. See docs/ci-required-checks.md.
+
+on:
+  workflow_run:
+    # The watched list. Extend by adding a workflow's `name:` here.
+    workflows:
+      - Cleanup Stale Review Apps
+      - Deploy Staging to Control Plane
+    types: [completed]
+
+permissions:
+  issues: write
+  actions: read
+
+# Serialize alert handling per watched workflow so two runs finishing at the
+# same time cannot race each other into filing duplicate issues.
+concurrency:
+  group: workflow-failure-alerts-${{ github.event.workflow_run.workflow_id }}
+  cancel-in-progress: false
+
+env:
+  # Who gets pinged. Edit here to hand off ownership.
+  MENTIONS: "@AbanoubGhadban @justin808"
+  ALERT_LABEL: ci-alert
+
+jobs:
+  alert:
+    # Non-PR runs only (schedule / push / manual dispatch).
+    if: github.event.workflow_run.event != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: File, update, or resolve the alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          # Event data flows in via env only — never interpolated into the
+          # script text below.
+          WF_NAME: ${{ github.event.workflow_run.name }}
+          WF_ID: ${{ github.event.workflow_run.workflow_id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          set -euo pipefail
+
+          title="CI alert: ${WF_NAME} is failing on main"
+
+          # Idempotent label bootstrap (already-exists error is fine).
+          gh api "repos/${REPO}/labels" \
+            -f name="${ALERT_LABEL}" -f color="d73a4a" \
+            -f description="Auto-filed by workflow-failure-alerts (#206)" \
+            >/dev/null 2>&1 || true
+
+          # Exact-title match among open ci-alert issues. (Plain jq: gh's
+          # built-in --jq flag does not support --arg.)
+          issue_number=$(gh issue list --repo "${REPO}" --state open \
+            --label "${ALERT_LABEL}" --json number,title \
+            | jq -r --arg t "${title}" '[.[] | select(.title == $t)][0].number // empty')
+
+          case "${RUN_CONCLUSION}" in
+            failure)
+              if [[ -n "${issue_number}" ]]; then
+                gh issue comment "${issue_number}" --repo "${REPO}" \
+                  --body "${MENTIONS} — still failing: ${RUN_URL}"
+              else
+                body=$(printf '%s\n' \
+                  "${MENTIONS} — the \`${WF_NAME}\` workflow failed on a non-PR run (schedule, push to main, or manual dispatch)." \
+                  "" \
+                  "Latest failing run: ${RUN_URL}" \
+                  "" \
+                  "_Filed automatically by \`.github/workflows/workflow-failure-alerts.yml\` (#206). Further failures are added as comments; the issue closes itself after two consecutive successful runs._")
+                gh issue create --repo "${REPO}" --label "${ALERT_LABEL}" \
+                  --title "${title}" --body "${body}"
+              fi
+              ;;
+            success)
+              # Nothing to resolve if no alert is open.
+              [[ -n "${issue_number}" ]] || exit 0
+
+              # Close only after TWO consecutive green non-PR runs on main.
+              # Cancelled/skipped runs are ignored — they are neither proof of
+              # health nor of sickness.
+              recent=$(gh api \
+                "repos/${REPO}/actions/workflows/${WF_ID}/runs?status=completed&per_page=20" \
+                --jq '[.workflow_runs[]
+                       | select(.event != "pull_request")
+                       | select(.head_branch == "main")
+                       | select(.conclusion == "success" or .conclusion == "failure")
+                       | .conclusion][0:2] | join(",")')
+
+              if [[ "${recent}" == "success,success" ]]; then
+                gh issue comment "${issue_number}" --repo "${REPO}" \
+                  --body "${MENTIONS} — recovered: two consecutive green runs, latest ${RUN_URL}. Closing."
+                gh issue close "${issue_number}" --repo "${REPO}"
+              else
+                echo "Green run, but the streak is '${recent}' — leaving the alert open."
+              fi
+              ;;
+            *)
+              echo "Conclusion '${RUN_CONCLUSION}' is neither success nor failure — ignoring."
+              ;;
+          esac
