@@ -72,7 +72,7 @@ cpflow run 'rails db:seed' -a react-server-components-demo
 ### Review apps
 
 This repo uses the generated Control Plane Flow GitHub Actions wrappers pinned
-to `shakacode/control-plane-flow@v5.1.1`.
+to `shakacode/control-plane-flow@v5.3.0`.
 
 Review app names are built from the prefix
 `react-server-components-demo-review`, so pull request 123 deploys as:
