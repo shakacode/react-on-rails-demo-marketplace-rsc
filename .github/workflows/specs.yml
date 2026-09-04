@@ -1,6 +1,8 @@
 name: RSpec request & routing specs
 
-# Fast, every-PR safety net for ordinary app-level changes. The existing browser
+# Fast safety net for ordinary app-level changes — runs on every PR that touches
+# Ruby/config/spec paths, and again on push to main as a post-merge gate.
+# The existing browser
 # gates prove the pages render and hydrate, but both need the full toolchain:
 # browser-smoke.yml builds production assets and boots Rails + the Node renderer
 # (~20 min), and rsc-rspack-e2e.yml additionally builds the Pro packages from
@@ -29,6 +31,23 @@ on:
       # The browser-route parity spec reads this file's inventory.
       - '.verify-routes.js'
       - '.github/workflows/specs.yml'
+      - 'Rakefile'
+      - 'bin/**'
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'config/**'
+      - 'lib/**'
+      - 'db/schema.rb'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'spec/**'
+      - '.rspec'
+      - '.verify-routes.js'
+      - '.github/workflows/specs.yml'
+      - 'Rakefile'
+      - 'bin/**'
   workflow_dispatch:
 
 permissions:
