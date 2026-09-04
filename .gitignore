@@ -121,9 +121,24 @@ test-*.js
 .mcp.json
 .psi-key
 
+# Playwright MCP server artifacts
+.playwright-mcp/
+
 # Claude Code worktrees and session state
 .claude/
 
 # macOS extended attribute files
 ._*
+
+# ShakaPerf results (generated, not committed)
+/audit-results/
+/compare-results/
+/compare-bisect-results/
+/.perf-worktrees/
+
+# QA-stress workspace and agent scratch directories
+.qa-stress-workspace/
+.dev-logs/
+.lh-results/
+.perf-worktrees/
 

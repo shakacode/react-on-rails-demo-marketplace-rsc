@@ -8,22 +8,26 @@ RSC_BUILD_IMPLEMENTATION=<implementation-id>
 
 If `RSC_BUILD_IMPLEMENTATION` is unset, the demo uses the released `react-on-rails-rsc` plugin and loader.
 
-See also [`docs/rsc-build-implementation-page-asset-comparison.md`](./rsc-build-implementation-page-asset-comparison.md) for the page-by-page transferred JS/CSS comparison between the released path and the branch implementation.
+See also:
+
+- [`docs/rsc-build-implementation-page-asset-comparison.md`](./rsc-build-implementation-page-asset-comparison.md) for the browser-level transferred JS/CSS comparison between `release` and `module_graph`.
+- [`docs/rsc-route-entry-size-comparison.md`](./rsc-route-entry-size-comparison.md) for the route-entry build-artifact JS/CSS comparison between `release` and `route_entry`.
 
 Current implementations:
 
 - `release`: released `react-on-rails-rsc` plugin + loader
 - `module_graph`: local webpack-only experimental plugin + local loader wrapper based on issue [#130](https://github.com/shakacode/react_on_rails_rsc/issues/130)
+- `route_entry`: local webpack/rspack benchmark implementation based on issue [#131](https://github.com/shakacode/react_on_rails_rsc/issues/131)
 
 ## Why this exists
 
-Issue #130 asks whether a module-graph-driven RSC build can do a better job than the released chunk-driven plugin at:
+Issues #130 and #131 ask whether graph-driven RSC builds can do a better job than the released chunk-driven plugin at:
 
 1. finding client boundaries,
 2. associating CSS with the right component,
 3. mapping a component to only the chunks it actually needs.
 
-This demo wires both modes behind one switch so the same app can be bundled both ways and compared with the same pages.
+This demo wires the implementations behind one switch so the same app can be bundled multiple ways and compared with the same pages.
 
 ## What this demo actually changes
 
@@ -71,6 +75,29 @@ This branch implementation is still a hybrid, not the full issue target:
 5. It emits a new `serverComponentCss` manifest bucket for server-rendered components.
 
 In simple terms: JS is still mostly chunk-driven here, but CSS becomes module-driven.
+
+### `route_entry`
+
+This branch implementation is benchmark-only and models issue #131's route-entry idea:
+
+1. Search the source tree for directories named by `RSC_ROUTE_ENTRY_DIRECTORY`.
+   The default is `startup`, matching React on Rails auto-bundling conventions.
+2. Treat every source file inside those directories as a server-component route root.
+3. Walk each route root's static relative import graph.
+4. Stop when a module has a top-level `"use client"` directive. That module is a
+   client boundary for the route.
+5. Keep walking through server modules and collect CSS imports in import order.
+6. Generate one client-side route entry under `tmp/rsc-route-entry-experiment/`
+   per route. The generated entry imports:
+   - server-component CSS discovered before client-boundary cuts;
+   - discovered client boundary modules.
+7. Add those generated entries to the client bundler config.
+8. Emit `react-rsc-route-entry-manifest.json` from client and server builds for
+   benchmarking.
+
+In simple terms: start from each route root, cut the graph at client boundaries,
+then let webpack/rspack build one browser entry for the route-discovered client
+and CSS surface.
 
 ### Full issue #130 target vs this branch
 
@@ -224,8 +251,14 @@ The script verifies that:
 ## Current limitations
 
 - `module_graph` is webpack-only in this demo. Selecting it for rspack fails fast.
-- The branch implementation still uses released client-reference discovery and released JS chunk mapping.
+- `module_graph` still uses released client-reference discovery and released JS chunk mapping.
 - The emitted `serverComponentCss` bucket still contains some synthetic generated-pack entries; the demo helper resolves startup files to the underlying component module first so the page uses the precise entry instead of the noisy one.
+- `route_entry` uses a demo-local static import resolver, not a final webpack/rspack
+  `moduleGraph` implementation.
+- `route_entry` follows relative static imports and exports. It does not resolve
+  arbitrary package imports, path aliases, or runtime-generated import strings.
+- `route_entry` emits benchmark route entries and a benchmark manifest. Rails views
+  do not yet link those route entries as the real page assets.
 
 ## Useful commands
 
@@ -239,6 +272,12 @@ Build with the experimental branch implementation:
 
 ```bash
 RSC_BUILD_IMPLEMENTATION=module_graph mise exec -- pnpm build:production
+```
+
+Build with the route-entry benchmark implementation:
+
+```bash
+RSC_BUILD_IMPLEMENTATION=route_entry mise exec -- pnpm build:production
 ```
 
 Inspect the current manifest:
