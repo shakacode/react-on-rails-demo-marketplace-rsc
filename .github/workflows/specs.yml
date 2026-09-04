@@ -1,6 +1,8 @@
 name: RSpec request & routing specs
 
-# Fast, every-PR safety net for ordinary app-level changes. The existing browser
+# Fast safety net for ordinary app-level changes — runs on every PR that touches
+# Ruby/config/spec paths, and again on push to main as a post-merge gate.
+# The existing browser
 # gates prove the pages render and hydrate, but both need the full toolchain:
 # browser-smoke.yml builds production assets and boots Rails + the Node renderer
 # (~20 min), and rsc-rspack-e2e.yml additionally builds the Pro packages from
@@ -15,8 +17,23 @@ name: RSpec request & routing specs
 #
 # The suite is deliberately NOT wired into `bundle exec rake` — see the comment
 # in the Rakefile for why.
+#
+# Required-check conversion (#206): `rspec-result` below is a required status
+# check on main. A required check must be ALWAYS-EMITTING — if a workflow-level
+# `paths:` filter stops the workflow from running at all, GitHub waits for the
+# missing check forever and the PR can never merge. So on pull_request this
+# workflow always starts, a cheap `detect-changes` job decides whether the diff
+# is Ruby-relevant, the real `rspec` job is skipped when it is not, and
+# `rspec-result` reports success ("passed or legitimately nothing to test") or
+# failure on every PR. See docs/ci-required-checks.md.
 on:
   pull_request:
+    # Deliberately NO `paths:` here — the filter moved into the detect-changes
+    # job so the required `rspec-result` check emits on every PR (#206).
+  push:
+    branches: [main]
+    # Push runs are not required checks, so the workflow-level filter stays —
+    # keep this list in sync with RUBY-RELEVANT PATHS in detect-changes below.
     paths:
       - 'app/**'
       - 'config/**'
@@ -29,6 +46,8 @@ on:
       # The browser-route parity spec reads this file's inventory.
       - '.verify-routes.js'
       - '.github/workflows/specs.yml'
+      - 'Rakefile'
+      - 'bin/**'
   workflow_dispatch:
 
 permissions:
@@ -39,7 +58,72 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ruby: ${{ steps.filter.outputs.ruby }}
+    steps:
+      - name: Decide whether Ruby-relevant paths changed
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -uo pipefail
+
+          # Non-PR events (push already passed the workflow-level filter;
+          # workflow_dispatch is an explicit request): always run the suite.
+          if [[ "${EVENT_NAME}" != "pull_request" ]]; then
+            echo "ruby=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          # Fail OPEN: if the file listing breaks, run the suite. A wasted
+          # spec run is cheap; a silently skipped gate is not.
+          # Renames matter on BOTH sides: a pure rename OUT of a Ruby-relevant
+          # path (lib/foo.rb -> scripts/foo.rb) lists only the new path in
+          # .filename — the old path is in .previous_filename. Missing it would
+          # green-light a PR whose rename breaks require/routing targets.
+          if ! files=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" \
+                         --paginate --jq '.[] | .filename, (.previous_filename // empty)'); then
+            echo "Could not list PR files — running specs to be safe."
+            echo "ruby=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          # The files endpoint silently caps at 3000 entries. If the PR claims
+          # more files than we listed, the list is incomplete — fail open too.
+          declared=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.changed_files' || echo "")
+          listed=$(grep -c . <<< "${files}" || true)
+          if [[ -z "${declared}" || "${listed}" -lt "${declared}" ]]; then
+            echo "File listing incomplete (${listed}/${declared:-unknown}) — running specs to be safe."
+            echo "ruby=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          # RUBY-RELEVANT PATHS — keep in sync with the push `paths:` filter
+          # at the top of this file.
+          ruby=false
+          while IFS= read -r f; do
+            case "${f}" in
+              app/*|config/*|lib/*|spec/*|bin/*) ruby=true; break ;;
+              db/schema.rb|Gemfile|Gemfile.lock|.rspec|.verify-routes.js|Rakefile) ruby=true; break ;;
+              .github/workflows/specs.yml) ruby=true; break ;;
+            esac
+          done <<< "${files}"
+
+          echo "Ruby-relevant change detected: ${ruby}"
+          echo "ruby=${ruby}" >> "${GITHUB_OUTPUT}"
+
   rspec:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ruby == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -79,3 +163,34 @@ jobs:
 
       - name: Run request & routing specs
         run: bundle exec rspec spec/requests spec/routing
+
+  # Always-emitting result for the required-checks gate (#206). This — not
+  # `rspec` — is the required context, because it reports on every PR:
+  #   - specs ran and passed                          -> success
+  #   - nothing Ruby-relevant changed (rspec skipped) -> success
+  #   - specs failed/cancelled, or detect-changes
+  #     itself broke (which would skip rspec)         -> failure
+  # Requiring bare `rspec` instead would count a skip caused by a BROKEN
+  # detect job as a pass (GitHub treats skipped-required as success).
+  rspec-result:
+    needs: [detect-changes, rspec]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail unless specs succeeded or were legitimately skipped
+        env:
+          DETECT_RESULT: ${{ needs.detect-changes.result }}
+          RSPEC_RESULT: ${{ needs.rspec.result }}
+          RUBY_CHANGED: ${{ needs.detect-changes.outputs.ruby }}
+        run: |
+          echo "detect-changes: ${DETECT_RESULT}; rspec: ${RSPEC_RESULT}; ruby-relevant: ${RUBY_CHANGED}"
+          if [[ "${RSPEC_RESULT}" == "success" ]]; then
+            exit 0
+          fi
+          if [[ "${DETECT_RESULT}" == "success" && "${RSPEC_RESULT}" == "skipped" && "${RUBY_CHANGED}" == "false" ]]; then
+            echo "No Ruby-relevant paths changed — nothing to test."
+            exit 0
+          fi
+          echo "Specs failed or were cancelled, or the change detector itself failed."
+          exit 1
