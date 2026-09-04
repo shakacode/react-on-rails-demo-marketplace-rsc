@@ -433,13 +433,23 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(status).to be_success, [stdout, stderr].join("\n")
   end
 
-  it 'can load the product-search scenario repeatedly without accumulating fixtures' do
+  it 'can load the product scenarios repeatedly without accumulating fixtures' do
     scenario_path = Rails.root.join('e2e/app_commands/scenarios/product_search.rb')
 
     2.times { load scenario_path }
 
-    expect(Product.count).to eq(26)
-    expect(Product.distinct.count(:sku)).to eq(26)
+    expect(Product.count).to eq(28)
+    expect(Product.distinct.count(:sku)).to eq(28)
+    expect(ProductReview.count).to eq(2)
+    expect(Product.find_by!(sku: 'E2E-PRODUCT-PAGE')).to have_attributes(
+      name: 'E2E Product Page Headphones',
+      stock_quantity: 3,
+      in_stock: true
+    )
+    expect(Product.find_by!(sku: 'E2E-PRODUCT-UNAVAILABLE')).to have_attributes(
+      stock_quantity: 0,
+      in_stock: false
+    )
   ensure
     load Rails.root.join('e2e/app_commands/clean.rb')
   end

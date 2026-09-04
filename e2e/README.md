@@ -7,11 +7,11 @@ pnpm test:e2e
 ```
 
 The command prepares the Rails test database, starts the node renderer and Rails
-on fixed loopback ports, seeds deterministic product-search data, runs
-Playwright, and stops both servers. The cleanup command deletes products and
-product reviews from the dedicated test database before and after every test.
-Both the runner and app commands refuse database names that do not end in
-`_test` or `_playwright`.
+on fixed loopback ports, seeds deterministic product-search and product-page
+data, runs Playwright, and stops both servers. The cleanup command deletes
+products and product reviews from the dedicated test database before and after
+every test. Both the runner and app commands refuse database names that do not
+end in `_test` or `_playwright`.
 
 ## Rails command security boundary
 
