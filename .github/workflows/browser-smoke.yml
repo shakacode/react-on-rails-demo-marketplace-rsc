@@ -70,8 +70,11 @@ jobs:
       - name: Run canonical lint gate
         run: .agents/bin/lint
 
-      - name: Audit high-severity JavaScript dependencies
-        run: pnpm audit:high
+      # NOTE: `pnpm audit:high` intentionally does NOT run in this job. It used
+      # to sit here, and any overnight high-severity advisory skipped the
+      # entire Chromium smoke below (issue #205). Security results now report
+      # independently in .github/workflows/dependency-audit.yml so a dependency
+      # advisory can never switch off this functional gate.
 
       - name: Cache Puppeteer Chromium
         id: puppeteer-cache
