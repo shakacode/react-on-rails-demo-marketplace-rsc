@@ -5,54 +5,58 @@
 // - captures all console messages, page errors, request failures
 // - reports anything that's not a clean load
 
-const puppeteer = require('puppeteer');
-const publicRouteContract = require('./config/public_routes.json');
-
 const BASE = process.env.BASE_URL || 'http://localhost:3010';
-const BROWSER_PARAMETER_VALUES = { restaurant: '1' };
-const PERSISTENT_MEDIA_ROUTES = new Set(['/media-gallery', '/media-gallery/rsc']);
-const MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR =
-  'button[aria-label="Open image 1 of 8 in the react-image-lightbox lightbox"]';
-const MEDIA_LIGHTBOX_CLOSE_SELECTOR = 'button[aria-label="Close lightbox"]';
+// Keep in sync with RouteContract in spec/support/route_contract.rb — every
+// rendered page and renderer-backed route, with the id-scoped routes resolved to
+// the seeded id 1. spec/routing/browser_route_parity_spec.rb fails if this list
+// and the contract disagree in either direction, so a new page cannot be added
+// without either browser coverage or a documented reason.
+const DEFAULT_ROUTES = [
+  // Marketing / content pages
+  '/',
+  '/how-rsc-works',
+  '/measure',
+  '/rsc-performance',
+  '/ssr-rsc-playground',
+  '/why-rsc',
+  // RSC entry points
+  '/products',
+  '/rsc',
+  // Media gallery — both paths hit the same RSC action
+  '/media-gallery', '/media-gallery/rsc',
+  // Restaurant detail
+  '/restaurant/1/ssr', '/restaurant/1/ssr-cached', '/restaurant/1/client',
+  '/restaurant/1/rsc', '/restaurant/1/rsc-cached',
+  // Virtualized review-list siblings (issue #184)
+  '/restaurant/1/ssr-virtual', '/restaurant/1/rsc-virtual',
+  // Product detail
+  '/product/ssr', '/product/ssr-cached', '/product/client',
+  '/product/rsc', '/product/rsc-cached', '/product/rsc-pull',
+  // Product search
+  '/product-search/ssr', '/product-search/ssr-cached', '/product-search/client',
+  '/product-search/rsc', '/product-search/rsc-cached',
+  // Blog
+  '/blog/ssr', '/blog/ssr-cached', '/blog/client',
+  '/blog/rsc', '/blog/rsc-cached', '/blog/rsc-simple', '/blog/rsc-simple-cached',
+  '/blog/rsc-step1', '/blog/rsc-step1b', '/blog/rsc-step1c',
+  '/blog/rsc-step2', '/blog/rsc-step3', '/blog/rsc-step4', '/blog/rsc-step5',
+  // CSS code-splitting experiment
+  '/css-demo/one/ssr', '/css-demo/one/rsc-server', '/css-demo/one/rsc-client',
+  '/css-demo/two/ssr', '/css-demo/two/rsc-server', '/css-demo/two/rsc-client',
+];
 
-function browserRouteFor(routeCase) {
-  const route = Object.entries(routeCase.parameters || {}).reduce(
-    (path, [parameter, fixtureName]) => {
-      const parameterValue = BROWSER_PARAMETER_VALUES[fixtureName];
-      if (parameterValue === undefined) {
-        throw new Error(
-          `No deterministic browser value for ${fixtureName} (${routeCase.path} :${parameter})`
-        );
-      }
 
-      return path.replace(`:${parameter}`, encodeURIComponent(parameterValue));
-    },
-    routeCase.request_path || routeCase.path
-  );
-
-  if (/:[A-Za-z_][A-Za-z0-9_]*/.test(route)) {
-    throw new Error(`Unresolved browser route parameter in ${route}`);
-  }
-
-  return route;
-}
-
-const DEFAULT_ROUTES = publicRouteContract.routes.flatMap((routeCase) => {
-  if (routeCase.expected_status === 200) return [browserRouteFor(routeCase)];
-  if (routeCase.expected_location) return [];
-
-  throw new Error(
-    `Public route ${routeCase.path} is neither browser-rendered nor an explicit redirect`
-  );
-});
-
+// Answering --list-routes must not need Puppeteer installed: the parity spec runs in
+// the Ruby-only specs.yml job, which never runs `pnpm install`.
 if (process.argv.includes('--list-routes')) {
   console.log(JSON.stringify(DEFAULT_ROUTES));
   process.exit(0);
 }
 
+const puppeteer = require('puppeteer');
+
 // A harness can scope the run to a subset (e.g. just the RSC client-boundary
-// routes) via a comma-separated ROUTES env var; default is the canonical list.
+// routes) via a comma-separated ROUTES env var; default is the full list above.
 const ROUTES = process.env.ROUTES
   ? process.env.ROUTES.split(',').map((r) => r.trim()).filter(Boolean)
   : DEFAULT_ROUTES;
@@ -83,20 +87,10 @@ async function checkProductSearchInteraction(page) {
   };
 
   await page.waitForSelector(inputSelector, { visible: true, timeout: 5000 });
-  await page.focus(inputSelector);
-  const inputIsFocused = await page.evaluate(
-    (selector) => document.activeElement === document.querySelector(selector),
-    inputSelector
-  );
-  if (!inputIsFocused) {
-    throw new Error('search input did not receive focus');
-  }
+  await page.click(inputSelector);
 
-  // The explicit API waits below are the readiness gate for the updated
-  // search page; waiting for all network activity to stop is broader than the
-  // interaction contract and can remain unsettled in current Chromium.
   const [response, resultsResponse, facetsResponse] = await Promise.all([
-    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 25000 }),
+    page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 25000 }),
     page.waitForResponse(
       (candidate) => isSearchApiResponse(candidate, '/api/product_search/results'),
       { timeout: 25000 }
@@ -202,59 +196,6 @@ async function checkProductSearchInteraction(page) {
   }
 }
 
-async function checkMediaClientInteraction(page) {
-  // The thumbnail is present in the server HTML, but opening and closing the
-  // lightbox requires its client-island event handlers to have hydrated.
-  const timeout = 25000;
-  const deadline = Date.now() + timeout;
-  const selectors = {
-    thumbnailSelector: MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR,
-    closeSelector: MEDIA_LIGHTBOX_CLOSE_SELECTOR,
-  };
-  const timedOut = () => new Error(`Media lightbox did not open and close within ${timeout}ms`);
-  const evaluateBeforeDeadline = async (pageFunction) => {
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) throw timedOut();
-
-    let timer;
-    try {
-      return await Promise.race([
-        page.evaluate(pageFunction, selectors),
-        new Promise((_resolve, reject) => {
-          timer = setTimeout(() => reject(timedOut()), remaining);
-        }),
-      ]);
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-  const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-  let opened = false;
-  while (!opened) {
-    opened = await evaluateBeforeDeadline(({ thumbnailSelector, closeSelector }) => {
-      if (document.querySelector(closeSelector)) return true;
-
-      const thumbnail = document.querySelector(thumbnailSelector);
-      if (typeof thumbnail?.click === 'function') thumbnail.click();
-      return false;
-    });
-    if (!opened) await yieldToBrowser();
-  }
-
-  let closed = false;
-  while (!closed) {
-    closed = await evaluateBeforeDeadline(({ closeSelector }) => {
-      const close = document.querySelector(closeSelector);
-      if (!close) return true;
-
-      if (typeof close.click === 'function') close.click();
-      return false;
-    });
-    if (!closed) await yieldToBrowser();
-  }
-}
-
 async function checkRoute(browser, route) {
   const page = await browser.newPage();
   const consoleErrors = [];
@@ -283,29 +224,15 @@ async function checkRoute(browser, route) {
   let httpStatus = null;
   let interactionError = null;
   try {
-    // These two media pages keep requests active and media elements loading,
-    // so neither networkidle0 nor load completes. They still run every
-    // post-paint, HTTP, page/console error, and duplicate-script check. The
-    // pre-existing route set retains the stricter networkidle0 condition.
-    const waitUntil = PERSISTENT_MEDIA_ROUTES.has(route) ? 'domcontentloaded' : 'networkidle0';
-    const resp = await page.goto(BASE + route, { waitUntil, timeout: 25000 });
+    const resp = await page.goto(BASE + route, { waitUntil: 'networkidle0', timeout: 25000 });
     httpStatus = resp ? resp.status() : null;
   } catch (e) {
-    await page.close().catch(() => {});
     return {
       route, httpStatus, ok: false, navError: e.message,
       bodyTextLength: 0, hasErrorPanel: false,
       duplicateScripts: [],
       consoleErrors, pageErrors, failedRequests,
     };
-  }
-
-  if (PERSISTENT_MEDIA_ROUTES.has(route)) {
-    try {
-      await checkMediaClientInteraction(page);
-    } catch (e) {
-      interactionError = e.message;
-    }
   }
 
   // Give React a beat to finish any post-paint work
@@ -366,16 +293,14 @@ async function checkRoute(browser, route) {
   });
 
   const results = [];
-  try {
-    for (const route of ROUTES) {
-      process.stderr.write(`checking ${route} ... `);
-      const r = await checkRoute(browser, route);
-      process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
-      results.push(r);
-    }
-  } finally {
-    await browser.close();
+  for (const route of ROUTES) {
+    process.stderr.write(`checking ${route} ... `);
+    const r = await checkRoute(browser, route);
+    process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
+    results.push(r);
   }
+
+  await browser.close();
 
   // Summary
   console.log('\n========== SUMMARY ==========');

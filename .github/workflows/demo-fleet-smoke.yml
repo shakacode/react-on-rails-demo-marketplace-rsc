@@ -1,0 +1,23 @@
+name: Demo fleet smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    uses: shakacode/react_on_rails/.github/workflows/demo-fleet-smoke.yml@613c6c2a251a782328b26d68e7f23daa9b677497
+    with:
+      ruby-version: "3.4.6"
+      node-version: "22.22.3"
+      install-command: >-
+        bundle config set path vendor/bundle && bundle install --jobs 4 --retry 3 &&
+        corepack enable && corepack pnpm@9.15.2 install --frozen-lockfile
+      test-command: bundle exec rake
+      build-command: SECRET_KEY_BASE=dummy_secret_key_base_for_demo_fleet bin/build-production
+      smoke-command: pnpm lint:rsc && pnpm verify:rsc

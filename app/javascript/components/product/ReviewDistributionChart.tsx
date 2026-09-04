@@ -31,7 +31,7 @@ function RatingBar({ stars, percentage, count }: RatingDistribution) {
       <div className="w-24 text-right flex-shrink-0">
         <span className="text-sm text-gray-500 tabular-nums">
           {percentage.toFixed(0)}%
-          <span className="text-gray-400 ml-1">({count.toLocaleString()})</span>
+          <span className="text-gray-400 ml-1">({count.toLocaleString('en-US')})</span>
         </span>
       </div>
     </div>
@@ -48,7 +48,7 @@ export function ReviewDistributionChart({ distribution, averageRating, totalRevi
           <div className="flex items-center justify-center mt-2">
             <StarRating rating={averageRating} />
           </div>
-          <div className="text-sm text-gray-500 mt-1">{totalReviews.toLocaleString()} reviews</div>
+          <div className="text-sm text-gray-500 mt-1">{totalReviews.toLocaleString('en-US')} reviews</div>
         </div>
 
         {/* Right: Distribution bars */}
