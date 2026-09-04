@@ -9,7 +9,59 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: browser-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Lint runs in its own parallel job so a lint failure never masks the
+  # Chromium smoke's signal (#216, continuing #205/#209's separation work).
+  # This job is always-emitting (the workflow has no path filter) and is
+  # registered as a required context in .github/rulesets/main.json.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev
+
+      - name: Write Ruby version file
+        shell: bash
+        run: |
+          ruby_version="$(awk -F'"' '/^[[:space:]]*ruby[[:space:]]*=/ { print $2; exit }' mise.toml)"
+          if [[ -z "${ruby_version}" ]]; then
+            echo "::error::Could not read Ruby version from mise.toml"
+            exit 1
+          fi
+          printf '%s\n' "${ruby_version}" > .ruby-version
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f
+        with:
+          ruby-version-file: .ruby-version
+          bundler-cache: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run canonical lint gate
+        run: .agents/bin/lint
+
   browser-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -67,14 +119,16 @@ jobs:
       - name: Install JavaScript dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run canonical lint gate
-        run: .agents/bin/lint
-
       # NOTE: `pnpm audit:high` intentionally does NOT run in this job. It used
       # to sit here, and any overnight high-severity advisory skipped the
       # entire Chromium smoke below (issue #205). Security results now report
       # independently in .github/workflows/dependency-audit.yml so a dependency
       # advisory can never switch off this functional gate.
+      #
+      # NOTE: Lint intentionally does NOT run in this job either. It used to
+      # sit here before the smoke steps, and a lint failure prevented the
+      # browser from ever starting — masking the smoke's own signal (#216,
+      # continuing #205/#209). Lint now runs in its own parallel job above.
 
       - name: Cache Puppeteer Chromium
         id: puppeteer-cache

@@ -26,9 +26,10 @@ on:
     # The watched list, keyed to each workflow's display `name:`. Extend by
     # adding a name here. RENAME HAZARD: if a watched workflow's `name:`
     # changes and this list is not updated, workflow_run silently stops firing
-    # for it — its alerting dies and any open `ci-alert` issue (title also
-    # keyed to the old name) can never auto-close. Update this list in the
-    # same PR as any watched-workflow rename.
+    # for it — its alerting dies. (Dedupe/auto-close use a hidden body
+    # marker, not the title, so a title rename alone does not orphan an
+    # existing issue.) Update this list in the same PR as any
+    # watched-workflow rename.
     workflows:
       - Cleanup Stale Review Apps
       - Deploy Staging to Control Plane
@@ -76,6 +77,7 @@ jobs:
           set -euo pipefail
 
           title="CI alert: ${WF_NAME} is failing on main"
+          marker="<!-- workflow-failure-alert: ${WF_NAME} -->"
 
           # Idempotent label bootstrap (already-exists error is fine).
           gh api "repos/${REPO}/labels" \
@@ -83,11 +85,16 @@ jobs:
             -f description="Auto-filed by workflow-failure-alerts (#206)" \
             >/dev/null 2>&1 || true
 
-          # Exact-title match among open ci-alert issues. (Plain jq: gh's
-          # built-in --jq flag does not support --arg.)
+          # Body-marker match among open ci-alert issues. The marker
+          # survives title edits — a renamed issue no longer causes nightly
+          # duplicates or orphaned issues that can never auto-close (#216).
+          # Falls back to exact-title match for issues created before this
+          # migration (they have no body marker yet). The (.body // "")
+          # guard prevents a jq type error on issues with null bodies.
           issue_number=$(gh issue list --repo "${REPO}" --state open \
-            --label "${ALERT_LABEL}" --json number,title \
-            | jq -r --arg t "${title}" '[.[] | select(.title == $t)][0].number // empty')
+            --label "${ALERT_LABEL}" --limit 100 --json number,title,body \
+            | jq -r --arg m "${marker}" --arg t "${title}" \
+              '[.[] | select(((.body // "") | contains($m)) or .title == $t)][0].number // empty')
 
           case "${RUN_CONCLUSION}" in
             # timed_out and startup_failure are failures for alerting purposes:
@@ -104,8 +111,11 @@ jobs:
                   "" \
                   "Latest failing run: ${RUN_URL}" \
                   "" \
-                  "_Filed automatically by \`.github/workflows/workflow-failure-alerts.yml\` (#206). Further failures are added as comments; the issue closes itself after two consecutive successful runs._")
+                  "_Filed automatically by \`.github/workflows/workflow-failure-alerts.yml\` (#206). Further failures are added as comments; the issue closes itself after two consecutive successful runs._" \
+                  "" \
+                  "${marker}")
                 gh issue create --repo "${REPO}" --label "${ALERT_LABEL}" \
+                  --assignee AbanoubGhadban,justin808 \
                   --title "${title}" --body "${body}"
               fi
               ;;
@@ -118,11 +128,12 @@ jobs:
               # unhealthy run between two successes blocks the auto-close.
               # Cancelled/skipped runs are ignored — they are neither proof of
               # health nor of sickness.
+              #
+              # The `branch=main&exclude_pull_requests=true` params filter
+              # server-side so we only page through main non-PR runs (#216).
               recent=$(gh api \
-                "repos/${REPO}/actions/workflows/${WF_ID}/runs?status=completed&per_page=20" \
+                "repos/${REPO}/actions/workflows/${WF_ID}/runs?status=completed&branch=main&exclude_pull_requests=true&per_page=20" \
                 --jq '[.workflow_runs[]
-                       | select(.event != "pull_request")
-                       | select(.head_branch == "main")
                        | select(.conclusion == "success" or .conclusion == "failure"
                                 or .conclusion == "timed_out" or .conclusion == "startup_failure")
                        | .conclusion][0:2] | join(",")')
