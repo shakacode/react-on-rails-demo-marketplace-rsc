@@ -214,32 +214,67 @@ jobs:
   # Separate job so the issues:write token is only ever live on the nightly /
   # manual failure path — never during PR or push runs (the audit job above
   # holds contents: read only).
+  #
+  # Unified alert convention (#216): uses the same `ci-alert` label,
+  # body-marker dedupe, `--assignee` notifications, and auto-close lifecycle
+  # as workflow-failure-alerts.yml, so all CI alert issues behave identically.
   file-tracking-issue:
     needs: dependency-audit
     # `always()` is required: a failed `needs` job otherwise skips dependents
     # before this condition is even evaluated. Main-only: a workflow_dispatch
     # hard-fail test on a feature branch must stay red without writing to the
     # maintainers' tracking issue.
-    if: always() && needs.dependency-audit.result == 'failure' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    #
+    # Runs on BOTH success and failure so it can auto-close after recovery.
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      actions: read
       issues: write
 
+    env:
+      ALERT_LABEL: ci-alert
+      MARKER: "<!-- dependency-audit-tracker -->"
+
     steps:
-      - name: File or update the advisory tracking issue
+      - name: File, update, or resolve the advisory tracking issue
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          AUDIT_RESULT: ${{ needs.dependency-audit.result }}
         run: |
-          # Assignees get GitHub email notifications — this is what reliably
-          # reaches both maintainers (the built-in scheduled-failure email
-          # only goes to whoever last edited this file).
-          title="Nightly dependency audit is failing"
+          set -euo pipefail
 
-          body="$(cat <<EOF
+          # Idempotent label bootstrap (matches workflow-failure-alerts.yml).
+          gh api "repos/${GH_REPO}/labels" \
+            -f name="${ALERT_LABEL}" -f color="d73a4a" \
+            -f description="Auto-filed by workflow-failure-alerts (#206)" \
+            >/dev/null 2>&1 || true
+
+          # Body-marker match among open issues. The marker survives title
+          # edits — a renamed tracker no longer causes nightly duplicates
+          # (#216). The query intentionally does NOT filter by label so it
+          # also finds tracker issues created by the pre-#216 code (which
+          # used no label). Uses jq --arg so special characters in the
+          # marker are properly escaped (matches workflow-failure-alerts.yml).
+          # The (.body // "") guard prevents a jq type error on issues
+          # with null bodies (e.g. created via API without a body).
+          existing="$(gh issue list --state open \
+            --limit 100 --json number,body \
+            | jq -r --arg m "${MARKER}" \
+              '[.[] | select((.body // "") | contains($m))][0].number // empty')"
+
+          case "${AUDIT_RESULT}" in
+            failure)
+              if [[ -n "$existing" ]]; then
+                gh issue comment "$existing" \
+                  --body "Still failing: ${RUN_URL} (advisories present or the audit could not complete — see the run)"
+              else
+                title="Nightly dependency audit is failing"
+                body="$(cat <<EOF
           The scheduled dependency audit failed — either high-severity
           advisories are present or the audit could not complete. See the
           run: ${RUN_URL} (the job summary / annotations say which).
@@ -248,21 +283,49 @@ jobs:
 
           Filed automatically by \`dependency-audit.yml\`; while the nightly
           run keeps failing, this issue gets a comment instead of a duplicate.
+          The issue closes itself after two consecutive successful runs.
 
-          <!-- dependency-audit-tracker -->
+          ${MARKER}
           EOF
-          )"
+                )"
+                gh issue create --title "$title" --body "$body" \
+                  --label "${ALERT_LABEL}" \
+                  --assignee AbanoubGhadban,justin808
+              fi
+              ;;
+            success)
+              # Nothing to resolve if no alert is open.
+              [[ -n "$existing" ]] || exit 0
 
-          # REST listing has no search-index lag, and the body marker survives
-          # title edits — a renamed tracker no longer causes nightly
-          # duplicates.
-          existing="$(gh issue list --state open --limit 100 \
-            --json number,body \
-            --jq '[.[] | select(.body | contains("<!-- dependency-audit-tracker -->"))][0].number // empty')"
+              # Close after TWO consecutive green nightly/dispatch runs,
+              # matching the workflow-failure-alerts convention (#216).
+              #
+              # This job runs inside the Dependency Audit workflow, so the
+              # current run is still in_progress and excluded by
+              # status=completed. We already know the current run succeeded
+              # (AUDIT_RESULT=success), so we only need ONE prior completed
+              # success to reach two consecutive greens.
+              #
+              # Uses the workflow file path directly in the runs endpoint
+              # — decoupled from the display `name:` field so a rename
+              # can't break it, and avoids an extra API call.
+              prior=$(gh api \
+                "repos/${GH_REPO}/actions/workflows/dependency-audit.yml/runs?status=completed&branch=main&exclude_pull_requests=true&per_page=20" \
+                --jq '[.workflow_runs[]
+                       | select(.event == "schedule" or .event == "workflow_dispatch")
+                       | select(.conclusion == "success" or .conclusion == "failure"
+                                or .conclusion == "timed_out" or .conclusion == "startup_failure")
+                       | .conclusion][0]')
 
-          if [[ -n "$existing" ]]; then
-            gh issue comment "$existing" --body "Still failing: ${RUN_URL} (advisories present or the audit could not complete — see the run)"
-          else
-            gh issue create --title "$title" --body "$body" \
-              --assignee AbanoubGhadban,justin808
-          fi
+              if [[ "${prior}" == "success" ]]; then
+                gh issue comment "$existing" \
+                  --body "Recovered: two consecutive green nightly runs, latest ${RUN_URL}. Closing."
+                gh issue close "$existing"
+              else
+                echo "Green run, but prior conclusion is '${prior}' — leaving the alert open."
+              fi
+              ;;
+            *)
+              echo "Audit result '${AUDIT_RESULT}' is neither success nor failure — ignoring."
+              ;;
+          esac
