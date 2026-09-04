@@ -174,5 +174,7 @@ jobs:
         run: |
           echo "=== Rails log ==="
           cat /tmp/marketplace-rails.log || true
+          echo "=== Rails production.log ==="
+          cat log/production.log || true
           echo "=== Node renderer log ==="
           cat /tmp/marketplace-renderer.log || true
