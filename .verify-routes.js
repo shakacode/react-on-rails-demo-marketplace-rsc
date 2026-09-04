@@ -419,8 +419,14 @@ async function checkRoute(browser, route) {
     }
   } finally {
     // Without this a throw from the loop leaves Chromium running and the
-    // process hanging instead of reporting the failure.
-    await browser.close();
+    // process hanging instead of reporting the failure. Swallowing close()'s
+    // own rejection matters just as much: if Chromium died mid-loop then one of
+    // checkRoute's unguarded page.evaluate calls threw AND close() will reject
+    // too, and an exception raised inside `finally` REPLACES the in-flight one
+    // — trading the real diagnostic for an opaque protocol error.
+    await browser.close().catch((closeError) => {
+      process.stderr.write(`warning: browser.close() failed: ${closeError.message}\n`);
+    });
   }
 
   // Summary
