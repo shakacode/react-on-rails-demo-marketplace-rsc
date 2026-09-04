@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Create and seed the run-scoped QA database.
+# Requires: QA_RUN_ID. Uses SEED_MODE=small by default.
+set -euo pipefail
+cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+
+: "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
+
+# Validate QA_RUN_ID format and length (max 46 chars for 63-byte PG limit)
+if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
+  exit 1
+fi
+if [[ ${#QA_RUN_ID} -gt 46 ]]; then
+  printf 'FATAL: QA_RUN_ID is %d chars (max 46).\n' "${#QA_RUN_ID}" >&2
+  exit 1
+fi
+
+readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
+
+if [[ -n "${DATABASE_USERNAME:-}" ]]; then
+  export DATABASE_URL="postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD:-}@localhost/${RUN_DB}"
+else
+  export DATABASE_URL="postgres://localhost/${RUN_DB}"
+fi
+export RAILS_ENV=production
+export SEED_MODE="${SEED_MODE:-small}"
+
+# Generate a throwaway secret so Rails boots in production mode
+export SECRET_KEY_BASE
+SECRET_KEY_BASE="$(openssl rand -hex 64)"
+
+printf 'seed: creating database %s (SEED_MODE=%s)\n' "${RUN_DB}" "${SEED_MODE}"
+
+# Create the database if it does not already exist, run migrations, and seed.
+# db:prepare handles create-if-missing + migrate + seed in one pass.
+bin/rails db:prepare
+
+printf 'seed: database %s is ready\n' "${RUN_DB}"

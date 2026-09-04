@@ -14,12 +14,20 @@ class RestaurantDetailData
   RATES = { 'USD' => 1.0, 'EUR' => 0.92, 'GBP' => 0.79, 'JPY' => 152.0,
             'AUD' => 1.51, 'CAD' => 1.36 }.freeze
 
-  def self.for(restaurant)
-    new(restaurant).build
+  # Reviews are synthesized (not read from the DB), capped here on purpose —
+  # the virtualization experiment (issue #184) raises the count via ?count=
+  # while the default keeps the benchmark story untouched. The rng consumes
+  # values in build order, so the first 40 reviews of a larger count are
+  # identical to the default 40.
+  DEFAULT_REVIEWS_COUNT = 40
+
+  def self.for(restaurant, reviews_count: DEFAULT_REVIEWS_COUNT)
+    new(restaurant, reviews_count: reviews_count).build
   end
 
-  def initialize(restaurant)
+  def initialize(restaurant, reviews_count: DEFAULT_REVIEWS_COUNT)
     @restaurant = restaurant
+    @reviews_count = reviews_count
     @rng = Random.new(restaurant.id)
   end
 
@@ -41,7 +49,7 @@ class RestaurantDetailData
 
   private
 
-  attr_reader :restaurant, :rng
+  attr_reader :restaurant, :rng, :reviews_count
 
   def serialize_restaurant
     {
@@ -249,7 +257,7 @@ class RestaurantDetailData
   end
 
   def reviews_payload
-    (1..40).map do |i|
+    (1..reviews_count).map do |i|
       reviewer = (['Jamie K.', 'Sarah M.', 'Diego R.', 'Priya S.', 'Casey L.', 'Alex T.', 'Morgan B.', 'Riley J.', 'Quinn P.', 'Sage W.']).sample(random: rng)
       rating = rng.rand(3..5)
       built_at = (Time.zone.now - rng.rand(1..720).hours).iso8601
@@ -357,7 +365,7 @@ class RestaurantDetailData
       avg_party_size: rng.rand(2.0..4.5).round(1),
       tables: rng.rand(18..36),
       menu_items_count: 80,
-      reviews_count: 40,
+      reviews_count: reviews_count,
       years_open: rng.rand(8..18),
       staff_count: rng.rand(14..32),
       seasonal_menu_changes_per_year: rng.rand(4..12),

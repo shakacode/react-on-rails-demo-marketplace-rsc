@@ -13,6 +13,9 @@ Scope:
 - transfer size, not raw file size
 
 `module_graph` is webpack-only in this branch, so this comparison does not cover rspack.
+It also does not cover `route_entry`; see
+[`docs/rsc-route-entry-size-comparison.md`](./rsc-route-entry-size-comparison.md)
+for that benchmark-only comparison.
 
 ## Measurement method
 

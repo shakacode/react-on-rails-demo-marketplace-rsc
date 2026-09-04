@@ -53,7 +53,7 @@ export function ProductInfo({ product }: Props) {
       <div className="flex items-center gap-3">
         <StarRating rating={product.average_rating} />
         <span className="text-sm font-semibold text-gray-900">{product.average_rating.toFixed(1)}</span>
-        <span className="text-sm text-gray-500">({product.review_count.toLocaleString()} reviews)</span>
+        <span className="text-sm text-gray-500">({product.review_count.toLocaleString('en-US')} reviews)</span>
       </div>
 
       {/* Price */}

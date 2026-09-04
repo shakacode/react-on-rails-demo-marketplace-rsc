@@ -77,6 +77,7 @@ const configureClient = () => {
   // server-bundle should ONLY be built by the serverConfig
   delete clientConfig.entry['server-bundle'];
 
+  rscImplementation.configureClientConfig(clientConfig);
   clientConfig.plugins.push(
     rscImplementation.createClientPlugin({
       clientReferences: rspackDefaultClientReferences,
