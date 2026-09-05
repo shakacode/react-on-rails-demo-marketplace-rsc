@@ -173,7 +173,7 @@ jobs:
         run: bin/rails db:test:prepare
 
       - name: Run request & routing specs
-        run: bundle exec rspec spec/requests spec/routing
+        run: bundle exec rspec spec/requests spec/routing spec/workflows
 
   # Always-emitting result for the required-checks gate (#206). This — not
   # `rspec` — is the required context, because it reports on every PR:
