@@ -108,8 +108,5 @@ Rails.application.routes.draw do
         get :related_posts
       end
     end
-
-    # Performance metrics collection
-    post '/performance_metrics', to: 'performance_metrics#create'
   end
 end
