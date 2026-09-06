@@ -30,6 +30,7 @@ gem 'tzinfo-data', platforms: %i[windows jruby]
 gem 'bootsnap', require: false
 
 group :development, :test do
+  gem 'cypress-on-rails', '1.20.1'
   gem 'debug', platforms: %i[mri windows]
   gem 'rspec-rails', '~> 8.0'
   gem 'factory_bot_rails'

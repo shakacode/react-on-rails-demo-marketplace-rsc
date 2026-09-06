@@ -55,4 +55,18 @@ export default [
       'react-compiler/react-compiler': 'error',
     },
   },
+  {
+    files: ['e2e/**/*.{js,mjs,ts,mts}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+  },
 ];
