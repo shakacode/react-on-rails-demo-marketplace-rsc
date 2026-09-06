@@ -173,7 +173,11 @@ jobs:
         run: bin/rails db:test:prepare
 
       - name: Run request & routing specs
-        run: bundle exec rspec spec/requests spec/routing spec/workflows
+        # spec/ppr_production_boot_spec.rb lives outside spec/requests and
+        # spec/routing but needs only Ruby (it shells out to `bin/rails
+        # runner` in a self-contained production subprocess, no DB access),
+        # so it rides along in this fast job instead of getting its own.
+        run: bundle exec rspec spec/requests spec/routing spec/workflows spec/ppr_production_boot_spec.rb
 
   # Always-emitting result for the required-checks gate (#206). This — not
   # `rspec` — is the required context, because it reports on every PR:
