@@ -1,6 +1,7 @@
 ---
 base_branch: main
 follow_up_prefix: 'Follow-up:'
+repo_prefix: RORM
 review_gate: AI reviewers are advisory unless they confirm a blocker. The merge
   gate is every required current-head check green; any unavailable or non-portable
   check must be recorded as an explicit non-blocking skip; all review threads
