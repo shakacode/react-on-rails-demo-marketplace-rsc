@@ -75,6 +75,11 @@ jobs:
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          # NOTE: GitHub's default shell is `bash -e {0}` — errexit is ON.
+          # `set` below only ADDS options; it does NOT turn -e off. Every
+          # fallible command here must stay guarded (if ! / || true / || echo),
+          # or one transient API error flips this fail-OPEN detector to
+          # fail-CLOSED (red required check on an unrelated PR). See #218.
           set -uo pipefail
 
           # Non-PR events (push already passed the workflow-level filter;
@@ -90,8 +95,11 @@ jobs:
           # path (lib/foo.rb -> scripts/foo.rb) lists only the new path in
           # .filename — the old path is in .previous_filename. Missing it would
           # green-light a PR whose rename breaks require/routing targets.
+          # One TSV line per file entry ("filename<TAB>previous_filename") so
+          # the line count below is in the same units as `.changed_files`
+          # (files, not names) — renames must not inflate the cap check (#218).
           if ! files=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" \
-                         --paginate --jq '.[] | .filename, (.previous_filename // empty)'); then
+                         --paginate --jq '.[] | [.filename, (.previous_filename // "")] | @tsv'); then
             echo "Could not list PR files — running specs to be safe."
             echo "ruby=true" >> "${GITHUB_OUTPUT}"
             exit 0
@@ -108,14 +116,17 @@ jobs:
           fi
 
           # RUBY-RELEVANT PATHS — keep in sync with the push `paths:` filter
-          # at the top of this file.
+          # at the top of this file. Each line holds one file as
+          # "new-name<TAB>old-name" (old name empty unless renamed) — check both.
           ruby=false
-          while IFS= read -r f; do
-            case "${f}" in
-              app/*|config/*|lib/*|spec/*|bin/*) ruby=true; break ;;
-              db/schema.rb|Gemfile|Gemfile.lock|.rspec|.verify-routes.js|Rakefile) ruby=true; break ;;
-              .github/workflows/specs.yml) ruby=true; break ;;
-            esac
+          while IFS=$'\t' read -r f prev; do
+            for p in "${f}" "${prev}"; do
+              case "${p}" in
+                app/*|config/*|lib/*|spec/*|bin/*) ruby=true; break 2 ;;
+                db/schema.rb|Gemfile|Gemfile.lock|.rspec|.verify-routes.js|Rakefile) ruby=true; break 2 ;;
+                .github/workflows/specs.yml) ruby=true; break 2 ;;
+              esac
+            done
           done <<< "${files}"
 
           echo "Ruby-relevant change detected: ${ruby}"
@@ -166,7 +177,7 @@ jobs:
         # spec/routing but needs only Ruby (it shells out to `bin/rails
         # runner` in a self-contained production subprocess, no DB access),
         # so it rides along in this fast job instead of getting its own.
-        run: bundle exec rspec spec/requests spec/routing spec/ppr_production_boot_spec.rb
+        run: bundle exec rspec spec/requests spec/routing spec/workflows spec/ppr_production_boot_spec.rb
 
   # Always-emitting result for the required-checks gate (#206). This — not
   # `rspec` — is the required context, because it reports on every PR:

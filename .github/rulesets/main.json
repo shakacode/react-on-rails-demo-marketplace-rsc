@@ -29,6 +29,7 @@
         "required_status_checks": [
           { "context": "browser-smoke", "integration_id": 15368 },
           { "context": "demo-fleet-smoke-result", "integration_id": 15368 },
+          { "context": "lint", "integration_id": 15368 },
           { "context": "rspec-result", "integration_id": 15368 }
         ]
       }
