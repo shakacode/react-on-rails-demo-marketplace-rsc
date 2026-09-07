@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: demo-fleet-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoke:
     uses: shakacode/react_on_rails/.github/workflows/demo-fleet-smoke.yml@613c6c2a251a782328b26d68e7f23daa9b677497
@@ -21,3 +25,22 @@ jobs:
       test-command: bundle exec rake
       build-command: SECRET_KEY_BASE=dummy_secret_key_base_for_demo_fleet bin/build-production
       smoke-command: pnpm lint:rsc && pnpm verify:rsc
+
+  # Always-emitting, locally-owned result for the required-checks gate (#206).
+  # Required contexts must have names this repo controls: the check name the
+  # reusable workflow emits ("smoke / Demo fleet smoke") belongs to
+  # react_on_rails, and a pin bump that renames the inner job would make a
+  # required context silently never report again — wedging every PR. This
+  # job's name is ours and stable. See docs/ci-required-checks.md.
+  demo-fleet-smoke-result:
+    needs: [smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail unless the fleet smoke succeeded
+        env:
+          RESULT: ${{ needs.smoke.result }}
+        run: |
+          echo "Demo fleet smoke result: ${RESULT}"
+          [[ "${RESULT}" == "success" ]]

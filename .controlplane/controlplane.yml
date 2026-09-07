@@ -21,6 +21,11 @@ apps:
   react-server-components-demo-review:
     <<: *common
     match_if_app_name_starts_with: true
+    # Required by `cpflow cleanup-stale-apps` (the nightly Cleanup Stale Review
+    # Apps workflow): a review app whose latest image is at least this many days
+    # old gets deleted. Without it the command exits 64 — which silently failed
+    # every nightly run from 2026-05-31 to 2026-09-03.
+    stale_app_image_deployed_days: 7
     # release_script intentionally omitted: review apps share the persistent
     # demo DB. Migrating here would mutate schema for other review apps.
     secrets_name: react-server-components-demo-secrets
