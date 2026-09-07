@@ -27,3 +27,29 @@ module E2EProductCleanup
     Rails.cache.clear
   end
 end
+
+# Clears the deterministic restaurant fixture and its dependent records.
+module E2ERestaurantCleanup
+  RESTAURANT_ID = 146_086
+
+  module_function
+
+  def clean!
+    E2EDatabaseSafety.verify!
+
+    restaurant = Restaurant.find_by(id: RESTAURANT_ID)
+    destroy_fixture!(restaurant) if restaurant
+    Rails.cache.clear
+  end
+
+  def destroy_fixture!(restaurant)
+    fixture_order_ids = restaurant.orders.select(:id)
+    fixture_menu_item_ids = restaurant.menu_items.select(:id)
+    OrderLine
+      .where(order_id: fixture_order_ids)
+      .or(OrderLine.where(menu_item_id: fixture_menu_item_ids))
+      .delete_all
+    restaurant.destroy!
+  end
+  private_class_method :destroy_fixture!
+end

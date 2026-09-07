@@ -40,15 +40,13 @@ renderer_pid=""
 renderer_pgid=""
 rails_pid=""
 rails_pgid=""
-
-cleanup() {
-  local exit_status=$?
-
-  trap - EXIT
-  trap '' INT TERM
-  stop_children "${renderer_pid}:${renderer_pgid}" "${rails_pid}:${rails_pgid}"
-  exit "${exit_status}"
-}
+renderer_loadable_stats_source="${repo_root}/public/packs-test/loadable-stats.json"
+renderer_loadable_stats_target="${repo_root}/public/packs/loadable-stats.json"
+renderer_loadable_stats_backup=""
+renderer_loadable_stats_target_existed=false
+renderer_loadable_stats_staged=false
+renderer_bundle_cache="${repo_root}/.node-renderer-bundles"
+source "${repo_root}/e2e/bin/playwright-cleanup"
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
@@ -62,9 +60,24 @@ case "${database_name}" in
     ;;
 esac
 
+clean_renderer_bundle_cache
 bin/rails db:prepare
 bundle exec rake react_on_rails:generate_packs
 bin/shakapacker
+
+if [[ ! -f "${renderer_loadable_stats_source}" ]]; then
+  echo "Playwright E2E requires generated test loadable stats: ${renderer_loadable_stats_source}"
+  exit 1
+fi
+
+mkdir -p "$(dirname "${renderer_loadable_stats_target}")"
+if [[ -f "${renderer_loadable_stats_target}" ]]; then
+  renderer_loadable_stats_backup="$(mktemp "${TMPDIR:-/tmp}/marketplace-rsc-loadable-stats.XXXXXX")"
+  cp "${renderer_loadable_stats_target}" "${renderer_loadable_stats_backup}"
+  renderer_loadable_stats_target_existed=true
+fi
+renderer_loadable_stats_staged=true
+cp "${renderer_loadable_stats_source}" "${renderer_loadable_stats_target}"
 
 require-open-port 127.0.0.1 5017
 require-open-port 127.0.0.1 3800
