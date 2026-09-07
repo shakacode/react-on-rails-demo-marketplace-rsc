@@ -1,7 +1,8 @@
 // Comprehensive page verifier:
 // - opens each route
-// - waits for network idle (hydration window)
+// - waits for a per-route readiness signal (see PERSISTENT_MEDIA_ROUTES)
 // - submits a client-side product search and verifies the resulting empty state
+// - opens and closes the media-gallery lightbox to prove its island hydrated
 // - captures all console messages, page errors, request failures
 // - reports anything that's not a clean load
 
@@ -61,6 +62,37 @@ const ROUTES = process.env.ROUTES
   ? process.env.ROUTES.split(',').map((r) => r.trim()).filter(Boolean)
   : DEFAULT_ROUTES;
 
+// The media gallery never goes quiet: its thumbnails and video posters come from
+// picsum.photos, and the two players keep media requests alive well past the
+// point the page is interactive. `networkidle0` therefore has nothing to settle
+// on and burns the whole navigation budget (it timed out at 25s on main in run
+// 33426195157). These routes navigate on `domcontentloaded` and use
+// checkMediaClientInteraction as their readiness signal instead, which is a
+// stricter gate than a quiet network: it does not pass until the client island's
+// handlers are attached.
+const PERSISTENT_MEDIA_ROUTES = new Set(['/media-gallery', '/media-gallery/rsc']);
+
+// Deliberately count-agnostic. LightboxThumbGrid labels each thumbnail
+// `Open image <n> of <total> in the <label> lightbox`, so pinning <total> would
+// silently stop matching if MediaGalleryData::RIL_IMAGE_IDS changed length. The
+// label segment is what disambiguates this grid from the
+// yet-another-react-lightbox grid rendered further down the same page.
+const MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR =
+  'button[aria-label^="Open image 1 of "][aria-label$=" in the react-image-lightbox lightbox"]';
+// react-image-lightbox 5.1.4 renders its close button with aria-label={closeLabel},
+// whose default value is this string.
+const MEDIA_LIGHTBOX_CLOSE_SELECTOR = 'button[aria-label="Close lightbox"]';
+
+// Renaming a media route would otherwise drop it back to `networkidle0` and
+// quietly take its hydration check with it, so refuse to run instead.
+for (const mediaRoute of PERSISTENT_MEDIA_ROUTES) {
+  if (!DEFAULT_ROUTES.includes(mediaRoute)) {
+    throw new Error(
+      `PERSISTENT_MEDIA_ROUTES lists ${mediaRoute}, which is no longer in DEFAULT_ROUTES`
+    );
+  }
+}
+
 // React minified-error codes that mean a hydration mismatch
 const HYDRATION_ERROR_CODES = new Set(['418', '419', '420', '421', '422', '423', '425']);
 
@@ -87,10 +119,23 @@ async function checkProductSearchInteraction(page) {
   };
 
   await page.waitForSelector(inputSelector, { visible: true, timeout: 5000 });
-  await page.click(inputSelector);
+  // focus + assert, rather than click and hope: if the input never took focus
+  // the Enter keypress below would go to the document and the failure would
+  // surface later as an unexplained missing navigation.
+  await page.focus(inputSelector);
+  const inputIsFocused = await page.evaluate(
+    (selector) => document.activeElement === document.querySelector(selector),
+    inputSelector
+  );
+  if (!inputIsFocused) {
+    throw new Error('search input did not receive focus');
+  }
 
+  // The explicit API waits below are the readiness gate for the updated search
+  // page; waiting for all network activity to stop is broader than the
+  // interaction contract and can remain unsettled in current Chromium.
   const [response, resultsResponse, facetsResponse] = await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 25000 }),
+    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 25000 }),
     page.waitForResponse(
       (candidate) => isSearchApiResponse(candidate, '/api/product_search/results'),
       { timeout: 25000 }
@@ -196,6 +241,66 @@ async function checkProductSearchInteraction(page) {
   }
 }
 
+// Opens and closes the react-image-lightbox gallery. The thumbnail grid ships in
+// the server HTML, so a clean load proves nothing about the island; only the
+// open/close round trip does. Both phases re-issue the click on a poll because a
+// single click can land before the island's handlers are attached, and both
+// clicks are idempotent (open sets the same index, close clears it).
+async function checkMediaClientInteraction(page) {
+  const timeout = 25000;
+  const pollIntervalMs = 100;
+  const selectors = {
+    thumbnailSelector: MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR,
+    closeSelector: MEDIA_LIGHTBOX_CLOSE_SELECTOR,
+  };
+
+  // Separate from the retry loops so a missing grid reports as a server-render
+  // problem instead of masquerading as a 25s hydration timeout.
+  try {
+    await page.waitForSelector(MEDIA_LIGHTBOX_THUMBNAIL_SELECTOR, {
+      visible: true,
+      timeout: 10000,
+    });
+  } catch (e) {
+    throw new Error(`media gallery lightbox thumbnail never rendered: ${e.message}`);
+  }
+
+  try {
+    await page.waitForFunction(
+      ({ thumbnailSelector, closeSelector }) => {
+        if (document.querySelector(closeSelector)) return true;
+
+        const thumbnail = document.querySelector(thumbnailSelector);
+        if (typeof thumbnail?.click === 'function') thumbnail.click();
+        return false;
+      },
+      { timeout, polling: pollIntervalMs },
+      selectors
+    );
+  } catch (e) {
+    throw new Error(
+      `media gallery lightbox did not open within ${timeout}ms `
+        + `(client island handlers never attached?): ${e.message}`
+    );
+  }
+
+  try {
+    await page.waitForFunction(
+      ({ closeSelector }) => {
+        const close = document.querySelector(closeSelector);
+        if (!close) return true;
+
+        if (typeof close.click === 'function') close.click();
+        return false;
+      },
+      { timeout, polling: pollIntervalMs },
+      selectors
+    );
+  } catch (e) {
+    throw new Error(`media gallery lightbox did not close within ${timeout}ms: ${e.message}`);
+  }
+}
+
 async function checkRoute(browser, route) {
   const page = await browser.newPage();
   const consoleErrors = [];
@@ -224,9 +329,13 @@ async function checkRoute(browser, route) {
   let httpStatus = null;
   let interactionError = null;
   try {
-    const resp = await page.goto(BASE + route, { waitUntil: 'networkidle0', timeout: 25000 });
+    // Every other route keeps the stricter networkidle0 condition; see
+    // PERSISTENT_MEDIA_ROUTES for why the media pages cannot use it.
+    const waitUntil = PERSISTENT_MEDIA_ROUTES.has(route) ? 'domcontentloaded' : 'networkidle0';
+    const resp = await page.goto(BASE + route, { waitUntil, timeout: 25000 });
     httpStatus = resp ? resp.status() : null;
   } catch (e) {
+    await page.close().catch(() => {});
     return {
       route, httpStatus, ok: false, navError: e.message,
       bodyTextLength: 0, hasErrorPanel: false,
@@ -241,6 +350,14 @@ async function checkRoute(browser, route) {
   if (route === '/product-search/client') {
     try {
       await checkProductSearchInteraction(page);
+    } catch (e) {
+      interactionError = e.message;
+    }
+  }
+
+  if (PERSISTENT_MEDIA_ROUTES.has(route)) {
+    try {
+      await checkMediaClientInteraction(page);
     } catch (e) {
       interactionError = e.message;
     }
@@ -293,14 +410,24 @@ async function checkRoute(browser, route) {
   });
 
   const results = [];
-  for (const route of ROUTES) {
-    process.stderr.write(`checking ${route} ... `);
-    const r = await checkRoute(browser, route);
-    process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
-    results.push(r);
+  try {
+    for (const route of ROUTES) {
+      process.stderr.write(`checking ${route} ... `);
+      const r = await checkRoute(browser, route);
+      process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} dupes=${r.duplicateScripts.length})\n`);
+      results.push(r);
+    }
+  } finally {
+    // Without this a throw from the loop leaves Chromium running and the
+    // process hanging instead of reporting the failure. Swallowing close()'s
+    // own rejection matters just as much: if Chromium died mid-loop then one of
+    // checkRoute's unguarded page.evaluate calls threw AND close() will reject
+    // too, and an exception raised inside `finally` REPLACES the in-flight one
+    // — trading the real diagnostic for an opaque protocol error.
+    await browser.close().catch((closeError) => {
+      process.stderr.write(`warning: browser.close() failed: ${closeError.message}\n`);
+    });
   }
-
-  await browser.close();
 
   // Summary
   console.log('\n========== SUMMARY ==========');

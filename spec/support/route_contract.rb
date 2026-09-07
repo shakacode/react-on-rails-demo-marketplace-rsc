@@ -15,9 +15,9 @@
 # Puppeteer gate (browser-smoke.yml) instead.
 #
 # Deliberately out of scope, so they never appear in the buckets:
-#   * Non-GET endpoints. The two POSTs (`/api/product_search/review_snippets` and the
-#     dead `/api/performance_metrics`, see #189) are not part of a GET page contract;
-#     the former still has its own request spec.
+#   * Non-GET endpoints. `/api/product_search/review_snippets` is not part of a GET
+#     page contract; it has its own request spec. (The dead `/api/performance_metrics`
+#     POST, which had no backing controller, was removed in #189.)
 #   * Framework-owned routes, which are listed in EXCLUSIONS with a rationale.
 module RouteContract
   # Dynamic segments need a deterministic value so the routing assertions are
@@ -73,9 +73,6 @@ module RouteContract
     rsc-step1 rsc-step1b rsc-step1c rsc-step2 rsc-step3 rsc-step4 rsc-step5
   ].freeze
 
-  # CSS code-splitting experiment: two pages x three rendering shapes.
-  CSS_DEMO = %w[one two].index_with { %w[ssr rsc-server rsc-client] }.freeze
-
   # Server-rendered through the Node renderer, so only dispatch is asserted here.
   RENDERER_BACKED = {
     '/rsc' => 'home#rsc',
@@ -88,7 +85,9 @@ module RouteContract
     **variants('/product', %w[ssr client rsc ssr-cached rsc-cached rsc-pull ppr], 'products', 'show'),
     **variants('/product-search', %w[ssr client rsc ssr-cached rsc-cached], 'product_search', 'search'),
     **variants('/blog', BLOG_VARIANTS, 'blog', 'post'),
-    **CSS_DEMO.reduce({}) { |acc, (page, shapes)| acc.merge(variants("/css-demo/#{page}", shapes, 'css_demo', page)) }
+    # CSS code-splitting experiment: two pages x three rendering shapes.
+    **variants('/css-demo/one', %w[ssr rsc-server rsc-client], 'css_demo', 'one'),
+    **variants('/css-demo/two', %w[ssr rsc-server rsc-client], 'css_demo', 'two')
   }.freeze
 
   # Routes declared unconditionally in config/routes.rb whose implementation is behind
