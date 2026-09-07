@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+child_is_running() {
+  local pid="${1:-}"
+  local state
+
+  [[ "${pid}" =~ ^[0-9]+$ ]] || return 1
+  if ! state="$(ps -o stat= -p "${pid}" 2>/dev/null)"; then
+    kill -0 "${pid}" 2>/dev/null
+    return
+  fi
+  state="${state//[[:space:]]/}"
+
+  [[ -n "${state}" && "${state}" != Z* ]]
+}
+
+owned_target_is_running() {
+  local pid="$1"
+  local group_id="$2"
+
+  if [[ -n "${group_id}" ]]; then
+    kill -0 -- "-${group_id}" 2>/dev/null
+  else
+    child_is_running "${pid}"
+  fi
+}
+
+stop_children() {
+  local timeout_seconds="${E2E_CHILD_STOP_TIMEOUT_SECONDS:-5}"
+  local deadline
+  local group_id
+  local group_ids=()
+  local index
+  local pid
+  local pids=()
+  local target
+
+  [[ "${timeout_seconds}" =~ ^[0-9]+$ ]] || timeout_seconds=5
+
+  for target in "$@"; do
+    pid="${target%%:*}"
+    group_id=""
+    if [[ "${target}" == *:* ]]; then
+      group_id="${target#*:}"
+    fi
+
+    if [[ "${pid}" =~ ^[0-9]+$ ]]; then
+      pids+=("${pid}")
+      if [[ "${group_id}" =~ ^[0-9]+$ && "${group_id}" == "${pid}" ]]; then
+        group_ids+=("${group_id}")
+      else
+        group_ids+=("")
+      fi
+    fi
+  done
+  ((${#pids[@]} > 0)) || return 0
+
+  for pid in "${pids[@]}"; do
+    if child_is_running "${pid}"; then
+      kill -TERM "${pid}" 2>/dev/null || true
+    fi
+  done
+
+  deadline=$((SECONDS + timeout_seconds))
+  while ((SECONDS < deadline)); do
+    for pid in "${pids[@]}"; do
+      if ! child_is_running "${pid}"; then
+        wait "${pid}" 2>/dev/null || true
+      fi
+    done
+
+    for ((index = 0; index < ${#pids[@]}; index += 1)); do
+      pid="${pids[${index}]}"
+      group_id="${group_ids[${index}]}"
+      owned_target_is_running "${pid}" "${group_id}" && break
+    done
+    ((index < ${#pids[@]})) || break
+
+    sleep 0.1
+  done
+
+  for ((index = 0; index < ${#pids[@]}; index += 1)); do
+    pid="${pids[${index}]}"
+    group_id="${group_ids[${index}]}"
+    if owned_target_is_running "${pid}" "${group_id}"; then
+      if [[ -n "${group_id}" ]]; then
+        kill -KILL -- "-${group_id}" 2>/dev/null || true
+      else
+        kill -KILL "${pid}" 2>/dev/null || true
+      fi
+    fi
+  done
+
+  for pid in "${pids[@]}"; do
+    wait "${pid}" 2>/dev/null || true
+  done
+}

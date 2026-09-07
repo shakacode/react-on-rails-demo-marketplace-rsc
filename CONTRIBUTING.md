@@ -67,6 +67,27 @@ git diff --check
 
 `pnpm lint` checks the JavaScript and TypeScript app tree with the repo ESLint config. `bundle exec rubocop` checks Ruby files with the repo RuboCop config and the current TODO baseline; remove entries from `.rubocop_todo.yml` as existing Ruby style debt is fixed.
 
+### Browser journey
+
+After the normal dependency install, install Playwright's Chromium binary once:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+Run the canonical Rails-aware browser test with:
+
+```bash
+pnpm test:e2e
+```
+
+This command uses the dedicated Rails test database and deletes its product and
+product-review rows before and after the journey. It enables a loopback-only
+Rails command bridge with an ephemeral capability token for two allowlisted
+repository files; the bridge remains disabled during normal app development
+and cannot boot in production. See
+[`e2e/README.md`](./e2e/README.md) for the security boundary and artifact paths.
+
 ## Documentation to read first
 
 - [README.md](./README.md)
