@@ -109,9 +109,32 @@ const MEDIA_HLS_ACTIVE_SELECTOR = 'figure video[controls]';
 // part of its client code missing -- the exact defect the island checks below
 // are built to catch, and the one network signal worth failing a route over.
 // Third-party URLs stay out of it: picsum and mux 404s are noise we do not
-// control. `/packs/` is the production build the hosted smoke serves;
-// `/packs-test/` is what a local test-mode stack serves.
-const OWN_BUNDLE_PATH = /^\/packs(-test)?\//;
+// control.
+//
+// The output directories are read from config/shakapacker.yml rather than
+// hardcoded, because a rename there would otherwise leave this regex matching
+// nothing and switch the gate off in silence. Same reasoning as the
+// PERSISTENT_MEDIA_ROUTES self-check below: refuse to run rather than lose
+// coverage quietly.
+const OWN_BUNDLE_PATH = (() => {
+  const shakapackerConfig = require('fs')
+    .readFileSync(require('path').join(__dirname, 'config/shakapacker.yml'), 'utf8');
+  const outputPaths = [
+    ...new Set(
+      Array.from(shakapackerConfig.matchAll(/^\s*public_output_path:\s*['"]?([\w./-]+)['"]?\s*$/gm))
+        .map((match) => match[1].replace(/^\/+|\/+$/g, ''))
+    ),
+  ];
+
+  if (outputPaths.length === 0) {
+    throw new Error('No public_output_path found in config/shakapacker.yml; own-bundle failures would go undetected');
+  }
+
+  const alternation = outputPaths
+    .map((outputPath) => outputPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
+  return new RegExp(`^/(${alternation})/`);
+})();
 const BASE_ORIGIN = new URL(BASE).origin;
 
 // Parsed rather than string-stripped: a BASE_URL carrying a trailing slash would
@@ -334,6 +357,17 @@ async function checkLightboxRoundTrip(page, { name, thumbnailSelector, openSelec
     );
   }
 
+  // The close loop below reads "selector gone" as "closed", so it would pass
+  // instantly against a lightbox whose close control never rendered at all --
+  // for yet-another-react-lightbox the open signal is the portal root, a
+  // different element, so nothing else would have caught that. Require the
+  // control to exist once before allowing its absence to mean success.
+  try {
+    await page.waitForSelector(closeSelector, { visible: true, timeout: 10000 });
+  } catch (e) {
+    throw new Error(`${name} opened without rendering its close control: ${e.message}`);
+  }
+
   try {
     await page.waitForFunction(
       (selectors) => {
@@ -435,6 +469,10 @@ async function checkMediaClientInteraction(page) {
   await checkLightboxRoundTrip(page, {
     name: 'react-image-lightbox gallery',
     thumbnailSelector: MEDIA_RIL_THUMBNAIL_SELECTOR,
+    // react-image-lightbox mounts inline rather than into a portal with a
+    // stable root, so its close button doubles as the "opened" signal. Keep the
+    // two fields even though they are equal here: collapsing them would tie the
+    // open assertion to whatever the close assertion happens to use.
     openSelector: MEDIA_RIL_CLOSE_SELECTOR,
     closeSelector: MEDIA_RIL_CLOSE_SELECTOR,
   });
