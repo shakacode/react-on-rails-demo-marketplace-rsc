@@ -119,15 +119,27 @@ const MEDIA_HLS_ACTIVE_SELECTOR = 'figure video[controls]';
 const OWN_BUNDLE_PATH = (() => {
   const shakapackerConfig = require('fs')
     .readFileSync(require('path').join(__dirname, 'config/shakapacker.yml'), 'utf8');
-  const outputPaths = [
-    ...new Set(
-      Array.from(shakapackerConfig.matchAll(/^\s*public_output_path:\s*['"]?([\w./-]+)['"]?\s*$/gm))
-        .map((match) => match[1].replace(/^\/+|\/+$/g, ''))
-    ),
-  ];
+  // Deliberately a line scan rather than a YAML parse: this file has to run in
+  // the Ruby-only specs job (`--list-routes`) where nothing is installed, and
+  // shakapacker's own node API only resolves the current NODE_ENV, while the
+  // browser here talks to a server whose environment we do not control.
+  // The literal-only match below is the safety net: a value this cannot read --
+  // a YAML alias such as `*1`, or a quoted expression -- is counted but not
+  // matched, and the mismatch throws instead of quietly narrowing the pattern.
+  const declarations = shakapackerConfig.match(/^\s*public_output_path:/gm) || [];
+  const literals = Array.from(
+    shakapackerConfig.matchAll(/^\s*public_output_path:\s*['"]?([\w.-]+(?:\/[\w.-]+)*)['"]?\s*$/gm)
+  ).map((match) => match[1].replace(/^\/+|\/+$/g, ''));
+  const outputPaths = [...new Set(literals)];
 
-  if (outputPaths.length === 0) {
+  if (declarations.length === 0) {
     throw new Error('No public_output_path found in config/shakapacker.yml; own-bundle failures would go undetected');
+  }
+  if (literals.length !== declarations.length) {
+    throw new Error(
+      `Could not read every public_output_path in config/shakapacker.yml as a literal `
+        + `(${literals.length} of ${declarations.length}); own-bundle failures would go undetected`
+    );
   }
 
   const alternation = outputPaths
@@ -140,7 +152,7 @@ const BASE_ORIGIN = new URL(BASE).origin;
 // Parsed rather than string-stripped: a BASE_URL carrying a trailing slash would
 // eat the leading `/` off every path and silently stop matching, which is the
 // same class of quiet miss these checks exist to catch.
-function sameOriginPath(url) {
+function sameOriginUrl(url) {
   if (typeof url !== 'string' || url === '') return null;
 
   let parsed;
@@ -149,7 +161,12 @@ function sameOriginPath(url) {
   } catch {
     return null;
   }
-  return parsed.origin === BASE_ORIGIN ? parsed.pathname + parsed.search : null;
+  return parsed.origin === BASE_ORIGIN ? parsed : null;
+}
+
+function sameOriginPath(url) {
+  const parsed = sameOriginUrl(url);
+  return parsed === null ? null : parsed.pathname + parsed.search;
 }
 
 function isOwnBundleUrl(url) {
@@ -192,8 +209,8 @@ async function checkProductSearchInteraction(page) {
   const inputSelector = 'input[placeholder="Search products, brands, categories..."]';
   const query = 'chromium-smoke-no-match-zqxj-74019';
   const isSearchApiResponse = (response, pathname) => {
-    const url = new URL(response.url());
-    return url.origin === new URL(BASE).origin
+    const url = sameOriginUrl(response.url());
+    return url !== null
       && url.pathname === pathname
       && url.searchParams.get('q') === query;
   };
@@ -390,6 +407,12 @@ async function checkLightboxRoundTrip(page, { name, thumbnailSelector, openSelec
 // library's light-mode preview element existing at all is proof that the island
 // hydrated and that its deferred chunk resolved. No click is needed, which
 // deliberately keeps this check off the remote stream.
+//
+// Residual scope: not clicking means react-player's own click-triggered engine
+// fetch is unexercised. The shared hls.js chunk is not part of that gap --
+// checkVanillaHlsIsland clicks and verifies it on this same route -- so what is
+// left uncovered is a broken react-player-internal glue chunk that is not the
+// shared hls.js module.
 async function checkReactPlayerIsland(page) {
   try {
     await page.waitForSelector(MEDIA_REACT_PLAYER_PREVIEW_SELECTOR, {
@@ -494,10 +517,10 @@ async function checkRoute(browser, route) {
   const bundleFailures = [];
   // One missing chunk raises both a 404 response and an aborted request, so
   // record each URL once to keep the failure report readable.
-  const recordBundleFailure = (url, reason) => {
-    if (!isOwnBundleUrl(url)) return;
-
-    const path = sameOriginPath(url);
+  // Takes an already-resolved same-origin path (null for anything third-party)
+  // so a failed request is parsed once rather than once per guard.
+  const recordBundleFailure = (path, reason) => {
+    if (path === null || !OWN_BUNDLE_PATH.test(path)) return;
     if (bundleFailures.some((failure) => failure.url === path)) return;
 
     bundleFailures.push({ url: path, reason });
@@ -527,7 +550,7 @@ async function checkRoute(browser, route) {
 
     const reason = req.failure()?.errorText;
     failedRequests.push({ url: path, reason });
-    recordBundleFailure(url, reason);
+    recordBundleFailure(path, reason);
   });
   // requestfailed only fires for network-level failures, so a 404 on one of our
   // own chunks -- the likeliest way to lose client code -- needs the response
@@ -535,7 +558,7 @@ async function checkRoute(browser, route) {
   page.on('response', (resp) => {
     if (resp.status() < 400) return;
 
-    recordBundleFailure(resp.url(), `HTTP ${resp.status()}`);
+    recordBundleFailure(sameOriginPath(resp.url()), `HTTP ${resp.status()}`);
   });
 
   let httpStatus = null;
@@ -627,7 +650,7 @@ async function checkRoute(browser, route) {
     for (const route of ROUTES) {
       process.stderr.write(`checking ${route} ... `);
       const r = await checkRoute(browser, route);
-      process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} bundleFails=${(r.bundleFailures || []).length} dupes=${r.duplicateScripts.length})\n`);
+      process.stderr.write(r.ok ? 'OK\n' : `FAIL (status=${r.httpStatus} pageErrors=${r.pageErrors.length} consoleErrs=${r.consoleErrors.filter(e=>e.kind!=='other').length} bundleFails=${r.bundleFailures.length} dupes=${r.duplicateScripts.length})\n`);
       results.push(r);
     }
   } finally {
@@ -658,7 +681,7 @@ async function checkRoute(browser, route) {
     for (const e of r.consoleErrors.filter(x => x.kind !== 'other')) {
       console.log(`  console.${e.type} [${e.kind}]: ${e.text.split('\n')[0].slice(0, 200)}`);
     }
-    for (const f of r.bundleFailures || []) {
+    for (const f of r.bundleFailures) {
       console.log(`  own-bundle-failure: ${f.url} (${f.reason})`);
     }
     for (const f of r.failedRequests) {
