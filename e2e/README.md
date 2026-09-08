@@ -6,14 +6,21 @@ Run the headless Chromium journey from the repository root:
 pnpm test:e2e
 ```
 
-The command prepares the Rails test database, starts the node renderer and Rails
+The command prepares the journey database, starts the node renderer and Rails
 on fixed loopback ports, seeds deterministic product-search, product-page, and
 restaurant-detail data, runs Playwright journeys for products, search, blogs,
 and restaurants, and stops both servers. The cleanup command deletes products,
-product reviews, restaurants, and dependent restaurant records from the
-dedicated test database before and after every stateful test. Both the runner
-and app commands refuse database names that do not end in `_test` or
-`_playwright`.
+product reviews, restaurants, and dependent restaurant records from that
+database before and after every stateful test. Both the runner and app commands
+refuse database names that do not end in `_test` or `_playwright`.
+
+Local runs use their own `localhub_demo_playwright` database, not the shared
+`localhub_demo_test` one that `bundle exec rspec` uses; the runner defaults
+`DATABASE_URL` to `postgres:///localhub_demo_playwright` and `bin/rails
+db:prepare` creates it on first use. That keeps RSpec's `before(:suite)`
+truncation of `_test` databases from deleting a journey's fixtures mid-run. CI
+sets `DATABASE_URL` itself and the default leaves that value alone; export your
+own `DATABASE_URL` to point a local run somewhere else.
 
 The test compiler writes `loadable-stats.json` under `public/packs-test`, while
 the node renderer copies configured companion assets from `public/packs`. The
