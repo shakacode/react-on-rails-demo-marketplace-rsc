@@ -112,6 +112,27 @@ const MEDIA_HLS_ACTIVE_SELECTOR = 'figure video[controls]';
 // control. `/packs/` is the production build the hosted smoke serves;
 // `/packs-test/` is what a local test-mode stack serves.
 const OWN_BUNDLE_PATH = /^\/packs(-test)?\//;
+const BASE_ORIGIN = new URL(BASE).origin;
+
+// Parsed rather than string-stripped: a BASE_URL carrying a trailing slash would
+// eat the leading `/` off every path and silently stop matching, which is the
+// same class of quiet miss these checks exist to catch.
+function sameOriginPath(url) {
+  if (typeof url !== 'string' || url === '') return null;
+
+  let parsed;
+  try {
+    parsed = new URL(url, BASE);
+  } catch {
+    return null;
+  }
+  return parsed.origin === BASE_ORIGIN ? parsed.pathname + parsed.search : null;
+}
+
+function isOwnBundleUrl(url) {
+  const path = sameOriginPath(url);
+  return path !== null && OWN_BUNDLE_PATH.test(path);
+}
 
 // Renaming a media route would otherwise drop it back to `networkidle0` and
 // quietly take its hydration check with it, so refuse to run instead.
@@ -139,7 +160,7 @@ function classify(text, locationUrl = '') {
   // third-party noise the `other` bucket exists to absorb, so it gets a kind of
   // its own that the `ok` computation counts.
   if (/Failed to load resource/i.test(text)) {
-    return OWN_BUNDLE_PATH.test(locationUrl.replace(BASE, '')) ? 'asset-load' : 'other';
+    return isOwnBundleUrl(locationUrl) ? 'asset-load' : 'other';
   }
   return 'other';
 }
@@ -381,24 +402,28 @@ async function checkVanillaHlsIsland(page) {
     );
   }
 
+  // Assert hls.js's effect rather than its chunk filename: the name is
+  // bundler-dependent (the production build does not keep `hls_js` in it, so
+  // matching on it passed locally and failed in CI). activate() awaits
+  // import('hls.js') before touching the element, and both of the library's
+  // paths then give the <video> a src -- a blob: URL from
+  // URL.createObjectURL(MediaSource) on the MSE path, the manifest URL on the
+  // native-HLS fallback. The element ships with no src at all, so any src means
+  // the deferred import resolved and ran. Nothing here waits on the remote
+  // manifest or on playback.
   try {
     await page.waitForFunction(
-      (origin) => performance
-        .getEntriesByType('resource')
-        .some((entry) => entry.name.startsWith(origin)
-          && /hls/i.test(entry.name)
-          // A 404 still produces a resource entry, so presence alone would pass
-          // on a missing chunk. responseStatus is same-origin-readable in
-          // Chrome 109+; where it is missing, fall back to presence and let the
-          // own-bundle failure check below carry the signal.
-          && (entry.responseStatus === undefined || entry.responseStatus === 200)),
+      (selector) => {
+        const video = document.querySelector(selector);
+        return typeof video?.src === 'string' && video.src.length > 0;
+      },
       { timeout: MEDIA_ISLAND_TIMEOUT_MS, polling: MEDIA_ISLAND_POLL_MS },
-      new URL(BASE).origin
+      MEDIA_HLS_ACTIVE_SELECTOR
     );
   } catch (e) {
     throw new Error(
-      `hls.js chunk never loaded from this origin within ${MEDIA_ISLAND_TIMEOUT_MS}ms `
-        + `(dynamic import chunk missing?): ${e.message}`
+      `hls.js never attached to the <video> within ${MEDIA_ISLAND_TIMEOUT_MS}ms `
+        + `(deferred hls.js import unresolved?): ${e.message}`
     );
   }
 }
@@ -431,8 +456,10 @@ async function checkRoute(browser, route) {
   const bundleFailures = [];
   // One missing chunk raises both a 404 response and an aborted request, so
   // record each URL once to keep the failure report readable.
-  const recordBundleFailure = (path, reason) => {
-    if (!OWN_BUNDLE_PATH.test(path)) return;
+  const recordBundleFailure = (url, reason) => {
+    if (!isOwnBundleUrl(url)) return;
+
+    const path = sameOriginPath(url);
     if (bundleFailures.some((failure) => failure.url === path)) return;
 
     bundleFailures.push({ url: path, reason });
@@ -445,7 +472,7 @@ async function checkRoute(browser, route) {
       // ("Failed to load resource: the server responded with a status of 404"),
       // so the own-bundle carve-out has to read it from there.
       const locationUrl = msg.location()?.url || '';
-      const isOwnBundle = OWN_BUNDLE_PATH.test(locationUrl.replace(BASE, ''));
+      const isOwnBundle = isOwnBundleUrl(locationUrl);
       // Skip known-noisy network 404s for missing static assets we don't control
       if (text.includes('Failed to load resource') && !isOwnBundle) return;
       consoleErrors.push({ type: msg.type(), text, url: locationUrl, kind: classify(text, locationUrl) });
@@ -456,22 +483,21 @@ async function checkRoute(browser, route) {
   });
   page.on('requestfailed', (req) => {
     const url = req.url();
+    const path = sameOriginPath(url);
     // Ignore third-party image preloads from picsum that sometimes 404
-    if (!url.startsWith(BASE)) return;
+    if (path === null) return;
 
-    const path = url.replace(BASE, '');
-    const failure = { url: path, reason: req.failure()?.errorText };
-    failedRequests.push(failure);
-    recordBundleFailure(path, failure.reason);
+    const reason = req.failure()?.errorText;
+    failedRequests.push({ url: path, reason });
+    recordBundleFailure(url, reason);
   });
   // requestfailed only fires for network-level failures, so a 404 on one of our
   // own chunks -- the likeliest way to lose client code -- needs the response
   // side too.
   page.on('response', (resp) => {
-    const url = resp.url();
-    if (!url.startsWith(BASE) || resp.status() < 400) return;
+    if (resp.status() < 400) return;
 
-    recordBundleFailure(url.replace(BASE, ''), `HTTP ${resp.status()}`);
+    recordBundleFailure(resp.url(), `HTTP ${resp.status()}`);
   });
 
   let httpStatus = null;
