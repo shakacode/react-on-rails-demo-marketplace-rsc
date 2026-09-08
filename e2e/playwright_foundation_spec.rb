@@ -415,6 +415,28 @@ RSpec.describe 'Rails-aware Playwright foundation' do
     expect(renderer_port_guard_offset).to be < database_preflight_offset
   end
 
+  it 'defaults local runs to a dedicated _playwright database without overriding CI' do
+    runner = Rails.root.join('e2e/run-playwright').read
+    default_line = 'export DATABASE_URL="${DATABASE_URL:-postgres:///localhub_demo_playwright}"'
+    default_offset = runner.index(default_line)
+    database_preflight_offset = runner.index('database_name=')
+
+    expect(default_offset).not_to be_nil
+    expect(database_preflight_offset).not_to be_nil
+    expect(default_offset).to be < database_preflight_offset
+
+    print_url = %(#{default_line}; printf '%s' "${DATABASE_URL}")
+    ci_url = 'postgres://postgres:postgres@localhost:5432/localhub_demo_playwright'
+    local_value, = Open3.capture2('bash', '-c', "unset DATABASE_URL; #{print_url}")
+    ci_value, = Open3.capture2({ 'DATABASE_URL' => ci_url }, 'bash', '-c', print_url)
+
+    expect(local_value).to eq('postgres:///localhub_demo_playwright')
+    expect(ci_value).to eq(ci_url)
+    expect(local_value).not_to end_with('_test')
+    expect(E2EDatabaseSafety::TEST_DATABASE_SUFFIXES).to include(a_string_matching(/_playwright\z/))
+    expect(local_value.split('/').last).to end_with('_playwright')
+  end
+
   it 'generates React on Rails packs before compiling the E2E bundles' do
     runner = Rails.root.join('e2e/run-playwright').read
     generation_offset = runner.index('bundle exec rake react_on_rails:generate_packs')

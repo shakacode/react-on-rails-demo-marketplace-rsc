@@ -18,6 +18,12 @@ fi
 
 export RAILS_ENV=test
 export NODE_ENV=test
+# CI points DATABASE_URL at a dedicated *_playwright database. Give local runs the
+# same isolation, so a concurrent `bundle exec rspec` cannot truncate this journey's
+# seeded scenario mid-run: spec/rails_helper.rb TRUNCATEs every table in before(:suite)
+# when the database name ends in _test, and localhub_demo_test is what database.yml
+# hands an unconfigured local run. `${VAR:-default}` leaves CI's value untouched.
+export DATABASE_URL="${DATABASE_URL:-postgres:///localhub_demo_playwright}"
 export E2E_RAILS_COMMANDS=1
 E2E_RAILS_TOKEN="$(openssl rand -hex 32)"
 export E2E_RAILS_TOKEN

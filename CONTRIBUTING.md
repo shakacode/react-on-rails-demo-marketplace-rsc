@@ -81,8 +81,10 @@ Run the canonical Rails-aware browser test with:
 pnpm test:e2e
 ```
 
-This command uses the dedicated Rails test database and deletes its product and
-product-review rows before and after the journey. It enables a loopback-only
+This command uses its own `localhub_demo_playwright` database — not the
+`localhub_demo_test` one `bundle exec rspec` uses — and deletes its product and
+product-review rows before and after the journey, so the two suites can run at
+the same time without truncating each other's data. It enables a loopback-only
 Rails command bridge with an ephemeral capability token for two allowlisted
 repository files; the bridge remains disabled during normal app development
 and cannot boot in production. See
