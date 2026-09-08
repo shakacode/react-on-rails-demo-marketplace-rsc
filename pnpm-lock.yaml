@@ -15,8 +15,8 @@ overrides:
   js-yaml@4: ^4.3.1
   lodash: 4.18.1
   nanoid: ^3.3.18
-  react-on-rails: 17.0.0
-  shakapacker: 10.2.0
+  react-on-rails: 17.0.1
+  shakapacker: 10.3.2
   uuid@8: ^11.1.1
   nanoid@3: ^3.3.18
 
@@ -85,11 +85,11 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-on-rails-pro:
-        specifier: 17.0.0
-        version: 17.0.0(react-dom@19.2.8(react@19.2.8))(react-on-rails-rsc@19.2.1(@rspack/core@2.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.108.4))(react@19.2.8)
+        specifier: 17.0.1
+        version: 17.0.1(react-dom@19.2.8(react@19.2.8))(react-on-rails-rsc@19.2.1(@rspack/core@2.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.108.4))(react@19.2.8)
       react-on-rails-pro-node-renderer:
-        specifier: 17.0.0
-        version: 17.0.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
+        specifier: 17.0.1
+        version: 17.0.1(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
       react-on-rails-rsc:
         specifier: 19.2.1
         version: 19.2.1(@rspack/core@2.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.108.4)
@@ -281,8 +281,8 @@ importers:
         specifier: 0.2.4
         version: 0.2.4(playwright-core@1.62.1)
       shakapacker:
-        specifier: 10.2.0
-        version: 10.2.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@babel/runtime@7.29.2)(@rspack/cli@2.1.2(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0)))(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0))(@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.2)(react-refresh@0.18.0))(@swc/core@1.15.43)(babel-loader@10.1.1(@babel/core@7.29.7)(@rspack/core@2.1.2)(webpack@5.108.4))(css-loader@7.1.4(@rspack/core@2.1.2)(webpack@5.108.4))(esbuild@0.28.2)(mini-css-extract-plugin@2.10.2(webpack@5.108.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.1.2))(sass-loader@17.0.0(@rspack/core@2.1.2)(sass@1.101.0)(webpack@5.108.4))(sass@1.101.0)(swc-loader@0.2.7(@swc/core@1.15.43)(webpack@5.108.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.43)(esbuild@0.28.2)(webpack@5.108.4))(webpack-assets-manifest@6.5.2(webpack@5.108.4))(webpack-cli@7.2.1)(webpack-dev-server@5.2.6)(webpack@5.108.4)
+        specifier: 10.3.2
+        version: 10.3.2(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@babel/runtime@7.29.2)(@rspack/cli@2.1.2(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0)))(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0))(@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.2)(react-refresh@0.18.0))(@swc/core@1.15.43)(babel-loader@10.1.1(@babel/core@7.29.7)(@rspack/core@2.1.2)(webpack@5.108.4))(css-loader@7.1.4(@rspack/core@2.1.2)(webpack@5.108.4))(esbuild@0.28.2)(mini-css-extract-plugin@2.10.2(webpack@5.108.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.1.2))(sass-loader@17.0.0(@rspack/core@2.1.2)(sass@1.101.0)(webpack@5.108.4))(sass@1.101.0)(swc-loader@0.2.7(@swc/core@1.15.43)(webpack@5.108.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.43)(esbuild@0.28.2)(webpack@5.108.4))(webpack-assets-manifest@6.5.2(webpack@5.108.4))(webpack-cli@7.2.1)(webpack-dev-server@5.2.6)(webpack@5.108.4)
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.108.4)
@@ -5804,8 +5804,8 @@ packages:
       react: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
       react-dom: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
 
-  react-on-rails-pro-node-renderer@17.0.0:
-    resolution: {integrity: sha512-82yuZubo1iaoVpnH8adznf0rVLoZvsSWxYbLYdbKhrdwPjt9MxtyJG6//sqd77hSRX3EVnXQONvkiiur8qLQtw==}
+  react-on-rails-pro-node-renderer@17.0.1:
+    resolution: {integrity: sha512-WIdjcQqJrK2LGuEotZ4ZuvFeASDJQYqGkkeWw3tPs4dPAiQeMTBWN0DsMlYKdfISwwEWwRBFWIYLj0F+qqDuDg==}
     engines: {node: '>=18.19.0'}
     peerDependencies:
       '@fastify/otel': '>=0.18.0 <1.0.0'
@@ -5846,8 +5846,8 @@ packages:
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@17.0.0:
-    resolution: {integrity: sha512-4eEOnr0K5d5POR9iwaaJGZWrNZUUL1gehhlQDfx83T8Nk3PIb4xVQkOVGkQBko4Wj/fCs9TSUFpMm741+9bNwg==}
+  react-on-rails-pro@17.0.1:
+    resolution: {integrity: sha512-c+5GM1iDjx/TqnL7kkpEv6iyiml1Y5Uf8RvIu66ULqJx3upiEUZyIQU0lz/80PbTHx1MDTuCUu59AHZSkPgCXg==}
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       ioredis: '>= 5'
@@ -5873,8 +5873,8 @@ packages:
       '@rspack/core':
         optional: true
 
-  react-on-rails@17.0.0:
-    resolution: {integrity: sha512-jVJmaXJaVsCVoZCWMQ3ePACWaGkq3hOlmbeR0LniQKLr8+kDDgL0RbZ/6D1J2tMAsd1CxS+sOu0PCyO0ZfAQ+g==}
+  react-on-rails@17.0.1:
+    resolution: {integrity: sha512-8Y6CpWC9gI30o+EZHZoB2mQh5nF8g9JCjyQNReALRpXvnJV8OoC5dQvbzMNtpS8X6P1bhuGSMFhsbYek5hpKpg==}
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -6201,8 +6201,8 @@ packages:
     peerDependencies:
       playwright-core: ^1.50.0
 
-  shakapacker@10.2.0:
-    resolution: {integrity: sha512-4jHAL3pCjI1BVf45hFPRVrsMRV54VIVVYrw1MmyX/Ks6rl2ydVt3rxpdzzxH4HFZ4umW6AsuAVSVucZE13taCw==}
+  shakapacker@10.3.2:
+    resolution: {integrity: sha512-W4LV0MFS1c6ayODF/Ra4RM5xS3DljBc9XGLqz04WGSap97U5gJ7FjBTChPmoJ/7VDiTYmL1w+vh+D360e9qK7Q==}
     engines: {node: ^20.19.0 || >=22.12.0, yarn: '>=1 <5'}
     hasBin: true
     peerDependencies:
@@ -6231,7 +6231,7 @@ packages:
       webpack: ^5.101.0
       webpack-assets-manifest: ^5.0.6 || ^6.0.0
       webpack-cli: ^4.9.2 || ^5.0.0 || ^6.0.0 || ^7.0.0
-      webpack-dev-server: ^5.2.2
+      webpack-dev-server: ^5.2.2 || ^6.0.0
       webpack-subresource-integrity: ^5.1.0
     peerDependenciesMeta:
       '@babel/core':
@@ -13093,7 +13093,7 @@ snapshots:
       react-lifecycles-compat: 3.0.4
       warning: 4.0.3
 
-  react-on-rails-pro-node-renderer@17.0.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
+  react-on-rails-pro-node-renderer@17.0.1(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
@@ -13110,11 +13110,11 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.43.0
       '@sentry/node': 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))
 
-  react-on-rails-pro@17.0.0(react-dom@19.2.8(react@19.2.8))(react-on-rails-rsc@19.2.1(@rspack/core@2.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.108.4))(react@19.2.8):
+  react-on-rails-pro@17.0.1(react-dom@19.2.8(react@19.2.8))(react-on-rails-rsc@19.2.1(@rspack/core@2.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.108.4))(react@19.2.8):
     dependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
-      react-on-rails: 17.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-on-rails: 17.0.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
     optionalDependencies:
       react-on-rails-rsc: 19.2.1(@rspack/core@2.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.108.4)
 
@@ -13130,7 +13130,7 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.1.2
 
-  react-on-rails@17.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-on-rails@17.0.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
@@ -13564,7 +13564,7 @@ snapshots:
       chalk: 4.1.2
       playwright-core: 1.62.1
 
-  shakapacker@10.2.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@babel/runtime@7.29.2)(@rspack/cli@2.1.2(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0)))(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0))(@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.2)(react-refresh@0.18.0))(@swc/core@1.15.43)(babel-loader@10.1.1(@babel/core@7.29.7)(@rspack/core@2.1.2)(webpack@5.108.4))(css-loader@7.1.4(@rspack/core@2.1.2)(webpack@5.108.4))(esbuild@0.28.2)(mini-css-extract-plugin@2.10.2(webpack@5.108.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.1.2))(sass-loader@17.0.0(@rspack/core@2.1.2)(sass@1.101.0)(webpack@5.108.4))(sass@1.101.0)(swc-loader@0.2.7(@swc/core@1.15.43)(webpack@5.108.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.43)(esbuild@0.28.2)(webpack@5.108.4))(webpack-assets-manifest@6.5.2(webpack@5.108.4))(webpack-cli@7.2.1)(webpack-dev-server@5.2.6)(webpack@5.108.4):
+  shakapacker@10.3.2(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@babel/runtime@7.29.2)(@rspack/cli@2.1.2(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0)))(@rspack/core@2.1.2)(@rspack/dev-server@2.1.0(@rspack/core@2.1.2)(selfsigned@5.5.0))(@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.2)(react-refresh@0.18.0))(@swc/core@1.15.43)(babel-loader@10.1.1(@babel/core@7.29.7)(@rspack/core@2.1.2)(webpack@5.108.4))(css-loader@7.1.4(@rspack/core@2.1.2)(webpack@5.108.4))(esbuild@0.28.2)(mini-css-extract-plugin@2.10.2(webpack@5.108.4))(rspack-manifest-plugin@5.2.2(@rspack/core@2.1.2))(sass-loader@17.0.0(@rspack/core@2.1.2)(sass@1.101.0)(webpack@5.108.4))(sass@1.101.0)(swc-loader@0.2.7(@swc/core@1.15.43)(webpack@5.108.4))(terser-webpack-plugin@5.4.0(@swc/core@1.15.43)(esbuild@0.28.2)(webpack@5.108.4))(webpack-assets-manifest@6.5.2(webpack@5.108.4))(webpack-cli@7.2.1)(webpack-dev-server@5.2.6)(webpack@5.108.4):
     dependencies:
       js-yaml: 4.3.1
       pack-config-diff: 0.1.0
