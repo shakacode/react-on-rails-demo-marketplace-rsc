@@ -39,6 +39,19 @@ for (const variant of variants) {
         new RegExp(`/restaurant/${restaurantId}/${variant}#cat-starters$`),
       );
       await expect(page.getByRole('heading', { name: /^Starters 11$/ })).toBeVisible();
+
+      // The category link above is a plain anchor, so it navigates with
+      // JavaScript disabled and everything it reveals is server-rendered
+      // markup — none of it can tell us the RSC client bundle hydrated. The
+      // "Helpful" control inside a review card is a real client island
+      // (HelpfulButton.tsx, useSyncExternalStore over a module-scoped store),
+      // so toggling it and watching aria-pressed flip is what makes this
+      // journey sensitive to a hydration regression.
+      const helpful = page.getByRole('button', { name: /helpful$/i }).first();
+      await expect(helpful).toHaveAttribute('aria-pressed', 'false');
+      await helpful.click();
+      await expect(helpful).toHaveAttribute('aria-pressed', 'true');
+      await expect(helpful).toHaveAccessibleName('Marked helpful');
     } else {
       const menuItemHeadings = page.locator('#menu').getByRole('heading', { level: 3 });
       await expect(menuItemHeadings).toHaveCount(80);
