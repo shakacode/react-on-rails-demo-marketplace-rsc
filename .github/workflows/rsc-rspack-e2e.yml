@@ -80,7 +80,7 @@ jobs:
 
     steps:
       - name: Checkout demo
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -88,7 +88,7 @@ jobs:
           bundler-cache: true
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -112,7 +112,7 @@ jobs:
 
       # ── Option A: build the RoR Pro packages from a source checkout ──────────
       - name: Checkout react_on_rails (Pro packages)
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           repository: shakacode/react_on_rails
           ref: ${{ github.event.inputs.ror_ref }}
