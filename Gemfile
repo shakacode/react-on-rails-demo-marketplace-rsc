@@ -14,11 +14,11 @@ gem 'turbo-rails'
 gem 'stimulus-rails'
 
 # React on Rails
-gem 'react_on_rails', '17.0.0'
-gem 'react_on_rails_pro', '17.0.0'
+gem 'react_on_rails', '17.0.1'
+gem 'react_on_rails_pro', '17.0.1'
 
 # Shakapacker for webpack integration
-gem 'shakapacker', '10.2.0'
+gem 'shakapacker', '10.3.2'
 
 # JSON handling
 gem 'jbuilder'
