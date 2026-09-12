@@ -34,10 +34,12 @@ module SearchPagination
 
   module_function
 
-  # Coerces a raw `page` param to a usable page number. Never raises: a
-  # non-scalar that slipped past permit stringifies, `scrub` disarms invalid
-  # encoding (a raw "%FF" query byte would make the regex itself raise
+  # Coerces a raw `page` param to a usable page number. Never raises for any
+  # HTTP-reachable value: a non-scalar that slipped past permit stringifies,
+  # `scrub` disarms invalid UTF-8 (which would make the regex itself raise
   # ArgumentError), and anything without a usable leading integer is page 1.
+  # (Only a non-ASCII-compatible string from an internal caller — UTF-16LE,
+  # say — could still raise; no such caller exists.)
   def clamp_page(raw_page)
     digits = raw_page.to_s[0, PAGE_WINDOW].to_s.scrub[LEADING_PAGE_DIGITS, 1]
     digits ? digits.to_i.clamp(1, MAX_PAGE) : 1

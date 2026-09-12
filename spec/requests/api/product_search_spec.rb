@@ -109,6 +109,45 @@ RSpec.describe 'Api::ProductSearch', type: :request do
       expect(response.parsed_body['snippets']).to eq({})
     end
 
+    # A malformed id must be dropped, never coerced: "7abc".to_i is 7, so a
+    # leading-integer parse would resolve garbage to a REAL product's data.
+    it 'does not resolve a malformed id to a real product' do
+      product = create_product(category: 'Electronics')
+      add_reviews(product)
+
+      post '/api/product_search/review_snippets', params: { product_ids: ["#{product.id}abc"] }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    it 'does not resolve a decimal-shaped id to a real product' do
+      product = create_product(category: 'Electronics')
+      add_reviews(product)
+
+      post '/api/product_search/review_snippets', params: { product_ids: ["#{product.id}.0"] }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    it 'accepts integer ids from a JSON body' do
+      product = create_product(category: 'Electronics')
+      add_reviews(product)
+
+      post '/api/product_search/review_snippets', params: { product_ids: [product.id] }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to have_key(product.id.to_s)
+    end
+
+    it 'drops an id wider than bigint instead of querying with it' do
+      post '/api/product_search/review_snippets', params: { product_ids: ['9' * 20] }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
     it 'ignores ids beyond the product_ids cap' do
       within_cap = create_product
       beyond_cap = create_product

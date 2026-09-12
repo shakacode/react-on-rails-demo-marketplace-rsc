@@ -64,15 +64,29 @@ module Api
     private
 
     # Issue #239: `product_ids` used to be trusted as an array of ids — a scalar
-    # value 500'd with NoMethodError. Coerce whatever arrives to an array, keep
-    # only positive integer ids, and cap the list. `to_s.to_i` (rather than a
-    # bare `to_i`) also degrades non-scalar entries to 0, which the positivity
-    # filter then drops.
+    # value 500'd with NoMethodError. Coerce whatever arrives to an array, cap
+    # it BEFORE any per-entry work (so a huge posted array is bounded up front),
+    # and keep only entries that are literally ids. An id is an Integer or a
+    # string of 1-18 digits — 18 keeps every id inside PostgreSQL's bigint.
+    # Anything else is dropped, never coerced: "7abc".to_i is 7, so a lenient
+    # parse would resolve malformed input to a REAL product's data.
+    PRODUCT_ID_FORMAT = /\A\d{1,18}\z/
+
     def sanitized_product_ids
       Array(params[:product_ids])
-        .map { |id| id.to_s.to_i }
-        .select(&:positive?)
         .first(MAX_REVIEW_SNIPPET_PRODUCT_IDS)
+        .filter_map { |raw| product_id_from(raw) }
+    end
+
+    def product_id_from(raw)
+      case raw
+      when Integer
+        raw if raw.positive?
+      when String
+        # valid_encoding? guards the regex: invalid UTF-8 bytes in a param
+        # would make match? raise ArgumentError.
+        raw.to_i if raw.valid_encoding? && raw.match?(PRODUCT_ID_FORMAT)
+      end
     end
 
     def search_params
