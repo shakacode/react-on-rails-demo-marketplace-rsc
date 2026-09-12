@@ -83,10 +83,17 @@ module Api
         .filter_map { |raw| product_id_from(raw) }
     end
 
+    # Both branches share one range guard, so a String "0" and a JSON
+    # integer 0 are rejected identically.
     def product_id_from(raw)
+      id = raw_product_id(raw)
+      id if id&.positive? && id <= MAX_PRODUCT_ID
+    end
+
+    def raw_product_id(raw)
       case raw
       when Integer
-        raw if raw.positive? && raw <= MAX_PRODUCT_ID
+        raw
       when String
         # valid_encoding? guards the regex: invalid UTF-8 bytes in a param
         # would make match? raise ArgumentError.
