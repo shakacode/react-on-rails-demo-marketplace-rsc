@@ -2,6 +2,8 @@
 
 module Api
   class ProductSearchController < ApplicationController
+    include ProductSerialization
+
     skip_forgery_protection
 
     PER_PAGE = 24
@@ -13,7 +15,7 @@ module Api
       products = products_scope.offset((page - 1) * PER_PAGE).limit(PER_PAGE)
 
       render json: {
-        products: products.map { |p| serialize_product(p) },
+        products: products.map { |p| serialize_search_product(p, variant: :search_card) },
         pagination: {
           current_page: page,
           total_pages: (total / PER_PAGE.to_f).ceil,
@@ -39,25 +41,13 @@ module Api
       }
     end
 
+    # Review snippets for client-side search — now uses the same concern method
+    # as SSR/RSC (2 per product, rating >= 3, 200-char comment truncation).
     def review_snippets
       product_ids = params[:product_ids]&.map(&:to_i) || []
       return render(json: { snippets: {} }) if product_ids.empty?
 
-      snippets = ProductReview
-        .where(product_id: product_ids)
-        .where('rating >= 4')
-        .where(verified_purchase: true)
-        .select('DISTINCT ON (product_id) product_id, title, rating, reviewer_name, comment, helpful_count')
-        .order(:product_id, helpful_count: :desc)
-        .each_with_object({}) do |review, hash|
-          hash[review.product_id] = {
-            title: review.title,
-            rating: review.rating,
-            reviewer_name: review.reviewer_name,
-            comment: review.comment&.truncate(150),
-            helpful_count: review.helpful_count
-          }
-        end
+      snippets = load_review_snippets(product_ids, per_product: 2)
 
       render json: { snippets: snippets, timestamp: Time.current.iso8601 }
     end
@@ -66,27 +56,6 @@ module Api
 
     def search_params
       params.permit(:q, :category, :brand, :min_rating, :in_stock, :price_min, :price_max, :sort, :page)
-    end
-
-    def serialize_product(product)
-      {
-        id: product.id,
-        name: product.name,
-        description: product.description&.truncate(200),
-        price: product.price.to_f,
-        original_price: product.original_price&.to_f,
-        category: product.category,
-        brand: product.brand,
-        sku: product.sku,
-        images: product.images,
-        features: (product.features || []).first(3),
-        tags: product.tags || [],
-        average_rating: product.average_rating.to_f,
-        review_count: product.review_count,
-        in_stock: product.in_stock,
-        stock_quantity: product.stock_quantity,
-        discount_percentage: product.discount_percentage
-      }
     end
   end
 end

@@ -3,18 +3,35 @@
 // No JS is shipped for the product cards themselves.
 // Only the AddToCartButton and CompareButton (client components) hydrate per card.
 //
-// Now includes the same data as SSR for a fair comparison:
-//   - 2 review snippets per product (same as SSR)
-//   - Compare button on each card (same as SSR)
-//   - Active filter pills (same as SSR)
-//   - 500-char descriptions, 6 features, specs (same as SSR)
+// All search paths (SSR, RSC, client API) share the same ProductSerialization concern:
+//   - 2 review snippets per product (rating >= 3, 200-char comments)
+//   - Compare button on each card (client component island)
+//   - Active filter pills (client component)
+//   - 500-char descriptions, 6 features (no specs — never rendered in search)
 
-import React from 'react';
-import { cacheComponent } from '../../utils/rscCache';
-import type { SearchProduct, Pagination as PaginationType, ReviewSnippet } from './types';
-import { SearchResultCard } from './SearchResultCard';
-import { SearchShellSort, SearchShellPagination, CompareButton, SearchShellActiveFilters, AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShellForServer';
-import { EmptySearchSuggestions, type EmptyStateSuggestions } from './EmptySearchSuggestions';
+import React from "react";
+import { cacheComponent } from "../../utils/rscCache";
+import type {
+  SearchProduct,
+  Pagination as PaginationType,
+  ReviewSnippet,
+} from "./types";
+import { SearchResultCard } from "./SearchResultCard";
+import {
+  SearchShellSort,
+  SearchShellPagination,
+  CompareButton,
+  SearchShellActiveFilters,
+  AddToCartButton,
+  CardStarRating,
+  CardReviewSnippets,
+  CardFeaturesList,
+  CardProductTags,
+} from "./SearchShellForServer";
+import {
+  EmptySearchSuggestions,
+  type EmptyStateSuggestions,
+} from "./EmptySearchSuggestions";
 
 interface SearchResultsData {
   products: SearchProduct[];
@@ -34,7 +51,13 @@ interface Props {
 }
 
 const CachedResultsGrid = cacheComponent(
-  async ({ products, review_snippets }: { products: SearchProduct[]; review_snippets: Record<number, ReviewSnippet[]> }) => (
+  async ({
+    products,
+    review_snippets,
+  }: {
+    products: SearchProduct[];
+    review_snippets: Record<number, ReviewSnippet[]>;
+  }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {products.map((product, idx) => (
         <SearchResultCard
@@ -43,9 +66,21 @@ const CachedResultsGrid = cacheComponent(
           description={product.description}
           reviewSnippets={review_snippets[product.id]}
           compareButton={<CompareButton productId={product.id} />}
-          addToCartButton={<AddToCartButton productId={product.id} inStock={product.in_stock} />}
-          starRating={<CardStarRating rating={product.average_rating} count={product.review_count} />}
-          reviewSnippetsNode={<CardReviewSnippets snippets={review_snippets[product.id] || []} />}
+          addToCartButton={
+            <AddToCartButton
+              productId={product.id}
+              inStock={product.in_stock}
+            />
+          }
+          starRating={
+            <CardStarRating
+              rating={product.average_rating}
+              count={product.review_count}
+            />
+          }
+          reviewSnippetsNode={
+            <CardReviewSnippets snippets={review_snippets[product.id] || []} />
+          }
           featuresList={<CardFeaturesList features={product.features || []} />}
           productTags={<CardProductTags tags={product.tags || []} />}
           index={idx}
@@ -53,11 +88,14 @@ const CachedResultsGrid = cacheComponent(
       ))}
     </div>
   ),
-  { id: 'search-results-grid', revalidate: 60 },
+  { id: "search-results-grid", revalidate: 60 },
 );
 
-export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }: Props) {
-  const data: SearchResultsData = await getReactOnRailsAsyncProp('search_results');
+export default async function AsyncSearchResultsRSC({
+  getReactOnRailsAsyncProp,
+}: Props) {
+  const data: SearchResultsData =
+    await getReactOnRailsAsyncProp("search_results");
   const { products, review_snippets, pagination, meta } = data;
 
   return (
@@ -66,7 +104,10 @@ export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }
       <SearchShellActiveFilters filtersApplied={meta.filters_applied || []} />
 
       {/* Sort bar — client component wrapper (receives data, manages its own state) */}
-      <SearchShellSort currentSort={meta.sort} totalResults={meta.total_results} />
+      <SearchShellSort
+        currentSort={meta.sort}
+        totalResults={meta.total_results}
+      />
 
       {products.length === 0 ? (
         data.empty_suggestions ? (
@@ -77,16 +118,33 @@ export default async function AsyncSearchResultsRSC({ getReactOnRailsAsyncProp }
           />
         ) : (
           <div className="text-center py-16">
-            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-16 h-16 text-gray-300 mx-auto mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-            <p className="text-gray-500 mt-1">Try adjusting your search or filter criteria</p>
+            <h3 className="text-lg font-medium text-gray-900">
+              No products found
+            </h3>
+            <p className="text-gray-500 mt-1">
+              Try adjusting your search or filter criteria
+            </p>
           </div>
         )
       ) : (
         <>
-          <CachedResultsGrid products={products} review_snippets={review_snippets} />
+          <CachedResultsGrid
+            products={products}
+            review_snippets={review_snippets}
+          />
           <SearchShellPagination pagination={pagination} />
         </>
       )}

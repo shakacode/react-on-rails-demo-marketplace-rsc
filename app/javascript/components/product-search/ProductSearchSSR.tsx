@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 // V1: Full SSR — ALL data fetched on server, returned at once.
 // ALL component code + libraries (marked, highlight.js, star rendering, card layout)
@@ -7,18 +7,32 @@
 // INP impacted because every result card is hydrated with interactive event handlers.
 // 36 products per page with 3 reviews each = ~200+ hydrated interactive elements.
 
-import React, { useState, useCallback } from 'react';
-import type { SearchProduct, Facets, Pagination as PaginationType, ReviewSnippet, SearchMeta } from './types';
-import { SearchResultCard } from './SearchResultCard';
-import { AddToCartButton, CardStarRating, CardReviewSnippets, CardFeaturesList, CardProductTags } from './SearchShell';
-import { FilterSidebar } from './FilterSidebar';
-import { SortBar } from './SortBar';
-import { SearchInput } from './SearchInput';
-import { PaginationControls } from './PaginationControls';
-import { ActiveFilterPills } from './ActiveFilterPills';
-import { applySearchParams, type SearchParamUpdates } from './useSearchUrl';
-import { EmptySearchSuggestions, type EmptyStateSuggestions } from './EmptySearchSuggestions';
-
+import React, { useState, useCallback } from "react";
+import type {
+  SearchProduct,
+  Facets,
+  Pagination as PaginationType,
+  ReviewSnippet,
+  SearchMeta,
+} from "./types";
+import { SearchResultCard } from "./SearchResultCard";
+import {
+  AddToCartButton,
+  CardStarRating,
+  CardReviewSnippets,
+  CardFeaturesList,
+  CardProductTags,
+} from "./SearchShell";
+import { FilterSidebar } from "./FilterSidebar";
+import { SortBar } from "./SortBar";
+import { SearchInput } from "./SearchInput";
+import { PaginationControls } from "./PaginationControls";
+import { ActiveFilterPills } from "./ActiveFilterPills";
+import { applySearchParams, type SearchParamUpdates } from "./useSearchUrl";
+import {
+  EmptySearchSuggestions,
+  type EmptyStateSuggestions,
+} from "./EmptySearchSuggestions";
 
 interface BrandHighlight {
   name: string;
@@ -36,7 +50,6 @@ interface Props {
   pagination: PaginationType;
   facets: Facets;
   search_meta: SearchMeta;
-  descriptions: Record<number, string>;
   review_snippets: Record<number, ReviewSnippet[]>;
   popular_tags: PopularTag[];
   brand_highlights: BrandHighlight[];
@@ -48,7 +61,6 @@ export default function ProductSearchSSR({
   pagination,
   facets,
   search_meta,
-  descriptions,
   review_snippets,
   popular_tags,
   brand_highlights,
@@ -60,7 +72,7 @@ export default function ProductSearchSSR({
   const activeFiltersList = (search_meta.filters_applied || []).map((f) => ({
     type: f.type,
     value: f.value,
-    label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace('_', ' '),
+    label: f.type.charAt(0).toUpperCase() + f.type.slice(1).replace("_", " "),
   }));
 
   const handleSearch = useCallback((q: string) => {
@@ -75,15 +87,18 @@ export default function ProductSearchSSR({
     applySearchParams({ page: String(page) });
   }, []);
 
-  const handleFilterChange = useCallback((filters: Record<string, string | undefined>) => {
-    applySearchParams(filters as SearchParamUpdates);
-  }, []);
+  const handleFilterChange = useCallback(
+    (filters: Record<string, string | undefined>) => {
+      applySearchParams(filters as SearchParamUpdates);
+    },
+    [],
+  );
 
   const handleRemoveFilter = useCallback((type: string) => {
-    if (type === 'price') {
+    if (type === "price") {
       applySearchParams({ price_min: undefined, price_max: undefined });
     } else {
-      applySearchParams({ [type as 'category']: undefined });
+      applySearchParams({ [type as "category"]: undefined });
     }
   }, []);
 
@@ -122,9 +137,12 @@ export default function ProductSearchSSR({
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="container mx-auto max-w-7xl px-4 py-4">
           <div className="flex items-center gap-4 mb-3">
-            <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">Product Search</h1>
+            <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
+              Product Search
+            </h1>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-              V1: Full SSR — All data blocks response. marked + highlight.js (400KB+) shipped to client for hydration.
+              V1: Full SSR — All data blocks response. marked + highlight.js
+              (400KB+) shipped to client for hydration.
             </p>
           </div>
           <SearchInput
@@ -139,7 +157,8 @@ export default function ProductSearchSSR({
         <div className="bg-indigo-600 text-white py-2 px-4 sticky top-[88px] z-20">
           <div className="container mx-auto max-w-7xl flex items-center justify-between">
             <span className="text-sm font-medium">
-              {compareList.size} product{compareList.size > 1 ? 's' : ''} selected for comparison
+              {compareList.size} product{compareList.size > 1 ? "s" : ""}{" "}
+              selected for comparison
             </span>
             <div className="flex gap-2">
               <button
@@ -172,10 +191,20 @@ export default function ProductSearchSSR({
               <FilterSidebar
                 facets={facets}
                 activeFilters={{
-                  category: search_meta.filters_applied?.find((f) => f.type === 'category')?.value,
-                  brand: search_meta.filters_applied?.find((f) => f.type === 'brand')?.value,
-                  min_rating: search_meta.filters_applied?.find((f) => f.type === 'min_rating')?.value?.replace('+', ''),
-                  in_stock: search_meta.filters_applied?.find((f) => f.type === 'in_stock') ? 'true' : undefined,
+                  category: search_meta.filters_applied?.find(
+                    (f) => f.type === "category",
+                  )?.value,
+                  brand: search_meta.filters_applied?.find(
+                    (f) => f.type === "brand",
+                  )?.value,
+                  min_rating: search_meta.filters_applied
+                    ?.find((f) => f.type === "min_rating")
+                    ?.value?.replace("+", ""),
+                  in_stock: search_meta.filters_applied?.find(
+                    (f) => f.type === "in_stock",
+                  )
+                    ? "true"
+                    : undefined,
                 }}
                 onFilterChange={handleFilterChange}
               />
@@ -183,7 +212,9 @@ export default function ProductSearchSSR({
               {/* Popular Tags Cloud — interactive, needs hydration */}
               {popular_tags.length > 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Popular Tags</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    Popular Tags
+                  </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {popular_tags.map((tag) => (
                       <button
@@ -191,12 +222,14 @@ export default function ProductSearchSSR({
                         onClick={() => handleTagClick(tag.name)}
                         className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
                           selectedTags.has(tag.name)
-                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
+                            ? "bg-indigo-100 text-indigo-700 border border-indigo-300"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent"
                         }`}
                       >
                         {tag.name}
-                        <span className="ml-1 text-gray-400">({tag.count})</span>
+                        <span className="ml-1 text-gray-400">
+                          ({tag.count})
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -206,7 +239,9 @@ export default function ProductSearchSSR({
               {/* Brand Highlights — interactive cards with hover state */}
               {brand_highlights.length > 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Top Brands</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    Top Brands
+                  </h3>
                   <div className="space-y-2">
                     {brand_highlights.map((brand) => (
                       <button
@@ -214,12 +249,18 @@ export default function ProductSearchSSR({
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900">{brand.name}</span>
-                          <span className="text-xs text-gray-400">({brand.product_count})</span>
+                          <span className="font-medium text-gray-900">
+                            {brand.name}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            ({brand.product_count})
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-amber-400 text-xs">★</span>
-                          <span className="text-xs text-gray-600">{brand.avg_rating}</span>
+                          <span className="text-xs text-gray-600">
+                            {brand.avg_rating}
+                          </span>
                         </div>
                       </button>
                     ))}
@@ -241,13 +282,19 @@ export default function ProductSearchSSR({
               empty_suggestions ? (
                 <EmptySearchSuggestions
                   query={search_meta.query}
-                  hasActiveFilters={(search_meta.filters_applied || []).length > 0}
+                  hasActiveFilters={
+                    (search_meta.filters_applied || []).length > 0
+                  }
                   suggestions={empty_suggestions}
                 />
               ) : (
                 <div className="text-center py-16">
-                  <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-                  <p className="text-gray-500 mt-1">Try adjusting your search criteria</p>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    No products found
+                  </h3>
+                  <p className="text-gray-500 mt-1">
+                    Try adjusting your search criteria
+                  </p>
                 </div>
               )
             ) : (
@@ -257,15 +304,33 @@ export default function ProductSearchSSR({
                     <SearchResultCard
                       key={product.id}
                       product={product}
-                      description={descriptions[product.id]}
+                      description={product.description}
                       reviewSnippets={review_snippets[product.id]}
                       isCompareSelected={compareList.has(product.id)}
                       onCompareToggle={() => handleCompareToggle(product.id)}
-                      addToCartButton={<AddToCartButton productId={product.id} inStock={product.in_stock} />}
-                      starRating={<CardStarRating rating={product.average_rating} count={product.review_count} />}
-                      reviewSnippetsNode={<CardReviewSnippets snippets={review_snippets[product.id] || []} />}
-                      featuresList={<CardFeaturesList features={product.features || []} />}
-                      productTags={<CardProductTags tags={product.tags || []} />}
+                      addToCartButton={
+                        <AddToCartButton
+                          productId={product.id}
+                          inStock={product.in_stock}
+                        />
+                      }
+                      starRating={
+                        <CardStarRating
+                          rating={product.average_rating}
+                          count={product.review_count}
+                        />
+                      }
+                      reviewSnippetsNode={
+                        <CardReviewSnippets
+                          snippets={review_snippets[product.id] || []}
+                        />
+                      }
+                      featuresList={
+                        <CardFeaturesList features={product.features || []} />
+                      }
+                      productTags={
+                        <CardProductTags tags={product.tags || []} />
+                      }
                       index={idx}
                     />
                   ))}
@@ -280,7 +345,6 @@ export default function ProductSearchSSR({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

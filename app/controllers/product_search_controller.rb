@@ -3,6 +3,7 @@
 class ProductSearchController < ApplicationController
   include ReactOnRailsPro::RSCPayloadRenderer
   include ReactOnRailsPro::AsyncRendering
+  include ProductSerialization
 
   enable_async_react_rendering only: %i[search_rsc search_rsc_cached]
 
@@ -21,10 +22,9 @@ class ProductSearchController < ApplicationController
   # All component code + libraries (marked, highlight.js ~400KB) shipped to client for hydration.
   def search_ssr
     products_scope = Product.filtered_search(search_params)
-    @products_data = paginate_and_serialize(products_scope, PER_PAGE, rich: true)
+    @products_data = paginate_and_serialize(products_scope, PER_PAGE)
     @facets_data = Product.facets(base_scope_for_facets)
     @search_meta = search_meta_data(products_scope)
-    @product_descriptions = load_product_descriptions(@products_data[:products], truncate_at: 500)
     @review_snippets = load_review_snippets(@products_data[:products].map { |p| p[:id] }, per_product: 2)
     @popular_tags = load_popular_tags
     @brand_highlights = load_brand_highlights
@@ -61,19 +61,21 @@ class ProductSearchController < ApplicationController
   # Full SSR props, built lazily for the cached view block (evaluated only on a cache miss).
   def product_search_ssr_props
     products_scope = Product.filtered_search(search_params)
-    products_data = paginate_and_serialize(products_scope, PER_PAGE, rich: true)
+    products_data = paginate_and_serialize(products_scope, PER_PAGE)
     {
       products: products_data[:products],
       pagination: products_data[:pagination],
       facets: Product.facets(base_scope_for_facets),
       search_meta: search_meta_data(products_scope),
-      descriptions: load_product_descriptions(products_data[:products], truncate_at: 500),
       review_snippets: load_review_snippets(products_data[:products].map { |p| p[:id] }, per_product: 2),
       popular_tags: load_popular_tags,
       brand_highlights: load_brand_highlights
     }
   end
   helper_method :product_search_ssr_props
+
+  # Expose concern methods to RSC ERB views where the emit block runs in view context.
+  helper_method :serialize_search_product, :load_review_snippets
 
   def set_seo_meta
     variant = SEO_VARIANTS[action_name]
@@ -93,13 +95,13 @@ class ProductSearchController < ApplicationController
     scope
   end
 
-  def paginate_and_serialize(scope, per_page = PER_PAGE, rich: false)
+  def paginate_and_serialize(scope, per_page = PER_PAGE)
     page = (search_params[:page] || 1).to_i
     total = scope.count
     products = scope.offset((page - 1) * per_page).limit(per_page)
 
     {
-      products: products.map { |p| serialize_search_result(p, rich: rich) },
+      products: products.map { |p| serialize_search_product(p, variant: :search_rich) },
       pagination: {
         current_page: page,
         total_pages: (total / per_page.to_f).ceil,
@@ -128,89 +130,6 @@ class ProductSearchController < ApplicationController
       filters << { type: 'price', value: "$#{search_params[:price_min]} - $#{search_params[:price_max]}" }
     end
     filters
-  end
-
-  def serialize_search_result(product, rich: false)
-    result = {
-      id: product.id,
-      name: product.name,
-      description: product.description&.truncate(rich ? 500 : 200),
-      price: product.price.to_f,
-      original_price: product.original_price&.to_f,
-      category: product.category,
-      brand: product.brand,
-      sku: product.sku,
-      images: product.images,
-      features: rich ? (product.features || []).first(6) : (product.features || []).first(3),
-      tags: product.tags || [],
-      average_rating: product.average_rating.to_f,
-      review_count: product.review_count,
-      in_stock: product.in_stock,
-      stock_quantity: product.stock_quantity,
-      discount_percentage: product.discount_percentage
-    }
-
-    if rich
-      # Include additional data that increases hydration payload
-      result[:specs] = product.specs || {}
-    end
-
-    result
-  end
-
-  def load_product_descriptions(products, truncate_at: 200)
-    products.each_with_object({}) do |p, hash|
-      hash[p[:id]] = p[:description]&.truncate(truncate_at) || p[:description]
-    end
-  end
-
-  def load_review_snippets(product_ids, per_product: 1)
-    return {} if product_ids.empty?
-
-    if per_product == 1
-      ProductReview
-        .where(product_id: product_ids)
-        .where('rating >= 4')
-        .where(verified_purchase: true)
-        .select('DISTINCT ON (product_id) product_id, title, rating, reviewer_name, comment, helpful_count')
-        .order(:product_id, helpful_count: :desc)
-        .each_with_object({}) do |review, hash|
-          hash[review.product_id] = {
-            title: review.title,
-            rating: review.rating,
-            reviewer_name: review.reviewer_name,
-            comment: review.comment&.truncate(150),
-            helpful_count: review.helpful_count
-          }
-        end
-    else
-      # Load multiple reviews per product using window function (avoids loading all reviews into memory)
-      sql = <<~SQL
-        SELECT product_id, title, rating, reviewer_name, comment, helpful_count
-        FROM (
-          SELECT product_id, title, rating, reviewer_name, comment, helpful_count,
-                 ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY helpful_count DESC, created_at DESC) as rn
-          FROM product_reviews
-          WHERE product_id IN (#{product_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(',')})
-            AND rating >= 3
-            AND verified_purchase = true
-        ) ranked
-        WHERE rn <= #{per_product}
-      SQL
-
-      reviews = ActiveRecord::Base.connection.execute(sql)
-      reviews.each_with_object({}) do |row, hash|
-        pid = row['product_id']
-        hash[pid] ||= []
-        hash[pid] << {
-          title: row['title'],
-          rating: row['rating'],
-          reviewer_name: row['reviewer_name'],
-          comment: row['comment']&.truncate(200),
-          helpful_count: row['helpful_count']
-        }
-      end
-    end
   end
 
   def load_popular_tags

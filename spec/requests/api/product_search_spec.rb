@@ -48,15 +48,18 @@ RSpec.describe 'Api::ProductSearch', type: :request do
   end
 
   describe 'POST /api/product_search/review_snippets' do
-    it 'returns one snippet per requested product that has a qualifying review' do
+    it 'returns up to 2 snippets per requested product with qualifying reviews' do
       product = create_product(category: 'Electronics')
-      add_reviews(product)
+      add_reviews(product, count: 3)
 
       post '/api/product_search/review_snippets', params: { product_ids: [product.id] }
 
       expect(response).to have_http_status(:ok)
       snippets = response.parsed_body['snippets']
-      expect(snippets[product.id.to_s]).to include('title', 'rating', 'reviewer_name')
+      product_snippets = snippets[product.id.to_s]
+      expect(product_snippets).to be_an(Array)
+      expect(product_snippets.length).to eq(2)
+      expect(product_snippets.first).to include('title', 'rating', 'reviewer_name')
     end
 
     it 'returns an empty snippet set when no ids are given' do
