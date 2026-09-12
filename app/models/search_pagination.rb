@@ -16,11 +16,31 @@ module SearchPagination
   # echoing the request.
   MAX_PAGE = 100_000
 
+  # Leading integer of the raw param: optional whitespace and "+", leading
+  # zeros skipped, then at most 7 significant digits — one more digit than
+  # MAX_PAGE needs, so any longer number still clamps to MAX_PAGE. Trailing
+  # garbage stops the match, mirroring String#to_i ("12abc" => 12);
+  # Ruby-literal quirks like "1_000" deliberately do not parse as 1000.
+  LEADING_PAGE_DIGITS = /\A\s*\+?0*(\d{1,7})/
+
+  # The parser only ever looks at this many leading characters, so the cost
+  # of clamping is constant no matter how long the raw param is. The old
+  # `.to_i.clamp` paid a full bignum conversion first (~100ms for a million
+  # attacker-supplied digits on this unauthenticated surface), and even an
+  # unwindowed regex pays a linear scan over a million leading zeros. Any
+  # sane page number — whitespace, a sign, a few leading zeros, 6 digits —
+  # fits comfortably; a param whose digits start beyond the window is page 1.
+  PAGE_WINDOW = 32
+
   module_function
 
-  # Coerces a raw `page` param (String, Integer, or nil) to a usable page number.
+  # Coerces a raw `page` param to a usable page number. Never raises: a
+  # non-scalar that slipped past permit stringifies, `scrub` disarms invalid
+  # encoding (a raw "%FF" query byte would make the regex itself raise
+  # ArgumentError), and anything without a usable leading integer is page 1.
   def clamp_page(raw_page)
-    raw_page.to_i.clamp(1, MAX_PAGE)
+    digits = raw_page.to_s[0, PAGE_WINDOW].to_s.scrub[LEADING_PAGE_DIGITS, 1]
+    digits ? digits.to_i.clamp(1, MAX_PAGE) : 1
   end
 
   # Applies the clamped page to `scope` and returns `[records, pagination]`,
