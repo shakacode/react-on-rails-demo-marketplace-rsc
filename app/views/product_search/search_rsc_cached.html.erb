@@ -13,10 +13,7 @@
   #    - specs hash (same as SSR)
   #    - 2 review snippets per product (same as SSR)
   products_scope = Product.filtered_search(@search_params_data.symbolize_keys)
-  page = (@search_params_data[:page] || @search_params_data["page"] || 1).to_i
-  per_page = 24
-  total = products_scope.count
-  products = products_scope.offset((page - 1) * per_page).limit(per_page)
+  products, pagination = paginate_search(products_scope)
 
   serialized_products = products.map do |p|
     {
@@ -100,16 +97,11 @@
   emit.call("search_results", {
     products: serialized_products,
     review_snippets: review_snippets,
-    pagination: {
-      current_page: page,
-      total_pages: (total / per_page.to_f).ceil,
-      total_count: total,
-      per_page: per_page,
-    },
+    pagination: pagination,
     meta: {
       query: sp[:q] || '',
       sort: sp[:sort] || 'relevance',
-      total_results: total,
+      total_results: pagination[:total_count],
       filters_applied: filters_applied,
     },
     empty_suggestions: empty_suggestions,
