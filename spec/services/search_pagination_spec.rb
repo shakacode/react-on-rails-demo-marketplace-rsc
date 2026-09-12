@@ -38,30 +38,24 @@ RSpec.describe SearchPagination do
       expect(described_class.clamp_page('1_000')).to eq(1)
     end
 
-    it 'never raises on non-scalar values that slip past params.permit' do
+    it 'clamps non-scalar values that slip past params.permit to 1' do
+      # A raise here would surface through the eq(1) expectation.
       [[], {}, [1, 2], :symbol, Object.new].each do |raw|
-        expect { described_class.clamp_page(raw) }.not_to raise_error
         expect(described_class.clamp_page(raw)).to eq(1)
       end
     end
 
-    it 'never raises on invalid-encoding bytes' do
-      # A raw %FF query byte produces an invalid-UTF-8 param. String#to_i
-      # tolerated it, but a bare regex match raises ArgumentError — the
-      # window + scrub keeps the parser total.
+    it 'clamps invalid-encoding bytes to 1 without raising' do
+      # See the scrub in SearchPagination.clamp_page.
       invalid = (+"\xFF12").force_encoding(Encoding::UTF_8)
       expect(invalid.valid_encoding?).to be(false)
-      expect { described_class.clamp_page(invalid) }.not_to raise_error
       expect(described_class.clamp_page(invalid)).to eq(1)
     end
 
     it 'handles unbounded input in constant work via the parse window' do
-      # An unauthenticated caller controls the length of this string; the
-      # old `.to_i.clamp` implementation paid a full bignum conversion
-      # (~100ms at a million digits) before clamping, and an unwindowed
-      # regex still paid a linear scan over a million leading zeros. The
-      # window bounds all parsing cost; digits starting beyond it read as
-      # page 1 rather than being searched for.
+      # See SearchPagination::PAGE_WINDOW for the cost rationale; digits
+      # starting beyond the window read as page 1 rather than being
+      # searched for.
       expect(described_class.clamp_page('9' * 1_000_000)).to eq(described_class::MAX_PAGE)
       expect(described_class.clamp_page('0' * 1_000_000)).to eq(1)
       expect(described_class.clamp_page("#{'0' * 1_000_000}12345")).to eq(1)

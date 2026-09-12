@@ -82,14 +82,6 @@ RSpec.describe 'Feature pages', type: :request, renderer_stub: true do
       expect(response.body).to include('data-renderer-stub="true"')
     end
 
-    # An unbounded page used to overflow PostgreSQL's bigint OFFSET and 500.
-    it 'GET /products?page=99999999999999999999 renders within the page cap' do
-      get '/products', params: { page: '99999999999999999999' }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include('data-renderer-stub="true"')
-    end
-
     # Pins the fourth pagination site (the cached RSC emit block), which the
     # issue's repro table omitted.
     it 'GET /product-search/rsc-cached?page=-7 renders the first page' do

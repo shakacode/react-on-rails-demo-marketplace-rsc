@@ -4,11 +4,21 @@ module Api
   class ProductSearchController < ApplicationController
     skip_forgery_protection
 
-    PER_PAGE = 24
+    PER_PAGE = SearchPagination::DEFAULT_PER_PAGE
 
     # Both endpoints are unauthenticated, so a single request may carry any
     # number of ids; everything past this cap is ignored (issue #239).
     MAX_REVIEW_SNIPPET_PRODUCT_IDS = 100
+
+    # An id is an Integer or a string of only digits — never coerced, since
+    # "7abc".to_i is 7 and a lenient parse would resolve malformed input to a
+    # REAL product's data (issue #239). 18 digits keeps every id inside
+    # PostgreSQL's bigint; the Integer branch (a JSON body produces real
+    # Integers) shares the same ceiling so the two branches stay congruent
+    # rather than leaning on Rails' tolerance of out-of-range IN-list binds.
+    MAX_PRODUCT_ID_DIGITS = 18
+    MAX_PRODUCT_ID = (10**MAX_PRODUCT_ID_DIGITS) - 1
+    PRODUCT_ID_FORMAT = /\A\d{1,#{MAX_PRODUCT_ID_DIGITS}}\z/
 
     def results
       products_scope = Product.filtered_search(search_params)
@@ -66,23 +76,12 @@ module Api
     # Issue #239: `product_ids` used to be trusted as an array of ids — a scalar
     # value 500'd with NoMethodError. Coerce whatever arrives to an array, cap
     # it BEFORE any per-entry work (so a huge posted array is bounded up front),
-    # and keep only entries that are literally ids. An id is an Integer or a
-    # string of 1-18 digits — 18 keeps every id inside PostgreSQL's bigint.
-    # Anything else is dropped, never coerced: "7abc".to_i is 7, so a lenient
-    # parse would resolve malformed input to a REAL product's data.
-    PRODUCT_ID_FORMAT = /\A\d{1,18}\z/
-
+    # and keep only entries that are literally ids (see MAX_PRODUCT_ID_DIGITS).
     def sanitized_product_ids
       Array(params[:product_ids])
         .first(MAX_REVIEW_SNIPPET_PRODUCT_IDS)
         .filter_map { |raw| product_id_from(raw) }
     end
-
-    # Same 18-digit ceiling for native Integers (a JSON body produces real
-    # Integers, not strings). Rails 8.1's predicate builder tolerates
-    # out-of-range IN-list binds, but bounding both branches keeps them
-    # congruent rather than leaning on that behavior.
-    MAX_PRODUCT_ID = 999_999_999_999_999_999
 
     def product_id_from(raw)
       case raw

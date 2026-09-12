@@ -44,15 +44,10 @@ RSpec.describe 'Api::ProductSearch', type: :request do
       expect(body['products']).not_to be_empty
     end
 
+    # page=-1 is a repro row from the issue table; other malformed shapes are
+    # value-pinned in spec/services/search_pagination_spec.rb.
     it 'clamps a negative page to the first page' do
       get '/api/product_search/results', params: { page: -1 }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body['pagination']).to include('current_page' => 1)
-    end
-
-    it 'clamps a non-numeric page to the first page' do
-      get '/api/product_search/results', params: { page: 'abc' }
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body['pagination']).to include('current_page' => 1)
@@ -111,21 +106,12 @@ RSpec.describe 'Api::ProductSearch', type: :request do
 
     # A malformed id must be dropped, never coerced: "7abc".to_i is 7, so a
     # leading-integer parse would resolve garbage to a REAL product's data.
-    it 'does not resolve a malformed id to a real product' do
+    it 'does not resolve malformed ids to a real product' do
       product = create_product(category: 'Electronics')
       add_reviews(product)
 
-      post '/api/product_search/review_snippets', params: { product_ids: ["#{product.id}abc"] }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body['snippets']).to eq({})
-    end
-
-    it 'does not resolve a decimal-shaped id to a real product' do
-      product = create_product(category: 'Electronics')
-      add_reviews(product)
-
-      post '/api/product_search/review_snippets', params: { product_ids: ["#{product.id}.0"] }
+      post '/api/product_search/review_snippets',
+           params: { product_ids: ["#{product.id}abc", "#{product.id}.0"] }
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body['snippets']).to eq({})

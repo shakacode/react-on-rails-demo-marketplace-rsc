@@ -8,11 +8,7 @@
   #    - specs hash (same as SSR)
   #    - 2 review snippets per product (same as SSR)
   products_scope = Product.filtered_search(@search_params_data.symbolize_keys)
-  products, pagination = SearchPagination.paginate(
-    products_scope,
-    page: @search_params_data[:page] || @search_params_data["page"],
-    per_page: 24
-  )
+  products, pagination = paginate_search(products_scope)
 
   serialized_products = products.map do |p|
     {
