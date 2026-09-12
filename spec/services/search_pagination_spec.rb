@@ -60,6 +60,10 @@ RSpec.describe SearchPagination do
       expect(described_class.clamp_page('0' * 1_000_000)).to eq(1)
       expect(described_class.clamp_page("#{'0' * 1_000_000}12345")).to eq(1)
       expect(described_class.clamp_page("#{'0' * (described_class::PAGE_WINDOW - 6)}12345")).to eq(12_345)
+      # A digit run cut by the window edge parses only its in-window prefix —
+      # not faithful, but an in-range page (see PAGE_WINDOW). 29 zeros + 5
+      # nines leaves room for 3 nines inside the 32-char window.
+      expect(described_class.clamp_page("#{'0' * 29}99999")).to eq(999)
     end
   end
 end

@@ -31,7 +31,10 @@ module SearchPagination
   # attacker-supplied digits on this unauthenticated surface), and even an
   # unwindowed regex pays a linear scan over a million leading zeros. Any
   # sane page number — whitespace, a sign, a few leading zeros, 6 digits —
-  # fits comfortably; a param whose digits start beyond the window is page 1.
+  # fits comfortably. Pathological zero-padding degrades safely, never
+  # faithfully: digits starting beyond the window read as page 1, and a
+  # digit run cut by the window edge (>= 26 leading zeros) parses only its
+  # in-window prefix — an in-range page either way, never an error.
   PAGE_WINDOW = 32
 
   module_function
