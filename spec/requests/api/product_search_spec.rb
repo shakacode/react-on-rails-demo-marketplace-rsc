@@ -148,6 +148,14 @@ RSpec.describe 'Api::ProductSearch', type: :request do
       expect(response.parsed_body['snippets']).to eq({})
     end
 
+    it 'drops an oversized native integer id from a JSON body' do
+      post '/api/product_search/review_snippets',
+           params: { product_ids: [999_999_999_999_999_999_999_999_999_999] }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
     it 'ignores ids beyond the product_ids cap' do
       within_cap = create_product
       beyond_cap = create_product

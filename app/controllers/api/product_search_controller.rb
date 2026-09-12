@@ -78,10 +78,16 @@ module Api
         .filter_map { |raw| product_id_from(raw) }
     end
 
+    # Same 18-digit ceiling for native Integers (a JSON body produces real
+    # Integers, not strings). Rails 8.1's predicate builder tolerates
+    # out-of-range IN-list binds, but bounding both branches keeps them
+    # congruent rather than leaning on that behavior.
+    MAX_PRODUCT_ID = 999_999_999_999_999_999
+
     def product_id_from(raw)
       case raw
       when Integer
-        raw if raw.positive?
+        raw if raw.positive? && raw <= MAX_PRODUCT_ID
       when String
         # valid_encoding? guards the regex: invalid UTF-8 bytes in a param
         # would make match? raise ArgumentError.
