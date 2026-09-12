@@ -56,6 +56,33 @@ RSpec.describe 'Feature pages', type: :request, renderer_stub: true do
     end
   end
 
+  # Issue #239: a non-positive `page` used to reach PostgreSQL as a negative OFFSET
+  # and 500. The stub replaces only the renderer, so these still run the real data
+  # assembly — paginate_and_serialize for the SSR pages and the ERB emit block for
+  # /products (the RSC template).
+  describe 'malformed pagination input' do
+    it 'GET /product-search/ssr?page=0 renders the first page' do
+      get '/product-search/ssr', params: { page: 0 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('data-renderer-stub="true"')
+    end
+
+    it 'GET /product-search/ssr-cached?page=-3 renders the first page' do
+      get '/product-search/ssr-cached', params: { page: -3 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('data-renderer-stub="true"')
+    end
+
+    it 'GET /products?page=0 renders the first page' do
+      get '/products', params: { page: 0 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('data-renderer-stub="true"')
+    end
+  end
+
   # The stub replaces the renderer, not the controller, so the data the page would
   # stream is still assembled. Asserting that keeps the stub from silently hollowing
   # out the coverage these examples claim to provide.

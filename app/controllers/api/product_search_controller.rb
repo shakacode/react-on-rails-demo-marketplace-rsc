@@ -6,24 +6,23 @@ module Api
 
     PER_PAGE = 24
 
+    # Both endpoints are unauthenticated, so a single request may carry any
+    # number of ids; everything past this cap is ignored (issue #239).
+    MAX_REVIEW_SNIPPET_PRODUCT_IDS = 100
+
     def results
       products_scope = Product.filtered_search(search_params)
-      page = (search_params[:page] || 1).to_i
-      total = products_scope.count
-      products = products_scope.offset((page - 1) * PER_PAGE).limit(PER_PAGE)
+      products, pagination = SearchPagination.paginate(
+        products_scope, page: search_params[:page], per_page: PER_PAGE
+      )
 
       render json: {
         products: products.map { |p| serialize_product(p) },
-        pagination: {
-          current_page: page,
-          total_pages: (total / PER_PAGE.to_f).ceil,
-          total_count: total,
-          per_page: PER_PAGE
-        },
+        pagination: pagination,
         meta: {
           query: search_params[:q] || '',
           sort: search_params[:sort] || 'relevance',
-          total_results: total
+          total_results: pagination[:total_count]
         },
         timestamp: Time.current.iso8601
       }
@@ -40,7 +39,7 @@ module Api
     end
 
     def review_snippets
-      product_ids = params[:product_ids]&.map(&:to_i) || []
+      product_ids = sanitized_product_ids
       return render(json: { snippets: {} }) if product_ids.empty?
 
       snippets = ProductReview
@@ -63,6 +62,18 @@ module Api
     end
 
     private
+
+    # Issue #239: `product_ids` used to be trusted as an array of ids — a scalar
+    # value 500'd with NoMethodError. Coerce whatever arrives to an array, keep
+    # only positive integer ids, and cap the list. `to_s.to_i` (rather than a
+    # bare `to_i`) also degrades non-scalar entries to 0, which the positivity
+    # filter then drops.
+    def sanitized_product_ids
+      Array(params[:product_ids])
+        .map { |id| id.to_s.to_i }
+        .select(&:positive?)
+        .first(MAX_REVIEW_SNIPPET_PRODUCT_IDS)
+    end
 
     def search_params
       params.permit(:q, :category, :brand, :min_rating, :in_stock, :price_min, :price_max, :sort, :page)

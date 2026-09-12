@@ -94,18 +94,11 @@ class ProductSearchController < ApplicationController
   end
 
   def paginate_and_serialize(scope, per_page = PER_PAGE, rich: false)
-    page = (search_params[:page] || 1).to_i
-    total = scope.count
-    products = scope.offset((page - 1) * per_page).limit(per_page)
+    products, pagination = SearchPagination.paginate(scope, page: search_params[:page], per_page: per_page)
 
     {
       products: products.map { |p| serialize_search_result(p, rich: rich) },
-      pagination: {
-        current_page: page,
-        total_pages: (total / per_page.to_f).ceil,
-        total_count: total,
-        per_page: per_page
-      }
+      pagination: pagination
     }
   end
 
