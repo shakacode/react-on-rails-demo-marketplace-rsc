@@ -81,6 +81,9 @@ class ProductSearchController < ApplicationController
   end
   helper_method :paginate_search
 
+  # Expose concern methods to RSC ERB views where the emit block runs in view context.
+  helper_method :serialize_search_product, :load_review_snippets
+
   def set_seo_meta
     variant = SEO_VARIANTS[action_name]
     @page_title = "Product Search — #{variant} | React on Rails RSC Demo" if variant
