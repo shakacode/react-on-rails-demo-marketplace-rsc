@@ -23,11 +23,13 @@ RSpec.describe 'Product search serialization parity', type: :request do
   let!(:review) { add_reviews(product, count: 3) }
 
   # The canonical field set that all search serializers must produce.
-  EXPECTED_SEARCH_FIELDS = %w[
-    id name description price original_price category brand sku
-    images features tags average_rating review_count in_stock
-    stock_quantity discount_percentage
-  ].sort.freeze
+  let(:expected_search_fields) do
+    %w[
+      id name description price original_price category brand sku
+      images features tags average_rating review_count in_stock
+      stock_quantity discount_percentage
+    ].sort.freeze
+  end
 
   describe 'API product search (client path)', :renderer_stub do
     it 'returns the canonical search field set' do
@@ -38,18 +40,14 @@ RSpec.describe 'Product search serialization parity', type: :request do
       expect(products).not_to be_empty
 
       actual_fields = products.first.keys.sort
-      expect(actual_fields).to eq(EXPECTED_SEARCH_FIELDS),
-        "API search fields diverged from canonical set.\n" \
-        "  Missing: #{(EXPECTED_SEARCH_FIELDS - actual_fields).inspect}\n" \
-        "  Extra:   #{(actual_fields - EXPECTED_SEARCH_FIELDS).inspect}"
+      expect(actual_fields).to eq(expected_search_fields)
     end
 
     it 'does NOT include specs in search results' do
       get '/api/product_search/results', params: { q: 'Parity Test Widget' }
 
       products = response.parsed_body['products']
-      expect(products.first).not_to have_key('specs'),
-        'specs is dead payload in search results — it should not be serialized'
+      expect(products.first).not_to have_key('specs')
     end
 
     it 'truncates description to 500 chars' do
@@ -134,10 +132,7 @@ RSpec.describe 'Product search serialization parity', type: :request do
       rich = controller.send(:serialize_search_product, product, variant: :search_rich)
       card = controller.send(:serialize_search_product, product, variant: :search_card)
 
-      expect(rich.keys.sort).to eq(card.keys.sort),
-        "search_rich and search_card field sets diverged.\n" \
-        "  Only in rich: #{(rich.keys - card.keys).inspect}\n" \
-        "  Only in card: #{(card.keys - rich.keys).inspect}"
+      expect(rich.keys.sort).to eq(card.keys.sort)
     end
 
     it 'neither search variant includes specs' do
@@ -168,8 +163,8 @@ RSpec.describe 'Product search serialization parity', type: :request do
       detail = controller.send(:serialize_product, product)
 
       expect(detail).to have_key(:specs)
-      expect(detail[:description].length).to eq(600) # full, not truncated
-      expect(detail[:features].length).to eq(8)       # all features
+      expect(detail[:description].length).to eq(600)
+      expect(detail[:features].length).to eq(8)
     end
 
     it 'card variant is slim (no description, specs, or features)' do

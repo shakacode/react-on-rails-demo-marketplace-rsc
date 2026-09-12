@@ -19,6 +19,7 @@ module ProductSerialization
   # Search product serialization — the unified entry point for all search paths
   # ---------------------------------------------------------------------------
 
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength -- flat field-mapping hash
   def serialize_search_product(product, variant: :search_rich)
     case variant
     when :search_rich, :search_card
@@ -44,6 +45,7 @@ module ProductSerialization
       raise ArgumentError, "Unknown search variant: #{variant.inspect}"
     end
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
   # ---------------------------------------------------------------------------
   # Product detail serialization (product show pages)
@@ -94,6 +96,7 @@ module ProductSerialization
   #   2 per product, rating >= 3, comment truncated to 200 chars
   # ---------------------------------------------------------------------------
 
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength -- SQL assembly + hash construction
   def load_review_snippets(product_ids, per_product: 2)
     return {} if product_ids.empty?
 
@@ -122,4 +125,5 @@ module ProductSerialization
       }
     end
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end
