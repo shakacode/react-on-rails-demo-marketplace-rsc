@@ -57,6 +57,15 @@ RSpec.describe 'Api::ProductSearch', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body['pagination']).to include('current_page' => 1)
     end
+
+    # An unbounded page used to overflow PostgreSQL's bigint OFFSET
+    # (ActiveRecord::RangeError) and 500.
+    it 'clamps an absurdly large page to the maximum page' do
+      get '/api/product_search/results', params: { page: '99999999999999999999' }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['pagination']).to include('current_page' => SearchPagination::MAX_PAGE)
+    end
   end
 
   describe 'GET /api/product_search/facets' do
