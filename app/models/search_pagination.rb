@@ -3,10 +3,10 @@
 # Shared page-clamping and offset arithmetic for the product-search surfaces:
 # the public API controller, the SSR controller, and the RSC ERB emit blocks
 # (issue #239). A `page` that is non-numeric or below 1 clamps to 1
-# (Kaminari-style) and an absurdly large one clamps to MAX_PAGE, so malformed
-# input can never become a negative or overflowing SQL OFFSET. Valid pages
-# behave as before, including a beyond-last-page request returning an empty
-# result set.
+# (Kaminari-style) and one above MAX_PAGE clamps to MAX_PAGE, so malformed
+# input can never become a negative or overflowing SQL OFFSET. Pages from 1
+# to MAX_PAGE behave as before, including a beyond-last-page request
+# returning an empty result set with the requested page echoed back.
 module SearchPagination
   # Upper bound for a requested page. These surfaces take unauthenticated
   # input, and an unbounded page overflows PostgreSQL's bigint OFFSET
