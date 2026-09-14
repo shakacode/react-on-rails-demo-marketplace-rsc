@@ -1,54 +1,10 @@
 <% content_for :head do %>
   <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
 <% end %>
+<%# The async-props emit block lives in ProductRscProps (issue #245) so this
+    initial-render door and the RSCRoute.refetch() payload door
+    (app/views/react_on_rails_pro/rsc_payload.text.erb) stream identical props. %>
 <%= stream_react_component_with_async_props("ProductPageRSC",
     props: { product: @product_data }, prerender: true) do |emit|
-
-  # Stream product details first (below-the-fold: description, features, specs)
-  # Emitted immediately — prioritizes hero section in initial stream for faster LCP
-  emit.call("product_details", {
-    description: @product.description,
-    features: @product.features,
-    specs: @product.specs,
-  })
-
-  # Stream review statistics (rating distribution aggregation)
-  emit.call("review_stats", @product.review_stats)
-
-  # Stream customer reviews (complex sort query)
-  reviews = @product.top_reviews(5)
-  emit.call("reviews", {
-    reviews: reviews.map { |r|
-      {
-        id: r.id,
-        rating: r.rating,
-        title: r.title,
-        comment: r.comment,
-        reviewer_name: r.reviewer_name,
-        verified_purchase: r.verified_purchase,
-        helpful_count: r.helpful_count,
-        created_at: r.created_at.iso8601,
-      }
-    }
-  })
-
-  # Stream related products
-  related = @product.related_products(4)
-  emit.call("related_products", {
-    products: related.map { |p|
-      {
-        id: p.id,
-        name: p.name,
-        price: p.price.to_f,
-        original_price: p.original_price&.to_f,
-        category: p.category,
-        brand: p.brand,
-        images: p.images,
-        average_rating: p.average_rating.to_f,
-        review_count: p.review_count,
-        in_stock: p.in_stock,
-        discount_percentage: p.discount_percentage,
-      }
-    }
-  })
+  ProductRscProps.emit_all(@product, emit)
 end %>

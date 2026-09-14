@@ -78,4 +78,67 @@ RSpec.describe 'ProductReviews', type: :request do
       end
     end
   end
+
+  # The refetch door (issue #245): RSCRoute.refetch() GETs
+  # /rsc_payload/ProductPageRSC?props=..., served by the gem's
+  # RscPayloadController through the app's template override
+  # (app/views/react_on_rails_pro/rsc_payload.text.erb). The real NDJSON
+  # streaming needs the Node renderer, so — like spec/support/renderer_stub.rb
+  # does for the page routes — this stubs only the process-boundary helpers and
+  # asserts the override dispatches through the async-props helper with the
+  # shared ProductRscProps emit block staffed. Stock-template behavior (the
+  # config-1 crash) is browser-verified in tmp/spike-245-evidence/config1-stock.
+  describe 'GET /rsc_payload/:component_name (app template override)' do
+    let(:emitted) { {} }
+    let(:payload_view_context) { ReactOnRailsPro::RscPayloadController.view_context_class }
+
+    before do
+      allow_any_instance_of(ReactOnRailsPro::RscPayloadController)
+        .to receive(:stream_view_containing_react_components) do |controller, **kwargs|
+          controller.render(template: kwargs.fetch(:template), layout: false, formats: [:text])
+        end
+
+      recorder = emitted
+      allow_any_instance_of(payload_view_context)
+        .to receive(:rsc_payload_react_component_with_async_props) do |_view, name, _options = {}, &block|
+          block&.call(->(prop_name, value) { recorder[prop_name] = value })
+          "async-props-payload-stub:#{name}"
+        end
+      allow_any_instance_of(payload_view_context)
+        .to receive(:rsc_payload_react_component) do |_view, name, _options = {}|
+          "plain-payload-stub:#{name}"
+        end
+    end
+
+    def get_payload(component_name, props)
+      get "/rsc_payload/#{component_name}", params: { props: props.to_json }
+    end
+
+    it 'routes ProductPageRSC through the async-props helper with the shared emit block staffed' do
+      get_payload('ProductPageRSC', { product: { id: product.id } })
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('async-props-payload-stub:ProductPageRSC')
+      expect(emitted.keys).to eq(%w[product_details review_stats reviews related_products])
+      expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Reviewer 1')
+      expect(emitted['review_stats'][:total_reviews]).to eq(3)
+    end
+
+    it 'reflects a just-written review through the same door refetch uses (read your writes)' do
+      post "/products/#{product.id}/reviews", params: valid_params, as: :json
+      expect(response).to have_http_status(:created)
+
+      get_payload('ProductPageRSC', { product: { id: product.id } })
+
+      expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Spike Bot')
+    end
+
+    it 'keeps the stock plain-props path for components without an async-props block' do
+      get_payload('SimpleServerComponent', {})
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('plain-payload-stub:SimpleServerComponent')
+      expect(emitted).to be_empty
+    end
+  end
 end

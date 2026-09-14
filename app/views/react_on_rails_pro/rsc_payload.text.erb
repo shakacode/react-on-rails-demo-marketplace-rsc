@@ -1,0 +1,39 @@
+<%#
+App-level override of the react_on_rails_pro engine's rsc_payload template
+(issue #245 — read-your-writes spike).
+
+Plain Rails view-path precedence makes this file shadow the gem's
+app/views/react_on_rails_pro/rsc_payload.text.erb (the engine has no
+isolate_namespace and no view-path manipulation). The stock template calls
+rsc_payload_react_component with NO async-props block, so an async-props page
+refetched through RSCRoute.refetch() renders without getReactOnRailsAsyncProp
+in its props and every async section throws
+"TypeError: getReactOnRailsAsyncProp is not a function"
+(evidence: tmp/spike-245-evidence/config1-stock, docs/rsc-read-your-writes.md).
+
+This override staffs that door: async-props pages dispatch by component name
+to the same shared emitter the initial-render view uses, so both doors stream
+identical props. Everything else keeps the stock plain-props path.
+
+Gotchas:
+ * Must stay `.text.erb` — RSCPayloadRenderer renders with formats: [:text]
+   and raises a bespoke MissingTemplate error for `.html.erb` overrides.
+ * Every tag below uses trailing-newline trims (and this comment must never
+   contain a literal ERB close sequence): the response is an NDJSON stream
+   and stray template whitespace would corrupt the length-prefixed chunks.
+ * @rsc_payload_component_props comes from the request query string
+   (?props=...), i.e. FROM THE BROWSER. Fine for public catalog data, but a
+   real app must authorize it — the 17.1 gem adds rsc_payload_authorizer for
+   exactly this seam.
+-%>
+<% if @rsc_payload_component_name == "ProductPageRSC" -%>
+<%= rsc_payload_react_component_with_async_props(
+      @rsc_payload_component_name,
+      props: @rsc_payload_component_props
+    ) do |emit|
+      product = Product.find(@rsc_payload_component_props.dig("product", "id"))
+      ProductRscProps.emit_all(product, emit)
+    end -%>
+<% else -%>
+<%= rsc_payload_react_component(@rsc_payload_component_name, props: @rsc_payload_component_props) -%>
+<% end -%>
