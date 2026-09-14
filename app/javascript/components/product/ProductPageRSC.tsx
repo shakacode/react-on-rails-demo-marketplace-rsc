@@ -20,6 +20,7 @@ import { Product } from '../../types/product';
 import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSectionForServer';
+import { ReviewMutationIsland } from './ReviewMutationIslandForServer';
 import AsyncProductDetailsRSC from './AsyncProductDetailsRSC';
 import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';
@@ -90,6 +91,9 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
         {/* Reviews section — streams as data resolves */}
         <section className="border-t border-gray-200 pt-8 mt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
+
+          {/* Read-your-writes spike (#245): POST a canned review, then RSCRoute.refetch() */}
+          <ReviewMutationIsland productId={product.id} />
 
           {/* Review stats stream first (rating distribution aggregation) */}
           <Suspense fallback={<ReviewStatsSkeleton />}>
