@@ -22,6 +22,11 @@ Rails.application.routes.draw do
   get '/ssr-rsc-playground' => 'pages#ssr_rsc_playground'
   get '/products', to: 'product_search#search_rsc', as: :products
 
+  # Read-your-writes spike (issue #245): the /product/rsc mutation island POSTs
+  # a canned review here, then refetches the streamed RSC page. Non-GET, so it
+  # is deliberately outside the RouteContract GET-page inventory.
+  post '/products/:product_id/reviews', to: 'product_reviews#create', as: :product_reviews
+
   # Multimedia showcase — media-heavy page (HLS video + responsive image galleries).
   # RSC-first single page (issue #98). Both paths hit the same RSC action.
   get '/media-gallery', to: 'media_gallery#show_rsc', as: :media_gallery
