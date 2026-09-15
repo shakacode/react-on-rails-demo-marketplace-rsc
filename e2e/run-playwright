@@ -28,11 +28,9 @@ export E2E_RAILS_COMMANDS=1
 E2E_RAILS_TOKEN="$(openssl rand -hex 32)"
 export E2E_RAILS_TOKEN
 export E2E_BASE_URL=http://127.0.0.1:5017
-# The renderer port stays overridable so a machine whose :3800 is busy can run
-# the suite (e.g. RENDERER_PORT=3810 e2e/run-playwright); CI keeps the default.
+export RENDERER_URL=http://127.0.0.1:3800
 export RENDERER_HOST=127.0.0.1
-export RENDERER_PORT="${RENDERER_PORT:-3800}"
-export RENDERER_URL="${RENDERER_URL:-http://127.0.0.1:${RENDERER_PORT}}"
+export RENDERER_PORT=3800
 export RENDERER_PASSWORD=e2e-local-renderer
 export RENDERER_LOG_LEVEL=warn
 export RENDERER_WORKERS_COUNT=1
@@ -43,7 +41,7 @@ export SHAKAPACKER_ASSETS_BUNDLER=rspack
 export ENABLE_SPIKE_MUTATIONS=1
 
 require-open-port 127.0.0.1 5017
-require-open-port 127.0.0.1 "${RENDERER_PORT}"
+require-open-port 127.0.0.1 3800
 
 log_dir="${repo_root}/e2e/server-logs"
 mkdir -p "${log_dir}"
@@ -92,7 +90,7 @@ renderer_loadable_stats_staged=true
 cp "${renderer_loadable_stats_source}" "${renderer_loadable_stats_target}"
 
 require-open-port 127.0.0.1 5017
-require-open-port 127.0.0.1 "${RENDERER_PORT}"
+require-open-port 127.0.0.1 3800
 
 set -m
 env -u E2E_RAILS_TOKEN node node-renderer.js > "${log_dir}/node-renderer.log" 2>&1 &
