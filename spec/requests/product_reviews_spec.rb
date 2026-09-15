@@ -167,8 +167,13 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(emitted).to be_empty
     end
 
-    it 'responds 400, not 500, to bracket-notation props (a Hash, not a JSON string)' do
+    it 'responds 400, not 500, to bracket-notation props (a Hash, not a JSON string) for any component' do
       get '/rsc_payload/ProductPageRSC', params: { props: { foo: 'bar' } }
+      expect(response).to have_http_status(:bad_request)
+
+      # The gem's own JSON.parse would 500 on this for every component; the
+      # guard is deliberately component-agnostic.
+      get '/rsc_payload/SimpleServerComponent', params: { props: { foo: 'bar' } }
       expect(response).to have_http_status(:bad_request)
       expect(emitted).to be_empty
     end

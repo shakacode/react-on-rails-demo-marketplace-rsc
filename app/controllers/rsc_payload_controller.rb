@@ -10,9 +10,17 @@
 # ActionView::Template::Error (status 500). A before_action runs before any
 # NDJSON chunk is emitted, so the status is still ours to set.
 class RscPayloadController < ReactOnRailsPro::RscPayloadController
+  # Component-agnostic: bracket-notation query params (?props[foo]=bar) reach
+  # Rails as a Hash, not a JSON string, and the gem's JSON.parse would raise an
+  # unrescued TypeError (500) for ANY component. 400 for all of them.
+  before_action :reject_non_string_props
   before_action :ensure_product_payload_target_exists
 
   private
+
+  def reject_non_string_props
+    head :bad_request unless params[:props].blank? || params[:props].is_a?(String)
+  end
 
   # Only the product id is read from the untrusted props JSON; the template
   # override rebuilds the full initial props server-side from the found record
@@ -22,9 +30,6 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
     return unless params[:component_name] == 'ProductPageRSC'
 
     props = parsed_untrusted_props
-    # Bracket-notation query params (?props[foo]=bar) reach Rails as a Hash,
-    # not a JSON string; JSON.parse would raise TypeError, so 400 explicitly.
-    return head :bad_request if props == :not_a_json_string
     # Malformed JSON string keeps the gem's own contract: rsc_payload renders 400.
     return if props == :invalid_json
 
@@ -37,7 +42,6 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
   def parsed_untrusted_props
     raw = params[:props]
     return {} if raw.blank?
-    return :not_a_json_string unless raw.is_a?(String)
 
     JSON.parse(raw)
   rescue JSON::ParserError
