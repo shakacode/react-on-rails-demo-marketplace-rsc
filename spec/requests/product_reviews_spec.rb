@@ -64,6 +64,35 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(body['errors']['rating']).not_to be_empty
     end
 
+    it 'responds 422 with each oversized field keyed in errors (length caps)' do
+      url = "/products/#{product.id}/reviews" # materialize the fixture before measuring the count
+
+      expect do
+        post url,
+             params: { review: valid_params[:review].merge(
+               reviewer_name: 'a' * 101, title: 'b' * 201, comment: 'c' * 5001
+             ) },
+             as: :json
+      end.not_to change(ProductReview, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      errors = response.parsed_body.fetch('errors')
+      expect(errors).to include('reviewer_name', 'title', 'comment')
+      expect(errors['reviewer_name'].join).to include('100')
+      expect(errors['title'].join).to include('200')
+      expect(errors['comment'].join).to include('5000')
+    end
+
+    it 'accepts values exactly at the length caps' do
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(
+             reviewer_name: 'a' * 100, title: 'b' * 200, comment: 'c' * 5000
+           ) },
+           as: :json
+
+      expect(response).to have_http_status(:created)
+    end
+
     it 'responds 404 for an unknown product id' do
       post '/products/0/reviews', params: valid_params, as: :json
       expect(response).to have_http_status(:not_found)
