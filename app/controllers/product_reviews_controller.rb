@@ -10,6 +10,15 @@
 class ProductReviewsController < ApplicationController
   include ReactOnRails::Controller::FormResponders
 
+  # Maintainer ruling on the PR-review thread (2026-09-15): an anonymous write
+  # endpoint that accepts self-reported trust signals is not safe on a public
+  # deployment, so the whole write functionality is gated behind an env flag —
+  # same pattern as ENABLE_BENCH_PARAMS in RestaurantsController. Production
+  # never sets it; the endpoint 404s there as if it did not exist.
+  SPIKE_MUTATIONS_ENV = 'ENABLE_SPIKE_MUTATIONS'
+
+  before_action :ensure_spike_mutations_enabled
+
   def create
     product = Product.find(params[:product_id])
     review = product.product_reviews.new(review_params)
@@ -21,7 +30,15 @@ class ProductReviewsController < ApplicationController
     end
   end
 
+  def self.spike_mutations_enabled?
+    ENV[SPIKE_MUTATIONS_ENV] == '1'
+  end
+
   private
+
+  def ensure_spike_mutations_enabled
+    head :not_found unless self.class.spike_mutations_enabled?
+  end
 
   # `verified_purchase` and `helpful_count` are spike affordances, not a real
   # public-API design: the demo dataset's `Product#top_reviews` sorts by

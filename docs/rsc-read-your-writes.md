@@ -248,9 +248,10 @@ bundle exec rake react_on_rails:generate_packs
 bin/shakapacker --mode development                        # configs 1-2
 RSC_CACHE_ENABLED=true bin/shakapacker --mode development # config 3
 
-# run (single renderer worker avoids the C3 BUILD_ID worker roulette)
+# run (single renderer worker avoids the C3 BUILD_ID worker roulette;
+# ENABLE_SPIKE_MUTATIONS=1 arms the gated write endpoint + island — never set in production)
 RENDERER_WORKERS_COUNT=1 node node-renderer.js &
-bundle exec rails server -p 3000 &
+ENABLE_SPIKE_MUTATIONS=1 bundle exec rails server -p 3000 &
 
 # probe (writes findings.json, console/network logs, screenshots)
 node tmp/spike-245-evidence/run-spike-probe.mjs tmp/spike-245-evidence/<outdir> \

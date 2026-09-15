@@ -5,6 +5,8 @@
     initial-render door and the RSCRoute.refetch() payload door
     (app/views/react_on_rails_pro/rsc_payload.text.erb) stream identical props. %>
 <%= stream_react_component_with_async_props("ProductPageRSC",
-    props: { product: @product_data }, prerender: true) do |emit|
+    props: { product: @product_data,
+             review_mutation_enabled: ProductReviewsController.spike_mutations_enabled? },
+    prerender: true) do |emit|
   ProductRscProps.emit_all(@product, emit)
 end %>

@@ -28,7 +28,12 @@ class ProductRscProps
   end
 
   def initial_props(product)
-    { product: serialize_product(product).except(:description, :features, :specs) }
+    {
+      product: serialize_product(product).except(:description, :features, :specs),
+      # Server truth, never the browser's copy: the island renders only where
+      # the gated write endpoint actually exists (ENABLE_SPIKE_MUTATIONS).
+      review_mutation_enabled: ProductReviewsController.spike_mutations_enabled?
+    }
   end
 
   # Emission order mirrors the original view block: product_details first

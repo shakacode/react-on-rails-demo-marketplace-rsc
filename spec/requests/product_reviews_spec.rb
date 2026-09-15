@@ -3,6 +3,18 @@
 require 'rails_helper'
 
 RSpec.describe 'ProductReviews', type: :request do
+  # The whole write functionality is env-gated (maintainer ruling on the PR
+  # review thread): ENABLE_SPIKE_MUTATIONS=1 in dev/local runs, never in
+  # production. Specs opt in explicitly; the disabled contract has its own
+  # context below.
+  around do |example|
+    previous = ENV.fetch(ProductReviewsController::SPIKE_MUTATIONS_ENV, nil)
+    ENV[ProductReviewsController::SPIKE_MUTATIONS_ENV] = '1'
+    example.run
+  ensure
+    ENV[ProductReviewsController::SPIKE_MUTATIONS_ENV] = previous
+  end
+
   let(:product) { create_product_with_reviews }
 
   let(:valid_params) do
@@ -55,6 +67,23 @@ RSpec.describe 'ProductReviews', type: :request do
     it 'responds 404 for an unknown product id' do
       post '/products/0/reviews', params: valid_params, as: :json
       expect(response).to have_http_status(:not_found)
+    end
+
+    context 'without ENABLE_SPIKE_MUTATIONS (the production posture)' do
+      around do |example|
+        ENV.delete(ProductReviewsController::SPIKE_MUTATIONS_ENV)
+        example.run
+      end
+
+      it 'hides the endpoint entirely: 404, nothing written' do
+        url = "/products/#{product.id}/reviews" # materialize the fixture before measuring the count
+
+        expect do
+          post url, params: valid_params, as: :json
+        end.not_to change(ProductReview, :count)
+
+        expect(response).to have_http_status(:not_found)
+      end
     end
 
     context 'with forgery protection enabled (as in development/production)' do

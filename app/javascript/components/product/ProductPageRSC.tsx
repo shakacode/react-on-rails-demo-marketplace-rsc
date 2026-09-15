@@ -33,6 +33,9 @@ import { buildProductSpecMarkdown } from './productSpecMarkdown';
 
 interface Props {
   product: Product;
+  // Server-set flag (ENABLE_SPIKE_MUTATIONS): the #245 mutation island renders
+  // only where its gated write endpoint actually exists. Production never sets it.
+  review_mutation_enabled?: boolean;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
@@ -56,7 +59,7 @@ const CachedProductSpecSheet = cacheComponent(
   { id: 'product-spec-sheet', revalidate: 60 },
 );
 
-export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Props) {
+export default function ProductPageRSC({ product, review_mutation_enabled, getReactOnRailsAsyncProp }: Props) {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-6xl px-4 py-6">
@@ -92,8 +95,9 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
         <section className="border-t border-gray-200 pt-8 mt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
 
-          {/* Read-your-writes spike (#245): POST a canned review, then RSCRoute.refetch() */}
-          <ReviewMutationIsland productId={product.id} />
+          {/* Read-your-writes spike (#245): POST a canned review, then RSCRoute.refetch().
+              Rendered only where the gated write endpoint exists (ENABLE_SPIKE_MUTATIONS). */}
+          {review_mutation_enabled && <ReviewMutationIsland productId={product.id} />}
 
           {/* Review stats stream first (rating distribution aggregation) */}
           <Suspense fallback={<ReviewStatsSkeleton />}>
