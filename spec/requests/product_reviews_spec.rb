@@ -158,6 +158,21 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(emitted).to be_empty
     end
 
+    it 'responds 404, not 500, when the id is valid JSON but not a scalar' do
+      get_payload('ProductPageRSC', { product: { id: { a: 1 } } })
+      expect(response).to have_http_status(:not_found)
+
+      get_payload('ProductPageRSC', { product: { id: [1] } })
+      expect(response).to have_http_status(:not_found)
+      expect(emitted).to be_empty
+    end
+
+    it 'responds 400, not 500, to bracket-notation props (a Hash, not a JSON string)' do
+      get '/rsc_payload/ProductPageRSC', params: { props: { foo: 'bar' } }
+      expect(response).to have_http_status(:bad_request)
+      expect(emitted).to be_empty
+    end
+
     it 'keeps the stock plain-props path for components without an async-props block' do
       get_payload('SimpleServerComponent', {})
 

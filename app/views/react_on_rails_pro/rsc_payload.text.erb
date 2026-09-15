@@ -31,22 +31,21 @@ Gotchas:
 -%>
 <% if @rsc_payload_component_name == "ProductPageRSC" -%>
 <%
-  # RscPayloadController's before_action already 404s on a missing/unknown id
-  # BEFORE the stream starts; this re-check is defense in depth only (a raise
-  # here would surface as ActionView::Template::Error mid-stream, not a 404).
-  requested_product_id =
-    @rsc_payload_component_props.is_a?(Hash) ? @rsc_payload_component_props.dig("product", "id") : nil
-  product = Product.find_by(id: requested_product_id)
-  if product.nil?
+  # @payload_product was validated and loaded by RscPayloadController's
+  # before_action, which 404s BEFORE the stream starts — no re-parse or
+  # re-query of the untrusted props here. The raise is defense in depth for a
+  # mis-wired route only (it would surface as ActionView::Template::Error
+  # mid-stream, not a 404).
+  if @payload_product.nil?
     raise ActiveRecord::RecordNotFound,
-          "ProductPageRSC payload requires a valid product id in props"
+          "ProductPageRSC payload requires RscPayloadController to load @payload_product"
   end
 -%>
 <%= rsc_payload_react_component_with_async_props(
       @rsc_payload_component_name,
-      props: ProductRscProps.initial_props(product)
+      props: ProductRscProps.initial_props(@payload_product)
     ) do |emit|
-      ProductRscProps.emit_all(product, emit)
+      ProductRscProps.emit_all(@payload_product, emit)
     end -%>
 <% else -%>
 <%= rsc_payload_react_component(@rsc_payload_component_name, props: @rsc_payload_component_props) -%>

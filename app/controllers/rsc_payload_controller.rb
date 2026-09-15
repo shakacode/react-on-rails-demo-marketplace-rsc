@@ -16,21 +16,38 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
 
   # Only the product id is read from the untrusted props JSON; the template
   # override rebuilds the full initial props server-side from the found record
-  # (ProductRscProps.initial_props), so nothing else the browser sent is used.
+  # (@payload_product / ProductRscProps.initial_props), so nothing else the
+  # browser sent is used.
   def ensure_product_payload_target_exists
     return unless params[:component_name] == 'ProductPageRSC'
 
     props = parsed_untrusted_props
-    # Malformed JSON keeps the gem's own contract: rsc_payload renders 400.
+    # Bracket-notation query params (?props[foo]=bar) reach Rails as a Hash,
+    # not a JSON string; JSON.parse would raise TypeError, so 400 explicitly.
+    return head :bad_request if props == :not_a_json_string
+    # Malformed JSON string keeps the gem's own contract: rsc_payload renders 400.
     return if props == :invalid_json
 
-    product_id = props.is_a?(Hash) ? props.dig('product', 'id') : nil
-    head :not_found unless Product.exists?(id: product_id)
+    # Found here once; the template renders from this record instead of
+    # re-parsing/re-querying the same untrusted input.
+    @payload_product = Product.find_by(id: scalar_product_id(props))
+    head :not_found unless @payload_product
   end
 
   def parsed_untrusted_props
-    JSON.parse(params[:props].presence || '{}')
+    raw = params[:props]
+    return {} if raw.blank?
+    return :not_a_json_string unless raw.is_a?(String)
+
+    JSON.parse(raw)
   rescue JSON::ParserError
     :invalid_json
+  end
+
+  # JSON can put any value at product.id (hash, array, bool); ActiveRecord
+  # treats a Hash id as a nested condition and errors. Accept only scalars.
+  def scalar_product_id(props)
+    id = props.is_a?(Hash) ? props.dig('product', 'id') : nil
+    id.is_a?(Integer) || id.is_a?(String) ? id : nil
   end
 end

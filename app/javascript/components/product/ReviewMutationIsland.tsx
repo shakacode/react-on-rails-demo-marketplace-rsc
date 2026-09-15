@@ -77,8 +77,21 @@ export function ReviewMutationIsland({ productId }: Props) {
         return;
       }
 
-      const { id } = (await response.json()) as { id: number };
-      setPostState({ phase: 'posted', reviewerName, reviewId: id });
+      // A 2xx does not guarantee a JSON body of the expected shape; surface a
+      // precise error instead of letting SyntaxError fall into the generic catch.
+      let reviewId: number;
+      try {
+        const body = (await response.json()) as { id?: unknown };
+        if (typeof body.id !== 'number') throw new Error('response body lacked a numeric id');
+        reviewId = body.id;
+      } catch (e) {
+        setPostState({
+          phase: 'error',
+          message: `POST succeeded but the response was unusable — ${e instanceof Error ? e.message : String(e)}`,
+        });
+        return;
+      }
+      setPostState({ phase: 'posted', reviewerName, reviewId });
 
       // Step 2 — see it: ask the enclosing RSCRoute to re-render the page's
       // server component tree from fresh Rails data.
