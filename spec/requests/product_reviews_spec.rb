@@ -285,6 +285,19 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(emitted).to be_empty
     end
 
+    it 'cannot silently 404 a guarded component without a prop reader (list derived from the map)' do
+      # The guard list is PRODUCT_ID_READERS.keys, so a component cannot join
+      # the guard without a reader; forcing the drift anyway raises loudly.
+      stub_const('RscPayloadController::PRODUCT_PAYLOAD_COMPONENTS',
+                 RscPayloadController::PRODUCT_PAYLOAD_COMPONENTS + ['GhostComponentRSC'])
+
+      expect(RscPayloadController::PRODUCT_ID_READERS.keys)
+        .to eq(%w[ProductPageRSC ProductReviewsSectionRSC])
+      expect do
+        get_payload('GhostComponentRSC', { product_id: product.id })
+      end.to raise_error(KeyError, /GhostComponentRSC/)
+    end
+
     it 'keeps the stock plain-props path for components without an async-props block' do
       get_payload('SimpleServerComponent', {})
 

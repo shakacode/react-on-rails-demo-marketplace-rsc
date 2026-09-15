@@ -16,12 +16,25 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
   before_action :reject_non_string_props
   before_action :ensure_product_payload_target_exists
 
-  # Components whose payload branch renders from a Product record. Both read
-  # ONLY the product id out of the untrusted props JSON; the template override
-  # rebuilds the full initial props server-side from the found record
-  # (@payload_product / ProductRscProps), so nothing else the browser sent is
-  # used. ProductReviewsSectionRSC is the C5 nested section route (issue #245).
-  PRODUCT_PAYLOAD_COMPONENTS = %w[ProductPageRSC ProductReviewsSectionRSC].freeze
+  # Components whose payload branch renders from a Product record, mapped to
+  # the reader that extracts the product id from their (untrusted) props JSON —
+  # shapes differ per component: the whole page mounts with the full product
+  # object ({product: {id: ...}}), the C5 nested section route with
+  # {product_id: ...}. Only that id is read; the template override rebuilds the
+  # full initial props server-side from the found record (@payload_product /
+  # ProductRscProps). The guard list is DERIVED from this map, so a new
+  # component cannot join the guard without a reader (no silent-404 drift), and
+  # an unmapped lookup raises KeyError loudly.
+  PRODUCT_ID_READERS = {
+    # `product` itself may be any JSON value, and Hash#dig raises TypeError on
+    # a non-dig-able intermediate.
+    'ProductPageRSC' => lambda { |props|
+      product = props['product']
+      product.is_a?(Hash) ? product['id'] : nil
+    },
+    'ProductReviewsSectionRSC' => ->(props) { props['product_id'] }
+  }.freeze
+  PRODUCT_PAYLOAD_COMPONENTS = PRODUCT_ID_READERS.keys.freeze
 
   private
 
@@ -53,21 +66,10 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
 
   # JSON can put any value at the id position (hash, array, bool); ActiveRecord
   # treats a Hash id as a nested condition and errors. Accept only scalars.
-  # Prop shapes differ per component: the whole page mounts with the full
-  # product object ({product: {id: ...}}), the nested section route mounts
-  # with {product_id: ...} (see ReviewsSectionRoute).
   def scalar_product_id(props)
     return nil unless props.is_a?(Hash)
 
-    id = case params[:component_name]
-         when 'ProductPageRSC'
-           # `product` itself is untrusted and may be any JSON value, and
-           # Hash#dig raises TypeError on a non-dig-able intermediate.
-           product = props['product']
-           product.is_a?(Hash) ? product['id'] : nil
-         when 'ProductReviewsSectionRSC'
-           props['product_id']
-         end
+    id = PRODUCT_ID_READERS.fetch(params[:component_name]).call(props)
     id.is_a?(Integer) || id.is_a?(String) ? id : nil
   end
 end
