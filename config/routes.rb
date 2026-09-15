@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  rsc_payload_route
+  # App-level payload controller guards browser-supplied props before the
+  # NDJSON stream starts (issue #245 hardening; see RscPayloadController).
+  rsc_payload_route(controller: 'rsc_payload')
   repository_url = ApplicationHelper::GITHUB_REPO_URL
   contributing_url = "#{repository_url}/blob/main/CONTRIBUTING.md"
   issues_url = "#{repository_url}/issues"
@@ -21,6 +23,11 @@ Rails.application.routes.draw do
   get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
   get '/ssr-rsc-playground' => 'pages#ssr_rsc_playground'
   get '/products', to: 'product_search#search_rsc', as: :products
+
+  # Read-your-writes spike (issue #245): the /product/rsc mutation island POSTs
+  # a canned review here, then refetches the streamed RSC page. Non-GET, so it
+  # is deliberately outside the RouteContract GET-page inventory.
+  post '/products/:product_id/reviews', to: 'product_reviews#create', as: :product_reviews
 
   # Multimedia showcase — media-heavy page (HLS video + responsive image galleries).
   # RSC-first single page (issue #98). Both paths hit the same RSC action.
