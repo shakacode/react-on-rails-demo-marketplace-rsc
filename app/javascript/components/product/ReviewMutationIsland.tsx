@@ -12,7 +12,7 @@
 // the seeded maximum (120) so the new review enters the top_reviews(5) window
 // the page streams from (see ProductReviewsController#review_params).
 
-import React, { useState, useTransition } from 'react';
+import React, { useRef, useState, useTransition } from 'react';
 import { useCurrentRSCRoute } from 'react-on-rails-pro/RSCRoute';
 
 interface Props {
@@ -34,6 +34,10 @@ export function ReviewMutationIsland({ productId }: Props) {
   const [isRefetching, startTransition] = useTransition();
   const [postState, setPostState] = useState<PostState>({ phase: 'idle' });
   const [localRefetchError, setLocalRefetchError] = useState<string | null>(null);
+  // Synchronous double-submit guard: `busy` is render-state and can lag one
+  // frame between the POST settling and the transition's isPending flipping,
+  // so a fast double-click could fire a second POST. The ref closes that gap.
+  const postInFlightRef = useRef(false);
 
   const runRefetch = (doFetch: () => Promise<unknown>) => {
     setLocalRefetchError(null);
@@ -44,11 +48,16 @@ export function ReviewMutationIsland({ productId }: Props) {
         // Outside production RSCRoute lets refetch failures throw loudly; keep
         // a copy here so the failure text stays visible for the spike evidence.
         setLocalRefetchError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+      } finally {
+        postInFlightRef.current = false; // release the double-submit guard once the refetch settles
       }
     });
   };
 
   const handleClick = async () => {
+    if (postInFlightRef.current) return;
+    postInFlightRef.current = true;
+
     setPostState({ phase: 'posting' });
     const stamp = new Date().toISOString().slice(11, 19);
     const reviewerName = `Spike Bot ${stamp}`;
@@ -73,6 +82,7 @@ export function ReviewMutationIsland({ productId }: Props) {
 
       if (!response.ok) {
         const body = await response.text();
+        postInFlightRef.current = false;
         setPostState({ phase: 'error', message: `POST failed with ${response.status}: ${body.slice(0, 200)}` });
         return;
       }
@@ -85,6 +95,7 @@ export function ReviewMutationIsland({ productId }: Props) {
         if (typeof body.id !== 'number') throw new Error('response body lacked a numeric id');
         reviewId = body.id;
       } catch (e) {
+        postInFlightRef.current = false;
         setPostState({
           phase: 'error',
           message: `POST succeeded but the response was unusable — ${e instanceof Error ? e.message : String(e)}`,
@@ -95,8 +106,11 @@ export function ReviewMutationIsland({ productId }: Props) {
 
       // Step 2 — see it: ask the enclosing RSCRoute to re-render the page's
       // server component tree from fresh Rails data.
+      // The transition's finally releases the guard once the refetch settles,
+      // so the ref stays held across the posting→isPending flag-flip gap.
       runRefetch(refetch);
     } catch (e) {
+      postInFlightRef.current = false;
       setPostState({ phase: 'error', message: e instanceof Error ? `${e.name}: ${e.message}` : String(e) });
     }
   };
@@ -125,7 +139,13 @@ export function ReviewMutationIsland({ productId }: Props) {
         <span className="text-indigo-900" data-testid="mutation-status" aria-live="polite">
           {postState.phase === 'posted' &&
             !isRefetching &&
+            !refetchError &&
+            !localRefetchError &&
             `Posted review #${postState.reviewId} as “${postState.reviewerName}” and refetched.`}
+          {postState.phase === 'posted' &&
+            !isRefetching &&
+            (refetchError || localRefetchError) &&
+            `Posted review #${postState.reviewId} as “${postState.reviewerName}”; the refetch failed — see below.`}
           {postState.phase === 'posted' && isRefetching && `Posted as “${postState.reviewerName}”; refetching…`}
           {postState.phase === 'error' && `Write failed — ${postState.message}`}
           {postState.phase === 'idle' && 'Spike #245: POST a canned review, then RSCRoute.refetch() this page.'}
