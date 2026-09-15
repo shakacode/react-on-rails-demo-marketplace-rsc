@@ -90,17 +90,22 @@ RSpec.describe 'ProductReviews', type: :request do
   # config-1 crash) is browser-verified in tmp/spike-245-evidence/config1-stock.
   describe 'GET /rsc_payload/:component_name (app template override)' do
     let(:emitted) { {} }
-    let(:payload_view_context) { ReactOnRailsPro::RscPayloadController.view_context_class }
+    let(:recorded_async_options) { {} }
+    # The app-level subclass (RscPayloadController) serves the route since the
+    # issue #245 hardening; stub the process-boundary helpers on it directly.
+    let(:payload_view_context) { RscPayloadController.view_context_class }
 
     before do
-      allow_any_instance_of(ReactOnRailsPro::RscPayloadController)
+      allow_any_instance_of(RscPayloadController)
         .to receive(:stream_view_containing_react_components) do |controller, **kwargs|
           controller.render(template: kwargs.fetch(:template), layout: false, formats: [:text])
         end
 
       recorder = emitted
+      options_recorder = recorded_async_options
       allow_any_instance_of(payload_view_context)
-        .to receive(:rsc_payload_react_component_with_async_props) do |_view, name, _options = {}, &block|
+        .to receive(:rsc_payload_react_component_with_async_props) do |_view, name, options = {}, &block|
+          options_recorder.replace(options)
           block&.call(->(prop_name, value) { recorder[prop_name] = value })
           "async-props-payload-stub:#{name}"
         end
@@ -131,6 +136,26 @@ RSpec.describe 'ProductReviews', type: :request do
       get_payload('ProductPageRSC', { product: { id: product.id } })
 
       expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Spike Bot')
+    end
+
+    it 'rebuilds the initial props server-side instead of echoing the browser copy' do
+      get_payload('ProductPageRSC', { product: { id: product.id, name: 'SPOOFED', price: 0 } })
+
+      expect(response).to have_http_status(:ok)
+      sent = recorded_async_options.fetch(:props).fetch(:product)
+      expect(sent[:name]).to eq(product.name) # not 'SPOOFED'
+      expect(sent[:sku]).to eq(product.sku)   # full shape restored (buildProductSpecMarkdown needs it)
+      # Async-streamed fields stay out of the initial props, mirroring door #1.
+      expect(sent).not_to have_key(:description)
+    end
+
+    it 'responds 404 before emitting anything when the browser props carry no known product id' do
+      get_payload('ProductPageRSC', {})
+      expect(response).to have_http_status(:not_found)
+
+      get_payload('ProductPageRSC', { product: { id: 0 } })
+      expect(response).to have_http_status(:not_found)
+      expect(emitted).to be_empty
     end
 
     it 'keeps the stock plain-props path for components without an async-props block' do

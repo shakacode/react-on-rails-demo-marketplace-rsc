@@ -22,16 +22,30 @@ Gotchas:
    contain a literal ERB close sequence): the response is an NDJSON stream
    and stray template whitespace would corrupt the length-prefixed chunks.
  * @rsc_payload_component_props comes from the request query string
-   (?props=...), i.e. FROM THE BROWSER. Fine for public catalog data, but a
-   real app must authorize it — the 17.1 gem adds rsc_payload_authorizer for
-   exactly this seam.
+   (?props=...), i.e. FROM THE BROWSER. This override therefore reads ONLY the
+   product id out of it, 404s on an unknown/missing id before any chunk is
+   emitted, and rebuilds the initial props server-side from the found record
+   (ProductRscProps.initial_props) instead of echoing the browser's copy. A
+   real app must still authorize the request — the 17.1 gem adds
+   rsc_payload_authorizer for exactly this seam.
 -%>
 <% if @rsc_payload_component_name == "ProductPageRSC" -%>
+<%
+  # RscPayloadController's before_action already 404s on a missing/unknown id
+  # BEFORE the stream starts; this re-check is defense in depth only (a raise
+  # here would surface as ActionView::Template::Error mid-stream, not a 404).
+  requested_product_id =
+    @rsc_payload_component_props.is_a?(Hash) ? @rsc_payload_component_props.dig("product", "id") : nil
+  product = Product.find_by(id: requested_product_id)
+  if product.nil?
+    raise ActiveRecord::RecordNotFound,
+          "ProductPageRSC payload requires a valid product id in props"
+  end
+-%>
 <%= rsc_payload_react_component_with_async_props(
       @rsc_payload_component_name,
-      props: @rsc_payload_component_props
+      props: ProductRscProps.initial_props(product)
     ) do |emit|
-      product = Product.find(@rsc_payload_component_props.dig("product", "id"))
       ProductRscProps.emit_all(product, emit)
     end -%>
 <% else -%>

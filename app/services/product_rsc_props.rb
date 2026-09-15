@@ -17,6 +17,20 @@ class ProductRscProps
     new.emit_all(product, emit)
   end
 
+  # Trusted initial props for the refetch door. Door #1's controller builds the
+  # same shape (ProductsController#show_rsc: serialize_product minus the
+  # async-streamed fields), so door #2 rebuilds it server-side from the found
+  # record instead of trusting the browser's copy in ?props= — a hand-crafted
+  # minimal payload otherwise crashes components that assume the full shape
+  # (e.g. buildProductSpecMarkdown needs sku; see docs/rsc-read-your-writes.md C4).
+  def self.initial_props(product)
+    new.initial_props(product)
+  end
+
+  def initial_props(product)
+    { product: serialize_product(product).except(:description, :features, :specs) }
+  end
+
   # Emission order mirrors the original view block: product_details first
   # (below-the-fold content, emitted immediately so the initial stream
   # prioritizes the hero section for LCP), then review stats (rating

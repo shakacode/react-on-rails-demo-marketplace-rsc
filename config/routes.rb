@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  rsc_payload_route
+  # App-level payload controller guards browser-supplied props before the
+  # NDJSON stream starts (issue #245 hardening; see RscPayloadController).
+  rsc_payload_route(controller: 'rsc_payload')
   repository_url = ApplicationHelper::GITHUB_REPO_URL
   contributing_url = "#{repository_url}/blob/main/CONTRIBUTING.md"
   issues_url = "#{repository_url}/issues"

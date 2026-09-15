@@ -170,10 +170,15 @@ per-page marginal cost is (a) an emitter service the page view wants anyway and
   — string keys, client-controlled values. The override must treat them as
   untrusted input (here: only `product.id` is read, and only public catalog
   data is emitted). 17.1 adds `rsc_payload_authorizer` for exactly this seam.
-  Related sharp edge: the page renders hero/name/price from those
-  browser-supplied props as-is; hand-crafting a minimal `?props={"product":
-  {"id":1}}` request crashes in `buildProductSpecMarkdown` because `sku` is
-  missing — the door assumes the full original prop shape.
+  Related sharp edge (observed, then hardened in this PR): the page renders
+  hero/name/price from those browser-supplied props as-is, and at evidence
+  time a hand-crafted minimal `?props={"product":{"id":1}}` request crashed in
+  `buildProductSpecMarkdown` because `sku` was missing — the door assumed the
+  full original prop shape. The override now reads ONLY the product id,
+  responds 404 for a missing/unknown id before any chunk is emitted, and
+  rebuilds the initial props server-side via `ProductRscProps.initial_props`
+  (same shape door #1's controller builds), so the browser's copy is never
+  echoed. Request specs pin both behaviors.
 - The upstream ask this implies: the *recipe* is documentable today (this repo
   is the demo), but first-class support would mean the gem letting an app
   register `component_name → emitter` (or a controller-level hook) instead of
