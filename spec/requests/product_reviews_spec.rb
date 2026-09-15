@@ -225,6 +225,55 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(emitted).to be_empty
     end
 
+    it 'responds 404, not 500, when product itself is not an object' do
+      get_payload('ProductPageRSC', { product: 5 })
+      expect(response).to have_http_status(:not_found)
+      expect(emitted).to be_empty
+    end
+
+    # C5 (issue #245): the nested reviews-section route's door.
+    describe 'ProductReviewsSectionRSC (section-scoped refetch, C5)' do
+      it 'routes through the async-props helper emitting ONLY review_stats and reviews' do
+        get_payload('ProductReviewsSectionRSC', { product_id: product.id })
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('async-props-payload-stub:ProductReviewsSectionRSC')
+        expect(emitted.keys).to eq(%w[review_stats reviews])
+        expect(emitted['review_stats'][:total_reviews]).to eq(3)
+        expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Reviewer 1')
+      end
+
+      it 'rebuilds the section initial props server-side instead of echoing the browser copy' do
+        get_payload('ProductReviewsSectionRSC',
+                    { product_id: product.id, review_mutation_enabled: 'SPOOFED', extra: 'junk' })
+
+        expect(response).to have_http_status(:ok)
+        sent = recorded_async_options.fetch(:props)
+        expect(sent).to eq(product_id: product.id, review_mutation_enabled: true)
+      end
+
+      it 'reflects a just-written review through the section door (read your writes)' do
+        post "/products/#{product.id}/reviews", params: valid_params, as: :json
+        expect(response).to have_http_status(:created)
+
+        get_payload('ProductReviewsSectionRSC', { product_id: product.id })
+
+        expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Spike Bot')
+      end
+
+      it 'responds 404 before emitting anything for a missing, unknown, or non-scalar product_id' do
+        get_payload('ProductReviewsSectionRSC', {})
+        expect(response).to have_http_status(:not_found)
+
+        get_payload('ProductReviewsSectionRSC', { product_id: 0 })
+        expect(response).to have_http_status(:not_found)
+
+        get_payload('ProductReviewsSectionRSC', { product_id: { a: 1 } })
+        expect(response).to have_http_status(:not_found)
+        expect(emitted).to be_empty
+      end
+    end
+
     it 'responds 400, not 500, to bracket-notation props (a Hash, not a JSON string) for any component' do
       get '/rsc_payload/ProductPageRSC', params: { props: { foo: 'bar' } }
       expect(response).to have_http_status(:bad_request)

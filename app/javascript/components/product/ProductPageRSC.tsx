@@ -21,6 +21,10 @@ import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSectionForServer';
 import { ReviewMutationIsland } from './ReviewMutationIslandForServer';
+// C5 (#245): imported from the island's own module (not the ForServer
+// re-export, which deliberately re-exports only the island) — both files are
+// client references in the manifest, so this adds no new manifest entry.
+import { ReviewsSectionRoute } from './ReviewMutationIsland';
 import AsyncProductDetailsRSC from './AsyncProductDetailsRSC';
 import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';
@@ -110,6 +114,30 @@ export default function ProductPageRSC({ product, review_mutation_enabled, getRe
               <AsyncReviewsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
             </Suspense>
           </div>
+
+          {/* C5 experiment (#245): a SECOND copy of the reviews section mounted
+              through a nested <RSCRoute componentName="ProductReviewsSectionRSC">.
+              Its island resolves useCurrentRSCRoute() to the NEAREST (nested)
+              route, so its refetch re-streams only review_stats + reviews
+              through the payload door, leaving the rest of the page untouched.
+              Rendered as an ADDITIONAL block (not a replacement) so the merged
+              whole-page path above keeps its exact behavior for comparison —
+              and because a nested route pins its subtree to its own payload
+              cache key, replacing the inline section would make the page-level
+              refetch serve the section from the provider cache (stale).
+              Gated like the island: absent unless ENABLE_SPIKE_MUTATIONS. */}
+          {review_mutation_enabled && (
+            <div
+              className="mt-10 rounded-xl border-2 border-dashed border-indigo-300 p-4"
+              data-testid="c5-section-experiment"
+            >
+              <p className="mb-4 text-sm text-indigo-800">
+                C5 experiment (#245): the block below is a nested RSCRoute — its button refetches ONLY this
+                section through the payload door.
+              </p>
+              <ReviewsSectionRoute productId={product.id} reviewMutationEnabled={Boolean(review_mutation_enabled)} />
+            </div>
+          )}
         </section>
 
         {/* Related products — streams last (recommendation query) */}

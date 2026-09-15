@@ -17,6 +17,23 @@ class ProductRscProps
     new.emit_all(product, emit)
   end
 
+  # C5 (issue #245): narrow emitter for the nested ProductReviewsSectionRSC
+  # route. A section refetch needs ONLY the reviews-section props, so door #2
+  # re-streams a fraction of the whole-page payload. Reuses the same private
+  # builders as emit_all — one source for the row shapes.
+  def self.emit_reviews_section(product, emit)
+    new.emit_reviews_section(product, emit)
+  end
+
+  # Trusted initial props for the section door, mirroring initial_props:
+  # rebuilt server-side from the found record, never echoed from the browser.
+  def self.section_initial_props(product)
+    {
+      product_id: product.id,
+      review_mutation_enabled: ProductReviewsController.spike_mutations_enabled?
+    }
+  end
+
   # Trusted initial props for the refetch door. Door #1's controller builds the
   # same shape (ProductsController#show_rsc: serialize_product minus the
   # async-streamed fields), so door #2 rebuilds it server-side from the found
@@ -46,6 +63,11 @@ class ProductRscProps
     emit.call('review_stats', product.review_stats)
     emit.call('reviews', reviews(product))
     emit.call('related_products', related_products(product))
+  end
+
+  def emit_reviews_section(product, emit)
+    emit.call('review_stats', product.review_stats)
+    emit.call('reviews', reviews(product))
   end
 
   private
