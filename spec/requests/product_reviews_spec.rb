@@ -96,6 +96,21 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(response.parsed_body.fetch('errors')).to include('helpful_count')
     end
 
+    it 'pins the helpful_count boundaries: negative and 2**31 rejected, 2**31 - 1 accepted' do
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(helpful_count: -1) }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body.fetch('errors')).to include('helpful_count')
+
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(helpful_count: (2**31)) }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(helpful_count: (2**31) - 1) }, as: :json
+      expect(response).to have_http_status(:created)
+    end
+
     it 'accepts values exactly at the length caps' do
       post "/products/#{product.id}/reviews",
            params: { review: valid_params[:review].merge(
