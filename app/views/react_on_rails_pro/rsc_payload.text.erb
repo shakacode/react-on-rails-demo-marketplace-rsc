@@ -47,6 +47,23 @@ Gotchas:
     ) do |emit|
       ProductRscProps.emit_all(@payload_product, emit)
     end -%>
+<% elsif @rsc_payload_component_name == "ProductReviewsSectionRSC" -%>
+<%
+  # C5 (issue #245): section-scoped refetch door. Same trust posture as the
+  # ProductPageRSC branch — the controller's before_action validated the
+  # browser props and loaded @payload_product before any chunk streamed; the
+  # narrow emitter re-streams ONLY review_stats + reviews.
+  if @payload_product.nil?
+    raise ActiveRecord::RecordNotFound,
+          "ProductReviewsSectionRSC payload requires RscPayloadController to load @payload_product"
+  end
+-%>
+<%= rsc_payload_react_component_with_async_props(
+      @rsc_payload_component_name,
+      props: ProductRscProps.section_initial_props(@payload_product)
+    ) do |emit|
+      ProductRscProps.emit_reviews_section(@payload_product, emit)
+    end -%>
 <% else -%>
 <%= rsc_payload_react_component(@rsc_payload_component_name, props: @rsc_payload_component_props) -%>
 <% end -%>

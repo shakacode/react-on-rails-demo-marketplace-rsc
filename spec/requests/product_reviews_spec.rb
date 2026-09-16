@@ -64,6 +64,63 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(body['errors']['rating']).not_to be_empty
     end
 
+    it 'responds 422 with each oversized field keyed in errors (length caps)' do
+      url = "/products/#{product.id}/reviews" # materialize the fixture before measuring the count
+
+      expect do
+        post url,
+             params: { review: valid_params[:review].merge(
+               reviewer_name: 'a' * 101, title: 'b' * 201, comment: 'c' * 5001
+             ) },
+             as: :json
+      end.not_to change(ProductReview, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      errors = response.parsed_body.fetch('errors')
+      expect(errors).to include('reviewer_name', 'title', 'comment')
+      expect(errors['reviewer_name'].join).to include('100')
+      expect(errors['title'].join).to include('200')
+      expect(errors['comment'].join).to include('5000')
+    end
+
+    it 'responds 422, not 500, when helpful_count exceeds the integer column range' do
+      url = "/products/#{product.id}/reviews" # materialize the fixture before measuring the count
+
+      expect do
+        post url,
+             params: { review: valid_params[:review].merge(helpful_count: 99_999_999_999_999) },
+             as: :json
+      end.not_to change(ProductReview, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body.fetch('errors')).to include('helpful_count')
+    end
+
+    it 'pins the helpful_count boundaries: negative and 2**31 rejected, 2**31 - 1 accepted' do
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(helpful_count: -1) }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body.fetch('errors')).to include('helpful_count')
+
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(helpful_count: (2**31)) }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(helpful_count: (2**31) - 1) }, as: :json
+      expect(response).to have_http_status(:created)
+    end
+
+    it 'accepts values exactly at the length caps' do
+      post "/products/#{product.id}/reviews",
+           params: { review: valid_params[:review].merge(
+             reviewer_name: 'a' * 100, title: 'b' * 200, comment: 'c' * 5000
+           ) },
+           as: :json
+
+      expect(response).to have_http_status(:created)
+    end
+
     it 'responds 404 for an unknown product id' do
       post '/products/0/reviews', params: valid_params, as: :json
       expect(response).to have_http_status(:not_found)
@@ -196,6 +253,55 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(emitted).to be_empty
     end
 
+    it 'responds 404, not 500, when product itself is not an object' do
+      get_payload('ProductPageRSC', { product: 5 })
+      expect(response).to have_http_status(:not_found)
+      expect(emitted).to be_empty
+    end
+
+    # C5 (issue #245): the nested reviews-section route's door.
+    describe 'ProductReviewsSectionRSC (section-scoped refetch, C5)' do
+      it 'routes through the async-props helper emitting ONLY review_stats and reviews' do
+        get_payload('ProductReviewsSectionRSC', { product_id: product.id })
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('async-props-payload-stub:ProductReviewsSectionRSC')
+        expect(emitted.keys).to eq(%w[review_stats reviews])
+        expect(emitted['review_stats'][:total_reviews]).to eq(3)
+        expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Reviewer 1')
+      end
+
+      it 'rebuilds the section initial props server-side instead of echoing the browser copy' do
+        get_payload('ProductReviewsSectionRSC',
+                    { product_id: product.id, review_mutation_enabled: 'SPOOFED', extra: 'junk' })
+
+        expect(response).to have_http_status(:ok)
+        sent = recorded_async_options.fetch(:props)
+        expect(sent).to eq(product_id: product.id, review_mutation_enabled: true)
+      end
+
+      it 'reflects a just-written review through the section door (read your writes)' do
+        post "/products/#{product.id}/reviews", params: valid_params, as: :json
+        expect(response).to have_http_status(:created)
+
+        get_payload('ProductReviewsSectionRSC', { product_id: product.id })
+
+        expect(emitted['reviews'][:reviews].map { |r| r[:reviewer_name] }).to include('Spike Bot')
+      end
+
+      it 'responds 404 before emitting anything for a missing, unknown, or non-scalar product_id' do
+        get_payload('ProductReviewsSectionRSC', {})
+        expect(response).to have_http_status(:not_found)
+
+        get_payload('ProductReviewsSectionRSC', { product_id: 0 })
+        expect(response).to have_http_status(:not_found)
+
+        get_payload('ProductReviewsSectionRSC', { product_id: { a: 1 } })
+        expect(response).to have_http_status(:not_found)
+        expect(emitted).to be_empty
+      end
+    end
+
     it 'responds 400, not 500, to bracket-notation props (a Hash, not a JSON string) for any component' do
       get '/rsc_payload/ProductPageRSC', params: { props: { foo: 'bar' } }
       expect(response).to have_http_status(:bad_request)
@@ -205,6 +311,19 @@ RSpec.describe 'ProductReviews', type: :request do
       get '/rsc_payload/SimpleServerComponent', params: { props: { foo: 'bar' } }
       expect(response).to have_http_status(:bad_request)
       expect(emitted).to be_empty
+    end
+
+    it 'cannot silently 404 a guarded component without a prop reader (list derived from the map)' do
+      # The guard list is PRODUCT_ID_READERS.keys, so a component cannot join
+      # the guard without a reader; forcing the drift anyway raises loudly.
+      stub_const('RscPayloadController::PRODUCT_PAYLOAD_COMPONENTS',
+                 RscPayloadController::PRODUCT_PAYLOAD_COMPONENTS + ['GhostComponentRSC'])
+
+      expect(RscPayloadController::PRODUCT_ID_READERS.keys)
+        .to eq(%w[ProductPageRSC ProductReviewsSectionRSC])
+      expect do
+        get_payload('GhostComponentRSC', { product_id: product.id })
+      end.to raise_error(KeyError, /GhostComponentRSC/)
     end
 
     it 'keeps the stock plain-props path for components without an async-props block' do

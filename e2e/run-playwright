@@ -35,6 +35,10 @@ export RENDERER_PASSWORD=e2e-local-renderer
 export RENDERER_LOG_LEVEL=warn
 export RENDERER_WORKERS_COUNT=1
 export SHAKAPACKER_ASSETS_BUNDLER=rspack
+# Arms the issue #245 write endpoint + mutation island for the
+# product_review_mutation journey (gated exactly like production: without
+# this the island does not render and the POST route 404s).
+export ENABLE_SPIKE_MUTATIONS=1
 
 require-open-port 127.0.0.1 5017
 require-open-port 127.0.0.1 3800

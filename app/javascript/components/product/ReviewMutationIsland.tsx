@@ -17,6 +17,14 @@ import { useCurrentRSCRoute } from 'react-on-rails-pro/RSCRoute';
 
 interface Props {
   productId: number;
+  // C5 (issue #245): 'page' (default) — the island sits directly under the
+  // page-level <RSCRoute> that registerServerComponent wraps around
+  // ProductPageRSC, so refetch() re-renders the WHOLE page tree. 'section' —
+  // the island is rendered inside the nested ProductReviewsSectionRSC route,
+  // so useCurrentRSCRoute() resolves to that nearer handle and refetch() is
+  // scoped to the reviews section only. Test ids gain a '-section' suffix so
+  // both instances stay addressable on one page.
+  scope?: 'page' | 'section';
 }
 
 type PostState =
@@ -29,7 +37,8 @@ function csrfToken(): string {
   return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
 }
 
-export function ReviewMutationIsland({ productId }: Props) {
+export function ReviewMutationIsland({ productId, scope = 'page' }: Props) {
+  const testIdSuffix = scope === 'section' ? '-section' : '';
   const { refetch, retry, refetchError, clearRefetchError } = useCurrentRSCRoute();
   const [isRefetching, startTransition] = useTransition();
   const [postState, setPostState] = useState<PostState>({ phase: 'idle' });
@@ -60,7 +69,7 @@ export function ReviewMutationIsland({ productId }: Props) {
 
     setPostState({ phase: 'posting' });
     const stamp = new Date().toISOString().slice(11, 19);
-    const reviewerName = `Spike Bot ${stamp}`;
+    const reviewerName = scope === 'section' ? `Spike Bot Sec ${stamp}` : `Spike Bot ${stamp}`;
 
     try {
       // Step 1 — save it: a plain Rails endpoint does the write.
@@ -117,26 +126,25 @@ export function ReviewMutationIsland({ productId }: Props) {
 
   const busy = postState.phase === 'posting' || isRefetching;
 
+  const refetchingLabel = scope === 'section' ? 'Refreshing section…' : 'Refreshing page…';
+  const idleLabel = scope === 'section' ? 'Post a canned review (section refetch)' : 'Post a canned review';
+
   return (
     <div
-      data-testid="review-mutation-island"
+      data-testid={`review-mutation-island${testIdSuffix}`}
       className="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm"
     >
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          data-testid="post-canned-review"
+          data-testid={`post-canned-review${testIdSuffix}`}
           onClick={handleClick}
           disabled={busy}
           className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {postState.phase === 'posting'
-            ? 'Posting review…'
-            : isRefetching
-              ? 'Refreshing page…'
-              : 'Post a canned review'}
+          {postState.phase === 'posting' ? 'Posting review…' : isRefetching ? refetchingLabel : idleLabel}
         </button>
-        <span className="text-indigo-900" data-testid="mutation-status" aria-live="polite">
+        <span className="text-indigo-900" data-testid={`mutation-status${testIdSuffix}`} aria-live="polite">
           {postState.phase === 'posted' &&
             !isRefetching &&
             !refetchError &&
@@ -152,7 +160,7 @@ export function ReviewMutationIsland({ productId }: Props) {
         </span>
       </div>
       {(refetchError || localRefetchError) && (
-        <div className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-red-800" data-testid="refetch-error">
+        <div className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-red-800" data-testid={`refetch-error${testIdSuffix}`}>
           <p className="font-medium">Refetch failed{refetchError ? ` — ${refetchError.message}` : ''}</p>
           {localRefetchError && !refetchError && <p>{localRefetchError}</p>}
           <div className="mt-1 flex gap-3">

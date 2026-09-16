@@ -4,7 +4,7 @@
 # privileges. Keep it explicitly enabled, limited to the test environment,
 # and authorize only the socket peer recorded by Rack.
 module E2ERailsBridge
-  ALLOWED_COMMANDS = ['clean', 'scenarios/product_search'].freeze
+  ALLOWED_COMMANDS = ['clean', 'scenarios/product_search', 'scenarios/spike_mutations'].freeze
   COMMAND_PATH = '/__e2e__/command'
   LOOPBACK_ADDRESSES = ['127.0.0.1', '::1'].freeze
   PRIVATE_COMMANDS_ENV = 'E2E_RAILS_COMMANDS'

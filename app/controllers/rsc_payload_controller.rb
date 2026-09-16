@@ -16,18 +16,34 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
   before_action :reject_non_string_props
   before_action :ensure_product_payload_target_exists
 
+  # Components whose payload branch renders from a Product record, mapped to
+  # the reader that extracts the product id from their (untrusted) props JSON —
+  # shapes differ per component: the whole page mounts with the full product
+  # object ({product: {id: ...}}), the C5 nested section route with
+  # {product_id: ...}. Only that id is read; the template override rebuilds the
+  # full initial props server-side from the found record (@payload_product /
+  # ProductRscProps). The guard list is DERIVED from this map, so a new
+  # component cannot join the guard without a reader (no silent-404 drift), and
+  # an unmapped lookup raises KeyError loudly.
+  PRODUCT_ID_READERS = {
+    # `product` itself may be any JSON value, and Hash#dig raises TypeError on
+    # a non-dig-able intermediate.
+    'ProductPageRSC' => lambda { |props|
+      product = props['product']
+      product.is_a?(Hash) ? product['id'] : nil
+    },
+    'ProductReviewsSectionRSC' => ->(props) { props['product_id'] }
+  }.freeze
+  PRODUCT_PAYLOAD_COMPONENTS = PRODUCT_ID_READERS.keys.freeze
+
   private
 
   def reject_non_string_props
     head :bad_request unless params[:props].blank? || params[:props].is_a?(String)
   end
 
-  # Only the product id is read from the untrusted props JSON; the template
-  # override rebuilds the full initial props server-side from the found record
-  # (@payload_product / ProductRscProps.initial_props), so nothing else the
-  # browser sent is used.
   def ensure_product_payload_target_exists
-    return unless params[:component_name] == 'ProductPageRSC'
+    return unless PRODUCT_PAYLOAD_COMPONENTS.include?(params[:component_name])
 
     props = parsed_untrusted_props
     # Malformed JSON string keeps the gem's own contract: rsc_payload renders 400.
@@ -48,10 +64,12 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
     :invalid_json
   end
 
-  # JSON can put any value at product.id (hash, array, bool); ActiveRecord
+  # JSON can put any value at the id position (hash, array, bool); ActiveRecord
   # treats a Hash id as a nested condition and errors. Accept only scalars.
   def scalar_product_id(props)
-    id = props.is_a?(Hash) ? props.dig('product', 'id') : nil
+    return nil unless props.is_a?(Hash)
+
+    id = PRODUCT_ID_READERS.fetch(params[:component_name]).call(props)
     id.is_a?(Integer) || id.is_a?(String) ? id : nil
   end
 end
