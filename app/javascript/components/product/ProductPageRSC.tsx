@@ -21,10 +21,7 @@ import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSectionForServer';
 import { ReviewMutationIsland } from './ReviewMutationIslandForServer';
-// C5 (#245): imported from the island's own module (not the ForServer
-// re-export, which deliberately re-exports only the island) — both files are
-// client references in the manifest, so this adds no new manifest entry.
-import { ReviewsSectionRoute } from './ReviewMutationIsland';
+import { ReviewsSectionRoute } from './ReviewsSectionRouteForServer';
 import AsyncProductDetailsRSC from './AsyncProductDetailsRSC';
 import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';

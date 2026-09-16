@@ -48,6 +48,14 @@ test('section-scoped refetch (C5) updates only the nested reviews section', asyn
   const nested = page.getByTestId('reviews-section-route');
   await expect(nested).toBeVisible();
 
+  // The INLINE section must coexist with the nested one — this duplication is
+  // load-bearing, not sloppiness: a nested route pins its subtree to its own
+  // payload cache key, so REPLACING the inline section with the nested route
+  // would make whole-page refetches serve the section stale from the provider
+  // cache (docs/rsc-read-your-writes.md C5, "strict both ways"). If a cleanup
+  // ever deduplicates the sections, this assertion goes red on purpose.
+  await expect(page.getByTestId('review-mutation-island')).toBeVisible();
+
   const urlBefore = page.url();
   await page.getByTestId('post-canned-review-section').click();
 
