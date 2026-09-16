@@ -83,6 +83,19 @@ RSpec.describe 'ProductReviews', type: :request do
       expect(errors['comment'].join).to include('5000')
     end
 
+    it 'responds 422, not 500, when helpful_count exceeds the integer column range' do
+      url = "/products/#{product.id}/reviews" # materialize the fixture before measuring the count
+
+      expect do
+        post url,
+             params: { review: valid_params[:review].merge(helpful_count: 99_999_999_999_999) },
+             as: :json
+      end.not_to change(ProductReview, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body.fetch('errors')).to include('helpful_count')
+    end
+
     it 'accepts values exactly at the length caps' do
       post "/products/#{product.id}/reviews",
            params: { review: valid_params[:review].merge(

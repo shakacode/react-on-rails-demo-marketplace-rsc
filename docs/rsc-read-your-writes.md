@@ -497,26 +497,22 @@ node tmp/spike-245-evidence/followup/run-c8a-probe.mjs <outdir> --phase httpfail
 e2e/run-playwright e2e/playwright/e2e/product_review_mutation.spec.ts
 ```
 
-## Follow-ups this implies (not in this PR)
+## Follow-ups (all upstream reports now filed)
 
-1. Upstream issue: the default `rsc_payload` template cannot serve async-props
-   pages — C2's reproducer, plus the recipe from C3/C4 (or first-class
-   `component_name → emitter` registration).
-2. Upstream issue: BUILD_ID is never initialized on the RSC payload endpoint
-   path, so `unstable_cache` + `refetch()` crashes per worker until that worker
-   serves a page render (C3's second wall).
-3. Upstream issue/RFC: `unstable_cache` needs write-time invalidation (tags /
-   delete) — C6; this is the piece server functions would not have fixed.
-4. Upstream issue: production refetch recovery covers only fetch-level
-   failures; a resolved payload whose stream carries per-boundary errors
-   crashes the page in production too, with no `refetchError` and no Retry
-   (C8a). Either the RSCRoute recovery should extend to render-phase
-   `ServerComponentFetchError`s, or the docstring should say "fetch failures"
-   instead of "refetch failures".
-5. Upstream docs nit: nesting `<RSCRoute>` inside a server component requires
-   an app-level `'use client'` wrapper (C5's build failure is the reproducer);
-   worth one sentence wherever RSCRoute is documented.
-6. `docs/oss/building-features/mutations.md` "after the write" row should list
-   `RSCRoute.refetch()` once 1-2 land.
-
-Draft texts for these live in `tmp/spike-245-evidence/drafts/`.
+1. shakacode/react_on_rails#5075 — the default `rsc_payload` template cannot
+   serve async-props pages (C2's reproducer + the C3/C4 recipe, plus the
+   bracket-notation TypeError and the template-cannot-404 lessons).
+2. shakacode/react_on_rails#5076 — BUILD_ID never initialized on the RSC
+   payload endpoint path (C3's second wall; worker roulette under cache).
+3. shakacode/react_on_rails#5077 — `unstable_cache` needs write-time
+   invalidation (tags / delete) — C6; the piece server functions would not
+   have fixed either.
+4. shakacode/react_on_rails#5078 — production refetch recovery covers only
+   fetch-level failures (C8a); includes the poisoned last-successful-cache
+   trap (`RSCProvider.js:441`) any fix must handle first.
+5. shakacode/react_on_rails#5079 — the RSC bundle build fails on the
+   package's own `'use client'` files (C5's build failure; sourcemap-pointer
+   root cause proven by counterfactual).
+6. Still open: `docs/oss/building-features/mutations.md` "after the write"
+   row should list `RSCRoute.refetch()` once #5075 lands (or the recipe is
+   blessed as-is).

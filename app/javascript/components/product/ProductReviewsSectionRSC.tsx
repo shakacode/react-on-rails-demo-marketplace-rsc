@@ -2,7 +2,7 @@
 //
 // C5 (issue #245): the reviews section as its own refetchable server
 // component, mounted inside ProductPageRSC through a nested <RSCRoute>
-// (see ReviewsSectionRoute in ReviewMutationIsland.tsx). Two render doors:
+// (see ReviewsSectionRoute.tsx). Two render doors:
 //
 //   * initial page render — the nested route's payload is generated through
 //     the SAME rendering request as the page (generateRSCPayload swaps the
