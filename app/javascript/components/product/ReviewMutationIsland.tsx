@@ -14,6 +14,7 @@
 
 import React, { useRef, useState, useTransition } from 'react';
 import { useCurrentRSCRoute } from 'react-on-rails-pro/RSCRoute';
+import { csrfToken } from '../../utils/csrfToken';
 
 interface Props {
   productId: number;
@@ -32,10 +33,6 @@ type PostState =
   | { phase: 'posting' }
   | { phase: 'posted'; reviewerName: string; reviewId: number }
   | { phase: 'error'; message: string };
-
-function csrfToken(): string {
-  return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
-}
 
 export function ReviewMutationIsland({ productId, scope = 'page' }: Props) {
   const testIdSuffix = scope === 'section' ? '-section' : '';
