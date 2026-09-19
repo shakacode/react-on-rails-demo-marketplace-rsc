@@ -27,7 +27,7 @@ interface Props {
 
 const reviewSchema = z.object({
   reviewer_name: z.string().min(1, "can't be blank").max(100),
-  rating: z.number().int().min(1).max(5),
+  rating: z.coerce.number().int().min(1).max(5),
   title: z.string().max(200).optional().default(''),
   comment: z.string().max(5000).optional().default(''),
 });
@@ -109,6 +109,10 @@ export function ReviewFormRHFIsland({ productId, scope = 'page' }: Props) {
       }
 
       // Refetch the server-rendered page to show the real review.
+      // Must use startTransition so React keeps old content visible (without it,
+      // refetch() suspends and the Suspense fallback flashes).
+      setSuccessReviewId(reviewId);
+      reset(); // Clear the form on success.
       setLocalRefetchError(null);
       startRefetchTransition(async () => {
         try {
@@ -119,9 +123,6 @@ export function ReviewFormRHFIsland({ productId, scope = 'page' }: Props) {
           postInFlightRef.current = false;
         }
       });
-
-      setSuccessReviewId(reviewId);
-      reset(); // Clear the form on success.
     } catch (e) {
       setError('root', {
         type: 'server',
