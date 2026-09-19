@@ -78,7 +78,7 @@ test('production error redaction gate (showFullDiagnostics) is present', () => {
 test('redaction is fail-closed (only development/test show full diagnostics)', () => {
   const hasDevOrTestGate =
     /showFullDiagnostics\s*=\s*railsEnv\s*===\s*['"]development['"]/.test(source) &&
-    /railsEnv\s*===\s*['"]test['"]/.test(source);
+    /showFullDiagnostics\s*=[^;]*railsEnv\s*===\s*['"]test['"]/.test(source);
 
   assert.ok(
     hasDevOrTestGate,
