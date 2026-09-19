@@ -9,13 +9,15 @@
 //
 // Key difference from Phase 1: Conform's `useForm({ lastResult })` manages
 // field repopulation automatically — no formKey counter needed.
+//
+// Note: import from '@conform-to/zod/v4' (not '@conform-to/zod') for zod v4
+// compatibility — the default export targets zod v3 and fails with v4.
 
 import React, { useActionState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useForm, getFormProps, getInputProps, getSelectProps, getTextareaProps } from '@conform-to/react';
-// Note: @conform-to/zod 1.21.1 is incompatible with zod v4 (missing ZodEffects,
-// ZodPipeline, ZodBranded exports). Client-side validation is done manually;
-// server-side validation via FormResponders catches all errors.
+import { parseWithZod } from '@conform-to/zod/v4';
+import { z } from 'zod';
 import { useCurrentRSCRoute } from 'react-on-rails-pro/RSCRoute';
 import { csrfToken } from '../../utils/csrfToken';
 
@@ -24,24 +26,14 @@ interface Props {
   scope?: 'page' | 'section';
 }
 
-// ── Client-side validation (manual, @conform-to/zod needs zod v3) ───────────
+// ── Validation schema ───────────────────────────────────────────────────────
 
-function validateReview(formData: FormData): Record<string, string[]> | null {
-  const errors: Record<string, string[]> = {};
-  const name = (formData.get('reviewer_name') as string ?? '').trim();
-  if (!name) errors.reviewer_name = ["can't be blank"];
-  else if (name.length > 100) errors.reviewer_name = ['is too long (maximum is 100 characters)'];
-  const ratingStr = formData.get('rating') as string ?? '';
-  const rating = Number(ratingStr);
-  if (!ratingStr || isNaN(rating) || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-    errors.rating = ['must be between 1 and 5'];
-  }
-  const title = (formData.get('title') as string) ?? '';
-  if (title.length > 200) errors.title = ['is too long (maximum is 200 characters)'];
-  const comment = (formData.get('comment') as string) ?? '';
-  if (comment.length > 5000) errors.comment = ['is too long (maximum is 5000 characters)'];
-  return Object.keys(errors).length > 0 ? errors : null;
-}
+const reviewSchema = z.object({
+  reviewer_name: z.string().min(1, "can't be blank").max(100),
+  rating: z.coerce.number().int().min(1).max(5),
+  title: z.string().max(200).optional().default(''),
+  comment: z.string().max(5000).optional().default(''),
+});
 
 // ── Submit button — useFormStatus works because Conform uses <form action> ──
 
@@ -89,23 +81,20 @@ export function ReviewFormConformIsland({ productId, scope = 'page' }: Props) {
       if (postInFlightRef.current) return prev;
       postInFlightRef.current = true;
 
-      // Client-side validation (manual — @conform-to/zod needs zod v3).
-      const clientErrors = validateReview(formData);
-      if (clientErrors) {
+      // Client-side validation via Conform + zod (using @conform-to/zod/v4).
+      const submission = parseWithZod(formData, { schema: reviewSchema });
+      if (submission.status !== 'success') {
         postInFlightRef.current = false;
         return {
           status: 'error',
           lastReviewId: null,
-          submission: { status: 'error', error: clientErrors } as SubmissionResult<string[]>,
+          // reply() preserves submitted values for lastResult repopulation —
+          // this is how Conform handles the React #29034 form-reset gotcha.
+          submission: submission.reply(),
         };
       }
 
-      const reviewData = {
-        reviewer_name: (formData.get('reviewer_name') as string) ?? '',
-        rating: Number(formData.get('rating') || '5'),
-        title: (formData.get('title') as string) ?? '',
-        comment: (formData.get('comment') as string) ?? '',
-      };
+      const reviewData = submission.value;
 
       try {
         const response = await fetch(`/products/${productId}/reviews`, {
@@ -135,8 +124,9 @@ export function ReviewFormConformIsland({ productId, scope = 'page' }: Props) {
           return {
             status: 'error',
             lastReviewId: null,
-            // Map Rails errors to Conform's SubmissionResult shape.
-            submission: { status: 'error', error: fieldErrors } as SubmissionResult<string[]>,
+            // Conform's reply({ fieldErrors }) preserves submitted values and
+            // populates per-field errors — handles the React #29034 reset gotcha.
+            submission: submission.reply({ fieldErrors }),
           };
         }
 
@@ -167,7 +157,8 @@ export function ReviewFormConformIsland({ productId, scope = 'page' }: Props) {
         return {
           status: 'success',
           lastReviewId: reviewId,
-          submission: { status: 'success' } as SubmissionResult<string[]>,
+          // resetForm: true clears the form on success.
+          submission: submission.reply({ resetForm: true }),
         };
       } catch (e) {
         postInFlightRef.current = false;
@@ -184,6 +175,9 @@ export function ReviewFormConformIsland({ productId, scope = 'page' }: Props) {
   // Conform's useForm: lastResult drives field repopulation and error display.
   const [form, fields] = useForm({
     lastResult: actionState.submission,
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: reviewSchema });
+    },
     defaultValue: {
       reviewer_name: '',
       rating: '5',
@@ -200,7 +194,7 @@ export function ReviewFormConformIsland({ productId, scope = 'page' }: Props) {
       className="mb-6 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm"
     >
       <p className="mb-3 font-medium text-teal-900">
-        Issue #244 Phase 2: Conform review form (@conform-to/react)
+        Issue #244 Phase 2: Conform review form (@conform-to/react + @conform-to/zod/v4)
       </p>
 
       <form

@@ -27,6 +27,9 @@ importers:
       '@conform-to/react':
         specifier: 1.21.1
         version: 1.21.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@conform-to/zod':
+        specifier: 1.21.1
+        version: 1.21.1(zod@4.6.5)
       '@hookform/resolvers':
         specifier: 5.9.1
         version: 5.9.1(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)
@@ -1037,6 +1040,11 @@ packages:
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
+
+  '@conform-to/zod@1.21.1':
+    resolution: {integrity: sha512-VqMuYoUVtZJ57P1EYD4tDuOyOaN5jiep1Ui6BRl7aP1m6tA8Do+mKioR7WXkGKULiNsjgPR7/FyWLtMUmtJNHg==}
+    peerDependencies:
+      zod: ^3.21.0 || ^4.0.0
 
   '@csstools/cascade-layer-name-parser@3.0.0':
     resolution: {integrity: sha512-/3iksyevwRfSJx5yH0RkcrcYXwuhMQx3Juqf40t97PeEy2/Mz2TItZ/z/216qpe4GgOyFBP8MKIwVvytzHmfIQ==}
@@ -8364,6 +8372,11 @@ snapshots:
       '@conform-to/dom': 1.21.1
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
+
+  '@conform-to/zod@1.21.1(zod@4.6.5)':
+    dependencies:
+      '@conform-to/dom': 1.21.1
+      zod: 4.6.5
 
   '@csstools/cascade-layer-name-parser@3.0.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)':
     dependencies:
