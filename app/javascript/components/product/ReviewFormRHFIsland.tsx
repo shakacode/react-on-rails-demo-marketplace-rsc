@@ -143,7 +143,7 @@ export function ReviewFormRHFIsland({ productId, scope = 'page' }: Props) {
 
       {/* RHF uses onSubmit — NOT <form action>. useFormStatus will not work. */}
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={(e) => handleSubmit(onSubmit)(e)}
         data-testid={`review-form-rhf${testIdSuffix}`}
         className="space-y-3"
       >
