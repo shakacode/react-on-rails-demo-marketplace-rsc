@@ -19,6 +19,7 @@
 import React, { useActionState, useOptimistic, useRef, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useCurrentRSCRoute } from 'react-on-rails-pro/RSCRoute';
+import { csrfToken } from '../../utils/csrfToken';
 
 interface Props {
   productId: number;
@@ -56,12 +57,6 @@ interface OptimisticReview {
   reviewer_name: string;
   rating: number;
   title: string;
-}
-
-// ── CSRF helper ─────────────────────────────────────────────────────────────
-
-function csrfToken(): string {
-  return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
 }
 
 // ── Submit button — useFormStatus must live in a child of <form> ────────────
