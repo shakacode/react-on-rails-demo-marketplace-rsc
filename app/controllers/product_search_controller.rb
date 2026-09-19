@@ -14,7 +14,7 @@ class ProductSearchController < ApplicationController
     "search_rsc" => "React Server Components (RSC)"
   }.freeze
 
-  PER_PAGE = 24
+  PER_PAGE = SearchPagination::DEFAULT_PER_PAGE
 
   # V1: Full SSR — fetch ALL data (products + facets + stats + reviews + tags), return complete page.
   # Every query blocks the response — nothing renders until everything is ready.
@@ -75,6 +75,13 @@ class ProductSearchController < ApplicationController
   end
   helper_method :product_search_ssr_props
 
+  # Pagination for the RSC emit blocks: the views build their own scope but
+  # must share the controller's page param and page size (issue #239).
+  def paginate_search(scope)
+    SearchPagination.paginate(scope, page: search_params[:page], per_page: PER_PAGE)
+  end
+  helper_method :paginate_search
+
   def set_seo_meta
     variant = SEO_VARIANTS[action_name]
     @page_title = "Product Search — #{variant} | React on Rails RSC Demo" if variant
@@ -94,18 +101,11 @@ class ProductSearchController < ApplicationController
   end
 
   def paginate_and_serialize(scope, per_page = PER_PAGE, rich: false)
-    page = (search_params[:page] || 1).to_i
-    total = scope.count
-    products = scope.offset((page - 1) * per_page).limit(per_page)
+    products, pagination = SearchPagination.paginate(scope, page: search_params[:page], per_page: per_page)
 
     {
       products: products.map { |p| serialize_search_result(p, rich: rich) },
-      pagination: {
-        current_page: page,
-        total_pages: (total / per_page.to_f).ceil,
-        total_count: total,
-        per_page: per_page
-      }
+      pagination: pagination
     }
   end
 

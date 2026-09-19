@@ -32,6 +32,35 @@ RSpec.describe 'Api::ProductSearch', type: :request do
       expect(ids).to include(target.id)
       expect(ids).not_to include(other.id)
     end
+
+    # Issue #239: a non-positive or non-numeric `page` used to reach PostgreSQL
+    # as a negative OFFSET and 500. It clamps to page 1 instead (Kaminari-style).
+    it 'clamps page=0 to the first page' do
+      get '/api/product_search/results', params: { page: 0 }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body['pagination']).to include('current_page' => 1)
+      expect(body['products']).not_to be_empty
+    end
+
+    # page=-1 is a repro row from the issue table; other malformed shapes are
+    # value-pinned in spec/services/search_pagination_spec.rb.
+    it 'clamps a negative page to the first page' do
+      get '/api/product_search/results', params: { page: -1 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['pagination']).to include('current_page' => 1)
+    end
+
+    # An unbounded page used to overflow PostgreSQL's bigint OFFSET
+    # (ActiveRecord::RangeError) and 500.
+    it 'clamps an absurdly large page to the maximum page' do
+      get '/api/product_search/results', params: { page: '99999999999999999999' }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['pagination']).to include('current_page' => SearchPagination::MAX_PAGE)
+    end
   end
 
   describe 'GET /api/product_search/facets' do
@@ -64,6 +93,71 @@ RSpec.describe 'Api::ProductSearch', type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    # Issue #239: a scalar `product_ids` used to raise NoMethodError (String#map)
+    # and 500. Malformed input degrades to an empty snippet set instead.
+    it 'returns an empty snippet set for a scalar product_ids value' do
+      post '/api/product_search/review_snippets', params: { product_ids: 'abc' }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    # A malformed id must be dropped, never coerced: "7abc".to_i is 7, so a
+    # leading-integer parse would resolve garbage to a REAL product's data.
+    it 'does not resolve malformed ids to a real product' do
+      product = create_product(category: 'Electronics')
+      add_reviews(product)
+
+      post '/api/product_search/review_snippets',
+           params: { product_ids: ["#{product.id}abc", "#{product.id}.0"] }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    it 'accepts integer ids from a JSON body' do
+      product = create_product(category: 'Electronics')
+      add_reviews(product)
+
+      post '/api/product_search/review_snippets', params: { product_ids: [product.id] }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to have_key(product.id.to_s)
+    end
+
+    it 'drops an id wider than bigint instead of querying with it' do
+      post '/api/product_search/review_snippets', params: { product_ids: ['9' * 20] }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    it 'drops an oversized native integer id from a JSON body' do
+      post '/api/product_search/review_snippets',
+           params: { product_ids: [999_999_999_999_999_999_999_999_999_999] }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['snippets']).to eq({})
+    end
+
+    it 'ignores ids beyond the product_ids cap' do
+      within_cap = create_product
+      beyond_cap = create_product
+      add_reviews(within_cap)
+      add_reviews(beyond_cap)
+
+      cap = Api::ProductSearchController::MAX_REVIEW_SNIPPET_PRODUCT_IDS
+      filler_ids = Array.new(cap - 1) { |i| 10_000_000 + i } # positive ids that match nothing
+      ids = [within_cap.id, *filler_ids, beyond_cap.id] # beyond_cap sits past the cap
+
+      post '/api/product_search/review_snippets', params: { product_ids: ids }
+
+      expect(response).to have_http_status(:ok)
+      snippets = response.parsed_body['snippets']
+      expect(snippets).to have_key(within_cap.id.to_s)
+      expect(snippets).not_to have_key(beyond_cap.id.to_s)
     end
   end
 
