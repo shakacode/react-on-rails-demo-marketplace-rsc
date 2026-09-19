@@ -23,6 +23,7 @@ on:
       - 'scripts/verify-rsc-e2e.sh'
       - 'scripts/check-rsc-chunks.mjs'
       - 'scripts/renderer-context.test.mjs'
+      - 'scripts/rsc-error-redaction.test.mjs'
       - '.verify-routes.js'
       - 'node-renderer.js'
       - 'package.json'
@@ -38,7 +39,7 @@ on:
         required: false
         default: ''
       rsc_ref:
-        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = the pinned 19.2.1 tag (see the checkout step).
+        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = the pinned 19.3.0 tag (see the checkout step).
         required: false
         default: ''
 
@@ -107,6 +108,9 @@ jobs:
       - name: Verify renderer VM web-platform globals
         run: pnpm test:renderer-context
 
+      - name: Verify RSC error redaction is present (issue #237)
+        run: pnpm test:rsc-error-redaction
+
       - name: Install yalc
         run: npm install -g yalc
 
@@ -137,13 +141,11 @@ jobs:
         env:
           RSC_REF: ${{ github.event.inputs.rsc_ref }}
         run: |
-          # Default pin: the exact release React on Rails Pro 17.0.0-rc.6 declares
-          # compatible. Upstream's default branch moved to 19.3.0-rc.0 (2026-08-29),
-          # whose version Pro's peer check rejects (the `>= 19.2.1` range is
-          # prerelease-blind), so tracking HEAD failed every run on every branch.
-          # Advance this pin when Pro's compat range accepts the next rsc release;
-          # workflow_dispatch `rsc_ref` still tests any ref on demand.
-          git clone --depth 1 --branch "${RSC_REF:-19.2.1}" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
+          # Default pin: the exact release React on Rails Pro 17.1.0 declares
+          # compatible. Advance this pin when Pro's compat range accepts the
+          # next rsc release; workflow_dispatch `rsc_ref` still tests any ref
+          # on demand.
+          git clone --depth 1 --branch "${RSC_REF:-19.3.0}" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
           echo "react_on_rails_rsc @ $(git -C .pkgsrc/rsc rev-parse --short HEAD)"
 
       - name: Build + yalc publish react-on-rails-rsc

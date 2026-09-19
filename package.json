@@ -28,6 +28,7 @@
     "smoke:routes": "node .verify-routes.js",
     "report:rsc:manifest": "node scripts/report-rsc-manifest.mjs",
     "test:renderer-context": "node --test scripts/renderer-context.test.mjs",
+    "test:rsc-error-redaction": "node --test scripts/rsc-error-redaction.test.mjs",
     "test:e2e:unit": "node --test e2e/playwright/support/*.test.mjs",
     "test:e2e": "bash e2e/run-playwright",
     "test:pull-mode": "node scripts/verify-pull-mode-e2e.js",
