@@ -45,7 +45,7 @@ function SubmitButton({ testIdSuffix }: { testIdSuffix: string }) {
       disabled={pending}
       aria-busy={pending}
       data-testid={`review-form-conform-submit${testIdSuffix}`}
-      className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-lg bg-teal-600 px-4 py-2 font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? 'Posting review…' : 'Post Review'}
     </button>
@@ -76,7 +76,7 @@ export function ReviewFormConformIsland({ productId, scope = 'page' }: Props) {
   const [localRefetchError, setLocalRefetchError] = React.useState<string | null>(null);
   const postInFlightRef = useRef(false);
 
-  const [actionState, formAction, isPending] = useActionState(
+  const [actionState, formAction] = useActionState(
     async (prev: ActionState, formData: FormData): Promise<ActionState> => {
       if (postInFlightRef.current) return prev;
       postInFlightRef.current = true;

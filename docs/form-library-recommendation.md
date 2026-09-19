@@ -109,7 +109,7 @@ rspack's `splitChunks` configuration.
 | `aria-describedby` | Manual | Built-in (`getInputProps`) | Manual | Manual |
 | Focus on error | Manual | Built-in | Built-in (`shouldFocusError`) | Manual |
 | **DX** |
-| Lines of code (our form) | 361 | 312 | 262 | 296 |
+| Lines of code (our form) | 361 | 306 | 260 | 296 |
 | TypeScript inference | Basic | Good | Good | Excellent |
 | QA fixes needed | 2 (formKey, optimistic gap) | 1 (zod/v4 subpath) | 1 (z.coerce.number) | 0 |
 | Progressive enhancement | ❌ | ❌ | ❌ | ❌ |

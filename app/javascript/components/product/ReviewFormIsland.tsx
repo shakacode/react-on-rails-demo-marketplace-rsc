@@ -110,7 +110,7 @@ export function ReviewFormIsland({ productId, scope = 'page' }: Props) {
   };
 
   // useActionState action: (previousState, formData) => nextState
-  const [formState, formAction, isPending] = useActionState(
+  const [formState, formAction] = useActionState(
     async (prev: FormState, formData: FormData): Promise<FormState> => {
       if (postInFlightRef.current) return prev;
       postInFlightRef.current = true;

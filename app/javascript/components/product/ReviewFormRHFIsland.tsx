@@ -32,8 +32,6 @@ const reviewSchema = z.object({
   comment: z.string().max(5000).optional().default(''),
 });
 
-type ReviewInput = z.infer<typeof reviewSchema>;
-
 // ── Main component ──────────────────────────────────────────────────────────
 
 export function ReviewFormRHFIsland({ productId, scope = 'page' }: Props) {
