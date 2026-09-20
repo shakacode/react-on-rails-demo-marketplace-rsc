@@ -21,10 +21,6 @@ import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSectionForServer';
 import { ReviewMutationIsland } from './ReviewMutationIslandForServer';
-import { ReviewFormIsland } from './ReviewFormIslandForServer';
-import { ReviewFormConformIsland } from './ReviewFormConformIslandForServer';
-import { ReviewFormRHFIsland } from './ReviewFormRHFIslandForServer';
-import { ReviewFormTanStackIsland } from './ReviewFormTanStackIslandForServer';
 import { ReviewsSectionRoute } from './ReviewsSectionRouteForServer';
 import AsyncProductDetailsRSC from './AsyncProductDetailsRSC';
 import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
@@ -103,18 +99,6 @@ export default function ProductPageRSC({ product, review_mutation_enabled, getRe
           {/* Read-your-writes spike (#245): POST a canned review, then RSCRoute.refetch().
               Rendered only where the gated write endpoint exists (ENABLE_SPIKE_MUTATIONS). */}
           {review_mutation_enabled && <ReviewMutationIsland productId={product.id} />}
-
-          {/* Issue #244 Phase 1: React 19 built-ins review form (no form library).
-              Rendered alongside the spike button for A/B comparison during evaluation.
-              Gated like the spike: absent unless ENABLE_SPIKE_MUTATIONS. */}
-          {review_mutation_enabled && <ReviewFormIsland productId={product.id} />}
-
-          {/* Issue #244 Phase 2: form-library variants for the matrix comparison.
-              Each library variant renders the same form with a different approach.
-              Gated like the baseline: absent unless ENABLE_SPIKE_MUTATIONS. */}
-          {review_mutation_enabled && <ReviewFormConformIsland productId={product.id} />}
-          {review_mutation_enabled && <ReviewFormRHFIsland productId={product.id} />}
-          {review_mutation_enabled && <ReviewFormTanStackIsland productId={product.id} />}
 
           {/* Review stats stream first (rating distribution aggregation) */}
           <Suspense fallback={<ReviewStatsSkeleton />}>

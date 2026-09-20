@@ -32,6 +32,12 @@ class RscPayloadController < ReactOnRailsPro::RscPayloadController
       product = props['product']
       product.is_a?(Hash) ? product['id'] : nil
     },
+    # Issue #244: the forms comparison page uses the same props shape as
+    # ProductPageRSC — a full product object with an id.
+    'ProductPageRSCForms' => lambda { |props|
+      product = props['product']
+      product.is_a?(Hash) ? product['id'] : nil
+    },
     'ProductReviewsSectionRSC' => ->(props) { props['product_id'] }
   }.freeze
   PRODUCT_PAYLOAD_COMPONENTS = PRODUCT_ID_READERS.keys.freeze

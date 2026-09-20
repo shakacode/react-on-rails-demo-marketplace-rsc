@@ -5,7 +5,7 @@ class ProductsController < ApplicationController
   include ReactOnRailsPro::AsyncRendering
   include ProductSerialization
 
-  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_rsc_pull show_ppr]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_rsc_pull show_ppr show_rsc_forms]
 
   before_action :set_seo_meta
 
@@ -45,6 +45,14 @@ class ProductsController < ApplicationController
     # async prop to keep the initial shell small and prioritize LCP.
     @product_data = serialize_product(@product).except(:description, :features, :specs)
     stream_view_containing_react_components(template: "products/show_rsc")
+  end
+
+  # Issue #244: dedicated form-library comparison page. Separate from the
+  # benchmarked /product/rsc so performance numbers stay unperturbed.
+  def show_rsc_forms
+    @product = find_product
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
+    stream_view_containing_react_components(template: "products/show_rsc_forms")
   end
 
   # V1 cached: cached_react_component. Only the cheap base serialize runs eagerly (also powers the

@@ -1,0 +1,9 @@
+<%# Issue #244: dedicated form-library comparison page.
+    Lives at /product/rsc-forms so the benchmarked /product/rsc stays clean.
+    Same async-props emitter as the main RSC page — reviews stream for refetch(). %>
+<%= stream_react_component_with_async_props("ProductPageRSCForms",
+    props: { product: @product_data,
+             review_mutation_enabled: ProductReviewsController.spike_mutations_enabled? },
+    prerender: true) do |emit|
+  ProductRscProps.emit_all(@product, emit)
+end %>

@@ -20,7 +20,7 @@ test.describe('React 19 review form (Phase 1)', () => {
   });
 
   test('submitting a valid review shows it after refetch', async ({ page }) => {
-    const response = await page.goto('/product/rsc');
+    const response = await page.goto('/product/rsc-forms');
     expect(response?.ok()).toBe(true);
 
     // Wait for the page to render.
@@ -53,7 +53,7 @@ test.describe('React 19 review form (Phase 1)', () => {
   });
 
   test('submitting without required fields shows validation errors', async ({ page }) => {
-    const response = await page.goto('/product/rsc');
+    const response = await page.goto('/product/rsc-forms');
     expect(response?.ok()).toBe(true);
 
     await expect(page.getByTestId('review-form-island')).toBeVisible();

@@ -47,6 +47,21 @@ Gotchas:
     ) do |emit|
       ProductRscProps.emit_all(@payload_product, emit)
     end -%>
+<% elsif @rsc_payload_component_name == "ProductPageRSCForms" -%>
+<%
+  # Issue #244: form-library comparison page. Same trust posture and emitter as
+  # the ProductPageRSC branch — same product data, same async props.
+  if @payload_product.nil?
+    raise ActiveRecord::RecordNotFound,
+          "ProductPageRSCForms payload requires RscPayloadController to load @payload_product"
+  end
+-%>
+<%= rsc_payload_react_component_with_async_props(
+      @rsc_payload_component_name,
+      props: ProductRscProps.initial_props(@payload_product)
+    ) do |emit|
+      ProductRscProps.emit_all(@payload_product, emit)
+    end -%>
 <% elsif @rsc_payload_component_name == "ProductReviewsSectionRSC" -%>
 <%
   # C5 (issue #245): section-scoped refetch door. Same trust posture as the

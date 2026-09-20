@@ -18,7 +18,7 @@ test.describe('TanStack Form review form (Phase 2)', () => {
   });
 
   test('submitting a valid review shows it after refetch', async ({ page }) => {
-    const response = await page.goto('/product/rsc');
+    const response = await page.goto('/product/rsc-forms');
     expect(response?.ok()).toBe(true);
 
     await expect(page.getByRole('heading', { level: 1, name: 'E2E Mutation Headphones' })).toBeVisible();
@@ -44,7 +44,7 @@ test.describe('TanStack Form review form (Phase 2)', () => {
   });
 
   test('submitting without required fields shows validation errors', async ({ page }) => {
-    const response = await page.goto('/product/rsc');
+    const response = await page.goto('/product/rsc-forms');
     expect(response?.ok()).toBe(true);
 
     await expect(page.getByTestId('review-form-tanstack-island')).toBeVisible();
