@@ -320,7 +320,7 @@ RSpec.describe 'ProductReviews', type: :request do
                  RscPayloadController::PRODUCT_PAYLOAD_COMPONENTS + ['GhostComponentRSC'])
 
       expect(RscPayloadController::PRODUCT_ID_READERS.keys)
-        .to eq(%w[ProductPageRSC ProductReviewsSectionRSC])
+        .to eq(%w[ProductPageRSC ProductPageRSCForms ProductReviewsSectionRSC])
       expect do
         get_payload('GhostComponentRSC', { product_id: product.id })
       end.to raise_error(KeyError, /GhostComponentRSC/)

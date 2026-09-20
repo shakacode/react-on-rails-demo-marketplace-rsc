@@ -83,6 +83,7 @@ module RouteContract
     **variants('/restaurant/:id', %w[ssr client rsc ssr-cached rsc-cached ssr-virtual rsc-virtual],
                'restaurants', 'show'),
     **variants('/product', %w[ssr client rsc ssr-cached rsc-cached rsc-pull ppr], 'products', 'show'),
+    '/product/rsc-forms' => 'products#show_rsc_forms',
     **variants('/product-search', %w[ssr client rsc ssr-cached rsc-cached], 'product_search', 'search'),
     **variants('/blog', BLOG_VARIANTS, 'blog', 'post'),
     # CSS code-splitting experiment: two pages x three rendering shapes.
@@ -96,7 +97,9 @@ module RouteContract
   FLAG_GATED = {
     '/product/ppr' => 'Partial Prerendering patches load only when ENABLE_PPR=true ' \
                       '(config/initializers/ppr_patches.rb). Without it the view calls an ' \
-                      'undefined ppr_react_component and the route 500s.'
+                      'undefined ppr_react_component and the route 500s.',
+    '/product/rsc-forms' => 'Form library comparison page (issue #244). The POST endpoint ' \
+                            'and form islands require ENABLE_SPIKE_MUTATIONS=1.'
   }.freeze
 
   # JSON endpoints, covered by request specs against real payloads.
