@@ -1,0 +1,9 @@
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%# L1: Apollo Client RSC — server-only GraphQL query, zero browser Apollo JS.
+    Uses stream_react_component (no async props) because the Apollo query
+    resolves everything server-side in one shot. %>
+<%= stream_react_component("ProductPageApolloL1RSC",
+    props: { product: @product_data },
+    prerender: true) %>
