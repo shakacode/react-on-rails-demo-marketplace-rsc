@@ -49,3 +49,6 @@ group :test do
   gem 'capybara'
   gem 'selenium-webdriver'
 end
+
+# GraphQL
+gem 'graphql', '~> 2.6'
