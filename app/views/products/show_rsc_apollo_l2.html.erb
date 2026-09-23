@@ -1,0 +1,9 @@
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%# L2: Apollo PreloadQuery → Flight → client island hydration.
+    Product hero is server-rendered; reviews transported via Flight ReadableStream
+    to a client island that hydrates the Apollo cache. %>
+<%= stream_react_component("ProductPageApolloL2RSC",
+    props: { product: @product_data },
+    prerender: true) %>
