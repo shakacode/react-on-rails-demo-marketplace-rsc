@@ -72,17 +72,17 @@ RSpec.describe "GraphQL endpoint", type: :request do
       expect(json["errors"]).to be_present
     end
 
-    it "enforces max_depth" do
-      # Build a deeply nested query that exceeds max_depth of 10
-      deep_query = "{ product { relatedProducts { relatedProducts { relatedProducts " \
-                   "{ relatedProducts { relatedProducts { relatedProducts { relatedProducts " \
-                   "{ relatedProducts { relatedProducts { relatedProducts { id } } } } } } } } } } } }"
+    it "rejects queries with undefined fields" do
+      # relatedProducts returns ProductCardType, which has no relatedProducts
+      # field. graphql-ruby rejects this at validation before execution.
+      invalid_query = "{ product { relatedProducts { relatedProducts { id } } } }"
 
-      post "/graphql", params: { query: deep_query }, as: :json
+      post "/graphql", params: { query: invalid_query }, as: :json
 
       expect(response).to have_http_status(:ok)
       json = response.parsed_body
       expect(json["errors"]).to be_present
+      expect(json["errors"].first["message"]).to include("doesn't exist on type")
     end
   end
 end

@@ -15,10 +15,11 @@
 import { ApolloClient, InMemoryCache } from '@apollo/client-react-streaming';
 import { HttpLink } from '@apollo/client/link/http';
 
-// The GraphQL endpoint URL is constructed from railsContext at render time
-// to match the current Rails host/port. During RSC rendering in the
-// node-renderer VM, this defaults to the Rails server's internal address.
-const DEFAULT_GRAPHQL_URI = 'http://localhost:3000/graphql';
+// The GraphQL endpoint URL. In the node-renderer VM, this defaults to
+// the Rails server's internal address. Configurable via GRAPHQL_URI at
+// build time (webpack/Rspack DefinePlugin) for Docker, CI, or production.
+const DEFAULT_GRAPHQL_URI =
+  (typeof process !== 'undefined' && process.env?.GRAPHQL_URI) || 'http://localhost:3000/graphql';
 
 export function makeApolloClient(graphqlUri: string = DEFAULT_GRAPHQL_URI) {
   return new ApolloClient({

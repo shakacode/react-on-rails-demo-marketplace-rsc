@@ -89,7 +89,7 @@ class ProductsController < ApplicationController
   # getClient().query() against /graphql; zero Apollo JS in browser.
   def show_rsc_apollo_l1
     @product = find_product
-    @product_data = serialize_product(@product)
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
     stream_view_containing_react_components(template: "products/show_rsc_apollo_l1")
   end
 
@@ -99,7 +99,7 @@ class ProductsController < ApplicationController
   # a client island that hydrates the Apollo cache without a duplicate request.
   def show_rsc_apollo_l2
     @product = find_product
-    @product_data = serialize_product(@product)
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
     stream_view_containing_react_components(template: "products/show_rsc_apollo_l2")
   end
 
