@@ -30,6 +30,11 @@ import { ApolloReviewsIsland } from './ApolloReviewsIsland';
 import { ApolloProviderWrapper } from '../apollo/ApolloProviderWrapper';
 import { ReviewsSkeleton } from './ProductSkeletons';
 
+// PreloadQuery is only available in the RSC bundle (react-server condition).
+// Resolved lazily at module scope to avoid Rspack ESM linking errors in the SSR
+// bundle and to satisfy the React Compiler's static-components rule.
+const PreloadQuery = getPreloadQuery();
+
 interface Props {
   product: Product;
 }
@@ -43,11 +48,8 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
     variables: { id: String(product.id) },
   });
 
-  const gqlProduct = data.product;
-
-  // PreloadQuery is only available in the RSC bundle (react-server condition).
-  // Resolved lazily to avoid Rspack ESM linking errors in the SSR bundle.
-  const PreloadQuery = getPreloadQuery();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gqlProduct = (data as any).product;
 
   return (
     <div className="min-h-screen bg-white">

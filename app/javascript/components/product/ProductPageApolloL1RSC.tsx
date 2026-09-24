@@ -11,7 +11,7 @@
 // React.cache() and correct three-bundle export resolution.
 
 import React from 'react';
-import { Product, ProductReview, ReviewStats, ProductCard } from '../../types/product';
+import { Product } from '../../types/product';
 import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSectionForServer';
@@ -27,6 +27,9 @@ interface Props {
   product: Product;
 }
 
+// GraphQL response uses camelCase (graphql-ruby auto-converts), while existing
+// server components use the snake_case shapes from types/product.ts. L1 stays
+// server-only so we map the camelCase response to the existing component props.
 export default async function ProductPageApolloL1RSC({ product }: Props) {
   // Query the Rails /graphql endpoint via Apollo's HttpLink.
   // getClient() returns a per-request-isolated ApolloClient (React.cache scoped).
@@ -35,10 +38,40 @@ export default async function ProductPageApolloL1RSC({ product }: Props) {
     variables: { id: String(product.id) },
   });
 
-  const gqlProduct = data.product;
-  const reviews: ProductReview[] = gqlProduct.reviews;
-  const reviewStats: ReviewStats = gqlProduct.reviewStats;
-  const relatedProducts: ProductCard[] = gqlProduct.relatedProducts;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gqlProduct = (data as any).product;
+
+  // Map camelCase GraphQL response to the snake_case props that ReviewsList,
+  // ReviewDistributionChart, and RelatedProducts expect. These components are
+  // shared with the non-Apollo RSC pages and use the Rails serializer shapes.
+  const reviews = gqlProduct.reviews.map((r: Record<string, unknown>) => ({
+    id: r.id,
+    rating: r.rating,
+    title: r.title,
+    comment: r.comment,
+    reviewer_name: r.reviewerName,
+    verified_purchase: r.verifiedPurchase,
+    helpful_count: r.helpfulCount,
+    created_at: r.createdAt,
+  }));
+  const reviewStats = {
+    average_rating: gqlProduct.reviewStats.averageRating,
+    total_reviews: gqlProduct.reviewStats.totalReviews,
+    distribution: gqlProduct.reviewStats.distribution,
+  };
+  const relatedProducts = gqlProduct.relatedProducts.map((p: Record<string, unknown>) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    original_price: p.originalPrice,
+    category: p.category,
+    brand: p.brand,
+    images: p.images,
+    average_rating: p.averageRating,
+    review_count: p.reviewCount,
+    in_stock: p.inStock,
+    discount_percentage: p.discountPercentage,
+  }));
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,7 +110,11 @@ export default async function ProductPageApolloL1RSC({ product }: Props) {
         {/* Reviews from GraphQL */}
         <section className="border-t border-gray-200 pt-8 mt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
-          <ReviewDistributionChart stats={reviewStats} />
+          <ReviewDistributionChart
+            distribution={reviewStats.distribution}
+            averageRating={reviewStats.average_rating}
+            totalReviews={reviewStats.total_reviews}
+          />
           <div className="mt-8">
             <ReviewsList reviews={reviews} />
           </div>

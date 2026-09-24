@@ -11,13 +11,38 @@
 
 import React from 'react';
 import { useReadQuery, type QueryRef } from '@apollo/client/react';
-import type { ProductReview, ReviewStats } from '../../types/product';
+
+// GraphQL response shapes — graphql-ruby auto-camelCases field names, so these
+// differ from the snake_case TS types in types/product.ts (which match the Rails
+// serializer / async-props contract). Apollo components use these camelCase shapes.
+interface GqlReview {
+  id: number;
+  rating: number;
+  title: string;
+  comment: string;
+  reviewerName: string;
+  verifiedPurchase: boolean;
+  helpfulCount: number;
+  createdAt: string;
+}
+
+interface GqlRatingDistribution {
+  stars: number;
+  count: number;
+  percentage: number;
+}
+
+interface GqlReviewStats {
+  averageRating: number;
+  totalReviews: number;
+  distribution: GqlRatingDistribution[];
+}
 
 // The shape returned by GET_PRODUCT_REVIEWS
 interface ProductReviewsData {
   product: {
-    reviews: ProductReview[];
-    reviewStats: ReviewStats;
+    reviews: GqlReview[];
+    reviewStats: GqlReviewStats;
   };
 }
 

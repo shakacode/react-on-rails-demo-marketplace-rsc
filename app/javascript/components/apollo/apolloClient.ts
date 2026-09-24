@@ -13,7 +13,7 @@
 // for registration purposes.
 
 import { ApolloClient, InMemoryCache } from '@apollo/client-react-streaming';
-import type { PreloadQueryComponent } from '@apollo/client-react-streaming/dist/registerApolloClient';
+import type { PreloadQueryComponent } from '@apollo/client-react-streaming';
 import { HttpLink } from '@apollo/client/link/http';
 
 // The GraphQL endpoint URL. In the node-renderer VM, this defaults to the
@@ -43,12 +43,12 @@ export function makeApolloClient(graphqlUri: string = DEFAULT_GRAPHQL_URI) {
 // index.ssr.js). The RSC bundle (react-server condition → index.rsc.js)
 // resolves it correctly at runtime.
 //
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const _streaming = require('@apollo/client-react-streaming');
 
 interface RegisterResult {
-  getClient: () => ApolloClient<unknown>;
-  query: ApolloClient<unknown>['query'];
+  getClient: () => InstanceType<typeof ApolloClient>;
+  query: InstanceType<typeof ApolloClient>['query'];
   PreloadQuery: PreloadQueryComponent;
 }
 
@@ -68,11 +68,11 @@ function getRegistered(): RegisterResult {
 }
 
 // Lazy accessors — only called from RSC components in the RSC bundle.
-export function getClient(): ApolloClient<unknown> {
+export function getClient() {
   return getRegistered().getClient();
 }
 
-export function query(...args: Parameters<ApolloClient<unknown>['query']>) {
+export function query(...args: Parameters<InstanceType<typeof ApolloClient>['query']>) {
   return getRegistered().query(...args);
 }
 
