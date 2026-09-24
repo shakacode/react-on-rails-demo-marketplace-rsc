@@ -6,6 +6,10 @@ Rails.application.routes.draw do
   contributing_url = "#{repository_url}/blob/main/CONTRIBUTING.md"
   issues_url = "#{repository_url}/issues"
 
+  # GraphQL endpoint for Apollo Client RSC demo (issue #255).
+  # POST-only; the node-renderer's HttpLink queries this during RSC rendering.
+  post '/graphql', to: 'graphql#execute'
+
   # Health check endpoint
   get 'up' => 'rails/health#show', as: :rails_health_check
 
@@ -55,6 +59,11 @@ Rails.application.routes.draw do
   get '/product/ppr', to: 'products#show_ppr'         # V4: PPR — cached shell + dynamic streaming
   # Issue #244: form-library comparison (separate from benchmarked /rsc).
   get '/product/rsc-forms', to: 'products#show_rsc_forms'
+  # Issue #255: Apollo Client × RSC — sibling routes for GraphQL integration demo.
+  # L1 = server-only Apollo query (zero browser Apollo JS).
+  # L2 = PreloadQuery → Flight → client island hydration.
+  get '/product/rsc-apollo-l1', to: 'products#show_rsc_apollo_l1'
+  get '/product/rsc-apollo-l2', to: 'products#show_rsc_apollo_l2'
 
   # Product search results — three versions demonstrating search page RSC gains
   get '/product-search/ssr', to: 'product_search#search_ssr'       # V1: Full SSR

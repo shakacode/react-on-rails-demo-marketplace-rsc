@@ -5,7 +5,8 @@ class ProductsController < ApplicationController
   include ReactOnRailsPro::AsyncRendering
   include ProductSerialization
 
-  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_rsc_pull show_ppr show_rsc_forms]
+  enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_rsc_pull show_ppr show_rsc_forms
+                                       show_rsc_apollo_l1 show_rsc_apollo_l2]
 
   before_action :set_seo_meta
 
@@ -14,7 +15,9 @@ class ProductsController < ApplicationController
     "show_client" => "Client-Side Rendering",
     "show_rsc" => "React Server Components (RSC)",
     "show_rsc_pull" => "RSC Pull-Mode (Bidirectional Async Props)",
-    "show_ppr" => "Partial Prerendering (PPR)"
+    "show_ppr" => "Partial Prerendering (PPR)",
+    "show_rsc_apollo_l1" => "Apollo L1: Server-Only GraphQL",
+    "show_rsc_apollo_l2" => "Apollo L2: PreloadQuery → Flight → Client Hydration"
   }.freeze
 
   # V1: Full Server SSR — fetch ALL data, return complete page
@@ -79,6 +82,25 @@ class ProductsController < ApplicationController
     @product = find_product
     @product_data = serialize_product(@product).except(:description, :features, :specs)
     stream_view_containing_react_components(template: "products/show_rsc_pull")
+  end
+
+  # Apollo L1: Server-only GraphQL query (issue #255).
+  # All data fetched via Apollo Client on the server. The RSC component calls
+  # getClient().query() against /graphql; zero Apollo JS in browser.
+  def show_rsc_apollo_l1
+    @product = find_product
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
+    stream_view_containing_react_components(template: "products/show_rsc_apollo_l1")
+  end
+
+  # Apollo L2: PreloadQuery → Flight → client hydration (issue #255).
+  # Product data rendered server-side, reviews preloaded via PreloadQuery.
+  # The query result travels through Flight as a ReadableStream ($R rows) to
+  # a client island that hydrates the Apollo cache without a duplicate request.
+  def show_rsc_apollo_l2
+    @product = find_product
+    @product_data = serialize_product(@product).except(:description, :features, :specs)
+    stream_view_containing_react_components(template: "products/show_rsc_apollo_l2")
   end
 
   # V4: PPR — static shell cached, dynamic content streams fresh.
