@@ -13,11 +13,14 @@
 // for registration purposes.
 
 import { ApolloClient, InMemoryCache } from '@apollo/client-react-streaming';
+import type { PreloadQueryComponent } from '@apollo/client-react-streaming/dist/registerApolloClient';
 import { HttpLink } from '@apollo/client/link/http';
 
-// The GraphQL endpoint URL. In the node-renderer VM, this defaults to
-// the Rails server's internal address. Configurable via GRAPHQL_URI at
-// build time (webpack/Rspack DefinePlugin) for Docker, CI, or production.
+// The GraphQL endpoint URL. In the node-renderer VM, this defaults to the
+// Rails server's internal address. Configurable via the GRAPHQL_URI runtime
+// environment variable in the node-renderer process (e.g. Docker, CI, or
+// production). This is NOT a build-time DefinePlugin replacement — it reads
+// process.env at runtime inside the VM.
 const DEFAULT_GRAPHQL_URI =
   (typeof process !== 'undefined' && process.env?.GRAPHQL_URI) || 'http://localhost:3000/graphql';
 
@@ -43,11 +46,11 @@ export function makeApolloClient(graphqlUri: string = DEFAULT_GRAPHQL_URI) {
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const _streaming = require('@apollo/client-react-streaming');
 
-type RegisterResult = {
-  getClient: () => InstanceType<typeof ApolloClient>;
-  query: (...args: any[]) => Promise<any>;
-  PreloadQuery: React.FC<any>;
-};
+interface RegisterResult {
+  getClient: () => ApolloClient<unknown>;
+  query: ApolloClient<unknown>['query'];
+  PreloadQuery: PreloadQueryComponent;
+}
 
 let _registered: RegisterResult | null = null;
 
@@ -59,21 +62,21 @@ function getRegistered(): RegisterResult {
         'This code path should only execute in the RSC bundle.'
       );
     }
-    _registered = _streaming.registerApolloClient(() => makeApolloClient());
+    _registered = _streaming.registerApolloClient(() => makeApolloClient()) as RegisterResult;
   }
   return _registered;
 }
 
 // Lazy accessors — only called from RSC components in the RSC bundle.
-export function getClient() {
+export function getClient(): ApolloClient<unknown> {
   return getRegistered().getClient();
 }
 
-export async function query(...args: any[]) {
+export function query(...args: Parameters<ApolloClient<unknown>['query']>) {
   return getRegistered().query(...args);
 }
 
 // PreloadQuery is a component — export it as a getter for the same reason.
-export function getPreloadQuery() {
+export function getPreloadQuery(): PreloadQueryComponent {
   return getRegistered().PreloadQuery;
 }
