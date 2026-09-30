@@ -38,7 +38,10 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
   // PreloadQuery is only available in the RSC bundle (react-server condition).
   // Must be called INSIDE the render function — a module-scope call would
   // execute during SSR bundle evaluation and crash (registerApolloClient is
-  // not exported from the SSR entry).
+  // not exported from the SSR entry). The reference is stable (cached in
+  // _registered), so the React Compiler's "Cannot create components during
+  // render" diagnostic is a false positive here.
+  // eslint-disable-next-line react-compiler/react-compiler
   const PreloadQuery = getPreloadQuery();
   // Fetch product data WITHOUT reviews — reviews come from PreloadQuery.
   // This avoids the duplicate-query problem: one request for the page shell,
