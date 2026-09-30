@@ -64,6 +64,21 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gqlProduct = (data as any).product;
 
+  // Map camelCase GraphQL response to the snake_case props that RelatedProducts expects.
+  const relatedProducts = (gqlProduct.relatedProducts || []).map((p: Record<string, unknown>) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    original_price: p.originalPrice,
+    category: p.category,
+    brand: p.brand,
+    images: p.images,
+    average_rating: p.averageRating,
+    review_count: p.reviewCount,
+    in_stock: p.inStock,
+    discount_percentage: p.discountPercentage,
+  }));
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-6xl px-4 py-6">
@@ -116,7 +131,7 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
         </section>
 
         {/* Related products — server rendered */}
-        <RelatedProducts products={gqlProduct.relatedProducts} />
+        <RelatedProducts products={relatedProducts} />
       </div>
     </div>
   );
