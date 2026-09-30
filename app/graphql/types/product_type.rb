@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module Types
+  # Full product detail including reviews, stats, and related products.
   class ProductType < BaseObject
-    description "A product listing with full detail fields"
+    description 'A product listing with full detail fields'
 
     field :id, ID, null: false
     field :name, String, null: false
@@ -22,7 +23,7 @@ module Types
     field :discount_percentage, Float
 
     # Associations — deliberately limited to top N to match existing serializer behaviour.
-    field :reviews, [ProductReviewType], null: false, description: "Top reviews ordered by helpful_count" do
+    field :reviews, [ProductReviewType], null: false, description: 'Top reviews ordered by helpful_count' do
       argument :limit, Integer, required: false, default_value: 5
     end
 
@@ -48,9 +49,7 @@ module Types
       object.top_reviews(limit)
     end
 
-    def review_stats
-      object.review_stats
-    end
+    delegate :review_stats, to: :object
 
     def related_products(limit:)
       object.related_products(limit)

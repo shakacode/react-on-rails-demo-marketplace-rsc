@@ -29,16 +29,11 @@ class GraphqlController < ApplicationController
   # Handle variables in form data, JSON body, or blank.
   def prepare_variables(variables_param)
     case variables_param
-    when String
-      variables_param.present? ? JSON.parse(variables_param) : {}
-    when Hash
-      variables_param
-    when ActionController::Parameters
-      variables_param.to_unsafe_h
-    when nil
-      {}
-    else
-      raise ArgumentError, "Unexpected parameter: #{variables_param}"
+    when String then variables_param.present? ? JSON.parse(variables_param) : {}
+    when Hash then variables_param
+    when ActionController::Parameters then variables_param.to_unsafe_h
+    when nil then {}
+    else raise ArgumentError, "Unexpected parameter: #{variables_param}"
     end
   end
 

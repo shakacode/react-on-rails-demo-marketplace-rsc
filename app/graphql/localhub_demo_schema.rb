@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Top-level GraphQL schema for the Apollo Client RSC demo (issue #255).
 class LocalhubDemoSchema < GraphQL::Schema
   query Types::QueryType
 
@@ -8,5 +9,5 @@ class LocalhubDemoSchema < GraphQL::Schema
   max_depth 10
 
   # Disable introspection in production (enable with GRAPHQL_INTROSPECTION=1).
-  disable_introspection_entry_points unless ENV["GRAPHQL_INTROSPECTION"] == "1" || !Rails.env.production?
+  disable_introspection_entry_points unless ENV['GRAPHQL_INTROSPECTION'] == '1' || !Rails.env.production?
 end

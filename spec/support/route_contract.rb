@@ -83,6 +83,8 @@ module RouteContract
     **variants('/restaurant/:id', %w[ssr client rsc ssr-cached rsc-cached ssr-virtual rsc-virtual],
                'restaurants', 'show'),
     **variants('/product', %w[ssr client rsc ssr-cached rsc-cached rsc-pull ppr], 'products', 'show'),
+    '/product/rsc-apollo-l1' => 'products#show_rsc_apollo_l1',
+    '/product/rsc-apollo-l2' => 'products#show_rsc_apollo_l2',
     '/product/rsc-forms' => 'products#show_rsc_forms',
     **variants('/product-search', %w[ssr client rsc ssr-cached rsc-cached], 'product_search', 'search'),
     **variants('/blog', BLOG_VARIANTS, 'blog', 'post'),

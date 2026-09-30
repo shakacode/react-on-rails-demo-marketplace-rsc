@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 module Types
+  # Root query type for the GraphQL endpoint.
   class QueryType < BaseObject
-    description "Root query type"
+    description 'Root query type'
 
-    field :product, ProductType, "Find a product by ID (defaults to the first product)" do
+    field :product, ProductType, 'Find a product by ID (defaults to the first product)' do
       argument :id, ID, required: false
     end
 

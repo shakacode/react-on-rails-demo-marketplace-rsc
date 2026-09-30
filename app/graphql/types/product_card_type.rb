@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module Types
+  # Slim product card used in related-products lists.
   class ProductCardType < BaseObject
-    description "Slim product card for related-products lists"
+    description 'Slim product card for related-products lists'
 
     field :id, ID, null: false
     field :name, String, null: false

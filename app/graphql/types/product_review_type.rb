@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Types
+  # A single product review with rating, title, and comment.
   class ProductReviewType < BaseObject
     field :id, ID, null: false
     field :rating, Integer, null: false
