@@ -11,26 +11,28 @@
 // crash the SSR bundle at module-evaluation time — all RSC-specific work
 // is deferred to first call, which only happens inside an RSC render.
 //
-// ESM vs CJS: Using `import *` (not require()) is critical — require()
+// ESM vs CJS: Using named imports (not require()) is critical — require()
 // resolves the CJS entry whose .cc.cjs transitive deps are not processed
-// by the RSC loader (issue #255 C5 finding). But `import *` namespace
-// property access at module scope fails Rspack's ESM static analysis when
-// the export doesn't exist in the SSR entry. Solution: access
-// registerApolloClient ONLY inside getRegistered() at call time.
+// by the RSC loader (issue #255 C5 finding). registerApolloClient is
+// accessed via dynamic import() inside getRegistered() to avoid Rspack's
+// ESM static linking error when the export doesn't exist in the SSR entry.
 
 import { ApolloClient, InMemoryCache } from '@apollo/client-react-streaming';
 import type { PreloadQueryComponent } from '@apollo/client-react-streaming';
 import { HttpLink } from '@apollo/client/link/http';
 
-// The GraphQL endpoint URL. In the node-renderer VM, this defaults to the
-// Rails server's internal address. Configurable via the GRAPHQL_URI runtime
-// environment variable in the node-renderer process (e.g. Docker, CI, or
-// production). This is NOT a build-time DefinePlugin replacement — it reads
-// process.env at runtime inside the VM.
-const DEFAULT_GRAPHQL_URI =
-  (typeof process !== 'undefined' && process.env?.GRAPHQL_URI) || 'http://localhost:3000/graphql';
+// The GraphQL endpoint URL. Callers pass it from the Rails controller
+// (request.protocol + request.host_with_port + '/graphql') so the renderer
+// always reaches the correct Rails instance, regardless of port.
+const DEFAULT_GRAPHQL_URI = 'http://localhost:3000/graphql';
 
-export function makeApolloClient(graphqlUri: string = DEFAULT_GRAPHQL_URI) {
+// Module-level URI seed — set by the first getClient(uri) call, used by
+// registerApolloClient's factory. Per-request isolation comes from
+// React.cache inside registerApolloClient; the URI is the same for all
+// components in one request.
+let _graphqlUri = DEFAULT_GRAPHQL_URI;
+
+export function makeApolloClient(graphqlUri: string = _graphqlUri) {
   return new ApolloClient({
     cache: new InMemoryCache(),
     link: new HttpLink({
@@ -46,8 +48,8 @@ export function makeApolloClient(graphqlUri: string = DEFAULT_GRAPHQL_URI) {
 //
 // The streaming package's react-server entry (index.rsc.js) exports
 // registerApolloClient; the node/SSR entry (index.ssr.js) does not.
-// We access it ONLY inside getRegistered() via dynamic import() at call
-// time — never at module scope where Rspack's ESM linker would reject it.
+// We access it via dynamic import() inside getRegistered() at call time
+// to avoid Rspack's ESM static linking error.
 
 interface RegisterResult {
   getClient: () => InstanceType<typeof ApolloClient>;
@@ -81,7 +83,10 @@ async function getRegistered(): Promise<RegisterResult> {
 }
 
 // Lazy accessors — only called from RSC components in the RSC bundle.
-export async function getClient() {
+// graphqlUri seeds the module-level URI before the first registerApolloClient
+// call; subsequent calls in the same request reuse the cached client.
+export async function getClient(graphqlUri?: string) {
+  if (graphqlUri) _graphqlUri = graphqlUri;
   return (await getRegistered()).getClient();
 }
 

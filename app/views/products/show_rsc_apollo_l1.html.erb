@@ -5,5 +5,5 @@
     Uses stream_react_component (no async props) because the Apollo query
     resolves everything server-side in one shot. %>
 <%= stream_react_component("ProductPageApolloL1RSC",
-    props: { product: @product_data },
+    props: { product: @product_data, graphql_url: @graphql_url },
     prerender: true) %>

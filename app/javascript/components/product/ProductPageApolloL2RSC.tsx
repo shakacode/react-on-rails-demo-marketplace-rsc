@@ -50,13 +50,14 @@ async function renderPreloadedReviews(productId: string) {
 
 interface Props {
   product: Product;
+  graphql_url: string;
 }
 
-export default async function ProductPageApolloL2RSC({ product }: Props) {
+export default async function ProductPageApolloL2RSC({ product, graphql_url }: Props) {
   // Fetch product data WITHOUT reviews — reviews come from PreloadQuery.
   // This avoids the duplicate-query problem: one request for the page shell,
   // one for the reviews transported to the client.
-  const client = await getClient();
+  const client = await getClient(graphql_url);
   const { data } = await client.query({
     query: GET_PRODUCT_WITHOUT_REVIEWS,
     variables: { id: String(product.id) },

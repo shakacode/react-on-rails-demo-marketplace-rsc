@@ -25,15 +25,16 @@ import { GET_PRODUCT_FULL } from '../apollo/queries';
 
 interface Props {
   product: Product;
+  graphql_url: string;
 }
 
 // GraphQL response uses camelCase (graphql-ruby auto-converts), while existing
 // server components use the snake_case shapes from types/product.ts. L1 stays
 // server-only so we map the camelCase response to the existing component props.
-export default async function ProductPageApolloL1RSC({ product }: Props) {
+export default async function ProductPageApolloL1RSC({ product, graphql_url }: Props) {
   // Query the Rails /graphql endpoint via Apollo's HttpLink.
   // getClient() returns a per-request-isolated ApolloClient (React.cache scoped).
-  const client = await getClient();
+  const client = await getClient(graphql_url);
   const { data } = await client.query({
     query: GET_PRODUCT_FULL,
     variables: { id: String(product.id) },

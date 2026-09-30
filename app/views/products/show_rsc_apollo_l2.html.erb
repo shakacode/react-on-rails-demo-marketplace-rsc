@@ -5,5 +5,5 @@
     Product hero is server-rendered; reviews transported via Flight ReadableStream
     to a client island that hydrates the Apollo cache. %>
 <%= stream_react_component("ProductPageApolloL2RSC",
-    props: { product: @product_data },
+    props: { product: @product_data, graphql_url: @graphql_url },
     prerender: true) %>

@@ -90,6 +90,7 @@ class ProductsController < ApplicationController
   def show_rsc_apollo_l1
     @product = find_product
     @product_data = serialize_product(@product).except(:description, :features, :specs)
+    @graphql_url = graphql_endpoint_url
     stream_view_containing_react_components(template: "products/show_rsc_apollo_l1")
   end
 
@@ -100,6 +101,7 @@ class ProductsController < ApplicationController
   def show_rsc_apollo_l2
     @product = find_product
     @product_data = serialize_product(@product).except(:description, :features, :specs)
+    @graphql_url = graphql_endpoint_url
     stream_view_containing_react_components(template: "products/show_rsc_apollo_l2")
   end
 
@@ -139,6 +141,13 @@ class ProductsController < ApplicationController
     @product_data&.dig(:images, 0, "url") || @product_data&.dig(:images, 0, :url)
   end
   helper_method :hero_image_url
+
+  # The node renderer VM needs a reachable URL for the GraphQL endpoint.
+  # In CI, Rails may run on a non-default port (e.g. 3010 for browser-smoke).
+  # Build the URL from the current request so it always matches.
+  def graphql_endpoint_url
+    "#{request.protocol}#{request.host_with_port}/graphql"
+  end
 
   def find_product
     if params[:id]
