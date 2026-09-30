@@ -30,16 +30,16 @@ import { ApolloReviewsIsland } from './ApolloReviewsIsland';
 import { ApolloProviderWrapper } from '../apollo/ApolloProviderWrapper';
 import { ReviewsSkeleton } from './ProductSkeletons';
 
-// PreloadQuery is only available in the RSC bundle (react-server condition).
-// Resolved lazily at module scope to avoid Rspack ESM linking errors in the SSR
-// bundle and to satisfy the React Compiler's static-components rule.
-const PreloadQuery = getPreloadQuery();
-
 interface Props {
   product: Product;
 }
 
 export default async function ProductPageApolloL2RSC({ product }: Props) {
+  // PreloadQuery is only available in the RSC bundle (react-server condition).
+  // Must be called INSIDE the render function — a module-scope call would
+  // execute during SSR bundle evaluation and crash (registerApolloClient is
+  // not exported from the SSR entry).
+  const PreloadQuery = getPreloadQuery();
   // Fetch product data WITHOUT reviews — reviews come from PreloadQuery.
   // This avoids the duplicate-query problem: one request for the page shell,
   // one for the reviews transported to the client.

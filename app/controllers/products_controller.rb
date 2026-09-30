@@ -6,7 +6,7 @@ class ProductsController < ApplicationController
   include ProductSerialization
 
   enable_async_react_rendering only: %i[show_rsc show_rsc_cached show_rsc_pull show_ppr show_rsc_forms
-                                       show_rsc_apollo_l1 show_rsc_apollo_l2]
+                                        show_rsc_apollo_l1 show_rsc_apollo_l2]
 
   before_action :set_seo_meta
 
