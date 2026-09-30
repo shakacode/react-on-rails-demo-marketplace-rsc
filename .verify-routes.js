@@ -34,8 +34,8 @@ const DEFAULT_ROUTES = [
   // Product detail
   '/product/ssr', '/product/ssr-cached', '/product/client',
   '/product/rsc', '/product/rsc-cached', '/product/rsc-pull',
-  // Apollo Client RSC demo (issue #255)
-  '/product/rsc-apollo-l1', '/product/rsc-apollo-l2',
+  // Apollo Client RSC demo (issue #255) — L2 is flag-gated (D6/F6 transport limitation)
+  '/product/rsc-apollo-l1',
   // Product search
   '/product-search/ssr', '/product-search/ssr-cached', '/product-search/client',
   '/product-search/rsc', '/product-search/rsc-cached',

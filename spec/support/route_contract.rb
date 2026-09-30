@@ -101,7 +101,10 @@ module RouteContract
                       '(config/initializers/ppr_patches.rb). Without it the view calls an ' \
                       'undefined ppr_react_component and the route 500s.',
     '/product/rsc-forms' => 'Form library comparison page (issue #244). The POST endpoint ' \
-                            'and form islands require ENABLE_SPIKE_MUTATIONS=1.'
+                            'and form islands require ENABLE_SPIKE_MUTATIONS=1.',
+    '/product/rsc-apollo-l2' => 'Apollo L2 PreloadQuery transport requires a streaming ' \
+                                'ApolloProvider that React on Rails Pro does not yet expose (D6/F6). ' \
+                                'The SSR pass hits useTransportValue without the provider context.'
   }.freeze
 
   # JSON endpoints, covered by request specs against real payloads.
