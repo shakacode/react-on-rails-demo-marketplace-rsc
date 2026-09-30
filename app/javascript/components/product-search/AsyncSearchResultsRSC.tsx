@@ -47,7 +47,7 @@ interface SearchResultsData {
 }
 
 interface Props {
-  getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
+  getReactOnRailsAsyncProp: (propName: string) => Promise<unknown>;
 }
 
 const CachedResultsGrid = cacheComponent(
@@ -94,8 +94,7 @@ const CachedResultsGrid = cacheComponent(
 export default async function AsyncSearchResultsRSC({
   getReactOnRailsAsyncProp,
 }: Props) {
-  const data: SearchResultsData =
-    await getReactOnRailsAsyncProp("search_results");
+  const data = (await getReactOnRailsAsyncProp("search_results")) as SearchResultsData;
   const { products, review_snippets, pagination, meta } = data;
 
   return (

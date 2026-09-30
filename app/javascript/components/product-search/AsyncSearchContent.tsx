@@ -3,7 +3,7 @@
 // V2: Async content loader — fetches search results, facets, and review snippets via API.
 // This component + all rendering libraries are loaded in an async chunk.
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import type {
   SearchProduct,
   Facets,
@@ -32,7 +32,7 @@ export default function AsyncSearchContent({ searchParams }: Props) {
     Record<number, ReviewSnippet[]>
   >({});
   const [totalResults, setTotalResults] = useState(0);
-  const [sort, setSort] = useState(searchParams.sort || "relevance");
+  const [sort] = useState(searchParams.sort || "relevance");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -90,8 +90,8 @@ export default function AsyncSearchContent({ searchParams }: Props) {
           const snippetsData = await snippetsRes.json();
           setReviewSnippets(snippetsData.snippets || {});
         }
-      } catch (e: any) {
-        if (e.name !== "AbortError") console.error("Search fetch error:", e);
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name !== "AbortError") console.error("Search fetch error:", e);
       } finally {
         setLoading(false);
       }

@@ -24,6 +24,8 @@ const PAGES = [
   { name: 'Restaurant RSC',        path: '/restaurant/1/rsc' },
   { name: 'Restaurant SSR',        path: '/restaurant/1/ssr' },
   { name: 'Restaurant Client',     path: '/restaurant/1/client' },
+  { name: 'Product Apollo L1',    path: '/product/rsc-apollo-l1' },
+  { name: 'Product Apollo L2',    path: '/product/rsc-apollo-l2' },
 ];
 
 const CDP_PORT = 9222 + Math.floor(Math.random() * 1000);

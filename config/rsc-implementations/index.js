@@ -18,6 +18,9 @@ const rspackDefaultClientReferences = [
     recursive: true,
     include: /\.[cm]?[jt]sx?$/,
   },
+  // @apollo/client-react-streaming ships SimulatePreloadedQuery as a 'use client'
+  // module (index.cc.js). Direct string path adds it without directory scanning.
+  './node_modules/@apollo/client-react-streaming/dist/index.cc.js',
 ];
 
 const implementations = {

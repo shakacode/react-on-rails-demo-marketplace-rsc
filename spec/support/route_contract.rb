@@ -83,6 +83,8 @@ module RouteContract
     **variants('/restaurant/:id', %w[ssr client rsc ssr-cached rsc-cached ssr-virtual rsc-virtual],
                'restaurants', 'show'),
     **variants('/product', %w[ssr client rsc ssr-cached rsc-cached rsc-pull ppr], 'products', 'show'),
+    '/product/rsc-apollo-l1' => 'products#show_rsc_apollo_l1',
+    '/product/rsc-apollo-l2' => 'products#show_rsc_apollo_l2',
     '/product/rsc-forms' => 'products#show_rsc_forms',
     **variants('/product-search', %w[ssr client rsc ssr-cached rsc-cached], 'product_search', 'search'),
     **variants('/blog', BLOG_VARIANTS, 'blog', 'post'),
@@ -99,7 +101,10 @@ module RouteContract
                       '(config/initializers/ppr_patches.rb). Without it the view calls an ' \
                       'undefined ppr_react_component and the route 500s.',
     '/product/rsc-forms' => 'Form library comparison page (issue #244). The POST endpoint ' \
-                            'and form islands require ENABLE_SPIKE_MUTATIONS=1.'
+                            'and form islands require ENABLE_SPIKE_MUTATIONS=1.',
+    '/product/rsc-apollo-l2' => 'Apollo L2 PreloadQuery transport requires a streaming ' \
+                                'ApolloProvider that React on Rails Pro does not yet expose (D6/F6). ' \
+                                'The SSR pass hits useTransportValue without the provider context.'
   }.freeze
 
   # JSON endpoints, covered by request specs against real payloads.

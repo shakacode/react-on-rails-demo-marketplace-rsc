@@ -14,6 +14,9 @@ const configureRsc = () => {
   // Add the RSC loader to replace 'use client' modules with client references.
   // Using enforce: 'post' so it runs AFTER swc-loader compiles TSX→JS,
   // giving acorn clean JavaScript to parse.
+  // .cjs is included because @apollo/client-react-streaming ships
+  // SimulatePreloadedQuery.cc.cjs with 'use client' — without it the RSC
+  // bundle runs the module server-side and useApolloClient() throws.
   rscConfig.module.rules.push({
     test: /\.(ts|tsx|js|jsx|mjs)$/,
     enforce: 'post',
