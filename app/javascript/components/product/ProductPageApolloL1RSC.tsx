@@ -33,7 +33,8 @@ interface Props {
 export default async function ProductPageApolloL1RSC({ product }: Props) {
   // Query the Rails /graphql endpoint via Apollo's HttpLink.
   // getClient() returns a per-request-isolated ApolloClient (React.cache scoped).
-  const { data } = await getClient().query({
+  const client = await getClient();
+  const { data } = await client.query({
     query: GET_PRODUCT_FULL,
     variables: { id: String(product.id) },
   });

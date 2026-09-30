@@ -10,18 +10,17 @@
 // point). The RSC-only functions (getClient, getPreloadQuery) must never
 // crash the SSR bundle at module-evaluation time — all RSC-specific work
 // is deferred to first call, which only happens inside an RSC render.
+//
+// ESM vs CJS: Using `import *` (not require()) is critical — require()
+// resolves the CJS entry whose .cc.cjs transitive deps are not processed
+// by the RSC loader (issue #255 C5 finding). But `import *` namespace
+// property access at module scope fails Rspack's ESM static analysis when
+// the export doesn't exist in the SSR entry. Solution: access
+// registerApolloClient ONLY inside getRegistered() at call time.
 
-// Namespace import so webpack resolves the ESM entry (index.rsc.js under
-// react-server condition, index.ssr.js otherwise). In the RSC bundle,
-// `streaming.registerApolloClient` exists; in the SSR bundle it's undefined.
-// Using `import *` instead of `require()` is critical: require() would
-// resolve the CJS entry whose .cc.cjs transitive deps are not processed by
-// the RSC loader (issue #255 C5 finding).
-import * as streaming from '@apollo/client-react-streaming';
+import { ApolloClient, InMemoryCache } from '@apollo/client-react-streaming';
 import type { PreloadQueryComponent } from '@apollo/client-react-streaming';
 import { HttpLink } from '@apollo/client/link/http';
-
-const { ApolloClient, InMemoryCache } = streaming;
 
 // The GraphQL endpoint URL. In the node-renderer VM, this defaults to the
 // Rails server's internal address. Configurable via the GRAPHQL_URI runtime
@@ -47,8 +46,8 @@ export function makeApolloClient(graphqlUri: string = DEFAULT_GRAPHQL_URI) {
 //
 // The streaming package's react-server entry (index.rsc.js) exports
 // registerApolloClient; the node/SSR entry (index.ssr.js) does not.
-// The namespace import resolves it as undefined in the SSR bundle, which
-// is safe — getRegistered() is only called from RSC render functions.
+// We access it ONLY inside getRegistered() via dynamic import() at call
+// time — never at module scope where Rspack's ESM linker would reject it.
 
 interface RegisterResult {
   getClient: () => InstanceType<typeof ApolloClient>;
@@ -58,14 +57,16 @@ interface RegisterResult {
 
 let _registered: RegisterResult | null = null;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const registerApolloClient = (streaming as any).registerApolloClient as
-  | ((makeClient: () => InstanceType<typeof ApolloClient>) => RegisterResult)
-  | undefined;
-
-function getRegistered(): RegisterResult {
+async function getRegistered(): Promise<RegisterResult> {
   if (!_registered) {
-    if (typeof registerApolloClient !== 'function') {
+    // Dynamic import() deferred to first call — resolves the ESM entry
+    // (index.rsc.js under react-server, index.ssr.js otherwise) and the
+    // RSC loader processes its 'use client' transitive deps correctly.
+    // The SSR bundle never reaches this because getClient/getPreloadQuery
+    // are only called from RSC render functions.
+    const streaming = await import('@apollo/client-react-streaming');
+
+    if (typeof streaming.registerApolloClient !== 'function') {
       throw new Error(
         'registerApolloClient is only available in the RSC bundle (react-server condition). ' +
         'This code path should only execute in the RSC bundle. ' +
@@ -74,21 +75,21 @@ function getRegistered(): RegisterResult {
         'inside RSC component render functions.'
       );
     }
-    _registered = registerApolloClient(() => makeApolloClient());
+    _registered = streaming.registerApolloClient(() => makeApolloClient()) as RegisterResult;
   }
   return _registered;
 }
 
 // Lazy accessors — only called from RSC components in the RSC bundle.
-export function getClient() {
-  return getRegistered().getClient();
+export async function getClient() {
+  return (await getRegistered()).getClient();
 }
 
-export function query(...args: Parameters<InstanceType<typeof ApolloClient>['query']>) {
-  return getRegistered().query(...args);
+export async function query(...args: Parameters<InstanceType<typeof ApolloClient>['query']>) {
+  return (await getRegistered()).query(...args);
 }
 
 // PreloadQuery is a component — export it as a getter for the same reason.
-export function getPreloadQuery(): PreloadQueryComponent {
-  return getRegistered().PreloadQuery;
+export async function getPreloadQuery(): Promise<PreloadQueryComponent> {
+  return (await getRegistered()).PreloadQuery;
 }

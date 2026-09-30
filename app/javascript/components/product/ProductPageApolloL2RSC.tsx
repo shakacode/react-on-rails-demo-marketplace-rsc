@@ -36,7 +36,7 @@ import { ReviewsSkeleton } from './ProductSkeletons';
 // getPreloadQuery() call only executes in the RSC bundle — the SSR bundle
 // includes this module but never renders it.
 async function renderPreloadedReviews(productId: string) {
-  const PreloadQuery = getPreloadQuery();
+  const PreloadQuery = await getPreloadQuery();
   return (
     <PreloadQuery
       query={GET_PRODUCT_REVIEWS}
@@ -56,7 +56,8 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
   // Fetch product data WITHOUT reviews — reviews come from PreloadQuery.
   // This avoids the duplicate-query problem: one request for the page shell,
   // one for the reviews transported to the client.
-  const { data } = await getClient().query({
+  const client = await getClient();
+  const { data } = await client.query({
     query: GET_PRODUCT_WITHOUT_REVIEWS,
     variables: { id: String(product.id) },
   });
