@@ -24,16 +24,15 @@ test('Apollo L1: server-only GraphQL renders product with reviews', async ({ pag
   await expect(page.getByText('Customer Reviews')).toBeVisible();
 });
 
-test('Apollo L2: PreloadQuery renders product with Suspense reviews section', async ({ page }) => {
+// L2 is flag-gated (D6/F6): the SSR transport requires a streaming ApolloProvider
+// hook that React on Rails Pro does not yet expose. The route renders server
+// content but the client island hydration degrades. Skipped until the upstream
+// hook is available.
+test.skip('Apollo L2: PreloadQuery renders product with Suspense reviews section', async ({ page }) => {
   const response = await page.goto('/product/rsc-apollo-l2');
   expect(response?.ok()).toBe(true);
 
-  // Version indicator
   await expect(page.getByText('Apollo L2: PreloadQuery')).toBeVisible();
-
-  // Product heading
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-
-  // Reviews section (may hydrate from PreloadQuery or re-fetch)
   await expect(page.getByText('Customer Reviews (Apollo L2)')).toBeVisible();
 });
