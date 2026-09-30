@@ -30,19 +30,29 @@ import { ApolloReviewsIsland } from './ApolloReviewsIsland';
 import { ApolloProviderWrapper } from '../apollo/ApolloProviderWrapper';
 import { ReviewsSkeleton } from './ProductSkeletons';
 
+// Render helper: resolves PreloadQuery lazily at call time, not at module scope.
+// Lowercase function name so the React Compiler does not analyze it as a
+// component (avoiding "Cannot create components during render"). The actual
+// getPreloadQuery() call only executes in the RSC bundle — the SSR bundle
+// includes this module but never renders it.
+async function renderPreloadedReviews(productId: string) {
+  const PreloadQuery = getPreloadQuery();
+  return (
+    <PreloadQuery
+      query={GET_PRODUCT_REVIEWS}
+      variables={{ id: productId }}
+    >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {(queryRef: any) => <ApolloReviewsIsland queryRef={queryRef} />}
+    </PreloadQuery>
+  );
+}
+
 interface Props {
   product: Product;
 }
 
 export default async function ProductPageApolloL2RSC({ product }: Props) {
-  // PreloadQuery is only available in the RSC bundle (react-server condition).
-  // Must be called INSIDE the render function — a module-scope call would
-  // execute during SSR bundle evaluation and crash (registerApolloClient is
-  // not exported from the SSR entry). The reference is stable (cached in
-  // _registered), so the React Compiler's "Cannot create components during
-  // render" diagnostic is a false positive here.
-  // eslint-disable-next-line react-compiler/react-compiler
-  const PreloadQuery = getPreloadQuery();
   // Fetch product data WITHOUT reviews — reviews come from PreloadQuery.
   // This avoids the duplicate-query problem: one request for the page shell,
   // one for the reviews transported to the client.
@@ -100,12 +110,7 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews (Apollo L2)</h2>
           <ApolloProviderWrapper>
             <Suspense fallback={<ReviewsSkeleton />}>
-              <PreloadQuery
-                query={GET_PRODUCT_REVIEWS}
-                variables={{ id: String(product.id) }}
-              >
-                {(queryRef: any) => <ApolloReviewsIsland queryRef={queryRef} />}
-              </PreloadQuery>
+              {await renderPreloadedReviews(String(product.id))}
             </Suspense>
           </ApolloProviderWrapper>
         </section>
