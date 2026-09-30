@@ -91,6 +91,12 @@ localhub-demo/
 └── (app code will go here)
 ```
 
+## Library × RSC Integration Docs
+- **docs/apollo-client-rsc.md** — Apollo Client RSC integration (issue #255):
+  conclusions C1–C10, decisions D1–D10, technical findings (Rspack ESM linking,
+  CJS vs ESM entry, React Compiler false positive, client manifest for
+  SimulatePreloadedQuery)
+
 ## Total Documentation
 
 - **Root docs**: 692 lines

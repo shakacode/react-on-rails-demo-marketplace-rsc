@@ -114,14 +114,15 @@ export default async function ProductPageApolloL2RSC({ product }: Props) {
           </section>
         )}
 
-        {/* Reviews — PreloadQuery transports the result through Flight.
-            The ReadableStream with query data is serialized as $R rows,
-            embedded in the RSC payload, and deserialized in the browser.
+        {/* Reviews — PreloadQuery runs the query on the server and transports
+            the result through Flight as $R (ReadableStream) rows.
 
-            ApolloProviderWrapper creates a browser-only ApolloClient +
-            ApolloProvider so SimulatePreloadedQuery's useApolloClient() has
-            context. ApolloReviewsIsland hydrates from the transported ref
-            without a duplicate request. */}
+            Known limitation (D6/F6): without a streaming ApolloProvider backed
+            by React on Rails Pro's stream-injection hook, SimulatePreloadedQuery
+            cannot transport query data from SSR to browser. The client island
+            re-fetches from /graphql on hydration (double fetch). This is the
+            documented degradation — fixing it requires an upstream React on Rails
+            Pro hook (the integration-package ask). */}
         <section className="border-t border-gray-200 pt-8 mt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews (Apollo L2)</h2>
           <ApolloProviderWrapper>
