@@ -22,7 +22,7 @@ RSpec.describe ProductSerialization do
     ]
     reviews.each do |attributes|
       ProductReview.create!({ rating: 5, verified_purchase: true, reviewer_name: 'Reviewer',
-                             comment: 'x' * 250 }.merge(attributes))
+                              comment: 'x' * 250 }.merge(attributes))
     end
 
     snippets = snippets_for([first.id, second.id, first.id, empty.id])
@@ -31,44 +31,51 @@ RSpec.describe ProductSerialization do
     expect(snippets[first.id].map { |review| review[:title] }).to eq(%w[Newer Older])
     expect(snippets[second.id].map { |review| review[:title] }).to eq(['Second product'])
     expect(snippets[first.id].first).to include(rating: 5, helpful_count: 10, reviewer_name: 'Reviewer',
-                                              comment: ('x' * 197) + '...')
+                                                comment: "#{'x' * 197}...")
     expect(snippets_for([first.id], per_product: 1)[first.id].size).to eq(1)
     expect(snippets_for([first.id], per_product: 0)).to eq({})
     expect(snippets_for([first.id], per_product: -1)).to eq({})
     expect(snippets_for([])).to eq({})
   end
 
-  it 'selects two snippets without scanning a popular product’s entire review history' do
-    product = TestData.create_product
-    now = Time.current
-    ProductReview.insert_all!(Array.new(1_000) do |index|
-      { product_id: product.id, rating: 5, verified_purchase: true, reviewer_name: 'Reviewer',
-        title: "Review #{index}", comment: 'Review body', helpful_count: index,
-        created_at: now, updated_at: now }
-    end)
-    connection = ActiveRecord::Base.connection
-    connection.execute('ANALYZE product_reviews')
+  [false, true].each do |mostly_unverified|
+    it "bounds review-history reads when mostly_unverified=#{mostly_unverified}" do
+      product = TestData.create_product
+      now = Time.current
+      review_count = mostly_unverified ? 10_000 : 1_000
+      # rubocop:disable Rails/SkipsModelValidations -- bulk fixture models a long review history
+      ProductReview.insert_all!(Array.new(review_count) do |index|
+        { product_id: product.id, rating: 5, verified_purchase: !mostly_unverified || index < 2,
+          reviewer_name: 'Reviewer',
+          title: "Review #{index}", comment: 'Review body', helpful_count: index,
+          created_at: now, updated_at: now }
+      end)
+      # rubocop:enable Rails/SkipsModelValidations
+      connection = ActiveRecord::Base.connection
+      connection.execute('ANALYZE product_reviews')
 
-    sql = nil
-    capture = ->(*args) { sql = args.last[:sql] if args.last[:sql].include?('FROM product_reviews') }
-    snippets = ActiveSupport::Notifications.subscribed(capture, 'sql.active_record') do
-      snippets_for([product.id])
-    end
-    expect(snippets[product.id].map { |review| review[:title] }).to eq(['Review 999', 'Review 998'])
-
-    # Count actual rows read, rather than imposing a machine-dependent time limit.
-    plan = connection.execute("EXPLAIN (ANALYZE, FORMAT JSON) #{sql}").first.fetch('QUERY PLAN')
-    plan = JSON.parse(plan) if plan.is_a?(String)
-    nodes = [plan.first.fetch('Plan')]
-    reviews_read = 0
-    until nodes.empty?
-      node = nodes.shift
-      if node['Relation Name'] == 'product_reviews'
-        reviews_read += (node.fetch('Actual Rows') + node.fetch('Rows Removed by Filter', 0)) *
-                       node.fetch('Actual Loops')
+      sql = nil
+      capture = ->(*args) { sql = args.last[:sql] if args.last[:sql].include?('FROM product_reviews') }
+      snippets = ActiveSupport::Notifications.subscribed(capture, 'sql.active_record') do
+        snippets_for([product.id])
       end
-      nodes.concat(node.fetch('Plans', []))
+      expected_titles = mostly_unverified ? ['Review 1', 'Review 0'] : ['Review 999', 'Review 998']
+      expect(snippets[product.id].map { |review| review[:title] }).to eq(expected_titles)
+
+      # Count actual rows read, rather than imposing a machine-dependent time limit.
+      plan = connection.execute("EXPLAIN (ANALYZE, FORMAT JSON) #{sql}").first.fetch('QUERY PLAN')
+      plan = JSON.parse(plan) if plan.is_a?(String)
+      nodes = [plan.first.fetch('Plan')]
+      reviews_read = 0
+      until nodes.empty?
+        node = nodes.shift
+        if node['Relation Name'] == 'product_reviews'
+          reviews_read += (node.fetch('Actual Rows') + node.fetch('Rows Removed by Filter', 0)) *
+                          node.fetch('Actual Loops')
+        end
+        nodes.concat(node.fetch('Plans', []))
+      end
+      expect(reviews_read).to be <= 10
     end
-    expect(reviews_read).to be <= 10
   end
 end
