@@ -162,7 +162,7 @@ jobs:
       - name: Run canonical demo validation
         env:
           RAILS_ENV: test
-        run: .agents/bin/validate
+        run: .agents/shaka/bin/validate
 
       - name: Smoke real routes in Chromium
         shell: bash

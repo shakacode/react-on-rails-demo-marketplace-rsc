@@ -1,0 +1,30 @@
+# Generated setup with repository-specific review jobs and fallback checks.
+# Deployment verification is a task-specific gate, not a universal check.
+---
+version: 1
+base_branch: main
+review:
+  required: meaningful_changes
+  ci_review_jobs:
+  - claude-review
+  local_review_agents:
+  - provider: anthropic
+    model_family: claude
+  - provider: openai
+    model_family: codex
+  - provider: xai
+    model_family: grok
+merge:
+  preference: ask
+  required_checks:
+  - demo-fleet-smoke-result
+  - rspec-result
+  - lint
+  - dependency-audit
+  - browser-smoke
+  - product-search
+branches:
+  name: "{login}-{host}/{issue}-{description}"
+wip:
+  include_locations: true
+repo_prefix: RORM
