@@ -1,15 +1,15 @@
 # Agent Workflow Scripts
 
-Standard entry points that portable agent-workflow skills call, so a skill can
-run `.agents/bin/<name>` in any repo without knowing this repo's specific
-commands. Each script is a thin, repo-owned wrapper. A script that is **absent**
-means that capability is n/a here.
+Shaka uses the generated wrappers in `.agents/shaka/bin/`. Other portable and
+QA skills use the tools in `.agents/bin/`. An absent script means that
+capability is not available here. The Shaka setup wrapper delegates to
+`setup-local`, which preserves the operator's manual mise trust prerequisite.
 
 | Script | Purpose | This repo runs |
 | --- | --- | --- |
-| `setup` | Bootstrap dependencies and database | `bin/setup` |
-| `validate` | Broad demo validation gate | `script/demo-fleet-verify` |
-| `test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — the repository has no committed unit or RSpec suite; this runs the Rails task, RSC import checks, pack generation, a production build, and RSC chunk verification |
+| `../shaka/bin/setup` | Bootstrap dependencies and database | `bin/setup` |
+| `../shaka/bin/validate` | Broad demo validation gate | `script/demo-fleet-verify` |
+| `../shaka/bin/test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — the repository has no committed unit or RSpec suite; this runs the Rails task, RSC import checks, pack generation, a production build, and RSC chunk verification |
 | `lint` | Lint / format | `pnpm type-check`, `pnpm lint`, then `bundle exec rubocop` |
 | `build` | Production asset build | `bin/build-production` (sets the Rails/secret/bundler environment, cleans generated assets, regenerates packs, then compiles bundles) |
 | `install` | Install dependencies only | `bundle install` + `pnpm install --frozen-lockfile` — no database operations, safe for materialized QA workspaces |
@@ -19,7 +19,7 @@ means that capability is n/a here.
 | `docs` | Docs checks | n/a |
 | `ci-detect` | CI change detector | n/a |
 
-Shaka delivery settings live in [`../agent-workflow.yml`](../agent-workflow.yml). Human constraints live in [`../../AGENTS.md`](../../AGENTS.md); operational notes live in [`../operations.yml`](../operations.yml).
+Shaka delivery settings live in [`../shaka/config.yml`](../shaka/config.yml). Human constraints live in [`../../AGENTS.md`](../../AGENTS.md); operational notes live in [`../operations.yml`](../operations.yml).
 
 ## QA-stress contract
 
@@ -43,7 +43,7 @@ The `qa_stress:` block in [`../qa-stress.yml`](../qa-stress.yml) declares the se
 
 This repository uses `mise.toml` for Ruby. The setup wrapper never runs `mise
 trust` for you. Before the first setup in a checkout, review that file and run
-`mise trust mise.toml` yourself; until then, `.agents/bin/setup` stops with this
+`mise trust mise.toml` yourself; until then, `.agents/shaka/bin/setup` stops with this
 manual prerequisite. `mise trust --show` also lists parent directories, so setup
 accepts only the exact trusted-status line for this checkout. It stops if that
 line is absent or unrecognized; a trusted parent, query failure, or output-format

@@ -46,12 +46,12 @@ When running ShakaPerf performance measurements:
 ## Agent Workflow Configuration
 
 Portable shared skills resolve this repo's commands and policy through:
-- **Commands** — run `.agents/bin/<name>` (`setup`, `validate`, `test`, ...); see `.agents/bin/README.md`. A missing script means that capability is n/a here.
-- **Shaka delivery settings** — `.agents/agent-workflow.yml`; human constraints remain in this file.
+- **Shaka commands** — run `.agents/shaka/bin/<name>` (`setup`, `validate`, `test`); see `.agents/bin/README.md`. A missing script means that capability is n/a here.
+- **Shaka delivery settings** — `.agents/shaka/config.yml`; human constraints remain in this file.
 - **QA-stress seam** — the `qa_stress:` block in `.agents/qa-stress.yml` declares the contract for `/qa-stress` runs. Additional wrappers: `.agents/bin/{serve,seed,reset}`. See `.agents/bin/README.md` for details.
 
 For QA-stress runs, read `.agents/qa-stress.yml` wherever the shared skill requests the QA contract from `.agents/agent-workflow.yml`. The Shaka delivery configuration contains only validated Shaka settings.
 
-Hosted AI reviewers are advisory unless they confirm a blocker. Before merge, address blocking findings, resolve all review threads, and require clean mergeability. Every required current-head check must pass; record unavailable or non-portable checks as explicit non-blocking skips without waiving required gates. Verify the review app on the current head. Workflow changes are approval-exempt only when AGENTS.md or a direct user or maintainer instruction authorizes them. This configuration grants no standing auto-merge authority.
+The configured Claude review job and independent local review must complete for meaningful changes. Other hosted AI reviewers are advisory unless they confirm a blocker. Before merge, address blocking findings, resolve all review threads, and require clean mergeability. Every required current-head check must pass; record unavailable or non-portable checks as explicit non-blocking skips without waiving required gates. Verify the review app on the current head. Workflow changes are approval-exempt only when AGENTS.md or a direct user or maintainer instruction authorizes them. This configuration grants no standing auto-merge authority.
 
 Follow-up titles use `Follow-up:`. Changelog updates, benchmark labels, and a merge ledger are not applicable here. CI parity and trigger notes are recorded in `.agents/operations.yml`.

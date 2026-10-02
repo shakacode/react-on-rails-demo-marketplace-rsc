@@ -1,8 +1,0 @@
----
-version: 1
-base_branch: main
-repo_prefix: RORM
-review:
-  required: none
-merge:
-  preference: ask

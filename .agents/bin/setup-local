@@ -13,13 +13,13 @@ if command -v mise >/dev/null 2>&1 && [ -f mise.toml ]; then
   if ! mise_trust_status="$(mise trust --show "${checkout_dir}/mise.toml" 2>/dev/null)"; then
     printf '%s\n' \
       "Refusing to run setup: unable to determine whether this checkout's mise.toml is trusted." \
-      'Review it, then run `mise trust mise.toml` manually and rerun .agents/bin/setup.' >&2
+      'Review it, then run `mise trust mise.toml` manually and rerun .agents/shaka/bin/setup.' >&2
     exit 1
   fi
   if ! printf '%s\n' "${mise_trust_status}" | grep -F -x -q "${checkout_dir}: trusted"; then
     printf '%s\n' \
       'Refusing to run setup: this checkout has an untrusted or unrecognized mise.toml trust status.' \
-      'Review it, then run `mise trust mise.toml` manually and rerun .agents/bin/setup.' >&2
+      'Review it, then run `mise trust mise.toml` manually and rerun .agents/shaka/bin/setup.' >&2
     exit 1
   fi
 fi
