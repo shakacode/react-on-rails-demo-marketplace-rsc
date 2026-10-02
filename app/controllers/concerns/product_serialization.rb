@@ -98,19 +98,26 @@ module ProductSerialization
 
   # rubocop:disable Metrics/AbcSize, Metrics/MethodLength -- SQL assembly + hash construction
   def load_review_snippets(product_ids, per_product: 2)
-    return {} if product_ids.empty?
+    limit = per_product.to_i
+    return {} if product_ids.empty? || limit <= 0
 
+    # Limit each product's indexed lookup before fetching review text. Ranking
+    # the entire matching history can exceed the renderer's streaming timeout.
     sql = <<~SQL
-      SELECT product_id, title, rating, reviewer_name, comment, helpful_count
-      FROM (
-        SELECT product_id, title, rating, reviewer_name, comment, helpful_count,
-               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY helpful_count DESC, created_at DESC) as rn
+      SELECT snippets.product_id, snippets.title, snippets.rating,
+             snippets.reviewer_name, snippets.comment, snippets.helpful_count
+      FROM products
+      CROSS JOIN LATERAL (
+        SELECT product_id, title, rating, reviewer_name, comment, helpful_count, created_at
         FROM product_reviews
-        WHERE product_id IN (#{product_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(',')})
+        WHERE product_id = products.id
           AND rating >= 3
           AND verified_purchase = true
-      ) ranked
-      WHERE rn <= #{per_product.to_i}
+        ORDER BY helpful_count DESC, created_at DESC
+        LIMIT #{limit}
+      ) snippets
+      WHERE products.id IN (#{product_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(',')})
+      ORDER BY snippets.product_id, snippets.helpful_count DESC, snippets.created_at DESC
     SQL
 
     ActiveRecord::Base.connection.execute(sql).each_with_object({}) do |row, hash|
