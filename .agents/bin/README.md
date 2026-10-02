@@ -1,15 +1,16 @@
 # Agent Workflow Scripts
 
-Shaka uses the generated wrappers in `.agents/shaka/bin/`. Other portable and
-QA skills use the tools in `.agents/bin/`. An absent script means that
+Shaka uses the generated wrappers in `.agents/shaka/bin/`. Older portable and
+QA skills retain the archive-compatible tools in `.agents/bin/`. An absent script means that
 capability is not available here. The Shaka setup wrapper delegates to
-`setup-local`, which preserves the operator's manual mise trust prerequisite.
+`setup`, which preserves the operator's manual mise trust prerequisite.
 
 | Script | Purpose | This repo runs |
 | --- | --- | --- |
 | `../shaka/bin/setup` | Bootstrap dependencies and database | `bin/setup` |
 | `../shaka/bin/validate` | Broad demo validation gate | `script/demo-fleet-verify` |
-| `../shaka/bin/test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — the repository has no committed unit or RSpec suite; this runs the Rails task, RSC import checks, pack generation, a production build, and RSC chunk verification |
+| `../shaka/bin/test` | Run executable Rails/RSC verification | `script/demo-fleet-verify` — this runs E2E type checks, lint and support unit tests, the Rails task, RSC import checks, pack generation, a production build, and RSC chunk verification |
+| `setup`, `test`, `validate` | Compatibility entry points for older portable skills | The original root discovery and commands; suitable for archived QA workspaces |
 | `lint` | Lint / format | `pnpm type-check`, `pnpm lint`, then `bundle exec rubocop` |
 | `build` | Production asset build | `bin/build-production` (sets the Rails/secret/bundler environment, cleans generated assets, regenerates packs, then compiles bundles) |
 | `install` | Install dependencies only | `bundle install` + `pnpm install --frozen-lockfile` — no database operations, safe for materialized QA workspaces |
