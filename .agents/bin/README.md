@@ -23,7 +23,7 @@ Non-command policy lives in [`../agent-workflow.yml`](../agent-workflow.yml).
 
 ## QA-stress contract
 
-The `qa_stress:` block in `agent-workflow.yml` declares the seam that the
+The `qa_stress:` block in [`../qa-stress.yml`](../qa-stress.yml) declares the seam that the
 `/qa-stress` skill reads during its Phase 0 contract check. It covers:
 
 - **Workspace isolation** — `scratch_root`, `materialization` (`git archive`),
