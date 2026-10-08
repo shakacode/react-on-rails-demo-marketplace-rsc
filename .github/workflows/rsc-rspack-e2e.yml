@@ -4,8 +4,9 @@ name: RSC + Rspack E2E gate
 # route at runtime — the only trustworthy proof that Rspack + RSC works (build
 # success and manifest parity are not enough; see react_on_rails#3488).
 #
-# Option A: build the React on Rails Pro packages and react-on-rails-rsc from
-# source checkouts, link them via yalc, then run scripts/verify-rsc-e2e.sh.
+# PR and default dispatch runs test the committed published package graph.
+# Explicit manual source refs opt into source/yalc diagnostics; those runs do
+# not establish acceptance of the published packages.
 #
 # NOTE: first-run CI iteration is expected (Postgres wiring, yalc/pnpm interplay,
 # Puppeteer Chromium, exact Pro build commands). The orchestration in
@@ -35,11 +36,11 @@ on:
       # refs are trusted. They are passed only to actions/checkout `ref:` (not a
       # shell), never interpolated into a run: command.
       ror_ref:
-        description: shakacode/react_on_rails ref (Pro packages). Empty = default branch.
+        description: Optional Pro source ref for source/yalc diagnostics. Empty = committed published packages unless rsc_ref is supplied.
         required: false
         default: ''
       rsc_ref:
-        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = the pinned 19.3.0 tag (see the checkout step).
+        description: Optional RSC source ref for source/yalc diagnostics. Empty = committed published packages unless ror_ref is supplied.
         required: false
         default: ''
 
@@ -112,10 +113,12 @@ jobs:
         run: pnpm test:rsc-error-redaction
 
       - name: Install yalc
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         run: npm install -g yalc
 
-      # ── Option A: build the RoR Pro packages from a source checkout ──────────
+      # Optional, explicitly requested source diagnostics only.
       - name: Checkout react_on_rails (Pro packages)
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         uses: actions/checkout@v7.0.1
         with:
           repository: shakacode/react_on_rails
@@ -123,6 +126,7 @@ jobs:
           path: .pkgsrc/ror
 
       - name: Build + yalc publish Pro packages
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         working-directory: .pkgsrc/ror
         run: |
           pnpm install --frozen-lockfile=false
@@ -134,6 +138,7 @@ jobs:
           ( cd packages/react-on-rails-pro-node-renderer && yalc publish )
 
       - name: Checkout react_on_rails_rsc (RSCRspackPlugin)
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         # Manual clone (public repo, anonymous) so any branch/PR ref can be
         # tested. actions/checkout can't fetch a non-default ref of another repo
         # with the default GITHUB_TOKEN. RSC_REF comes from env (not inlined into
@@ -141,14 +146,13 @@ jobs:
         env:
           RSC_REF: ${{ github.event.inputs.rsc_ref }}
         run: |
-          # Default pin: the exact release React on Rails Pro 17.1.0 declares
-          # compatible. Advance this pin when Pro's compat range accepts the
-          # next rsc release; workflow_dispatch `rsc_ref` still tests any ref
-          # on demand.
-          git clone --depth 1 --branch "${RSC_REF:-19.3.0}" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
+          # When only ror_ref is supplied, match the demo's RSC dependency.
+          RSC_REF="${RSC_REF:-$(node -p "require('./package.json').dependencies['react-on-rails-rsc']")}"
+          git clone --depth 1 --branch "$RSC_REF" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
           echo "react_on_rails_rsc @ $(git -C .pkgsrc/rsc rev-parse --short HEAD)"
 
       - name: Build + yalc publish react-on-rails-rsc
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         working-directory: .pkgsrc/rsc
         run: |
           corepack enable
@@ -164,6 +168,7 @@ jobs:
 
       # ── Link the freshly-built packages into the demo (matches #72 setup) ────
       - name: Link packages + install
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         run: |
           # The demo pins all RoR packages to the private
           # shakacode/react-on-rails-builds repo (unfetchable in CI) two ways:

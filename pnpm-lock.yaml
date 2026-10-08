@@ -15,7 +15,7 @@ overrides:
   js-yaml@4: ^4.3.1
   lodash: 4.18.1
   nanoid: ^3.3.18
-  react-on-rails: 17.2.0-rc.0
+  react-on-rails: 17.2.0-rc.1
   shakapacker: 10.3.2
   uuid@8: ^11.1.1
   nanoid@3: ^3.3.18
@@ -26,19 +26,19 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: 4.3.1
-        version: 4.3.1(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1)
+        version: 4.3.1(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1)
       '@apollo/client-react-streaming':
         specifier: 0.14.5
-        version: 0.14.5(@apollo/client@4.3.1(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1))(@types/react@19.2.18)(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1)
+        version: 0.14.5(@apollo/client@4.3.1(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1))(@types/react@19.3.0)(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1)
       '@conform-to/react':
         specifier: 1.21.1
-        version: 1.21.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.21.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@conform-to/zod':
         specifier: 1.21.1
         version: 1.21.1(zod@4.6.5)
       '@hookform/resolvers':
         specifier: 5.9.1
-        version: 5.9.1(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)
+        version: 5.9.1(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.88.0(react@19.3.0))(zod@4.6.5)
       '@hotwired/stimulus':
         specifier: ^3.2.2
         version: 3.2.2
@@ -47,13 +47,13 @@ importers:
         version: 8.0.23
       '@loadable/component':
         specifier: ^5.16.7
-        version: 5.16.7(react@19.2.8)
+        version: 5.16.7(react@19.3.0)
       '@loadable/server':
         specifier: ^5.16.7
-        version: 5.16.7(@loadable/component@5.16.7(react@19.2.8))(react@19.2.8)
+        version: 5.16.7(@loadable/component@5.16.7(react@19.3.0))(react@19.3.0)
       '@tanstack/react-form':
         specifier: 1.33.5
-        version: 1.33.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.33.5(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       d3-array:
         specifier: ^3.2.4
         version: 3.2.4
@@ -97,35 +97,35 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4(marked@18.0.12)
       react:
-        specifier: 19.2.8
-        version: 19.2.8
+        specifier: 19.3.0
+        version: 19.3.0
       react-dom:
-        specifier: 19.2.8
-        version: 19.2.8(react@19.2.8)
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
       react-hook-form:
         specifier: 7.88.0
-        version: 7.88.0(react@19.2.8)
+        version: 7.88.0(react@19.3.0)
       react-image-lightbox:
         specifier: ^5.1.4
-        version: 5.1.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 5.1.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-on-rails-pro:
-        specifier: 17.2.0-rc.0
-        version: 17.2.0-rc.0(react-dom@19.2.8(react@19.2.8))(react-on-rails-rsc@19.3.0(@rspack/core@2.2.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3))(react@19.2.8)
+        specifier: 17.2.0-rc.1
+        version: 17.2.0-rc.1(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1-rc.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0)
       react-on-rails-pro-node-renderer:
-        specifier: 17.2.0-rc.0
-        version: 17.2.0-rc.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
+        specifier: 17.2.0-rc.1
+        version: 17.2.0-rc.1(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
       react-on-rails-rsc:
-        specifier: 19.3.0
-        version: 19.3.0(@rspack/core@2.2.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3)
+        specifier: 19.3.1-rc.1
+        version: 19.3.1-rc.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
       react-player:
         specifier: ^3.4.0
-        version: 3.4.0(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 3.4.0(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-server-dom-webpack:
-        specifier: 19.2.8
-        version: 19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3)
+        specifier: 19.3.0
+        version: 19.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
       react-virtuoso:
         specifier: ^4.18.12
-        version: 4.18.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 4.18.12(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       rxjs:
         specifier: 7.8.1
         version: 7.8.1
@@ -140,7 +140,7 @@ importers:
         version: 6.2.1
       yet-another-react-lightbox:
         specifier: ^3.32.2
-        version: 3.32.2(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 3.32.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       zod:
         specifier: 4.6.5
         version: 4.6.5
@@ -224,11 +224,11 @@ importers:
         specifier: ^22.20.1
         version: 22.20.1
       '@types/react':
-        specifier: ^19.2.18
-        version: 19.2.18
+        specifier: ^19.3.0
+        version: 19.3.0
       '@types/react-dom':
-        specifier: ^19.2.7
-        version: 19.2.7(@types/react@19.2.18)
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
       '@types/sanitize-html':
         specifier: ^2.16.1
         version: 2.16.1
@@ -306,7 +306,7 @@ importers:
         version: 0.0.12
       shaka-perf:
         specifier: 0.2.5
-        version: 0.2.5(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@types/node@22.20.1)(@types/react@19.2.18)(yauzl@2.10.0)
+        version: 0.2.5(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@types/node@22.20.1)(@types/react@19.3.0)(yauzl@2.10.0)
       shaka-shared:
         specifier: 0.2.4
         version: 0.2.4(playwright-core@1.62.1)
@@ -1649,8 +1649,8 @@ packages:
   '@fastify/ajv-compiler@4.0.5':
     resolution: {integrity: sha512-KoWKW+MhvfTRWL4qrhUwAAZoaChluo0m0vbiJlGMt2GXvL4LVPQEjt8kSpHI3IBq5Rez8fg+XeH3cneztq+C7A==}
 
-  '@fastify/busboy@3.2.0':
-    resolution: {integrity: sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==}
+  '@fastify/busboy@3.2.2':
+    resolution: {integrity: sha512-yXSS27qPExaXeuLvMRMXOLtpipzfQYNjG3FkunDWKGfMYjKuhFXko9CVzqxm8jcF+lmtS9Fd89QNdh9XDjnbNg==}
 
   '@fastify/deepmerge@3.2.1':
     resolution: {integrity: sha512-N5Oqvltoa2r9z1tbx4xjky0oRR60v+T47Ic4J1ukoVQcptLOrIdRnCSdTGmOmajZuHVKlTnfcmrjyqsGEW1ztA==}
@@ -2979,13 +2979,13 @@ packages:
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
-  '@types/react-dom@19.2.7':
-    resolution: {integrity: sha512-I8bPpDLcHBv1qiIiXDCy71Rt8eQDKJP0sMSWJphDdAcdqiJ1sGpZamavoEIRZmYzjia9LuEb2HlYdDpmoENpvQ==}
+  '@types/react-dom@19.3.0':
+    resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
     peerDependencies:
-      '@types/react': ^19.2.0
+      '@types/react': ^19.3.0
 
-  '@types/react@19.2.18':
-    resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
+  '@types/react@19.3.0':
+    resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
@@ -6106,10 +6106,10 @@ packages:
     resolution: {integrity: sha512-s4VSOf6yN0rvbRZGxs8Om5CWj6seneMwK3oDb4lWDH0UPhWcxwOWw5+qk24bxq87szX1ydrwylIOp2uG1ojUpA==}
     engines: {node: '>= 0.8'}
 
-  react-dom@19.2.8:
-    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
+  react-dom@19.3.0:
+    resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
-      react: ^19.2.8
+      react: ^19.3.0
 
   react-hook-form@7.88.0:
     resolution: {integrity: sha512-QRaLOWhX93YCnMiRfnOFRSwWXZNt8qhm2JTZwypoDvKpSffTJHmpzMXt8U6PV5UThvL3IiiLDUWe2nHMtz6Mmw==}
@@ -6136,8 +6136,8 @@ packages:
       react: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
       react-dom: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
 
-  react-on-rails-pro-node-renderer@17.2.0-rc.0:
-    resolution: {integrity: sha512-feyK9U3iWmjl2hy7wEOpd8iib2iBE+RYHwSD8fnMMQcdlDb11t4ztreUFDjIlJYP+UnROUK3g/lxuZ7hJx/DWw==}
+  react-on-rails-pro-node-renderer@17.2.0-rc.1:
+    resolution: {integrity: sha512-Airgxgpf8svGEUGjeensope+5pjyuNo5ocJcwkL7GIxjUcQbBRT86ZKWfL6YJazWQ0kw0SUDeK63e01TPoTETQ==}
     engines: {node: '>=18.19.0'}
     peerDependencies:
       '@fastify/otel': '>=0.18.0 <1.0.0'
@@ -6178,8 +6178,8 @@ packages:
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@17.2.0-rc.0:
-    resolution: {integrity: sha512-HRcICxDzvDvk/u0wQjg7ly8qz6zO2HF+PKSKefJipCAwu+2vGaDWbGCH3yQP/gVJvUst1npP8lrWfSN8kfgI0Q==}
+  react-on-rails-pro@17.2.0-rc.1:
+    resolution: {integrity: sha512-G8YpyHHA2EquoWl5dLC5fj0m+uQgaqMZDRwKPgyYQr2bw+MhkvypDaU/PjI93Kg0E8WEPZqcHedzblKhgcaztQ==}
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       ioredis: '>= 5'
@@ -6194,19 +6194,19 @@ packages:
       react-on-rails-rsc:
         optional: true
 
-  react-on-rails-rsc@19.3.0:
-    resolution: {integrity: sha512-K2QuvKMYu2V+8egZbRp+2YO7imPXk+/CKw13WQdQORg0tfsQgy5fVKaKBcRCPAJHD019UfAR6palEwQ2tNvOvg==}
+  react-on-rails-rsc@19.3.1-rc.1:
+    resolution: {integrity: sha512-rCXtoTjHt2qm/TMBFFXqXRcwsqFQuSNDEQe79X2qUIkdp6ihRghTIOSjYLl9Hth8SDc+1PP57FUqaBmE2l6XVA==}
     peerDependencies:
       '@rspack/core': ^1.0.0 || ^2.0.0
-      react: ^19.2.8
-      react-dom: ^19.2.8
+      react: ^19.3.0
+      react-dom: ^19.3.0
       webpack: ^5.59.0
     peerDependenciesMeta:
       '@rspack/core':
         optional: true
 
-  react-on-rails@17.2.0-rc.0:
-    resolution: {integrity: sha512-Ew810LOL2gRiwZEaCjwvslShJX+/Ec7fZvGGX8L+VO0UMxCcoXy6sfAy8GfGoAjyHS7x/2lt59eCIYjPc2l53w==}
+  react-on-rails@17.2.0-rc.1:
+    resolution: {integrity: sha512-5JmxFCz9dlClsbX3GrLd3rNTmHnVMjED4uk/UPDgJuoetWHwvVlCDxYZDuxbzUMoLeNDMQXn9e5evYgtMyRtlQ==}
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -6228,12 +6228,12 @@ packages:
     resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
     engines: {node: '>=0.10.0'}
 
-  react-server-dom-webpack@19.2.8:
-    resolution: {integrity: sha512-rFO1VJZ+cH9ZH6hGy9+qmIsmZHZpCMKJZXhWHqT71UnSfg+w+W+gwrwp58MVzMqdFquG8GF1c6C8q0OGphkEdg==}
+  react-server-dom-webpack@19.3.0:
+    resolution: {integrity: sha512-ymt9RkvWtW4OpIhWf1wj4u5CxnBaVbDCkz/bw3/QFmOE7+/wg8C30uiJ/QqkEdWn/UqT5c7/rOUW/eWYMwceCg==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: ^19.2.8
-      react-dom: ^19.2.8
+      react: ^19.3.0
+      react-dom: ^19.3.0
       webpack: ^5.59.0
 
   react-virtuoso@4.18.12:
@@ -6242,8 +6242,8 @@ packages:
       react: '>=16 || >=17 || >= 18 || >= 19'
       react-dom: '>=16 || >=17 || >= 18 || >=19'
 
-  react@19.2.8:
-    resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
+  react@19.3.0:
+    resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
     engines: {node: '>=0.10.0'}
 
   readable-stream@2.3.8:
@@ -6457,6 +6457,9 @@ packages:
 
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+
+  scheduler@0.28.0:
+    resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
 
   schema-utils@4.3.3:
     resolution: {integrity: sha512-eflK8wEtyOE6+hsaRVPxvUKYCpRgzLqDTb8krvAsRIwOGlHoSgYLgBXoubGgLd2fT41/OUYdb48v4k4WWHQurA==}
@@ -7471,19 +7474,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@apollo/client-react-streaming@0.14.5(@apollo/client@4.3.1(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1))(@types/react@19.2.18)(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1)':
+  '@apollo/client-react-streaming@0.14.5(@apollo/client@4.3.1(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1))(@types/react@19.3.0)(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1)':
     dependencies:
-      '@apollo/client': 4.3.1(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1)
-      '@types/react-dom': 19.2.7(@types/react@19.2.18)
+      '@apollo/client': 4.3.1(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1)
+      '@types/react-dom': 19.3.0(@types/react@19.3.0)
       '@wry/equality': 0.5.7
       graphql: 16.10.0
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
       rxjs: 7.8.1
     transitivePeerDependencies:
       - '@types/react'
 
-  '@apollo/client@4.3.1(graphql@16.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.1)':
+  '@apollo/client@4.3.1(graphql@16.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rxjs@7.8.1)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.10.0)
       '@wry/caches': 1.0.1
@@ -7495,8 +7498,8 @@ snapshots:
       rxjs: 7.8.1
       tslib: 2.8.1
     optionalDependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
 
   '@aws-sdk/checksums@3.1000.28':
     dependencies:
@@ -8471,11 +8474,11 @@ snapshots:
 
   '@conform-to/dom@1.21.1': {}
 
-  '@conform-to/react@1.21.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@conform-to/react@1.21.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@conform-to/dom': 1.21.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
 
   '@conform-to/zod@1.21.1(zod@4.6.5)':
     dependencies:
@@ -8974,7 +8977,7 @@ snapshots:
       ajv-formats: 3.0.1(ajv@8.20.0)
       fast-uri: 3.1.7
 
-  '@fastify/busboy@3.2.0': {}
+  '@fastify/busboy@3.2.2': {}
 
   '@fastify/deepmerge@3.2.1': {}
 
@@ -8997,7 +9000,7 @@ snapshots:
 
   '@fastify/multipart@9.4.0':
     dependencies:
-      '@fastify/busboy': 3.2.0
+      '@fastify/busboy': 3.2.2
       '@fastify/deepmerge': 3.2.1
       '@fastify/error': 4.2.0
       fastify-plugin: 5.1.0
@@ -9048,10 +9051,10 @@ snapshots:
     dependencies:
       graphql: 16.10.0
 
-  '@hookform/resolvers@5.9.1(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)':
+  '@hookform/resolvers@5.9.1(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.88.0(react@19.3.0))(zod@4.6.5)':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.88.0(react@19.2.8)
+      react-hook-form: 7.88.0(react@19.3.0)
     optionalDependencies:
       ajv: 8.20.0
       ajv-formats: 2.1.1(ajv@8.20.0)
@@ -9367,18 +9370,18 @@ snapshots:
       '@babel/core': 7.29.7
       '@babel/plugin-syntax-dynamic-import': 7.8.3(@babel/core@7.29.7)
 
-  '@loadable/component@5.16.7(react@19.2.8)':
+  '@loadable/component@5.16.7(react@19.3.0)':
     dependencies:
       '@babel/runtime': 7.29.2
       hoist-non-react-statics: 3.3.2
-      react: 19.2.8
+      react: 19.3.0
       react-is: 16.13.1
 
-  '@loadable/server@5.16.7(@loadable/component@5.16.7(react@19.2.8))(react@19.2.8)':
+  '@loadable/server@5.16.7(@loadable/component@5.16.7(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@loadable/component': 5.16.7(react@19.2.8)
+      '@loadable/component': 5.16.7(react@19.3.0)
       lodash: 4.18.1
-      react: 19.2.8
+      react: 19.3.0
 
   '@loadable/webpack-plugin@5.15.2(webpack@5.110.3)':
     dependencies:
@@ -9394,23 +9397,23 @@ snapshots:
     dependencies:
       mux-embed: 5.18.1
 
-  '@mux/mux-player-react@3.13.0(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@mux/mux-player-react@3.13.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@mux/mux-player': 3.13.0(react@19.2.8)
+      '@mux/mux-player': 3.13.0(react@19.3.0)
       '@mux/playback-core': 0.35.0
       prop-types: 15.8.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
     optionalDependencies:
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.7(@types/react@19.2.18)
+      '@types/react': 19.3.0
+      '@types/react-dom': 19.3.0(@types/react@19.3.0)
 
-  '@mux/mux-player@3.13.0(react@19.2.8)':
+  '@mux/mux-player@3.13.0(react@19.3.0)':
     dependencies:
       '@mux/mux-video': 0.31.0
       '@mux/playback-core': 0.35.0
-      media-chrome: 4.19.2(react@19.2.8)
-      player.style: 0.3.4(react@19.2.8)
+      media-chrome: 4.19.2(react@19.3.0)
+      player.style: 0.3.4(react@19.3.0)
     transitivePeerDependencies:
       - react
 
@@ -10069,20 +10072,20 @@ snapshots:
 
   '@tanstack/pacer-lite@0.1.1': {}
 
-  '@tanstack/react-form@1.33.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@tanstack/react-form@1.33.5(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@tanstack/form-core': 1.33.5
-      '@tanstack/react-store': 0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react: 19.2.8
+      '@tanstack/react-store': 0.11.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react: 19.3.0
     transitivePeerDependencies:
       - react-dom
 
-  '@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@tanstack/react-store@0.11.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@tanstack/store': 0.11.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      use-sync-external-store: 1.7.0(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+      use-sync-external-store: 1.7.0(react@19.3.0)
 
   '@tanstack/store@0.11.1': {}
 
@@ -10170,11 +10173,11 @@ snapshots:
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@19.2.7(@types/react@19.2.18)':
+  '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:
-      '@types/react': 19.2.18
+      '@types/react': 19.3.0
 
-  '@types/react@19.2.18':
+  '@types/react@19.3.0':
     dependencies:
       csstype: 3.2.3
 
@@ -10838,9 +10841,9 @@ snapshots:
     dependencies:
       custom-media-element: 1.4.6
 
-  ce-la-react@0.3.2(react@19.2.8):
+  ce-la-react@0.3.2(react@19.3.0):
     dependencies:
-      react: 19.2.8
+      react: 19.3.0
 
   chalk@4.1.2:
     dependencies:
@@ -12183,7 +12186,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  ink@6.8.0(@types/react@19.2.18)(react@19.2.8):
+  ink@6.8.0(@types/react@19.3.0)(react@19.3.0):
     dependencies:
       '@alcalzone/ansi-tokenize': 0.2.5
       ansi-escapes: 7.3.0
@@ -12198,8 +12201,8 @@ snapshots:
       indent-string: 5.0.0
       is-in-ci: 2.0.0
       patch-console: 2.0.0
-      react: 19.2.8
-      react-reconciler: 0.33.0(react@19.2.8)
+      react: 19.3.0
+      react-reconciler: 0.33.0(react@19.3.0)
       scheduler: 0.27.0
       signal-exit: 3.0.7
       slice-ansi: 8.0.0
@@ -12212,7 +12215,7 @@ snapshots:
       ws: 8.21.0
       yoga-layout: 3.2.1
     optionalDependencies:
-      '@types/react': 19.2.18
+      '@types/react': 19.3.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -12766,9 +12769,9 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  media-chrome@4.19.2(react@19.2.8):
+  media-chrome@4.19.2(react@19.3.0):
     dependencies:
-      ce-la-react: 0.3.2(react@19.2.8)
+      ce-la-react: 0.3.2(react@19.3.0)
     transitivePeerDependencies:
       - react
 
@@ -13241,9 +13244,9 @@ snapshots:
       pvutils: 1.1.5
       tslib: 2.8.1
 
-  player.style@0.3.4(react@19.2.8):
+  player.style@0.3.4(react@19.3.0):
     dependencies:
-      media-chrome: 4.19.2(react@19.2.8)
+      media-chrome: 4.19.2(react@19.3.0)
     transitivePeerDependencies:
       - react
 
@@ -13656,36 +13659,36 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
-  react-dom@19.2.8(react@19.2.8):
+  react-dom@19.3.0(react@19.3.0):
     dependencies:
-      react: 19.2.8
-      scheduler: 0.27.0
+      react: 19.3.0
+      scheduler: 0.28.0
 
-  react-hook-form@7.88.0(react@19.2.8):
+  react-hook-form@7.88.0(react@19.3.0):
     dependencies:
-      react: 19.2.8
+      react: 19.3.0
 
-  react-image-lightbox@5.1.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-image-lightbox@5.1.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       prop-types: 15.8.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      react-modal: 3.16.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+      react-modal: 3.16.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
 
   react-is@16.13.1: {}
 
   react-lifecycles-compat@3.0.4: {}
 
-  react-modal@3.16.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-modal@3.16.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       exenv: 1.2.2
       prop-types: 15.8.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
       react-lifecycles-compat: 3.0.4
       warning: 4.0.3
 
-  react-on-rails-pro-node-renderer@17.2.0-rc.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
+  react-on-rails-pro-node-renderer@17.2.0-rc.1(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
@@ -13702,41 +13705,41 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.43.0
       '@sentry/node': 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))
 
-  react-on-rails-pro@17.2.0-rc.0(react-dom@19.2.8(react@19.2.8))(react-on-rails-rsc@19.3.0(@rspack/core@2.2.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3))(react@19.2.8):
+  react-on-rails-pro@17.2.0-rc.1(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1-rc.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0):
     dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      react-on-rails: 17.2.0-rc.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+      react-on-rails: 17.2.0-rc.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     optionalDependencies:
-      react-on-rails-rsc: 19.3.0(@rspack/core@2.2.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3)
+      react-on-rails-rsc: 19.3.1-rc.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
 
-  react-on-rails-rsc@19.3.0(@rspack/core@2.2.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3):
+  react-on-rails-rsc@19.3.1-rc.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3):
     dependencies:
       '@babel/parser': 7.29.7
       acorn-loose: 8.5.2
       neo-async: 2.6.2
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      react-server-dom-webpack: 19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+      react-server-dom-webpack: 19.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
       webpack: 5.110.3(@swc/core@1.16.2)(esbuild@0.28.2)(postcss@8.5.28)(webpack-cli@7.2.3)
       webpack-sources: 3.5.1
     optionalDependencies:
       '@rspack/core': 2.2.2
 
-  react-on-rails@17.2.0-rc.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-on-rails@17.2.0-rc.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
 
-  react-player@3.4.0(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-player@3.4.0(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
-      '@mux/mux-player-react': 3.13.0(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@types/react': 19.2.18
+      '@mux/mux-player-react': 3.13.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@types/react': 19.3.0
       cloudflare-video-element: 1.3.5
       dash-video-element: 0.3.2(@svta/cml-cta@1.0.6(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0))(@svta/cml-structured-field-values@1.1.3(@svta/cml-utils@1.5.0))(@svta/cml-utils@1.5.0)
       hls-video-element: 1.5.11
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
       spotify-audio-element: 1.0.4
       tiktok-video-element: 0.1.2
       twitch-video-element: 0.1.6
@@ -13749,28 +13752,28 @@ snapshots:
       - '@svta/cml-utils'
       - '@types/react-dom'
 
-  react-reconciler@0.33.0(react@19.2.8):
+  react-reconciler@0.33.0(react@19.3.0):
     dependencies:
-      react: 19.2.8
+      react: 19.3.0
       scheduler: 0.27.0
 
   react-refresh@0.18.0: {}
 
-  react-server-dom-webpack@19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.110.3):
+  react-server-dom-webpack@19.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
       webpack: 5.110.3(@swc/core@1.16.2)(esbuild@0.28.2)(postcss@8.5.28)(webpack-cli@7.2.3)
       webpack-sources: 3.5.1
 
-  react-virtuoso@4.18.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-virtuoso@4.18.12(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
 
-  react@19.2.8: {}
+  react@19.3.0: {}
 
   readable-stream@2.3.8:
     dependencies:
@@ -13988,6 +13991,8 @@ snapshots:
 
   scheduler@0.27.0: {}
 
+  scheduler@0.28.0: {}
+
   schema-utils@4.3.3:
     dependencies:
       '@types/json-schema': 7.0.15
@@ -14094,7 +14099,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  shaka-perf@0.2.5(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@types/node@22.20.1)(@types/react@19.2.18)(yauzl@2.10.0):
+  shaka-perf@0.2.5(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@types/node@22.20.1)(@types/react@19.3.0)(yauzl@2.10.0):
     dependencies:
       os: 0.1.2
       '@axe-core/playwright': 4.13.0(playwright-core@1.62.1)
@@ -14114,7 +14119,7 @@ snapshots:
       handlebars: 4.7.9
       html-minifier-terser: 7.2.0
       ignore: 5.3.2
-      ink: 6.8.0(@types/react@19.2.18)(react@19.2.8)
+      ink: 6.8.0(@types/react@19.3.0)(react@19.3.0)
       jpeg-js: 0.4.4
       json5: 2.2.3
       jstat: 1.9.6
@@ -14132,7 +14137,7 @@ snapshots:
       pngjs: 7.0.0
       portfinder: 1.0.38
       race-cancellation: 0.4.1
-      react: 19.2.8
+      react: 19.3.0
       shaka-shared: 0.2.4(playwright-core@1.62.1)
       sharp: 0.35.3(@types/node@22.20.1)
       temp: 0.9.4
@@ -14761,9 +14766,9 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  use-sync-external-store@1.7.0(react@19.2.8):
+  use-sync-external-store@1.7.0(react@19.3.0):
     dependencies:
-      react: 19.2.8
+      react: 19.3.0
 
   util-deprecate@1.0.2: {}
 
@@ -15106,13 +15111,13 @@ snapshots:
       fd-slicer: 1.1.0
     optional: true
 
-  yet-another-react-lightbox@3.32.2(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  yet-another-react-lightbox@3.32.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
     optionalDependencies:
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.7(@types/react@19.2.18)
+      '@types/react': 19.3.0
+      '@types/react-dom': 19.3.0(@types/react@19.3.0)
 
   yocto-queue@0.1.0: {}
 
