@@ -13,9 +13,15 @@ gem 'importmap-rails'
 gem 'turbo-rails'
 gem 'stimulus-rails'
 
-# React on Rails
-gem 'react_on_rails', '17.2.0.rc.0'
-gem 'react_on_rails_pro', '17.2.0.rc.0'
+# React on Rails + Pro from the ppr-integration branch (PPR v1). Git dependency replaces
+# the published gems + the local ENABLE_PPR monkey-patches (lib/ppr_patches, removed):
+# ppr_react_component and the PPR cache/resume pipeline now ship in the gems themselves.
+git 'https://github.com/shakacode/react_on_rails.git',
+    branch: 'ppr-integration',
+    glob: '{react_on_rails,react_on_rails_pro}/*.gemspec' do
+  gem 'react_on_rails'
+  gem 'react_on_rails_pro'
+end
 
 # Shakapacker for webpack integration
 gem 'shakapacker', '10.3.2'

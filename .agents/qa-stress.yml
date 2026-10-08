@@ -154,7 +154,8 @@ qa_stress:
         rsc-pull uses bidirectional pull-mode async props with
         unstable_cache. Cached variants use cached_react_component and
         cached_stream_react_component_with_async_props. /product/ppr is the
-        PPR route (requires ENABLE_PPR=true install variant).
+        PPR route (ppr_react_component, built into react_on_rails_pro from
+        the ppr-integration branch; no install flag needed).
     product_search:
       routes:
         - /product-search/ssr
@@ -196,12 +197,11 @@ qa_stress:
 
   # --- PPR variant (F7) ---
   ppr:
-    env_flag: ENABLE_PPR=true
     route: /product/ppr
     notes: >-
-      PPR (Partial Prerendering) variant requires the ENABLE_PPR=true
-      environment variable at install time (patches node_modules via
-      postinstall). The /product/ppr route invokes show_ppr and
+      PPR (Partial Prerendering) ships in react_on_rails_pro (git dependency
+      on the ppr-integration branch); no install-time flag or patches are
+      needed. The /product/ppr route invokes show_ppr and
       ppr_react_component; /product/rsc is NOT a PPR route. PPR is
       experimental and may not be available in all environments.
 
@@ -213,4 +213,3 @@ qa_stress:
       - QA_RAILS_PORT
       - QA_RENDERER_PORT
       - SEED_MODE
-      - ENABLE_PPR
