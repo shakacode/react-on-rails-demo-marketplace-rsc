@@ -12,7 +12,7 @@ module LocalhubDemo
     config.load_defaults 7.1
 
     # Configuration for the application, engines, and railties goes here.
-    config.autoload_lib(ignore: %w[assets tasks ppr_patches])
+    config.autoload_lib(ignore: %w[assets tasks])
 
     # Don't generate system test files.
     config.generators.system_tests = nil

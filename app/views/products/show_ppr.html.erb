@@ -1,11 +1,16 @@
 <% content_for :head do %>
   <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
 <% end %>
-<%# PPR variant: the static shell (hero + product info + skeletons) is prerendered
-    and cached on the first request. On subsequent requests the cached shell serves
-    instantly while only the dynamic Suspense boundaries (reviews, related, etc.)
-    stream fresh from the server.
+<%# PPR variant: the page is prerendered and cached on the first request; subsequent
+    requests serve the cached shell instantly (ppr.static_shell cache_hit=true).
+    All props here are computed synchronously in Ruby, so the prerender settles
+    within the ppr_settle_budget_ms budget and the cache record is fully static —
+    no resume phase runs. Suspense holes that outlive the budget (e.g. async props
+    over a slow backend) would be captured as postponed state and stream fresh on
+    every request after the cached shell.
+    ppr_react_component ships in react_on_rails_pro (ppr-integration branch); the
+    server bundle must import 'react-on-rails-pro/pprSupport' to register the
+    react-dom prerender/resume APIs.
     cache_key = product id + updated_at. %>
 <%= ppr_react_component("ProductPageSSR",
-    cache_key: ["product_ppr", @product.id, @product.updated_at.to_i],
-    prerender: true) { product_ssr_props } %>
+    cache_key: ["product_ppr", @product.id, @product.updated_at.to_i]) { product_ssr_props } %>

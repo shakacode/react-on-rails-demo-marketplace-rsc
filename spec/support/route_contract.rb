@@ -97,9 +97,6 @@ module RouteContract
   # an environment flag. They keep dispatch coverage, but rendering them needs the flag,
   # so spec/requests/feature_pages_spec.rb skips them with the reason attached.
   FLAG_GATED = {
-    '/product/ppr' => 'Partial Prerendering patches load only when ENABLE_PPR=true ' \
-                      '(config/initializers/ppr_patches.rb). Without it the view calls an ' \
-                      'undefined ppr_react_component and the route 500s.',
     '/product/rsc-forms' => 'Form library comparison page (issue #244). The POST endpoint ' \
                             'and form islands require ENABLE_SPIKE_MUTATIONS=1.',
     '/product/rsc-apollo-l2' => 'Apollo L2 PreloadQuery transport requires a streaming ' \

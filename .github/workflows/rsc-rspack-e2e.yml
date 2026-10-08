@@ -35,7 +35,7 @@ on:
       # refs are trusted. They are passed only to actions/checkout `ref:` (not a
       # shell), never interpolated into a run: command.
       ror_ref:
-        description: shakacode/react_on_rails ref (Pro packages). Empty = default branch.
+        description: shakacode/react_on_rails ref (Pro packages). Empty = ppr-integration, the branch the demo's git dependencies track.
         required: false
         default: ''
       rsc_ref:
@@ -119,7 +119,10 @@ jobs:
         uses: actions/checkout@v7.0.1
         with:
           repository: shakacode/react_on_rails
-          ref: ${{ github.event.inputs.ror_ref }}
+          # Default to ppr-integration: the demo's Gemfile and package.json pin that
+          # branch as a git dependency, and the gate must build the same Pro sources
+          # (e.g. react-on-rails-pro/pprSupport only exists there).
+          ref: ${{ github.event.inputs.ror_ref || 'ppr-integration' }}
           path: .pkgsrc/ror
 
       - name: Build + yalc publish Pro packages
@@ -165,11 +168,12 @@ jobs:
       # ── Link the freshly-built packages into the demo (matches #72 setup) ────
       - name: Link packages + install
         run: |
-          # The demo pins all RoR packages to the private
-          # shakacode/react-on-rails-builds repo (unfetchable in CI) two ways:
-          # direct deps AND a pnpm.overrides entry. yalc populates .yalc/* and
-          # rewrites the direct deps; we then repoint pnpm.overrides at the same
-          # local builds so nothing resolves back to the private git repo.
+          # The demo pins the RoR packages to the ppr-integration branch of the
+          # public react_on_rails monorepo two ways: direct git-subdir deps AND a
+          # pnpm.overrides entry. yalc populates .yalc/* and rewrites the direct
+          # deps; we then repoint pnpm.overrides at the same local builds so the
+          # gate tests exactly the checked-out sources (ror_ref) instead of
+          # re-fetching the pinned git commit.
           yalc add react-on-rails react-on-rails-pro react-on-rails-pro-node-renderer react-on-rails-rsc
           # yalc populated .yalc/* for all four. Now: keep the three Pro/RSC
           # packages as direct deps (file:.yalc), but DROP react-on-rails from

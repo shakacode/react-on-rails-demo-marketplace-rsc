@@ -35,8 +35,7 @@
     "perf:preflight": "bash scripts/perf-preflight.sh",
     "perf:audit": "bash scripts/perf-audit.sh",
     "perf:compare": "bash scripts/perf-compare.sh",
-    "perf:compare:commits": "bash scripts/perf-compare-commits.sh",
-    "postinstall": "node scripts/apply-ppr-patches.js"
+    "perf:compare:commits": "bash scripts/perf-compare-commits.sh"
   },
   "dependencies": {
     "@apollo/client": "4.3.1",
@@ -67,8 +66,8 @@
     "react-dom": "19.2.8",
     "react-hook-form": "7.88.0",
     "react-image-lightbox": "^5.1.4",
-    "react-on-rails-pro": "17.2.0-rc.0",
-    "react-on-rails-pro-node-renderer": "17.2.0-rc.0",
+    "react-on-rails-pro": "github:shakacode/react_on_rails#ppr-integration&path:packages/react-on-rails-pro",
+    "react-on-rails-pro-node-renderer": "github:shakacode/react_on_rails#ppr-integration&path:packages/react-on-rails-pro-node-renderer",
     "react-on-rails-rsc": "19.3.0",
     "react-player": "^3.4.0",
     "react-server-dom-webpack": "19.2.8",
@@ -92,7 +91,7 @@
       "js-yaml@4": "^4.3.1",
       "lodash": "4.18.1",
       "nanoid": "^3.3.18",
-      "react-on-rails": "17.2.0-rc.0",
+      "react-on-rails": "github:shakacode/react_on_rails#ppr-integration&path:packages/react-on-rails",
       "shakapacker": "10.3.2",
       "uuid@8": "^11.1.1",
       "nanoid@3": "^3.3.18"
