@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Downstream checks preserved from this repository's pre-6.0 validator.
+# bin/test-cpflow-github-flow runs this file after its generated baseline checks.
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+echo "==> check production promotion checkout pins"
+ruby <<'RUBY'
+require "yaml"
+
+PINNED_CHECKOUT_ACTION = %r{\Aactions/checkout@[0-9a-f]{40}\z}
+promote_path = ".github/workflows/cpflow-promote-staging-to-production.yml"
+promote_job = YAML.load_file(promote_path, aliases: true).fetch("jobs", {})["promote-to-production"]
+
+abort "#{promote_path}:promote-to-production job is missing" unless promote_job
+
+steps = Array(promote_job["steps"])
+checkout_step = steps.find { |step| step["name"] == "Checkout control-plane-flow actions" }
+repository_checkout_step = steps.find { |step| step["name"] == "Checkout repository" }
+
+unless repository_checkout_step
+  abort "#{promote_path}:promote-to-production must include a Checkout repository step"
+end
+
+repository_checkout_action = repository_checkout_step["uses"].to_s
+
+unless repository_checkout_action.match?(PINNED_CHECKOUT_ACTION)
+  abort "#{promote_path}:promote-to-production must use a full-SHA-pinned actions/checkout ref for the Checkout repository step"
+end
+
+unless checkout_step
+  abort "#{promote_path}:promote-to-production must include a Checkout control-plane-flow actions step"
+end
+
+unless checkout_step["uses"].to_s == repository_checkout_action
+  abort "#{promote_path}:promote-to-production checkout steps must use the same actions/checkout ref"
+end
+
+puts "production promotion checkout pins: #{repository_checkout_action}"
+RUBY
