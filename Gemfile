@@ -4,7 +4,7 @@ ruby '3.4.6'
 
 # Core Rails
 gem 'rails', '~> 8.1'
-gem 'pg', '~> 1.6'
+gem 'pg', '~> 1.7'
 gem 'puma', '~> 8.0'
 
 # Asset Pipeline
