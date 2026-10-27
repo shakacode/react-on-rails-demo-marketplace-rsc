@@ -1,5 +1,7 @@
 # Deployment Guide
 
+The application and Docker image use Ruby `3.4.9`, matching the CI runtime.
+
 ## Run Locally with Docker
 
 **Build:**

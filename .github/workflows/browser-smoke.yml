@@ -42,7 +42,7 @@ jobs:
           printf '%s\n' "${ruby_version}" > .ruby-version
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f
         with:
           ruby-version-file: .ruby-version
           bundler-cache: true
@@ -102,7 +102,7 @@ jobs:
           printf '%s\n' "${ruby_version}" > .ruby-version
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f
         with:
           ruby-version-file: .ruby-version
           bundler-cache: true
