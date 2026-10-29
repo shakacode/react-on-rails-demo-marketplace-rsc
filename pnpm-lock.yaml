@@ -15,7 +15,7 @@ overrides:
   js-yaml@4: ^4.3.1
   lodash: 4.18.1
   nanoid: ^3.3.18
-  react-on-rails: 17.2.1-rc.0
+  react-on-rails: 17.2.1-rc.1
   shakapacker: 10.3.2
   uuid@8: ^11.1.1
   nanoid@3: ^3.3.18
@@ -109,11 +109,11 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-on-rails-pro:
-        specifier: 17.2.1-rc.0
-        version: 17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0)
+        specifier: 17.2.1-rc.1
+        version: 17.2.1-rc.1(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0)
       react-on-rails-pro-node-renderer:
-        specifier: 17.2.1-rc.0
-        version: 17.2.1-rc.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
+        specifier: 17.2.1-rc.1
+        version: 17.2.1-rc.1(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
       react-on-rails-rsc:
         specifier: 19.3.1
         version: 19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
@@ -5064,8 +5064,8 @@ packages:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
 
-  legacy-javascript@0.0.1:
-    resolution: {integrity: sha512-lPyntS4/aS7jpuvOlitZDFifBCb4W8L/3QU0PLbUTUj+zYah8rfVjYic88yG7ZKTxhS5h9iz7duT8oUXKszLhg==}
+  legacy-javascript@0.0.4:
+    resolution: {integrity: sha512-UTmeKBVxnfJcpmpOvzzNnLsQT99BXHpPlc/ZKddIRmWmrR0fw6335I3lq4+sJoP60UTbBNaYsGYVPc65YB1x3A==}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -6136,8 +6136,8 @@ packages:
       react: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
       react-dom: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
 
-  react-on-rails-pro-node-renderer@17.2.1-rc.0:
-    resolution: {integrity: sha512-CBrATBOK7XjrwvPns8sxTNXJ5VLeDHNxxD5prTZNRem9+9I09sRgkUA4+qR24P8HEBP2jAf3FlxlVi3CN8VR2w==}
+  react-on-rails-pro-node-renderer@17.2.1-rc.1:
+    resolution: {integrity: sha512-sqV5HTFwUVeyx/Qr+MmqMbLn5sH4Z925WutY10vlvhvFKkHN0ZzAP0w1dWggrp6EDqcCps3+P8341hqfcoDxOg==}
     engines: {node: '>=18.19.0'}
     peerDependencies:
       '@fastify/otel': '>=0.18.0 <1.0.0'
@@ -6178,8 +6178,8 @@ packages:
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@17.2.1-rc.0:
-    resolution: {integrity: sha512-tsznD0FmfDVW3TFfUz+WSiAQ9BBcYGIXnGUkqemDmsNIZcLi+8qkGf9nI1qoPwJu7G1t7RutC326ao+33+kLZw==}
+  react-on-rails-pro@17.2.1-rc.1:
+    resolution: {integrity: sha512-O+y01TleMByIg4EfHJlon/pKzyjwAtZcDGfg5oi3oVTF6md3aRFE+n3SOKTH30Bo4HPlnIoKW/7DQzf4f/lfWA==}
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       ioredis: '>= 5'
@@ -6205,8 +6205,8 @@ packages:
       '@rspack/core':
         optional: true
 
-  react-on-rails@17.2.1-rc.0:
-    resolution: {integrity: sha512-kG9u0n2MKV02yJIti+/33//gkOPxbIL0nkceAkaZF1iEl63L2a8uUzO9Xc0d5QKfMLKVAF6bpBc2UzNfqMmMWw==}
+  react-on-rails@17.2.1-rc.1:
+    resolution: {integrity: sha512-D7uY5zE6+GiKNjNQS+Ch3M39vM+0402vv3ym8Fi1Ba6/aGBTIFZ5sw4SMBNgwJ14ofKgWSDbCVefOqaTdRMIZA==}
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -9561,7 +9561,7 @@ snapshots:
 
   '@paulirish/trace_engine@0.0.65':
     dependencies:
-      legacy-javascript: 0.0.1
+      legacy-javascript: 0.0.4
       third-party-web: 0.30.0
 
   '@peculiar/asn1-cms@2.8.0':
@@ -12557,7 +12557,7 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
 
-  legacy-javascript@0.0.1: {}
+  legacy-javascript@0.0.4: {}
 
   levn@0.4.1:
     dependencies:
@@ -13688,7 +13688,7 @@ snapshots:
       react-lifecycles-compat: 3.0.4
       warning: 4.0.3
 
-  react-on-rails-pro-node-renderer@17.2.1-rc.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
+  react-on-rails-pro-node-renderer@17.2.1-rc.1(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
@@ -13705,11 +13705,11 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.43.0
       '@sentry/node': 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))
 
-  react-on-rails-pro@17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0):
+  react-on-rails-pro@17.2.1-rc.1(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0):
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
-      react-on-rails: 17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react-on-rails: 17.2.1-rc.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     optionalDependencies:
       react-on-rails-rsc: 19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
 
@@ -13726,7 +13726,7 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.2.2
 
-  react-on-rails@17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  react-on-rails@17.2.1-rc.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
