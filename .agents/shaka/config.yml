@@ -27,5 +27,5 @@ merge:
 branches:
   name: "{login}-{host}/{issue}-{description}"
 wip:
-  include_locations: true
+  include_checkout_path: true
 repo_prefix: RORM
