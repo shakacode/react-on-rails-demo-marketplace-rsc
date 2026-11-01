@@ -15,7 +15,7 @@ overrides:
   js-yaml@4: ^4.3.1
   lodash: 4.18.1
   nanoid: ^3.3.18
-  react-on-rails: 17.2.1-rc.0
+  react-on-rails: 17.2.1-rc.2
   shakapacker: 10.3.2
   uuid@8: ^11.1.1
   nanoid@3: ^3.3.18
@@ -109,11 +109,11 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-on-rails-pro:
-        specifier: 17.2.1-rc.0
-        version: 17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0)
+        specifier: 17.2.1-rc.2
+        version: 17.2.1-rc.2(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0)
       react-on-rails-pro-node-renderer:
-        specifier: 17.2.1-rc.0
-        version: 17.2.1-rc.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
+        specifier: 17.2.1-rc.2
+        version: 17.2.1-rc.2(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1)))
       react-on-rails-rsc:
         specifier: 19.3.1
         version: 19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
@@ -4272,6 +4272,9 @@ packages:
   fast-json-stringify@6.3.0:
     resolution: {integrity: sha512-oRCntNDY/329HJPlmdNLIdogNtt6Vyjb1WuT01Soss3slIdyUp8kAcDU3saQTOquEK8KFVfwIIF7FebxUAu+yA==}
 
+  fast-json-stringify@7.2.0:
+    resolution: {integrity: sha512-q18imgm9fEdQVfvJbRJALE9VP/A5HGme0+NUnWcmFYM9rbQbLkZZk20FyIp1LQ8gDOauQKwqMc52YozqFaQyOw==}
+
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
@@ -4281,11 +4284,14 @@ packages:
   fast-uri@3.1.7:
     resolution: {integrity: sha512-dOvZVzjdZdz7phd9v6jCbwxrBW3fK6n8Rc0CtdmM4bumzMnxywBYhuph6J819RRw/ku+rLbelwfMunktuzVVHg==}
 
+  fast-uri@4.2.3:
+    resolution: {integrity: sha512-I1PXwP5eAhlNlcdpjt9CgB59op2ZvZfxw+BkqGFVIUOgNpCVTcTqp3HhTX7brxj5vsip+nSY4nTvff+eIA76hg==}
+
   fastify-plugin@5.1.0:
     resolution: {integrity: sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==}
 
-  fastify@5.8.5:
-    resolution: {integrity: sha512-Yqptv59pQzPgQUSIm87hMqHJmdkb1+GPxdE6vW6FRyVE9G86mt7rOghitiU4JHRaTyDUk9pfeKmDeu70lAwM4Q==}
+  fastify@5.12.7:
+    resolution: {integrity: sha512-v4pEPsTRPuqlDIYiQFB+BHjVN4SdHX9u0ABk0ZDUKbbdY1vsNryUd1j4Z+jQEZajvYIVk047Kimva9/AJ79GYw==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -5064,8 +5070,8 @@ packages:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
 
-  legacy-javascript@0.0.1:
-    resolution: {integrity: sha512-lPyntS4/aS7jpuvOlitZDFifBCb4W8L/3QU0PLbUTUj+zYah8rfVjYic88yG7ZKTxhS5h9iz7duT8oUXKszLhg==}
+  legacy-javascript@0.0.4:
+    resolution: {integrity: sha512-UTmeKBVxnfJcpmpOvzzNnLsQT99BXHpPlc/ZKddIRmWmrR0fw6335I3lq4+sJoP60UTbBNaYsGYVPc65YB1x3A==}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -6042,6 +6048,9 @@ packages:
   process-warning@5.0.0:
     resolution: {integrity: sha512-a39t9ApHNx2L4+HBnQKqxxHNs1r7KF+Intd8Q/g1bUh6q0WIp9voPXJ/x0j+ZL45KF1pJd9+q2jLIRMfvEshkA==}
 
+  process-warning@5.1.1:
+    resolution: {integrity: sha512-oCkNVj4OKnKEcocVBcDfiIugN1/cE6rgfT3nCtzeqZPA8+rIxMaQ0xXzIkGP8Gj2qUaP1UR7uhJ1VD8lUCpzCg==}
+
   process@0.11.10:
     resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
     engines: {node: '>= 0.6.0'}
@@ -6136,8 +6145,8 @@ packages:
       react: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
       react-dom: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18 || ^19
 
-  react-on-rails-pro-node-renderer@17.2.1-rc.0:
-    resolution: {integrity: sha512-CBrATBOK7XjrwvPns8sxTNXJ5VLeDHNxxD5prTZNRem9+9I09sRgkUA4+qR24P8HEBP2jAf3FlxlVi3CN8VR2w==}
+  react-on-rails-pro-node-renderer@17.2.1-rc.2:
+    resolution: {integrity: sha512-QhC+IFF0QfbTOrtsZH0yA6x79G5c289YQ+RHZZHP6Kq8q258h+s5nttazF6niFN8ilIPlqVCR1d0bT2Vru8kWw==}
     engines: {node: '>=18.19.0'}
     peerDependencies:
       '@fastify/otel': '>=0.18.0 <1.0.0'
@@ -6178,8 +6187,8 @@ packages:
       '@sentry/tracing':
         optional: true
 
-  react-on-rails-pro@17.2.1-rc.0:
-    resolution: {integrity: sha512-tsznD0FmfDVW3TFfUz+WSiAQ9BBcYGIXnGUkqemDmsNIZcLi+8qkGf9nI1qoPwJu7G1t7RutC326ao+33+kLZw==}
+  react-on-rails-pro@17.2.1-rc.2:
+    resolution: {integrity: sha512-O7LfBjGYuAQLS6lpG2KMKwpDqPyAfcxislmMjEWkxZu62MmAmEJdBeU9e06EnrEP7BHFMQJTHPSoyUSaNFgF2Q==}
     peerDependencies:
       '@tanstack/react-router': '>=1.139.0 <2.0.0'
       ioredis: '>= 5'
@@ -6205,8 +6214,8 @@ packages:
       '@rspack/core':
         optional: true
 
-  react-on-rails@17.2.1-rc.0:
-    resolution: {integrity: sha512-kG9u0n2MKV02yJIti+/33//gkOPxbIL0nkceAkaZF1iEl63L2a8uUzO9Xc0d5QKfMLKVAF6bpBc2UzNfqMmMWw==}
+  react-on-rails@17.2.1-rc.2:
+    resolution: {integrity: sha512-RPpsinYC5z1Uh6HfhKffLR9FPe+NoxxvPnSm5l43GohH4CGI6MZcGIlj7d9wZHt+7HviZi3Ts9hZ9UH6/GRP/w==}
     peerDependencies:
       react: '>= 16'
       react-dom: '>= 16'
@@ -9561,7 +9570,7 @@ snapshots:
 
   '@paulirish/trace_engine@0.0.65':
     dependencies:
-      legacy-javascript: 0.0.1
+      legacy-javascript: 0.0.4
       third-party-web: 0.30.0
 
   '@peculiar/asn1-cms@2.8.0':
@@ -11715,6 +11724,15 @@ snapshots:
       json-schema-ref-resolver: 3.0.0
       rfdc: 1.4.1
 
+  fast-json-stringify@7.2.0:
+    dependencies:
+      '@fastify/merge-json-schemas': 0.2.1
+      ajv: 8.20.0
+      ajv-formats: 3.0.1(ajv@8.20.0)
+      fast-uri: 4.2.3
+      json-schema-ref-resolver: 3.0.0
+      rfdc: 1.4.1
+
   fast-levenshtein@2.0.6: {}
 
   fast-querystring@1.1.2:
@@ -11723,9 +11741,11 @@ snapshots:
 
   fast-uri@3.1.7: {}
 
+  fast-uri@4.2.3: {}
+
   fastify-plugin@5.1.0: {}
 
-  fastify@5.8.5:
+  fastify@5.12.7:
     dependencies:
       '@fastify/ajv-compiler': 4.0.5
       '@fastify/error': 4.2.0
@@ -11733,11 +11753,11 @@ snapshots:
       '@fastify/proxy-addr': 5.1.0
       abstract-logging: 2.0.1
       avvio: 9.2.0
-      fast-json-stringify: 6.3.0
+      fast-json-stringify: 7.2.0
       find-my-way: 9.7.0
       light-my-request: 6.6.0
       pino: 9.14.0
-      process-warning: 5.0.0
+      process-warning: 5.1.1
       rfdc: 1.4.1
       secure-json-parse: 4.1.0
       semver: 7.8.5
@@ -12557,7 +12577,7 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
 
-  legacy-javascript@0.0.1: {}
+  legacy-javascript@0.0.4: {}
 
   levn@0.4.1:
     dependencies:
@@ -13566,6 +13586,8 @@ snapshots:
 
   process-warning@5.0.0: {}
 
+  process-warning@5.1.1: {}
+
   process@0.11.10: {}
 
   prop-types@15.8.1:
@@ -13688,11 +13710,11 @@ snapshots:
       react-lifecycles-compat: 3.0.4
       warning: 4.0.3
 
-  react-on-rails-pro-node-renderer@17.2.1-rc.0(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
+  react-on-rails-pro-node-renderer@17.2.1-rc.2(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(@sentry/node@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))):
     dependencies:
       '@fastify/formbody': 8.0.2
       '@fastify/multipart': 9.4.0
-      fastify: 5.8.5
+      fastify: 5.12.7
       fs-extra: 11.3.4
       jsonwebtoken: 9.0.3
       lockfile: 1.0.4
@@ -13705,11 +13727,11 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.43.0
       '@sentry/node': 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))
 
-  react-on-rails-pro@17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0):
+  react-on-rails-pro@17.2.1-rc.2(react-dom@19.3.0(react@19.3.0))(react-on-rails-rsc@19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3))(react@19.3.0):
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
-      react-on-rails: 17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react-on-rails: 17.2.1-rc.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     optionalDependencies:
       react-on-rails-rsc: 19.3.1(@rspack/core@2.2.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(webpack@5.110.3)
 
@@ -13726,7 +13748,7 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.2.2
 
-  react-on-rails@17.2.1-rc.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  react-on-rails@17.2.1-rc.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
