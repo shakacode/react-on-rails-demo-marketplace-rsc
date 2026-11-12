@@ -15,10 +15,11 @@ RSpec.describe 'Documented demo routes', type: :routing do
 
   def documented_paths(markdown)
     urls = URI.extract(markdown, %w[http https]).filter_map { |url| app_url_path(url) }
-    examples = markdown.scan(%r{`(/[^`\s]+)`}).flatten
-    relative = markdown_links(markdown).select { |target| target.start_with?('/') }
+    # Include bare paths in prose and fenced examples. The boundary excludes
+    # relative repository files (./README.md) and fragments of absolute URLs.
+    paths = markdown.scan(%r{(?<![\w.:/])(/[\w:./-]+)}).flatten
 
-    (urls + examples + relative).map { |path| path.split(/[?#]/).first }.uniq.sort
+    (urls + paths).map { |path| path.split(/[?#]/).first.sub(/[.:]+\z/, '') }.uniq.sort
   end
 
   def markdown_links(markdown)
@@ -41,13 +42,19 @@ RSpec.describe 'Documented demo routes', type: :routing do
       [Product](/product/rsc?tab=reviews)
       curl http://localhost:3000/api/product_search/results
       `/product-search/rsc` and `/route-that-does-not-exist`
+      Visit /missing-in-prose.
+      ```text
+      /missing-in-fence → an obsolete demo
+      ```
     MD
 
     expect(documented_paths(markdown)).to contain_exactly(
       '/restaurant/1/rsc', '/api/product_search/results', '/media-gallery', '/product/rsc',
-      '/product-search/rsc', '/route-that-does-not-exist'
+      '/product-search/rsc', '/route-that-does-not-exist', '/missing-in-prose', '/missing-in-fence'
     )
-    expect(undocumented_paths(documented_paths(markdown))).to eq(['/route-that-does-not-exist'])
+    expect(undocumented_paths(documented_paths(markdown))).to eq(
+      ['/missing-in-fence', '/missing-in-prose', '/route-that-does-not-exist']
+    )
   end
 
   %w[README.md CONTRIBUTING.md].each do |filename|
