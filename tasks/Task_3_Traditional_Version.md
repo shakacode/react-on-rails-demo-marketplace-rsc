@@ -1,5 +1,7 @@
 # Task 3: Traditional Versions (V1 + V2)
 
+> **Historical planning document.** This is the original proposal, not current operating instructions or a record of what shipped. Routes, commands, dataset sizes, performance targets, and checklists may be obsolete. Start with the [current README](../README.md).
+
 **Time**: 10-14 hours
 **Dependencies**: Task 1 (webpack config complete), Task 2 (Components & API complete)
 **Can Run Parallel With**: Task 4 (RSC Version)

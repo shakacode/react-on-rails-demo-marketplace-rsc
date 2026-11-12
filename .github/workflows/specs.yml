@@ -48,6 +48,9 @@ on:
       - '.github/workflows/specs.yml'
       - 'Rakefile'
       - 'bin/**'
+      # Entry-point docs are checked against the route contract.
+      - 'README.md'
+      - 'CONTRIBUTING.md'
   workflow_dispatch:
 
 permissions:
@@ -125,6 +128,7 @@ jobs:
                 app/*|config/*|lib/*|spec/*|bin/*) ruby=true; break 2 ;;
                 db/schema.rb|Gemfile|Gemfile.lock|.rspec|.verify-routes.js|Rakefile) ruby=true; break 2 ;;
                 .github/workflows/specs.yml) ruby=true; break 2 ;;
+                README.md|CONTRIBUTING.md) ruby=true; break 2 ;;
               esac
             done
           done <<< "${files}"

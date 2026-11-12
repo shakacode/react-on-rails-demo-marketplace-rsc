@@ -107,7 +107,7 @@ RSpec.describe 'specs.yml detect-changes step' do
     # (3 filenames + 2 previous names = 5), matching `declared` and silently
     # skipping specs; entry-unit counting sees 3 < 5 and fails open.
     files = [
-      { 'filename' => 'README.md' },
+      { 'filename' => 'docs/index.md' },
       { 'filename' => 'docs/new-a.md', 'previous_filename' => 'docs/old-a.md' },
       { 'filename' => 'notes/new-b.md', 'previous_filename' => 'notes/old-b.md' }
     ]
@@ -136,12 +136,29 @@ RSpec.describe 'specs.yml detect-changes step' do
   end
 
   it 'reports ruby=false when only irrelevant paths changed' do
-    files = [{ 'filename' => 'README.md' }, { 'filename' => 'docs/x.md' }]
+    files = [{ 'filename' => 'docs/x.md' }, { 'filename' => 'docs/y.md' }]
     result = run_detect_changes(files: files, changed_files: 2)
 
     expect(result.fetch(:status)).to be_success
     expect(result.fetch(:stdout)).to include('Ruby-relevant change detected: false')
     expect(result.fetch(:output)).to eq("ruby=false\n")
+  end
+
+  %w[README.md CONTRIBUTING.md].each do |filename|
+    it "runs the documentation route guard when only #{filename} changes" do
+      result = run_detect_changes(files: [{ 'filename' => filename }], changed_files: 1)
+
+      expect(result.fetch(:status)).to be_success
+      expect(result.fetch(:output)).to eq("ruby=true\n")
+    end
+
+    it "detects a rename away from #{filename}" do
+      files = [{ 'filename' => 'docs/archived.md', 'previous_filename' => filename }]
+      result = run_detect_changes(files: files, changed_files: 1)
+
+      expect(result.fetch(:status)).to be_success
+      expect(result.fetch(:output)).to eq("ruby=true\n")
+    end
   end
 
   it 'handles a zero-file PR without failing' do

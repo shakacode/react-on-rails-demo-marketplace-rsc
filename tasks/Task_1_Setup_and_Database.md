@@ -1,5 +1,7 @@
 # Task 1: Setup & Database
 
+> **Historical planning document.** This is the original proposal, not current operating instructions or a record of what shipped. Routes, commands, dataset sizes, performance targets, and checklists may be obsolete. Start with the [current README](../README.md).
+
 **Time**: 8-12 hours
 **Dependencies**: None (this is foundation)
 **Blocking**: All other tasks depend on this
