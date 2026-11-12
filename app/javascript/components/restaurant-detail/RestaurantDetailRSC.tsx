@@ -1,6 +1,6 @@
 import React from 'react';
 import { cacheComponent } from '../../utils/rscCache';
-import { RestaurantDetailProps, MenuPayload, Review, HoursEntry, DetailRestaurant } from './types';
+import { RestaurantDetailProps, MenuPayload, HoursEntry, DetailRestaurant } from './types';
 import { RestaurantHeader } from './RestaurantHeader';
 import { BioSection } from './BioSectionForServer';
 import { MenuSection } from './MenuSectionForServer';
@@ -19,13 +19,6 @@ const CachedMenuSection = cacheComponent(
   { id: 'restaurant-menu', revalidate: 60 },
 );
 
-const CachedReviewsSection = cacheComponent(
-  async ({ reviews, averageRating, reviewCount }: { restaurantId: number; reviews: Review[]; averageRating: number; reviewCount: number }) => (
-    <ReviewsSection reviews={reviews} averageRating={averageRating} reviewCount={reviewCount} />
-  ),
-  { id: 'restaurant-reviews', revalidate: 60 },
-);
-
 const CachedSidebarSection = cacheComponent(
   async ({ neighborhood, faq, hours, restaurant }: { restaurantId: number; neighborhood: string; faq: string; hours: HoursEntry[]; restaurant: DetailRestaurant }) => (
     <SidebarSection neighborhood={neighborhood} faq={faq} hours={hours} restaurant={restaurant} />
@@ -40,7 +33,8 @@ export default function RestaurantDetailRSC(props: RestaurantDetailProps) {
       <RestaurantHeader restaurant={props.restaurant} stats={props.stats} hours={props.hours} variant="rsc" />
       <CachedBioSection restaurantId={rid} bio={props.bio} story={props.story} restaurant={props.restaurant} />
       <CachedMenuSection restaurantId={rid} menu={props.menu} />
-      <CachedReviewsSection restaurantId={rid} reviews={props.reviews} averageRating={props.restaurant.average_rating} reviewCount={props.restaurant.review_count} />
+      {/* HelpfulButton is a client island; cached fragments must stay server-only. */}
+      <ReviewsSection reviews={props.reviews} averageRating={props.restaurant.average_rating} reviewCount={props.restaurant.review_count} />
       <CachedSidebarSection restaurantId={rid} neighborhood={props.neighborhood} faq={props.faq} hours={props.hours} restaurant={props.restaurant} />
     </div>
   );

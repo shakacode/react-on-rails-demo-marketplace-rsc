@@ -6,6 +6,12 @@ local hit avoids a Redis request. Redis shares completed entries across workers
 and preserves them through worker restarts. Concurrent cold requests in different
 workers can still render the same fragment: single-flight coalescing is per worker.
 
+Cache only server-only fragments with public data. The current cache decoder cannot
+replay client component references inside the RSC bundle. Search results and
+restaurant reviews contain interactive client islands, so those sections render
+normally while eligible product, blog and restaurant sections remain cached. Never
+share personalized data without including its identity and permissions in the key.
+
 ## Configuration
 
 `RSC_CACHE_ENABLED` and `RSC_L1_CACHE_MAX_ENTRIES` are **build-time** settings for
@@ -45,8 +51,8 @@ than once, even when sharing is enabled.
 The Redis URL stays out of browser bundles and is passed only to trusted renderer
 VMs. Use a disposable Redis database for experiments and keep credentials out of
 logs and checked-in configuration. The renderer exposes a callback instead of
-serializing the URL in its startup configuration; the cache startup message also
-masks URL credentials.
+serializing the URL in its startup configuration; the cache startup message does
+not print the URL.
 
 ## Repeatable checks
 

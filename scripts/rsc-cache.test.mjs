@@ -25,7 +25,7 @@ async function until(predicate, timeout = 5000) {
   }
 }
 
-async function cacheFixture(t, { enabled = true, maxEntries = '2' } = {}) {
+async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'disposable-cache-test' } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'marketplace-rsc-cache-'));
   const shutdown = [];
   const listener = net.createServer();
@@ -34,9 +34,9 @@ async function cacheFixture(t, { enabled = true, maxEntries = '2' } = {}) {
   await new Promise((resolve) => listener.close(resolve));
   const server = spawn('redis-server', [
     '--bind', '127.0.0.1', '--port', String(port), '--save', '', '--appendonly', 'no',
-    '--dir', directory, '--requirepass', 'disposable-cache-test',
+    '--dir', directory, '--requirepass', password,
   ], { stdio: 'ignore', env: { ...process.env, LC_ALL: 'C' } });
-  const redisUrl = `redis://:disposable-cache-test@127.0.0.1:${port}`;
+  const redisUrl = `redis://:${password}@127.0.0.1:${port}`;
   const redis = new Redis(redisUrl, { retryStrategy: () => 20 });
   redis.on('error', () => {});
   t.after(async () => {
@@ -180,11 +180,13 @@ test('Redis loss leaves local hits and subsequent local writes usable', async (t
   assert.equal(await handler.get('missing'), null);
 });
 
-test('startup logging masks Redis credentials', async (t) => {
-  const fixture = await cacheFixture(t);
+test('startup logging omits Redis URLs even with an at-sign in the password', async (t) => {
+  const password = 'disposable-cache-test@tail';
+  const fixture = await cacheFixture(t, { password });
   const { logs } = fixture.worker();
-  assert.match(logs.join('\n'), /redis:\/\/\*\*\*@127\.0\.0\.1/);
-  assert.equal(logs.join('\n').includes('disposable-cache-test'), false);
+  assert.match(logs.join('\n'), /Tiered cache enabled/);
+  assert.equal(logs.join('\n').includes('redis://'), false);
+  assert.equal(logs.join('\n').includes(password), false);
 });
 
 test('shutdown closes the Redis connection before completing worker termination', async (t) => {

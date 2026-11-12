@@ -85,8 +85,7 @@ function closeOnShutdown(handler: RedisClosable) {
 }
 
 if (redisUrl && isRscBundle && isRedisCacheEnabled) {
-  const safeUrl = redisUrl.replace(/:\/\/[^@]*@/, '://***@');
-  console.info(`[RSC Cache] Tiered cache enabled (L1 in-memory + L2 Redis: ${safeUrl})`);
+  console.info('[RSC Cache] Tiered cache enabled (L1 in-memory + L2 Redis)');
   const l1 = new InMemoryLRU();
   const l2 = new RedisCacheHandler({ redisUrl });
   closeOnShutdown(l2 as RedisClosable);

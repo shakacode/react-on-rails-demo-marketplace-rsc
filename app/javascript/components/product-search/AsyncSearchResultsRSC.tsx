@@ -10,7 +10,6 @@
 //   - 500-char descriptions, 6 features (no specs — never rendered in search)
 
 import React from "react";
-import { cacheComponent } from "../../utils/rscCache";
 import type {
   SearchProduct,
   Pagination as PaginationType,
@@ -50,14 +49,16 @@ interface Props {
   getReactOnRailsAsyncProp: (propName: string) => Promise<unknown>;
 }
 
-const CachedResultsGrid = cacheComponent(
-  async ({
+// The fragment cache decoder cannot replay client references in the RSC bundle.
+// Keep the interactive islands outside cached fragments.
+async function ResultsGrid({
     products,
     review_snippets,
   }: {
     products: SearchProduct[];
     review_snippets: Record<number, ReviewSnippet[]>;
-  }) => (
+  }) {
+  return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {products.map((product, idx) => (
         <SearchResultCard
@@ -87,9 +88,8 @@ const CachedResultsGrid = cacheComponent(
         />
       ))}
     </div>
-  ),
-  { id: "search-results-grid", revalidate: 60 },
-);
+  );
+}
 
 export default async function AsyncSearchResultsRSC({
   getReactOnRailsAsyncProp,
@@ -140,7 +140,7 @@ export default async function AsyncSearchResultsRSC({
         )
       ) : (
         <>
-          <CachedResultsGrid
+          <ResultsGrid
             products={products}
             review_snippets={review_snippets}
           />
