@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { EventEmitter } from 'node:events';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import net from 'node:net';
@@ -13,9 +12,13 @@ import vm from 'node:vm';
 import Redis from 'ioredis';
 import webpack from 'webpack';
 import addIoredisExternal from '../config/shared/addIoredisExternal.js';
+import redisCacheOwnerModule from '../config/redis-cache-owner.js';
 
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('..', import.meta.url));
+const { createRedisCacheOwner } = redisCacheOwnerModule;
+const hasRedis = spawnSync('redis-server', ['--version'], { env: { ...process.env, LC_ALL: 'C' } }).status === 0;
+const cacheTest = (name, fn) => test(name, { skip: !hasRedis && 'requires redis-server on PATH' }, fn);
 
 async function until(predicate, timeout = 5000) {
   const deadline = Date.now() + timeout;
@@ -27,7 +30,13 @@ async function until(predicate, timeout = 5000) {
 
 async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'disposable-cache-test' } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'marketplace-rsc-cache-'));
-  const shutdown = [];
+  const clients = [];
+  class TrackedRedis extends Redis {
+    constructor(...args) {
+      super(...args);
+      clients.push(this);
+    }
+  }
   const listener = net.createServer();
   await new Promise((resolve) => listener.listen(0, '127.0.0.1', resolve));
   const { port } = listener.address();
@@ -40,7 +49,7 @@ async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'd
   const redis = new Redis(redisUrl, { retryStrategy: () => 20 });
   redis.on('error', () => {});
   t.after(async () => {
-    await Promise.all(shutdown.map((close) => close()));
+    clients.forEach((client) => client.disconnect());
     redis.disconnect();
     server.kill();
     await rm(directory, { recursive: true, force: true });
@@ -84,31 +93,22 @@ async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'd
   }
   const code = await readFile(path.join(directory, 'cache.cjs'), 'utf8');
 
-  function worker(url = redisUrl) {
-    const workerProcess = new EventEmitter();
-    workerProcess.env = { NODE_ENV: 'production' };
-    workerProcess.pid = 1;
-    let stopped = false;
-    workerProcess.kill = () => { stopped = true; };
+  function worker(url = redisUrl, getSharedRedisCache = createRedisCacheOwner()) {
+    const workerProcess = { env: { NODE_ENV: 'production' } };
     const module = { exports: {} };
     const logs = [];
     vm.runInNewContext(code, {
-      module, exports: module.exports, require, Buffer, process: workerProcess,
+      module, exports: module.exports,
+      require: (name) => (name === 'ioredis' ? { default: TrackedRedis } : require(name)),
+      Buffer, process: workerProcess,
       setTimeout, clearTimeout, setImmediate, clearImmediate,
       __GET_REDIS_URL__: () => url,
+      __GET_SHARED_REDIS_CACHE__: getSharedRedisCache,
       console: Object.fromEntries(['info', 'warn', 'error', 'debug'].map((level) => [
         level, (...args) => logs.push(args.join(' ')),
       ])),
     }, { filename: path.join(directory, 'cache.cjs') });
-    const hasShutdownHook = workerProcess.listenerCount('SIGTERM') > 0;
-    const stop = async () => {
-      if (hasShutdownHook && !stopped) {
-        workerProcess.emit('SIGTERM');
-        await until(() => stopped);
-      }
-    };
-    shutdown.push(stop);
-    return { handler: module.exports.getCacheHandler('default'), logs, stop };
+    return { handler: module.exports.getCacheHandler('default'), logs };
   }
 
   return { worker, redis, server };
@@ -119,7 +119,7 @@ const entry = (text, revalidate = 60) => ({
 });
 const text = (cached) => cached?.value.map((chunk) => chunk.toString()).join('');
 
-test('a fresh worker reuses a fragment cached by another worker', async (t) => {
+cacheTest('a fresh worker reuses a fragment cached by another worker', async (t) => {
   const fixture = await cacheFixture(t);
   const first = fixture.worker();
   await first.handler.set('shared-fragment', entry('rendered once'));
@@ -127,7 +127,7 @@ test('a fresh worker reuses a fragment cached by another worker', async (t) => {
   assert.equal(text(await second.handler.get('shared-fragment')), 'rendered once');
 });
 
-test('without a Redis URL, workers retain separate in-memory caches', async (t) => {
+cacheTest('without a Redis URL, workers retain separate in-memory caches', async (t) => {
   const fixture = await cacheFixture(t);
   const first = fixture.worker('');
   await first.handler.set('local-fragment', entry('local only'));
@@ -136,7 +136,7 @@ test('without a Redis URL, workers retain separate in-memory caches', async (t) 
   assert.equal(await fixture.redis.dbsize(), 0);
 });
 
-test('a disabled build flag leaves Redis unused and reports caching as disabled', async (t) => {
+cacheTest('a disabled build flag leaves Redis unused and reports caching as disabled', async (t) => {
   const fixture = await cacheFixture(t, { enabled: false });
   const first = fixture.worker();
   await first.handler.set('disabled-fragment', entry('local handler'));
@@ -145,7 +145,7 @@ test('a disabled build flag leaves Redis unused and reports caching as disabled'
   assert.match(first.logs.join('\n'), /fragment caching is disabled/);
 });
 
-test('L1 evicts the least recently read entry at its configured capacity', async (t) => {
+cacheTest('L1 evicts the least recently read entry at its configured capacity', async (t) => {
   const fixture = await cacheFixture(t, { maxEntries: '2' });
   const { handler } = fixture.worker();
   await handler.set('a', entry('A'));
@@ -158,7 +158,7 @@ test('L1 evicts the least recently read entry at its configured capacity', async
   assert.equal(text(await handler.get('c')), 'C');
 });
 
-test('promotion from Redis does not extend a fragment beyond its original expiry', async (t) => {
+cacheTest('promotion from Redis does not extend a fragment beyond its original expiry', async (t) => {
   const fixture = await cacheFixture(t);
   await fixture.worker().handler.set('expires', entry('short lived', 1));
   await delay(600);
@@ -168,7 +168,7 @@ test('promotion from Redis does not extend a fragment beyond its original expiry
   assert.equal(await second.handler.get('expires'), null);
 });
 
-test('Redis loss leaves local hits and subsequent local writes usable', async (t) => {
+cacheTest('Redis loss leaves local hits and subsequent local writes usable', async (t) => {
   const fixture = await cacheFixture(t);
   const { handler } = fixture.worker();
   await handler.set('before-outage', entry('already warm'));
@@ -180,7 +180,7 @@ test('Redis loss leaves local hits and subsequent local writes usable', async (t
   assert.equal(await handler.get('missing'), null);
 });
 
-test('startup logging omits Redis URLs even with an at-sign in the password', async (t) => {
+cacheTest('startup logging omits Redis URLs even with an at-sign in the password', async (t) => {
   const password = 'disposable-cache-test@tail';
   const fixture = await cacheFixture(t, { password });
   const { logs } = fixture.worker();
@@ -189,12 +189,15 @@ test('startup logging omits Redis URLs even with an at-sign in the password', as
   assert.equal(logs.join('\n').includes(password), false);
 });
 
-test('shutdown closes the Redis connection before completing worker termination', async (t) => {
+cacheTest('several VM generations in one worker share one Redis connection', async (t) => {
   const fixture = await cacheFixture(t);
-  const context = fixture.worker();
-  await context.handler.set('shutdown', entry('saved'));
+  const owner = createRedisCacheOwner();
+  const first = fixture.worker(undefined, owner);
+  await first.handler.set('generation', entry('saved'));
+  for (let generation = 0; generation < 12; generation += 1) {
+    const next = fixture.worker(undefined, owner);
+    assert.equal(text(await next.handler.get('generation')), 'saved');
+  }
+  // One fixture inspector plus one shared worker connection.
   assert.match(await fixture.redis.info('clients'), /connected_clients:2\r?\n/);
-  await context.stop();
-  assert.match(await fixture.redis.info('clients'), /connected_clients:1\r?\n/);
-  assert.equal(text(await fixture.worker().handler.get('shutdown')), 'saved');
 });

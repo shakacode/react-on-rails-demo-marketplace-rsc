@@ -31,6 +31,8 @@ RAILS_PORT="${RAILS_PORT:-3010}"
 RENDERER_PORT="${RENDERER_PORT:-3800}"
 
 export SHAKAPACKER_ASSETS_BUNDLER=rspack
+# Exercise fragment encoding/decoding as well as ordinary rendering in CI.
+export RSC_CACHE_ENABLED=true
 export RENDERER_URL="http://localhost:${RENDERER_PORT}"
 export BASE_URL="http://localhost:${RAILS_PORT}"
 
@@ -84,7 +86,7 @@ wait_for_port "$RAILS_PORT" "Rails"
 # SSR/client variants and /search,/analytics routes have unrelated data/route
 # issues (404/500 without seed data) that are out of scope for an RSC-rendering
 # gate. Override with RSC_ROUTES if the demo's RSC routes change.
-export ROUTES="${RSC_ROUTES:-/rsc,/product/rsc,/product-search/rsc,/blog/rsc,/blog/rsc-simple,/blog/rsc-step1,/blog/rsc-step1b,/blog/rsc-step1c,/blog/rsc-step2,/blog/rsc-step3,/blog/rsc-step4,/blog/rsc-step5}"
+export ROUTES="${RSC_ROUTES:-/rsc,/product/rsc,/product-search/rsc,/restaurant/1/rsc,/restaurant/1/rsc-virtual,/blog/rsc,/blog/rsc-simple,/blog/rsc-step1,/blog/rsc-step1b,/blog/rsc-step1c,/blog/rsc-step2,/blog/rsc-step3,/blog/rsc-step4,/blog/rsc-step5}"
 
 # .verify-routes.js opens each route, waits for the hydration window, captures
 # console/page errors and classified React hydration codes, and exits non-zero

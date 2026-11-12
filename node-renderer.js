@@ -1,6 +1,7 @@
 const path = require('path');
 
 const { rendererAdditionalContext } = require('./config/renderer-context');
+const { createRedisCacheOwner } = require('./config/redis-cache-owner');
 
 const { env } = process;
 
@@ -36,7 +37,11 @@ const config = {
   // Additional NodeJS modules to add to the VM context
   // Keep the runtime URL available to trusted RSC code without serializing its
   // credentials in the renderer's startup configuration logs.
-  additionalContext: { ...rendererAdditionalContext, __GET_REDIS_URL__: () => env.REDIS_URL || '' },
+  additionalContext: {
+    ...rendererAdditionalContext,
+    __GET_REDIS_URL__: () => env.REDIS_URL || '',
+    __GET_SHARED_REDIS_CACHE__: createRedisCacheOwner(),
+  },
 
   // Set to false to use real timers (required for setTimeout, setInterval)
   stubTimers: false,
