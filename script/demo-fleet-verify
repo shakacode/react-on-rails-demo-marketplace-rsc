@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+pnpm type-check:e2e
+pnpm lint:e2e
+pnpm test:e2e:unit
 bundle exec rake
 pnpm lint:rsc
-bundle exec rake react_on_rails:generate_packs
-RAILS_ENV=production NODE_ENV=production SECRET_KEY_BASE=dummy_secret_key_base_for_demo_fleet pnpm build:production
+SECRET_KEY_BASE=dummy_secret_key_base_for_demo_fleet bin/build-production
 pnpm verify:rsc

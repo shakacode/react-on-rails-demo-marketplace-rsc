@@ -42,12 +42,30 @@ export function aggregateRuns(runs, warmupCount) {
     'streamingDuration',
   ];
 
+  // Scroll-cycle metrics (issue #184) exist only on lanes that opt into
+  // `scroll: true` — omitted (not zero-filled) everywhere else so the JSON
+  // shape of existing lanes is unchanged.
+  const optionalMetricKeys = [
+    'domNodesPostHydration', 'domNodesAtBottom', 'domNodesPostScroll',
+    'heapUsedPostLoad', 'heapUsedPostScroll',
+    'scrollLongTaskTime', 'scrollLongTaskCount',
+    'scrollLoafTime', 'scrollLoafCount', 'scrollLoafMax',
+    'scrollDuration', 'scrollSteps', 'scrollCycleComplete', 'scrollCoverage',
+    'postFreezeLongTaskTime',
+  ];
+
   const result = {};
   for (const key of metricKeys) {
     const values = effective
       .map((run) => run[key])
       .filter((v) => v != null && !Number.isNaN(v));
     result[key] = summarize(values);
+  }
+  for (const key of optionalMetricKeys) {
+    const values = effective
+      .map((run) => run[key])
+      .filter((v) => v != null && !Number.isNaN(v));
+    if (values.length > 0) result[key] = summarize(values);
   }
 
   // Merge JS resources from last effective run (sizes are deterministic)

@@ -1,0 +1,6 @@
+<%# Cached variant of restaurants/show_rsc.html.erb (plain stream, no async props). cached_stream_
+    react_component caches the streamed chunks; on a hit they replay and the detail assembly +
+    node render are skipped. Props come from the block. cache_key = restaurant id + updated_at. %>
+<%= cached_stream_react_component("RestaurantDetailRSC",
+      cache_key: ["restaurant_rsc", @restaurant.id, @restaurant.updated_at.to_i],
+      prerender: true) { RestaurantDetailData.for(@restaurant) } %>

@@ -21,6 +21,10 @@ export function getCollectorScript(overrides = {}) {
   const likeSelector = overrides.likeButton || SELECTORS.likeButton;
   const headingSelector = SELECTORS.relatedPostsHeading;
   const headingText = overrides.relatedHeadingText || SELECTORS.relatedPostsText;
+  // Hydration is detected on any element React attaches fibers to. Lanes whose
+  // interaction target may not exist at load (virtualized lists mount buttons
+  // lazily) declare a separate always-present hydration target.
+  const hydrationSelector = overrides.hydrationTarget || likeSelector;
 
   return `
     // Inject web-vitals IIFE — creates window.webVitals
@@ -37,6 +41,36 @@ export function getCollectorScript(overrides = {}) {
       streamingDuration: null,
       _hydrationStart: null,
       _streamingStart: null,
+      // Scroll-phase metrics (issue #184). INP cannot see scrolling — the
+      // Event Timing API observes only clicks/taps/keys — so scroll jank is
+      // measured directly: long tasks and long animation frames that happen
+      // while the runner's scripted scroll cycle is active. The phase flag
+      // also keeps scroll long-tasks OUT of TBT, so load-phase TBT is not
+      // double-counted with scroll work.
+      scrollLongTaskTime: 0,
+      scrollLongTaskCount: 0,
+      scrollLoafTime: 0,
+      scrollLoafCount: 0,
+      scrollLoafMax: 0,
+      // Post-freeze non-scroll long tasks (forced GCs, the anchor jump, click
+      // plumbing) land here as a diagnostic instead of contaminating TBT —
+      // validated at 0.0ms across the published matrix, and this bucket keeps
+      // it observable if a future harness change moves it off zero.
+      postFreezeLongTaskTime: 0,
+      _scrollPhase: false,
+      _tbtFrozen: false,
+      _tbtFreezeAt: Infinity,
+    };
+
+    window.__vitals.beginScrollPhase = () => { window.__vitals._scrollPhase = true; };
+    window.__vitals.endScrollPhase = () => { window.__vitals._scrollPhase = false; };
+    // TBT freeze (issue #184 closeout): the runner calls this at the start of
+    // the scroll cycle, BEFORE the first forced GC, so TBT means exactly
+    // "load-phase blocking time". The startTime comparison keeps the boundary
+    // exact even for a long task delivered after the freeze call.
+    window.__vitals.freezeTbt = () => {
+      window.__vitals._tbtFrozen = true;
+      window.__vitals._tbtFreezeAt = performance.now();
     };
 
     // --- web-vitals library callbacks (accurate metric definitions) ---
@@ -62,16 +96,39 @@ export function getCollectorScript(overrides = {}) {
     });
 
     // --- Manual: TBT (not covered by web-vitals) ---
+    // During the scripted scroll cycle, long tasks are attributed to the
+    // scroll-phase metrics instead of TBT (see beginScrollPhase above).
 
     const tbtObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         const blocking = entry.duration - 50;
         if (blocking > 0) {
-          window.__vitals.tbt += blocking;
+          if (window.__vitals._scrollPhase) {
+            window.__vitals.scrollLongTaskTime += blocking;
+            window.__vitals.scrollLongTaskCount += 1;
+          } else if (!window.__vitals._tbtFrozen || entry.startTime < window.__vitals._tbtFreezeAt) {
+            window.__vitals.tbt += blocking;
+          } else {
+            window.__vitals.postFreezeLongTaskTime += blocking;
+          }
         }
       }
     });
     try { tbtObserver.observe({ type: 'longtask', buffered: true }); } catch {}
+
+    // --- Manual: long animation frames during the scroll phase ---
+    // LoAF catches rendering-pipeline jank (style/layout/paint) that longtask
+    // misses; blockingDuration is the over-50ms share of each frame.
+
+    const loafObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!window.__vitals._scrollPhase) continue;
+        window.__vitals.scrollLoafTime += entry.blockingDuration ?? Math.max(0, entry.duration - 50);
+        window.__vitals.scrollLoafCount += 1;
+        window.__vitals.scrollLoafMax = Math.max(window.__vitals.scrollLoafMax, entry.duration);
+      }
+    });
+    try { loafObserver.observe({ type: 'long-animation-frame', buffered: false }); } catch {}
 
     // --- Manual: Streaming + Hydration detection ---
     // Both deferred to DOMContentLoaded because document.documentElement
@@ -109,7 +166,7 @@ export function getCollectorScript(overrides = {}) {
       window.__vitals._hydrationStart = performance.now();
 
       function checkHydration() {
-        const btn = document.querySelector('${likeSelector}');
+        const btn = document.querySelector('${hydrationSelector}');
         if (btn) {
           const keys = Object.keys(btn);
           const hasFiber = keys.some(

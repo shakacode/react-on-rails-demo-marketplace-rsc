@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+clean_renderer_bundle_cache() {
+  if [[ -d "${renderer_bundle_cache}" ]]; then
+    find "${renderer_bundle_cache}" -mindepth 1 -depth -delete || true
+    rmdir "${renderer_bundle_cache}" 2>/dev/null || true
+  fi
+}
+
+restore_renderer_loadable_stats() {
+  if [[ "${renderer_loadable_stats_staged}" != true ]]; then
+    return
+  fi
+
+  if [[ "${renderer_loadable_stats_target_existed}" == true ]]; then
+    if ! mkdir -p "$(dirname "${renderer_loadable_stats_target}")"; then
+      echo "Failed to recreate the renderer stats directory; backup retained at ${renderer_loadable_stats_backup}" >&2
+      return 1
+    fi
+    if cp "${renderer_loadable_stats_backup}" "${renderer_loadable_stats_target}"; then
+      rm -f "${renderer_loadable_stats_backup}"
+      renderer_loadable_stats_backup=""
+    else
+      echo "Failed to restore renderer stats; backup retained at ${renderer_loadable_stats_backup}" >&2
+      return 1
+    fi
+  else
+    rm -f "${renderer_loadable_stats_target}"
+    rmdir "$(dirname "${renderer_loadable_stats_target}")" 2>/dev/null || true
+  fi
+}
+
+cleanup() {
+  local exit_status=$?
+
+  trap - EXIT
+  trap '' INT TERM
+  stop_children "${renderer_pid}:${renderer_pgid}" "${rails_pid}:${rails_pgid}"
+  clean_renderer_bundle_cache
+  if ! restore_renderer_loadable_stats; then
+    if [[ "${exit_status}" -eq 0 ]]; then
+      exit_status=1
+    fi
+  fi
+  exit "${exit_status}"
+}

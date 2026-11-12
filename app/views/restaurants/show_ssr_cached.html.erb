@@ -1,0 +1,6 @@
+<%# Cached variant of restaurants/show_ssr.html.erb. Props are built in the block so the detail
+    assembly (markdown bio, 80-item menu, 40 reviews, price ladder) is skipped on a cache hit,
+    along with the SSR prerender. cache_key = restaurant id + updated_at. %>
+<%= cached_react_component("RestaurantDetailSSR",
+      cache_key: ["restaurant_ssr", @restaurant.id, @restaurant.updated_at.to_i],
+      prerender: true) { RestaurantDetailData.for(@restaurant) } %>

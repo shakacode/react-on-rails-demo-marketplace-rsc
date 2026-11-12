@@ -20,6 +20,8 @@ import { Product } from '../../types/product';
 import { ProductImageGallery } from './ProductImageGalleryForServer';
 import { ProductInfo } from './ProductInfo';
 import { AddToCartSection } from './AddToCartSectionForServer';
+import { ReviewMutationIsland } from './ReviewMutationIslandForServer';
+import { ReviewsSectionRoute } from './ReviewsSectionRouteForServer';
 import AsyncProductDetailsRSC from './AsyncProductDetailsRSC';
 import AsyncReviewStatsRSC from './AsyncReviewStatsRSC';
 import AsyncReviewsRSC from './AsyncReviewsRSC';
@@ -32,6 +34,9 @@ import { buildProductSpecMarkdown } from './productSpecMarkdown';
 
 interface Props {
   product: Product;
+  // Server-set flag (ENABLE_SPIKE_MUTATIONS): the #245 mutation island renders
+  // only where its gated write endpoint actually exists. Production never sets it.
+  review_mutation_enabled?: boolean;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
@@ -55,7 +60,7 @@ const CachedProductSpecSheet = cacheComponent(
   { id: 'product-spec-sheet', revalidate: 60 },
 );
 
-export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Props) {
+export default function ProductPageRSC({ product, review_mutation_enabled, getReactOnRailsAsyncProp }: Props) {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-6xl px-4 py-6">
@@ -91,6 +96,10 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
         <section className="border-t border-gray-200 pt-8 mt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
 
+          {/* Read-your-writes spike (#245): POST a canned review, then RSCRoute.refetch().
+              Rendered only where the gated write endpoint exists (ENABLE_SPIKE_MUTATIONS). */}
+          {review_mutation_enabled && <ReviewMutationIsland productId={product.id} />}
+
           {/* Review stats stream first (rating distribution aggregation) */}
           <Suspense fallback={<ReviewStatsSkeleton />}>
             <AsyncReviewStatsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
@@ -102,6 +111,30 @@ export default function ProductPageRSC({ product, getReactOnRailsAsyncProp }: Pr
               <AsyncReviewsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
             </Suspense>
           </div>
+
+          {/* C5 experiment (#245): a SECOND copy of the reviews section mounted
+              through a nested <RSCRoute componentName="ProductReviewsSectionRSC">.
+              Its island resolves useCurrentRSCRoute() to the NEAREST (nested)
+              route, so its refetch re-streams only review_stats + reviews
+              through the payload door, leaving the rest of the page untouched.
+              Rendered as an ADDITIONAL block (not a replacement) so the merged
+              whole-page path above keeps its exact behavior for comparison —
+              and because a nested route pins its subtree to its own payload
+              cache key, replacing the inline section would make the page-level
+              refetch serve the section from the provider cache (stale).
+              Gated like the island: absent unless ENABLE_SPIKE_MUTATIONS. */}
+          {review_mutation_enabled && (
+            <div
+              className="mt-10 rounded-xl border-2 border-dashed border-indigo-300 p-4"
+              data-testid="c5-section-experiment"
+            >
+              <p className="mb-4 text-sm text-indigo-800">
+                C5 experiment (#245): the block below is a nested RSCRoute — its button refetches ONLY this
+                section through the payload door.
+              </p>
+              <ReviewsSectionRoute productId={product.id} reviewMutationEnabled={Boolean(review_mutation_enabled)} />
+            </div>
+          )}
         </section>
 
         {/* Related products — streams last (recommendation query) */}

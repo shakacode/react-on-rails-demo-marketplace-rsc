@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM ruby:3.3.0-slim AS base
+ARG RUBY_VERSION=3.4.9
+FROM ruby:${RUBY_VERSION}-slim AS base
 
 ENV NODE_VERSION=20.19.5
 ENV PNPM_VERSION=9.15.2
@@ -38,8 +39,17 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle config set without 'development test' && \
     bundle install --jobs=4 --retry=3
 
-# Install Node packages
+# Install Node packages.
+# `pnpm install` also runs package.json's `postinstall` hook, which is
+# `node scripts/apply-ppr-patches.js`. That script therefore has to be in the image
+# *before* this layer runs, or the install aborts with MODULE_NOT_FOUND. Only the
+# hook itself is copied, not all of `scripts/`, so that editing an unrelated script
+# does not invalidate the install layer's cache.
+# The hook is a no-op during the image build: it returns early unless ENABLE_PPR=true,
+# which nothing here sets, so the `patches/` tree it would otherwise read is not
+# needed until the `COPY . .` below.
 COPY package.json pnpm-lock.yaml .npmrc ./
+COPY scripts/apply-ppr-patches.js ./scripts/
 RUN pnpm install --frozen-lockfile
 
 # Copy app source
@@ -49,20 +59,13 @@ COPY . .
 ARG REACT_ON_RAILS_PRO_LICENSE
 ARG SECRET_KEY_BASE=dummy_secret_for_asset_compilation
 ARG RSC_CACHE_ENABLED=false
+ARG REACT_COMPILER_ENABLED=false
 
-RUN RAILS_ENV=production \
-    NODE_ENV=production \
-    SECRET_KEY_BASE=$SECRET_KEY_BASE \
+RUN SECRET_KEY_BASE=$SECRET_KEY_BASE \
     REACT_ON_RAILS_PRO_LICENSE=$REACT_ON_RAILS_PRO_LICENSE \
     RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
-    bundle exec rake react_on_rails:generate_packs
-
-RUN RAILS_ENV=production \
-    NODE_ENV=production \
-    SECRET_KEY_BASE=$SECRET_KEY_BASE \
-    REACT_ON_RAILS_PRO_LICENSE=$REACT_ON_RAILS_PRO_LICENSE \
-    RSC_CACHE_ENABLED=$RSC_CACHE_ENABLED \
-    bin/shakapacker
+    REACT_COMPILER_ENABLED=$REACT_COMPILER_ENABLED \
+    bin/build-production
 
 # ============================================================
 # Production stage - minimal runtime image

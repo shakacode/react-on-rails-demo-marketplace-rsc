@@ -1,5 +1,7 @@
 const path = require('path');
 
+const { rendererAdditionalContext } = require('./config/renderer-context');
+
 const { env } = process;
 
 const { reactOnRailsProNodeRenderer } = require('react-on-rails-pro-node-renderer');
@@ -31,11 +33,10 @@ const config = {
   // Required for loadable components and async operations
   supportModules: true,
 
-  // Additional NodeJS modules to add to the VM context. REDIS_URL may include
-  // credentials, so keep this context limited to trusted server-side RSC code.
-  // ioredis stays external; initRedisCache is the only bundle module expected to use this URL.
-  // Redis caching also requires RSC_CACHE_ENABLED=true when building the RSC bundle.
-  additionalContext: { URL, AbortController, performance, __REDIS_URL__: env.REDIS_URL || '' },
+  // Additional NodeJS modules to add to the VM context
+  // Keep the runtime URL available to trusted RSC code without serializing its
+  // credentials in the renderer's startup configuration logs.
+  additionalContext: { ...rendererAdditionalContext, __GET_REDIS_URL__: () => env.REDIS_URL || '' },
 
   // Set to false to use real timers (required for setTimeout, setInterval)
   stubTimers: false,

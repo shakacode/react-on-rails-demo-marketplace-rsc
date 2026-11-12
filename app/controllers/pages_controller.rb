@@ -10,6 +10,7 @@ class PagesController < ApplicationController
   def how_rsc_works; end
   def rsc_performance; end
   def measure; end
+  def ssr_rsc_playground; end
 
   def lh_compare
     @left  = params[:left].to_s

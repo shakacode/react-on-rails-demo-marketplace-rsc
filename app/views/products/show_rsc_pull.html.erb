@@ -1,0 +1,68 @@
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%# V5: Pull-mode async props — bidirectional streaming.
+    push_props: [] means NO props are eagerly pushed. React requests each prop
+    on demand via propRequest; Rails resolves them in the pull_requests loop.
+    Combined with unstable_cache on the JS side: on a cache HIT the component
+    never requests the prop, so the DB query below never runs.
+
+    Allowlisted prop names only — unknown names are rejected. %>
+<%= stream_react_component_with_async_props("ProductPagePullRSC",
+    props: { product: @product_data }, prerender: true,
+    push_props: []) do |emit|
+
+  while (prop_name = emit.pull_requests.dequeue)
+    case prop_name
+    when "product_details"
+      emit.call("product_details", {
+        description: @product.description,
+        features: @product.features,
+        specs: @product.specs,
+      })
+
+    when "review_stats"
+      emit.call("review_stats", @product.review_stats)
+
+    when "reviews"
+      reviews = @product.top_reviews(5)
+      emit.call("reviews", {
+        reviews: reviews.map { |r|
+          {
+            id: r.id,
+            rating: r.rating,
+            title: r.title,
+            comment: r.comment,
+            reviewer_name: r.reviewer_name,
+            verified_purchase: r.verified_purchase,
+            helpful_count: r.helpful_count,
+            created_at: r.created_at.iso8601,
+          }
+        }
+      })
+
+    when "related_products"
+      related = @product.related_products(4)
+      emit.call("related_products", {
+        products: related.map { |p|
+          {
+            id: p.id,
+            name: p.name,
+            price: p.price.to_f,
+            original_price: p.original_price&.to_f,
+            category: p.category,
+            brand: p.brand,
+            images: p.images,
+            average_rating: p.average_rating.to_f,
+            review_count: p.review_count,
+            in_stock: p.in_stock,
+            discount_percentage: p.discount_percentage,
+          }
+        }
+      })
+
+    else
+      emit.reject(prop_name, "Unknown async prop")
+    end
+  end
+end %>

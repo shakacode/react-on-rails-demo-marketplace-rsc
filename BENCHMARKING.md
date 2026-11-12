@@ -1,6 +1,28 @@
 # Benchmarking Guide
 
-This project includes a Puppeteer-based benchmarking suite that measures Web Vitals for the SSR, Client, and RSC versions of the blog post page.
+This project has **two performance measurement suites**. Choose the right one:
+
+| Question | Tool | Command |
+|----------|------|---------|
+| How fast is page X on this server? | Puppeteer/web-vitals | `pnpm vitals` |
+| How do SSR vs Client vs RSC compare? | Puppeteer/web-vitals | `pnpm vitals:compare` |
+| Did this branch make things slower? | **ShakaPerf** | `pnpm perf:compare` |
+| Did commit A regress vs commit B? | **ShakaPerf** | `pnpm perf:compare:commits A B` |
+| What problems does this page have? | **ShakaPerf** | `pnpm perf:audit` |
+
+**Puppeteer/web-vitals** (`pnpm vitals`) measures absolute per-page numbers on
+one running server. Good for comparing rendering strategies (SSR vs RSC) on the
+same code version.
+
+**ShakaPerf** (`pnpm perf:compare`) compares two code versions under paired
+simultaneous sampling with statistical gating. Good for detecting regressions
+across commits. See [ShakaPerf A/B Testing](#shakaperf-ab-testing) below.
+
+---
+
+## Puppeteer/web-vitals Suite
+
+This suite measures Web Vitals for the SSR, Client, and RSC versions of the blog post page.
 
 ## Running the App in Production
 
@@ -65,6 +87,30 @@ The server must be running before executing any benchmarking script.
 | `--verbose` | `-v` | `false` | Show per-iteration results and JS breakdowns |
 | `--label` | `-l` | | Label for the output JSON file |
 | `--output` | `-o` | auto-generated | Custom output file path |
+| `--mobile` | | `false` | Emulate a phone (390×844, DPR 3, touch, mobile UA) |
+| `--query` | | | Query string appended to every measured path (e.g. `--query "count=500"`). The restaurant `count`/`initial` knobs are measurement-only: the Rails server must be started with `ENABLE_BENCH_PARAMS=1` or they are ignored |
+
+### Scroll-heavy lanes (issue #184)
+
+The restaurant detail lanes (`restaurant-ssr`, `restaurant-client`,
+`restaurant-rsc`, `restaurant-ssr-virtual`, `restaurant-rsc-virtual`) opt into
+a scripted scroll cycle: the runner wheels to the bottom of the page and back,
+then clicks a review's "Helpful" button for INP. These lanes report extra
+metrics:
+
+| Metric | What it measures |
+|--------|------------------|
+| Scroll long tasks (ms/#) | Long-task blocking time raised **during** the scroll cycle — kept out of TBT so load-phase TBT is not double-counted. INP cannot see scrolling (Event Timing only observes discrete interactions), so this is the scroll-responsiveness number |
+| Scroll LoAF blocking/max | Long-animation-frame data during the cycle (rendering-pipeline jank) |
+| DOM nodes (post-hydration / at bottom / post-scroll) | Live DOM size before, during, and after the cycle — the virtualization payoff |
+| JS heap (post-load / post-scroll) | `usedJSHeapSize` after a forced GC |
+
+A lane that declares an interaction selector fails loudly when the target is
+missing instead of silently reporting no INP. The scroll cycle likewise
+asserts completion — its step budget adapts to the measured document height,
+`scrollCycleComplete`/`scrollCoverage` land in the results JSON, and a
+traversal that cannot reach the bottom and return fails the lane rather than
+recording partial bottom-of-page metrics.
 
 ### Compare Results: `pnpm vitals:compare`
 
@@ -149,3 +195,140 @@ CONTENT_DELAY_MS=500 RAILS_ENV=production \
 ```
 
 At 0ms delay, SSR and RSC have similar FCP because data is instant and RSC's double-pass rendering overhead offsets its streaming advantage. As delay increases, RSC's FCP stays flat (shell streams immediately) while SSR's FCP grows proportionally.
+
+## List virtualization (react-virtuoso) investigation
+
+Issue [#184](https://github.com/shakacode/react-on-rails-demo-marketplace-rsc/issues/184)
+asked whether list virtualization composes with the demo's SSR / client / RSC
+variants and at what cost. The measured answer — including the
+`/restaurant/:id/ssr-virtual` and `/restaurant/:id/rsc-virtual` routes, the
+per-shape costs, the `verify:rsc` red-team, and the decision table — lives in
+[`docs/react-virtuoso-rsc-benchmark.md`](./docs/react-virtuoso-rsc-benchmark.md).
+
+---
+
+## ShakaPerf A/B Testing
+
+[ShakaPerf](https://github.com/shakacode/shakaperf) compares two code versions
+under paired simultaneous sampling. Both sides run on the same machine, and
+each measurement pair fires both sides at the same instant, cancelling shared
+noise (network jitter, OS scheduling, thermal throttling). The result is a
+statistically gated verdict per metric: **regression**, **improvement**, or
+**no difference**.
+
+### Prerequisites
+
+```bash
+# Verify all required tools
+pnpm perf:preflight
+
+# Install Playwright browser (first time only)
+pnpm exec playwright install chromium
+```
+
+**Platform:** macOS and Linux only (native addon via node-gyp). Windows is not
+supported.
+
+### Single-Target Audit
+
+Point ShakaPerf at one running server to get a combined performance,
+accessibility, visual, and bundle-size report:
+
+```bash
+# Against a running server on the default port
+pnpm perf:audit
+
+# Against a specific URL
+pnpm perf:audit -- --url http://localhost:3001
+```
+
+Results are written to `audit-results/`.
+
+### Branch vs Main Comparison
+
+Start both servers yourself (one on the current branch, one on main), then run:
+
+```bash
+pnpm perf:compare
+```
+
+This uses `controlURL` / `experimentURL` from `abtests.config.ts` (defaults to
+ports 4020/4030). Override with:
+
+```bash
+pnpm perf:compare -- --controlURL http://localhost:3000 --experimentURL http://localhost:3001
+```
+
+### Two-Commit Comparison
+
+Automatically provisions two worktree servers and compares:
+
+```bash
+# Branch vs main
+pnpm perf:compare:commits main feature-branch
+
+# Two arbitrary SHAs
+pnpm perf:compare:commits abc1234 def5678
+```
+
+The script creates temporary worktrees, builds both sides, starts co-located
+servers, runs paired sampling, and cleans up. Both sides share the same
+database (D3 — shared read-only DB for identical data by construction).
+
+### Configuration
+
+`abtests.config.ts` controls:
+
+- **Ports**: default 4020 (control) / 4030 (experiment), overridable via
+  `SHAKAPERF_CONTROL_PORT` / `SHAKAPERF_EXPERIMENT_PORT`
+- **Viewports**: desktop only by default
+- **Measurements**: 20 per test per viewport
+- **Thresholds**: p < 0.05, regression threshold 50ms, estimator stat
+- **Sampling mode**: simultaneous (paired)
+
+### A/B Test Files
+
+Tests live in `ab-tests/*.abtest.ts`. Each file defines one Playwright scenario
+using `abTest(name, { startingPath }, async () => { … })` from `shaka-shared`.
+The same test runs on both the control and experiment servers.
+
+Style rules: fail loudly (no `try`/`catch` swallowing), run linearly (no
+loops), no `if`-branching on page state, assert via `waitForSelector` /
+`waitForURL`, wait on conditions not the clock, deterministic inputs,
+`annotate('…')` before each non-trivial action, one behaviour per test.
+
+### Reading Results
+
+- **HTML**: `compare-results/self-contained-performance-report.html` (shareable,
+  self-contained) and `compare-results/full-report.html`
+- **JSON**: `compare-results/report.json` (`schemaVersion: 1`) — see the issue
+  for the schema contract.
+- **Chips**: `regression`, `improvement`, `no difference`, `broken`, `flaky`,
+  `visual change`, `accessibility regression`, etc.
+
+**Known limitation**: per-stage `summary` objects in JSON reports are still
+empty placeholders (shakaperf#68). Numeric p-values, estimates, and confidence
+intervals are in the HTML report and per-test artifact directories.
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Clean — no regressions |
+| 1 | Pipeline completed with failures (stderr carries `FAILED:` summary) |
+| 75 | Transient proxied-menu state — retry (`EX_TEMPFAIL`) |
+| Other | Harness/config problem, not a test verdict |
+
+### Bundle Size Diffing
+
+`shaka-bundle-size` (included as a dev dependency) complements the existing
+`scripts/measure-bundle-sizes.mjs`. Both tools remain available:
+
+- `scripts/measure-bundle-sizes.mjs` — absolute bundle sizes per loadable chunk
+- `shaka-bundle-size` — used by ShakaPerf internally for A/B bundle delta
+  reporting as part of the compare pipeline
+
+### CI Integration
+
+Deferred. Upstream GitHub Actions support (shakaperf#76) and PR-comment reporter
+(shakaperf#77) are open WIP. When those land, add a non-blocking workflow.

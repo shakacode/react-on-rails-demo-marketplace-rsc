@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# Boot Rails + node-renderer on run-scoped ports for QA-stress testing.
+# Requires: QA_RUN_ID (for database isolation), built assets (run .agents/bin/build first).
+# Env overrides: QA_RAILS_PORT (default 3020), QA_RENDERER_PORT (default 3821).
+set -euo pipefail
+cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+
+: "${QA_RUN_ID:?QA_RUN_ID is required — set it to a unique run identifier}"
+
+# Validate QA_RUN_ID: only alphanumeric, hyphens, and underscores allowed.
+# Prevents path traversal and SQL injection via the DB name / log paths.
+# Max 46 chars so the full DB name (localhub_demo_qa_ prefix = 17 chars)
+# stays within PostgreSQL's 63-byte identifier limit.
+if [[ ! "${QA_RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'FATAL: QA_RUN_ID contains invalid characters: %s\n' "${QA_RUN_ID}" >&2
+  printf '       Only letters, digits, hyphens, and underscores are allowed.\n' >&2
+  exit 1
+fi
+if [[ ${#QA_RUN_ID} -gt 46 ]]; then
+  printf 'FATAL: QA_RUN_ID is %d chars (max 46 to stay within PostgreSQL 63-byte identifier limit).\n' "${#QA_RUN_ID}" >&2
+  exit 1
+fi
+
+readonly RAILS_PORT="${QA_RAILS_PORT:-3020}"
+readonly RENDERER_PORT="${QA_RENDERER_PORT:-3821}"
+readonly RUN_DB="localhub_demo_qa_${QA_RUN_ID}"
+readonly TIMEOUT_SECS=60
+
+# Generate synthetic secrets — never reuse real credentials
+export SECRET_KEY_BASE
+SECRET_KEY_BASE="$(openssl rand -hex 64)"
+export RENDERER_PASSWORD
+RENDERER_PASSWORD="$(openssl rand -hex 32)"
+
+# Point at the run-scoped database.
+# Include credentials when available (CI uses postgres:postgres); fall back to
+# no-auth for local peer/trust setups.
+if [[ -n "${DATABASE_USERNAME:-}" ]]; then
+  export DATABASE_URL="postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD:-}@localhost/${RUN_DB}"
+else
+  export DATABASE_URL="postgres://localhost/${RUN_DB}"
+fi
+
+# Production-like environment
+export RAILS_ENV=production
+export NODE_ENV=production
+export RAILS_SERVE_STATIC_FILES=true
+export RENDERER_LOG_LEVEL=warn
+export RENDERER_PORT
+
+# Tell Rails where to find the renderer — must match the port the renderer
+# actually binds to. Without this, react_on_rails_pro falls back to
+# http://localhost:3800 and never reaches the run-scoped renderer.
+export RENDERER_URL="http://localhost:${RENDERER_PORT}"
+
+# Pin worker restart interval high to prevent false negatives in memory slope
+# measurements — we do not want a scheduled restart resetting RSS mid-run.
+# Note: node-renderer.js overrides this when CI=1 (to 2 min). We explicitly
+# unset CI so our pinned value sticks even if the outer shell has CI set.
+unset CI
+export RENDERER_ALL_WORKERS_RESTART_INTERVAL=9999
+
+renderer_pid=""
+rails_pid=""
+cleanup() {
+  [[ -n "${renderer_pid}" ]] && kill "${renderer_pid}" 2>/dev/null || true
+  [[ -n "${rails_pid}" ]] && kill "${rails_pid}" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# --- Log directory inside the workspace (not /tmp) ---
+readonly QA_LOG_DIR="${QA_LOG_DIR:-.qa-stress-workspace/logs/${QA_RUN_ID}}"
+mkdir -p "${QA_LOG_DIR}"
+
+# --- Start node-renderer ---
+node node-renderer.js > "${QA_LOG_DIR}/renderer.log" 2>&1 &
+renderer_pid=$!
+
+# --- Start Rails ---
+bundle exec rails server -b 127.0.0.1 -p "${RAILS_PORT}" > "${QA_LOG_DIR}/rails.log" 2>&1 &
+rails_pid=$!
+
+# --- Health probes ---
+ready=false
+for _ in $(seq 1 "${TIMEOUT_SECS}"); do
+  # Bail if either process has already crashed
+  if ! kill -0 "${renderer_pid}" 2>/dev/null; then
+    printf 'Node renderer exited before becoming ready.\n' >&2
+    cat ${QA_LOG_DIR}/renderer.log >&2
+    exit 1
+  fi
+  if ! kill -0 "${rails_pid}" 2>/dev/null; then
+    printf 'Rails exited before becoming ready.\n' >&2
+    cat ${QA_LOG_DIR}/rails.log >&2
+    exit 1
+  fi
+
+  rails_ready=false
+  renderer_ready=false
+
+  if curl -fsS --max-time 3 "http://127.0.0.1:${RAILS_PORT}/up" >/dev/null 2>&1; then
+    rails_ready=true
+  fi
+
+  if (: >"/dev/tcp/127.0.0.1/${RENDERER_PORT}") 2>/dev/null; then
+    renderer_ready=true
+  fi
+
+  if [[ "${rails_ready}" == "true" && "${renderer_ready}" == "true" ]]; then
+    ready=true
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "${ready}" != "true" ]]; then
+  printf 'Rails and node-renderer did not become ready within %ds.\n' "${TIMEOUT_SECS}" >&2
+  printf '%s\n' "--- renderer log ---" >&2
+  cat "${QA_LOG_DIR}/renderer.log" >&2
+  printf '%s\n' "--- rails log ---" >&2
+  cat "${QA_LOG_DIR}/rails.log" >&2
+  exit 1
+fi
+
+printf 'QA serve ready (run_id=%s)\n' "${QA_RUN_ID}"
+printf '  Rails:     http://127.0.0.1:%s  (pid %s)\n' "${RAILS_PORT}" "${rails_pid}"
+printf '  Renderer:  port %s                (pid %s)\n' "${RENDERER_PORT}" "${renderer_pid}"
+printf '  Database:  %s\n' "${RUN_DB}"
+printf '  Logs:      %s/rails.log  %s/renderer.log\n' "${QA_LOG_DIR}" "${QA_LOG_DIR}"
+
+# Keep running until either process exits — if one crashes after readiness,
+# exit immediately so QA-stress doesn't continue against a degraded target.
+# wait -n returns as soon as *either* child exits. Disable set -e so the
+# diagnostic output below is reached even on non-zero exit.
+set +e
+wait -n
+exit_code=$?
+set -e
+printf 'FATAL: a child process exited unexpectedly (exit %d).\n' "${exit_code}" >&2
+printf '%s\n' "--- renderer log (tail) ---" >&2
+tail -20 "${QA_LOG_DIR}/renderer.log" >&2 2>/dev/null || true
+printf '%s\n' "--- rails log (tail) ---" >&2
+tail -20 "${QA_LOG_DIR}/rails.log" >&2 2>/dev/null || true
+exit "${exit_code}"

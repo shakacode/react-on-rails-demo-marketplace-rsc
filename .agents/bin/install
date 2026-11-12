@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Install dependencies only — no database operations, no server restart.
+# Safe to run inside a materialized QA workspace where DATABASE_URL points at
+# a run-scoped database that may not exist yet.
+set -euo pipefail
+cd "$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+
+# Ruby gems
+gem install bundler --conservative --no-document
+bundle check || bundle install
+
+# JavaScript/Node dependencies
+pnpm install --frozen-lockfile

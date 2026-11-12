@@ -1,0 +1,7 @@
+<%# Cached variant of product_search/search_ssr.html.erb. The full SSR data assembly (paginated
+    results, facets, review snippets, tags, brand highlights) is built in product_search_ssr_props and
+    evaluated only on a cache miss; on a hit it and the prerender are skipped.
+    cache_key = the search params (they determine the rendered output). %>
+<%= cached_react_component("ProductSearchSSR",
+      cache_key: ["product_search_ssr", @search_params_data.sort],
+      prerender: true) { product_search_ssr_props } %>

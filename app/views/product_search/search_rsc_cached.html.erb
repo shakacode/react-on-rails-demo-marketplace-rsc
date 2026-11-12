@@ -1,0 +1,92 @@
+<%# Cached variant of product_search/search_rsc.html.erb. Same component, sync props, and async emits,
+    wrapped in cached_stream_react_component_with_async_props. On a hit the async block (results,
+    facets, tags, brand highlights) and the node render are skipped; chunks replay from cache.
+    cache_key = the search params (they determine the output). %>
+<%= cached_stream_react_component_with_async_props("ProductSearchRSC",
+    cache_key: ["product_search_rsc", @search_params_data.sort],
+    props: { search_params: @search_params_data }, prerender: true) do |emit|
+
+  # 1. Stream search results FIRST — this is the LCP content.
+  #    All three search paths (SSR, RSC, client API) now use the same
+  #    ProductSerialization concern with identical field sets:
+  #    - 500-char descriptions, 6 features, NO specs (dead payload removed)
+  #    - 2 review snippets per product (rating >= 3, 200-char comments)
+  products_scope = Product.filtered_search(@search_params_data.symbolize_keys)
+  products, pagination = paginate_search(products_scope)
+
+  serialized_products = products.map { |p| serialize_search_product(p, variant: :search_rich) }
+
+  # Load review snippets (2 per product — shared concern method)
+  product_ids = serialized_products.map { |p| p[:id] }
+  review_snippets = load_review_snippets(product_ids, per_product: 2)
+
+  # Build active filters list (same as SSR)
+  sp = @search_params_data.symbolize_keys
+  filters_applied = []
+  filters_applied << { type: 'category', value: sp[:category] } if sp[:category].present?
+  filters_applied << { type: 'brand', value: sp[:brand] } if sp[:brand].present?
+  filters_applied << { type: 'min_rating', value: "#{sp[:min_rating]}+" } if sp[:min_rating].present?
+  filters_applied << { type: 'in_stock', value: 'In Stock Only' } if sp[:in_stock] == 'true'
+  if sp[:price_min].present? && sp[:price_max].present?
+    filters_applied << { type: 'price', value: "$#{sp[:price_min]} - $#{sp[:price_max]}" }
+  end
+
+  empty_suggestions = nil
+  if serialized_products.empty?
+    empty_suggestions = {
+      top_categories: Product.group(:category)
+                            .order(Arel.sql("COUNT(*) DESC"))
+                            .limit(6)
+                            .pluck(Arel.sql("category, COUNT(*)"))
+                            .map { |name, count| { name: name, count: count } },
+      top_brands: Product.group(:brand)
+                        .order(Arel.sql("COUNT(*) DESC"))
+                        .limit(8)
+                        .pluck(Arel.sql("brand, COUNT(*)"))
+                        .map { |name, count| { name: name, count: count } },
+    }
+  end
+
+  emit.call("search_results", {
+    products: serialized_products,
+    review_snippets: review_snippets,
+    pagination: pagination,
+    meta: {
+      query: sp[:q] || '',
+      sort: sp[:sort] || 'relevance',
+      total_results: pagination[:total_count],
+      filters_applied: filters_applied,
+    },
+    empty_suggestions: empty_suggestions,
+  })
+
+  # 2. Stream facet counts — expensive aggregation queries
+  base_scope = Product.all
+  q = sp[:q]
+  base_scope = base_scope.search_query(q) if q.present?
+  emit.call("facets", Product.facets(base_scope))
+
+  # 3. Stream popular tags (same as SSR)
+  popular_tags = Product.where.not(tags: nil)
+    .pluck(:tags)
+    .flatten
+    .tally
+    .sort_by { |_, count| -count }
+    .first(20)
+    .map { |tag, count| { name: tag, count: count } }
+  emit.call("popular_tags", popular_tags)
+
+  # 4. Stream brand highlights (same as SSR)
+  brand_highlights = Product.group(:brand)
+    .select("brand, COUNT(*) as product_count, AVG(average_rating) as avg_rating")
+    .order("product_count DESC")
+    .limit(8)
+    .map do |b|
+      {
+        name: b.brand,
+        product_count: b.product_count,
+        avg_rating: b.avg_rating.to_f.round(1),
+      }
+    end
+  emit.call("brand_highlights", brand_highlights)
+end %>

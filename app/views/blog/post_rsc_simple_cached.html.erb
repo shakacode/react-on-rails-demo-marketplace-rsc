@@ -1,0 +1,7 @@
+<%# Cached variant of blog/post_rsc_simple.html.erb (plain stream, all data upfront). cached_stream_
+    react_component caches the streamed chunks; on a hit they replay and the data fetch + node render
+    are skipped. Props come from the block. Blog content is static, so the post id is a stable key. %>
+<%= cached_stream_react_component("BlogPostRSCSimple", cache_key: ["blog_rsc_simple", 1], prerender: true) do
+  post = BlogData.find_post(1)
+  { post: post, related_posts: BlogData.related_posts(post[:id]) }
+end %>

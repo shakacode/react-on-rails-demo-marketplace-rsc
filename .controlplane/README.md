@@ -1,5 +1,7 @@
 # Deployment Guide
 
+The application and Docker image use Ruby `3.4.9`, matching the CI runtime.
+
 ## Run Locally with Docker
 
 **Build:**
@@ -72,7 +74,7 @@ cpflow run 'rails db:seed' -a react-server-components-demo
 ### Review apps
 
 This repo uses the generated Control Plane Flow GitHub Actions wrappers pinned
-to `shakacode/control-plane-flow@v5.1.1`.
+to `shakacode/control-plane-flow@v6.0.1`.
 
 Review app names are built from the prefix
 `react-server-components-demo-review`, so pull request 123 deploys as:

@@ -1,0 +1,8 @@
+<%# Server-component CSS (cssShared + cssB) lives only in the RSC/server bundle, so it never %>
+<%# reaches the browser and this page renders unstyled. Link the page's exact CSS set from a %>
+<%# Prefer the experimental module-graph manifest's serverComponentCss when available. %>
+<%# Fall back to the client-built carrier pack for the released plugin path. %>
+<% unless append_rsc_server_component_manifest_css('CssPageTwoServerCss') %>
+  <% append_stylesheet_pack_tag('css_demo_two') %>
+<% end %>
+<%= stream_react_component("CssPageTwoServerCss", prerender: true) %>

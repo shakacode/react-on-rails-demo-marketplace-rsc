@@ -1,0 +1,54 @@
+# Grouped Dependabot updates: one PR per ecosystem (Ruby / JavaScript / GitHub Actions)
+# instead of one PR per dependency. Tracks npm so the shakapacker gem and npm
+# package move together. 3-day cooldown so a freshly published version can't be
+# yanked after the PR opens. Patterned on shakacode/react_on_rails.
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 3
+    groups:
+      ruby:
+        patterns:
+          - "react_on_rails*"
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 3
+    ignore:
+      # @loadable/babel-plugin 5.x requires Babel 7. Keep the grouped updater
+      # from restoring Babel 8 until that runtime plugin supports it.
+      - dependency-name: "@babel/core"
+        versions: [">= 8.0.0"]
+      - dependency-name: "@babel/preset-env"
+        versions: [">= 8.0.0"]
+      - dependency-name: "@babel/preset-react"
+        versions: [">= 8.0.0"]
+      - dependency-name: "@babel/preset-typescript"
+        versions: [">= 8.0.0"]
+    groups:
+      javascript:
+        patterns:
+          - "react-on-rails*"
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"

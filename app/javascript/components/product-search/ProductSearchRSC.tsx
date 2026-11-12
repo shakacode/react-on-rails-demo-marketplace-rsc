@@ -4,14 +4,14 @@
 // Results (with review snippets merged) and facets stream progressively.
 // Popular tags and brand highlights stream as separate async props.
 //
-// Now includes ALL the same features as SSR for a fair comparison:
+// Uses the same ProductSerialization concern as SSR and client API:
 //   - Compare button per card (client component island)
 //   - Compare bar at top (client component)
 //   - Active filter pills (client component)
 //   - Popular tags cloud (client component, streamed separately)
 //   - Brand highlights (client component, streamed separately)
-//   - 2 review snippets per product
-//   - 500-char descriptions, 6 features, specs
+//   - 2 review snippets per product (rating >= 3, 200-char comments)
+//   - 500-char descriptions, 6 features (no specs — never rendered in search)
 //
 // 4 streaming emits:
 //   1. search_results (products + review_snippets + pagination + meta + filters)
@@ -38,33 +38,39 @@
 // Total JS savings: ~400KB+ eliminated from client bundle (marked + highlight.js).
 // Result cards (the heaviest content) are pure HTML — zero hydration cost.
 
-import React, { Suspense } from 'react';
-import type { SearchParams } from './types';
-import { SearchShellHeader, CompareBar } from './SearchShellForServer';
-import AsyncSearchResultsRSC from './AsyncSearchResultsRSC';
-import AsyncFacetsRSC from './AsyncFacetsRSC';
-import AsyncSidebarExtrasRSC from './AsyncSidebarExtrasRSC';
-import { ResultsGridSkeleton } from './SearchSkeletons';
-import { FilterSidebarSkeleton } from './SearchSkeletons';
+import React, { Suspense } from "react";
+import type { SearchParams } from "./types";
+import { SearchShellHeader, CompareBar } from "./SearchShellForServer";
+import AsyncSearchResultsRSC from "./AsyncSearchResultsRSC";
+import AsyncFacetsRSC from "./AsyncFacetsRSC";
+import AsyncSidebarExtrasRSC from "./AsyncSidebarExtrasRSC";
+import { ResultsGridSkeleton } from "./SearchSkeletons";
+import { FilterSidebarSkeleton } from "./SearchSkeletons";
 
 interface Props {
   search_params: SearchParams;
   getReactOnRailsAsyncProp: (propName: string) => Promise<any>;
 }
 
-export default function ProductSearchRSC({ search_params, getReactOnRailsAsyncProp }: Props) {
+export default function ProductSearchRSC({
+  search_params,
+  getReactOnRailsAsyncProp,
+}: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header — streams immediately with search input */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="container mx-auto max-w-7xl px-4 py-4">
           <div className="flex items-center gap-4 mb-3">
-            <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">Product Search</h1>
+            <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
+              Product Search
+            </h1>
             <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
-              V3: RSC Streaming — Result cards rendered server-side (0KB JS). Only filters + search are interactive.
+              V3: RSC Streaming — Result cards rendered server-side (0KB JS).
+              Only filters + search are interactive.
             </p>
           </div>
-          <SearchShellHeader initialQuery={search_params.q || ''} />
+          <SearchShellHeader initialQuery={search_params.q || ""} />
         </div>
       </header>
 
@@ -78,12 +84,17 @@ export default function ProductSearchRSC({ search_params, getReactOnRailsAsyncPr
           <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-[140px] space-y-4">
               <Suspense fallback={<FilterSidebarSkeleton />}>
-                <AsyncFacetsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} searchParams={search_params} />
+                <AsyncFacetsRSC
+                  getReactOnRailsAsyncProp={getReactOnRailsAsyncProp}
+                  searchParams={search_params}
+                />
               </Suspense>
 
               {/* Popular tags + Brand highlights stream as separate async props */}
               <Suspense fallback={null}>
-                <AsyncSidebarExtrasRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
+                <AsyncSidebarExtrasRSC
+                  getReactOnRailsAsyncProp={getReactOnRailsAsyncProp}
+                />
               </Suspense>
             </div>
           </div>
@@ -91,12 +102,13 @@ export default function ProductSearchRSC({ search_params, getReactOnRailsAsyncPr
           {/* Results area — product cards stream as server-rendered HTML */}
           <div className="flex-1 min-w-0">
             <Suspense fallback={<ResultsGridSkeleton />}>
-              <AsyncSearchResultsRSC getReactOnRailsAsyncProp={getReactOnRailsAsyncProp} />
+              <AsyncSearchResultsRSC
+                getReactOnRailsAsyncProp={getReactOnRailsAsyncProp}
+              />
             </Suspense>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

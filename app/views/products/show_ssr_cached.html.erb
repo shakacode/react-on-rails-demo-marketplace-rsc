@@ -1,0 +1,9 @@
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%# Cached variant of products/show_ssr.html.erb. The expensive props (top 10 reviews, review stats,
+    4 related products) are built in product_ssr_props and evaluated only on a cache miss; on a hit
+    they and the SSR prerender are skipped. cache_key = product id + updated_at. %>
+<%= cached_react_component("ProductPageSSR",
+      cache_key: ["product_ssr", @product.id, @product.updated_at.to_i],
+      prerender: true) { product_ssr_props } %>

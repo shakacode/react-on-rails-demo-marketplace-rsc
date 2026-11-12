@@ -35,7 +35,7 @@ export function RelatedProducts({ products }: Props) {
               </h3>
               <div className="flex items-center gap-1.5 mb-2">
                 <StarRating rating={product.average_rating} size="sm" />
-                <span className="text-xs text-gray-500">({product.review_count.toLocaleString()})</span>
+                <span className="text-xs text-gray-500">({product.review_count.toLocaleString('en-US')})</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>

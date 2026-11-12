@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 
 type ReadingMode = 'default' | 'compact' | 'dark';
 
 const STORAGE_KEY = 'blog:reading-mode';
+const subscribeToHydration = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 const modes: { value: ReadingMode; label: string; icon: string }[] = [
   { value: 'default', label: 'Default', icon: 'A' },
@@ -19,19 +22,30 @@ function applyMode(mode: ReadingMode) {
   root.classList.add(`reading-mode-${mode}`);
 }
 
+function storedMode(): ReadingMode {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === 'compact' || stored === 'dark' || stored === 'default' ? stored : 'default';
+  } catch {
+    return 'default';
+  }
+}
+
 export function ReadingModeToggle() {
-  const [mode, setMode] = useState<ReadingMode>('default');
+  const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot);
+  const [selectedMode, setSelectedMode] = useState<ReadingMode | null>(null);
+  const mode = selectedMode ?? (hydrated ? storedMode() : 'default');
 
   useEffect(() => {
-    const stored = (typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY)) as ReadingMode | null;
-    const initial: ReadingMode = stored === 'compact' || stored === 'dark' || stored === 'default' ? stored : 'default';
-    setMode(initial);
-    applyMode(initial);
+    applyMode(mode);
+  }, [mode]);
+
+  useEffect(() => {
     return () => applyMode('default');
   }, []);
 
   const handleSelect = (next: ReadingMode) => {
-    setMode(next);
+    setSelectedMode(next);
     applyMode(next);
     try {
       window.localStorage.setItem(STORAGE_KEY, next);

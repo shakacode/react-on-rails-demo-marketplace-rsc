@@ -21,3 +21,4 @@ export function cacheComponent<P extends Record<string, unknown>>(
   }
   return fn;
 }
+

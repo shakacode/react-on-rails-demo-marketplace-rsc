@@ -11,12 +11,24 @@ const METRIC_CONFIG = [
   { key: 'streamingDuration', label: 'Streaming', unit: 'ms' },
   { key: 'jsTransferSize', label: 'JS Transfer', unit: 'KB' },
   { key: 'jsDecodedSize', label: 'JS Decoded', unit: 'KB' },
+  // Scroll-cycle metrics (issue #184) — present only on `scroll: true` lanes.
+  { key: 'scrollLongTaskTime', label: 'Scroll long tasks', unit: 'ms' },
+  { key: 'scrollLongTaskCount', label: 'Scroll long tasks #', unit: 'count' },
+  { key: 'scrollLoafTime', label: 'Scroll LoAF blocking', unit: 'ms' },
+  { key: 'scrollLoafMax', label: 'Scroll LoAF max', unit: 'ms' },
+  { key: 'domNodesPostHydration', label: 'DOM nodes (post-hydration)', unit: 'count' },
+  { key: 'domNodesAtBottom', label: 'DOM nodes (at bottom)', unit: 'count' },
+  { key: 'domNodesPostScroll', label: 'DOM nodes (post-scroll)', unit: 'count' },
+  { key: 'heapUsedPostLoad', label: 'JS heap (post-load)', unit: 'MB' },
+  { key: 'heapUsedPostScroll', label: 'JS heap (post-scroll)', unit: 'MB' },
 ];
 
 function fmt(value, unit) {
   if (value == null || (typeof value === 'number' && Number.isNaN(value))) return '-';
   if (unit === 'KB') return `${(value / 1024).toFixed(1)} KB`;
+  if (unit === 'MB') return `${(value / (1024 * 1024)).toFixed(1)} MB`;
   if (unit === 'ms') return `${value.toFixed(1)} ms`;
+  if (unit === 'count') return `${Math.round(value)}`;
   return value.toFixed(4);
 }
 

@@ -1,11 +1,14 @@
 const { default: serverWebpackConfig, extractLoader } = require('./serverWebpackConfig');
+const { getWebpackRscImplementation } = require('../rsc-implementations');
+
 const addIoredisExternal = require('../shared/addIoredisExternal');
 
 const configureRsc = () => {
   const rscConfig = serverWebpackConfig(true);
-  const serverBundleEntry = rscConfig.entry['server-bundle'];
+  const rscImplementation = getWebpackRscImplementation();
 
   // Update the entry name to be `rsc-bundle` instead of `server-bundle`
+  const serverBundleEntry = rscConfig.entry['server-bundle'];
   const rscEntry = {
     'rsc-bundle': [
       './app/javascript/utils/initRedisCache.ts',
@@ -17,10 +20,13 @@ const configureRsc = () => {
   // Add the RSC loader to replace 'use client' modules with client references.
   // Using enforce: 'post' so it runs AFTER swc-loader compiles TSX→JS,
   // giving acorn clean JavaScript to parse.
+  // .cjs is included because @apollo/client-react-streaming ships
+  // SimulatePreloadedQuery.cc.cjs with 'use client' — without it the RSC
+  // bundle runs the module server-side and useApolloClient() throws.
   rscConfig.module.rules.push({
     test: /\.(ts|tsx|js|jsx|mjs)$/,
     enforce: 'post',
-    loader: 'react-on-rails-rsc/WebpackLoader',
+    loader: rscImplementation.rscLoader,
   });
 
   // Add the `react-server` condition to the resolve config

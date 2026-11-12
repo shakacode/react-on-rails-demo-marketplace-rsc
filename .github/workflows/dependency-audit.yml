@@ -1,0 +1,332 @@
+name: Dependency Audit
+
+# Why this is a separate workflow — and why PR failures are differential
+# (issue #205):
+#
+# `pnpm audit:high` used to run inside browser-smoke, between lint and the
+# Chromium smoke. `pnpm audit` re-queries a live advisory database on every
+# run, so the same commit can pass one day and fail the next with no code
+# change — and when it failed, every functional step after it was skipped.
+# A transitive advisory in build tooling could silently switch off the only
+# push-time browser gate on main (verified on run 33426195157).
+#
+# The audit therefore lives here, reporting security results independently of
+# the functional gate:
+#   - pull_request: the PR's audit is compared against a same-moment audit of
+#     its base branch. Advisories the PR itself introduces (absent on the
+#     base) FAIL the check. Advisories that also fire on the base (e.g.
+#     published overnight) only WARN — an external clock must not invalidate
+#     unrelated work between PR-open and merge.
+#   - push to main: warn-only; main is the baseline itself, and the nightly
+#     run owns its hard signal.
+#   - schedule / workflow_dispatch: any high advisory FAILS the run and files
+#     or updates (never duplicates) a tracking issue assigned to the
+#     maintainers, so outstanding advisories cannot rot silently.
+#
+# Remediating the advisories themselves is tracked separately (issue #167 and
+# Dependabot); this workflow only owns the reporting mechanism.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Nightly, off-peak minute (GitHub cron runs on the default branch).
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Keyed by event too: schedule, push-to-main, and dispatch-on-main must not
+  # share a cancel-in-progress group, or a merge landing at ~04:23 UTC would
+  # cancel the in-flight nightly (no hard fail, no tracking issue that night).
+  group: dependency-audit-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+
+      - name: Audit high-severity JavaScript dependencies
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # `pnpm audit` reads package.json + pnpm-lock.yaml and queries the
+          # registry's advisory DB — no `pnpm install` needed (~30s job).
+
+          audit_json() { # $1 = directory; prints JSON; tolerates audit's
+                         # non-zero "advisories found" exit code
+            (cd "$1" && pnpm audit --audit-level high --json) || true
+          }
+
+          high_ghsas() { # $1 = json file; prints "GHSA-id package" lines for
+                         # high/critical advisories (unordered — the LC_ALL=C
+                         # shell sort below owns ordering)
+            node -e '
+              const fs = require("fs");
+              const j = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              // Fail closed: valid JSON WITHOUT an advisories key (e.g. pnpm
+              // emits {"error":{...}} on registry failure) must not read as
+              // "zero advisories". A present-but-empty advisories object is
+              // the genuine clean case.
+              if (typeof j.advisories !== "object" || j.advisories === null) {
+                process.exit(2);
+              }
+              const out = new Set();
+              for (const a of Object.values(j.advisories)) {
+                if (a.severity === "high" || a.severity === "critical") {
+                  out.add(`${a.github_advisory_id || a.id} ${a.module_name}`);
+                }
+              }
+              for (const line of out) console.log(line);
+            ' "$1"
+          }
+
+          audit_json . > /tmp/head-audit.json
+          if ! high_ghsas /tmp/head-audit.json > /tmp/head-highs.txt; then
+            # The push arm is documented warn-only — an advisory-DB outage at
+            # merge time must not paint main red (the nightly stays
+            # fail-closed).
+            if [[ "$EVENT_NAME" == "push" ]]; then
+              echo "::warning title=Dependency audit could not complete::Could not parse pnpm audit output on this main push (registry hiccup or malformed JSON). The nightly run owns main's hard signal."
+              exit 0
+            fi
+            echo "::error title=Dependency audit output unparsable::Could not parse pnpm audit output for this branch"
+            exit 1
+          fi
+          # comm(1) requires sorted input. This LC_ALL=C sort (and its twin on
+          # the base file below) is the single ordering authority — the JS
+          # filter deliberately emits its lines unordered.
+          LC_ALL=C sort -o /tmp/head-highs.txt /tmp/head-highs.txt
+
+          # Human-readable table for the job summary (same command the old
+          # in-job step ran; its exit code is not the verdict anymore).
+          pnpm audit:high > /tmp/head-audit.txt || true
+          {
+            echo "## pnpm audit output (this branch) — informational, all severities; the gate verdict uses the JSON audit's high/critical set"
+            echo '```'
+            cat /tmp/head-audit.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ ! -s /tmp/head-highs.txt ]]; then
+            echo "No advisories at or above the high threshold."
+            exit 0
+          fi
+
+          case "$EVENT_NAME" in
+            schedule|workflow_dispatch)
+              # Nightly / manual runs fail loudly so advisories can't rot.
+              echo "High-severity advisories present:"
+              cat /tmp/head-highs.txt
+              echo "::error title=High-severity dependency advisories::The audit found high or critical advisories (list in the step log and job summary). Remediation is tracked in issue #167 / Dependabot."
+              exit 1
+              ;;
+            pull_request)
+              # Differential gate: blame the PR only for advisories its own
+              # dependency changes introduce relative to the base branch,
+              # with both sides audited at the same moment against the same
+              # advisory DB. The base is pinned to the event payload's
+              # base.sha — the exact snapshot the PR's merge ref was built
+              # against — so a push to the base branch landing between event
+              # and run can no longer produce a false "introduced by this PR"
+              # red. Every fetch/read failure funnels into the crafted
+              # fail-closed error below instead of dying on bash -e with raw
+              # git stderr. BASE_REF is used only in human-facing messages.
+              baseline_unavailable() {
+                echo "::error title=Dependency audit baseline unavailable::Could not fetch or read the base (${BASE_REF} @ ${BASE_SHA}), so this PR's findings cannot be attributed. Re-run this job; if it keeps failing, check GitHub/registry availability. If the base branch was force-pushed, re-running cannot help — push a new commit to this PR to refresh the baseline SHA."
+                exit 1
+              }
+
+              git fetch --no-tags --depth=1 origin "$BASE_SHA" || baseline_unavailable
+              base_dir="$(mktemp -d)"
+              git show "$BASE_SHA":package.json > "$base_dir/package.json" || baseline_unavailable
+              git show "$BASE_SHA":pnpm-lock.yaml > "$base_dir/pnpm-lock.yaml" || baseline_unavailable
+              if git cat-file -e "$BASE_SHA":.npmrc 2>/dev/null; then
+                git show "$BASE_SHA":.npmrc > "$base_dir/.npmrc" || baseline_unavailable
+              fi
+
+              audit_json "$base_dir" > /tmp/base-audit.json
+              if ! high_ghsas /tmp/base-audit.json > /tmp/base-highs.txt; then
+                # Fail-closed (maintainer decision, 2026-09-03): with no
+                # baseline we cannot prove the PR didn't introduce these
+                # advisories, so we refuse to guess. Fetch/read failures are
+                # funnelled through baseline_unavailable above; this guard
+                # catches the base audit itself failing (registry hiccup,
+                # malformed JSON). Re-run the job once the registry recovers.
+                echo "::error title=Dependency audit baseline unavailable::Could not audit ${BASE_REF}, so this PR's findings cannot be attributed. Re-run this job; if it keeps failing, check registry availability."
+                exit 1
+              fi
+              LC_ALL=C sort -o /tmp/base-highs.txt /tmp/base-highs.txt
+
+              LC_ALL=C comm -23 /tmp/head-highs.txt /tmp/base-highs.txt > /tmp/new-highs.txt
+
+              if [[ -s /tmp/new-highs.txt ]]; then
+                {
+                  echo "## ❌ New high-severity advisories introduced by this PR"
+                  echo '```'
+                  cat /tmp/new-highs.txt
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"
+                echo "::error title=New high-severity dependency advisories::This PR's lockfile triggers advisories that do not fire on ${BASE_REF} (see the job summary). Avoid or fix the vulnerable versions before merge."
+                exit 1
+              fi
+
+              echo "::warning title=Pre-existing high-severity dependency advisories::All findings also fire on ${BASE_REF}, so they were not caused by this PR. Remediation is tracked in issue #167 / Dependabot — do not bundle it into unrelated PRs."
+              exit 0
+              ;;
+            push)
+              # push to main: main is the baseline; the nightly run owns the
+              # hard signal.
+              echo "::warning title=High-severity dependency advisories on main::See the job summary. Remediation is tracked in issue #167 / Dependabot."
+              exit 0
+              ;;
+            *)
+              # A future trigger (e.g. merge_group) must not silently become
+              # non-gating: fail loudly until it gets an explicit policy arm.
+              echo "::error title=Unhandled trigger event::Event '$EVENT_NAME' has no explicit dependency-audit policy. Add an arm for it before enabling the trigger."
+              exit 1
+              ;;
+          esac
+
+  # Separate job so the issues:write token is only ever live on the nightly /
+  # manual failure path — never during PR or push runs (the audit job above
+  # holds contents: read only).
+  #
+  # Unified alert convention (#216): uses the same `ci-alert` label,
+  # body-marker dedupe, `--assignee` notifications, and auto-close lifecycle
+  # as workflow-failure-alerts.yml, so all CI alert issues behave identically.
+  file-tracking-issue:
+    needs: dependency-audit
+    # `always()` is required: a failed `needs` job otherwise skips dependents
+    # before this condition is even evaluated. Main-only: a workflow_dispatch
+    # hard-fail test on a feature branch must stay red without writing to the
+    # maintainers' tracking issue.
+    #
+    # Runs on BOTH success and failure so it can auto-close after recovery.
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      issues: write
+
+    env:
+      ALERT_LABEL: ci-alert
+      MARKER: "<!-- dependency-audit-tracker -->"
+
+    steps:
+      - name: File, update, or resolve the advisory tracking issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          AUDIT_RESULT: ${{ needs.dependency-audit.result }}
+        run: |
+          set -euo pipefail
+
+          # Idempotent label bootstrap (matches workflow-failure-alerts.yml).
+          gh api "repos/${GH_REPO}/labels" \
+            -f name="${ALERT_LABEL}" -f color="d73a4a" \
+            -f description="Auto-filed by workflow-failure-alerts (#206)" \
+            >/dev/null 2>&1 || true
+
+          # Body-marker match among open issues. The marker survives title
+          # edits — a renamed tracker no longer causes nightly duplicates
+          # (#216). The query intentionally does NOT filter by label so it
+          # also finds tracker issues created by the pre-#216 code (which
+          # used no label). Uses jq --arg so special characters in the
+          # marker are properly escaped (matches workflow-failure-alerts.yml).
+          # The (.body // "") guard prevents a jq type error on issues
+          # with null bodies (e.g. created via API without a body).
+          existing="$(gh issue list --state open \
+            --limit 100 --json number,body \
+            | jq -r --arg m "${MARKER}" \
+              '[.[] | select((.body // "") | contains($m))][0].number // empty')"
+
+          case "${AUDIT_RESULT}" in
+            failure)
+              if [[ -n "$existing" ]]; then
+                gh issue comment "$existing" \
+                  --body "Still failing: ${RUN_URL} (advisories present or the audit could not complete — see the run)"
+              else
+                title="Nightly dependency audit is failing"
+                body="$(cat <<EOF
+          The scheduled dependency audit failed — either high-severity
+          advisories are present or the audit could not complete. See the
+          run: ${RUN_URL} (the job summary / annotations say which).
+
+          - Remediation workflow for advisories: issue #167 / Dependabot.
+
+          Filed automatically by \`dependency-audit.yml\`; while the nightly
+          run keeps failing, this issue gets a comment instead of a duplicate.
+          The issue closes itself after two consecutive successful runs.
+
+          ${MARKER}
+          EOF
+                )"
+                gh issue create --title "$title" --body "$body" \
+                  --label "${ALERT_LABEL}" \
+                  --assignee AbanoubGhadban,justin808
+              fi
+              ;;
+            success)
+              # Nothing to resolve if no alert is open.
+              [[ -n "$existing" ]] || exit 0
+
+              # Close after TWO consecutive green nightly/dispatch runs,
+              # matching the workflow-failure-alerts convention (#216).
+              #
+              # This job runs inside the Dependency Audit workflow, so the
+              # current run is still in_progress and excluded by
+              # status=completed. We already know the current run succeeded
+              # (AUDIT_RESULT=success), so we only need ONE prior completed
+              # success to reach two consecutive greens.
+              #
+              # Uses the workflow file path to look up the ID — decoupled
+              # from the display `name:` field so a rename can't break it.
+              wf_id=$(gh api "repos/${GH_REPO}/actions/workflows/dependency-audit.yml" \
+                --jq '.id')
+              prior=$(gh api \
+                "repos/${GH_REPO}/actions/workflows/${wf_id}/runs?status=completed&branch=main&exclude_pull_requests=true&per_page=20" \
+                --jq '[.workflow_runs[]
+                       | select(.event == "schedule" or .event == "workflow_dispatch")
+                       | select(.conclusion == "success" or .conclusion == "failure"
+                                or .conclusion == "timed_out" or .conclusion == "startup_failure")
+                       | .conclusion][0]')
+
+              if [[ "${prior}" == "success" ]]; then
+                gh issue comment "$existing" \
+                  --body "Recovered: two consecutive green nightly runs, latest ${RUN_URL}. Closing."
+                gh issue close "$existing"
+              else
+                echo "Green run, but prior conclusion is '${prior}' — leaving the alert open."
+              fi
+              ;;
+            *)
+              echo "Audit result '${AUDIT_RESULT}' is neither success nor failure — ignoring."
+              ;;
+          esac

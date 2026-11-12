@@ -5,7 +5,7 @@ import {
 } from 'react-on-rails-pro/cache';
 import type { CacheEntry, CacheHandler } from 'react-on-rails-pro/cache';
 
-declare const __REDIS_URL__: string | undefined;
+declare const __GET_REDIS_URL__: (() => string) | undefined;
 
 type RedisClosable = Partial<{
   close: () => unknown;
@@ -51,14 +51,14 @@ class InMemoryLRU implements CacheHandler {
   }
 }
 
-const redisUrl = typeof __REDIS_URL__ !== 'undefined' ? __REDIS_URL__ : '';
+const redisUrl = typeof __GET_REDIS_URL__ === 'function' ? __GET_REDIS_URL__() : '';
 const isRscBundle = process.env.REACT_ON_RAILS_RSC_BUNDLE === 'true';
 // RSC_CACHE_ENABLED is baked into the bundle by webpack/rspack DefinePlugin.
 const isRedisCacheEnabled = process.env.RSC_CACHE_ENABLED === 'true';
 
 function closeOnShutdown(handler: RedisClosable) {
-  // rc.3 does not expose a public shutdown API; use the wrapped ioredis client
-  // when present, and prefer a public handler method if upstream adds one later.
+  // CacheHandler has no public shutdown API; use the wrapped ioredis client
+  // when present, and prefer a public handler method when available.
   const closeTarget = handler.quit || handler.disconnect || handler.close ? handler : handler.redis;
   const close = closeTarget?.quit ?? closeTarget?.disconnect ?? closeTarget?.close;
   if (!close) return;
@@ -93,6 +93,6 @@ if (redisUrl && isRscBundle && isRedisCacheEnabled) {
   registerCacheHandler('default', new TieredCacheHandler(l1, l2));
 } else if (redisUrl && isRscBundle && !isRedisCacheEnabled) {
   console.warn(
-    '[RSC Cache] REDIS_URL is set but RSC_CACHE_ENABLED was not true at bundle build time; using in-memory LRU',
+    '[RSC Cache] REDIS_URL is set but RSC_CACHE_ENABLED was not true at bundle build time; RSC fragment caching is disabled',
   );
 }

@@ -1,0 +1,59 @@
+<% content_for :head do %>
+  <link rel="preload" as="image" href="<%= hero_image_url %>" fetchpriority="high">
+<% end %>
+<%# Cached variant of products/show_rsc.html.erb. Same component, sync props, and async emits, wrapped
+    in cached_stream_react_component_with_async_props. On a hit the async block (review stats, reviews,
+    related products) and the node render are skipped; chunks replay from cache.
+    cache_key = product id + updated_at. %>
+<%= cached_stream_react_component_with_async_props("ProductPageRSC",
+    cache_key: ["product_rsc", @product.id, @product.updated_at.to_i],
+    props: { product: @product_data }, prerender: true) do |emit|
+
+  # Stream product details first (below-the-fold: description, features, specs)
+  # Emitted immediately — prioritizes hero section in initial stream for faster LCP
+  emit.call("product_details", {
+    description: @product.description,
+    features: @product.features,
+    specs: @product.specs,
+  })
+
+  # Stream review statistics (rating distribution aggregation)
+  emit.call("review_stats", @product.review_stats)
+
+  # Stream customer reviews (complex sort query)
+  reviews = @product.top_reviews(5)
+  emit.call("reviews", {
+    reviews: reviews.map { |r|
+      {
+        id: r.id,
+        rating: r.rating,
+        title: r.title,
+        comment: r.comment,
+        reviewer_name: r.reviewer_name,
+        verified_purchase: r.verified_purchase,
+        helpful_count: r.helpful_count,
+        created_at: r.created_at.iso8601,
+      }
+    }
+  })
+
+  # Stream related products
+  related = @product.related_products(4)
+  emit.call("related_products", {
+    products: related.map { |p|
+      {
+        id: p.id,
+        name: p.name,
+        price: p.price.to_f,
+        original_price: p.original_price&.to_f,
+        category: p.category,
+        brand: p.brand,
+        images: p.images,
+        average_rating: p.average_rating.to_f,
+        review_count: p.review_count,
+        in_stock: p.in_stock,
+        discount_percentage: p.discount_percentage,
+      }
+    }
+  })
+end %>

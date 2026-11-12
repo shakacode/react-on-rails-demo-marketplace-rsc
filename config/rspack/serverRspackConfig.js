@@ -1,8 +1,11 @@
 /* eslint-disable no-param-reassign */
-const { RSCRspackPlugin } = require('react-on-rails-rsc/RspackPlugin');
-const rspack = require('@rspack/core');
 const path = require('path');
+const rspack = require('@rspack/core');
 const commonRspackConfig = require('./commonRspackConfig');
+const {
+  getRspackRscImplementation,
+  rspackDefaultClientReferences,
+} = require('../rsc-implementations');
 
 function extractLoader(rule, loaderName) {
   if (!Array.isArray(rule.use)) return undefined;
@@ -21,6 +24,7 @@ function extractLoader(rule, loaderName) {
 
 const configureServer = (rscBundle = false) => {
   const serverConfig = commonRspackConfig();
+  const rscImplementation = getRspackRscImplementation();
 
   const serverEntry = {
     'server-bundle': serverConfig.entry['server-bundle'],
@@ -56,20 +60,22 @@ const configureServer = (rscBundle = false) => {
   };
 
   if (!rscBundle) {
-    serverConfig.plugins.push(new RSCRspackPlugin({
-      isServer: true,
-      clientReferences: [
-        {
-          directory: './app/javascript',
-          recursive: true,
-          include: /\.[cm]?[jt]sx?$/,
-        },
-      ],
-    }));
+    serverConfig.plugins.push(
+      rscImplementation.createServerPlugin({
+        clientReferences: rspackDefaultClientReferences,
+      }),
+    );
   }
 
-  if (rspack.optimize?.LimitChunkCountPlugin) {
-    serverConfig.plugins.unshift(new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
+  // Rspack has LimitChunkCountPlugin at the same path
+  let LimitChunkCountPlugin;
+  try {
+    LimitChunkCountPlugin = require('@rspack/core').optimize.LimitChunkCountPlugin;
+  } catch {
+    // Fallback: try dynamic import for ESM-only @rspack/core
+  }
+  if (LimitChunkCountPlugin) {
+    serverConfig.plugins.unshift(new LimitChunkCountPlugin({ maxChunks: 1 }));
   }
 
   serverConfig.plugins.push(
@@ -128,6 +134,7 @@ const configureServer = (rscBundle = false) => {
   serverConfig.devtool = 'eval';
   serverConfig.target = 'node';
   serverConfig.node = false;
+
   return serverConfig;
 };
 

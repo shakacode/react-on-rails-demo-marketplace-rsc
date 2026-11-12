@@ -1,7 +1,11 @@
-const { RSCRspackPlugin } = require('react-on-rails-rsc/RspackPlugin');
 const { CssExtractRspackPlugin } = require('@rspack/core');
+const LoadablePlugin = require('@loadable/webpack-plugin');
 const { getPlugins: getRspackPlugins } = require('shakapacker/package/plugins/rspack.js');
 const commonRspackConfig = require('./commonRspackConfig');
+const {
+  getRspackRscImplementation,
+  rspackDefaultClientReferences,
+} = require('../rsc-implementations');
 
 const isHMR = process.env.HMR;
 
@@ -68,24 +72,21 @@ const overrideCssModulesConfig = (config) => {
 
 const configureClient = () => {
   const clientConfig = commonRspackConfig();
+  const rscImplementation = getRspackRscImplementation();
 
   // server-bundle should ONLY be built by the serverConfig
   delete clientConfig.entry['server-bundle'];
 
-  clientConfig.plugins.push(new RSCRspackPlugin({
-    isServer: false,
-    clientReferences: [
-      {
-        directory: './app/javascript',
-        recursive: true,
-        include: /\.[cm]?[jt]sx?$/,
-      },
-    ],
-  }));
+  rscImplementation.configureClientConfig(clientConfig);
+  clientConfig.plugins.push(
+    rscImplementation.createClientPlugin({
+      clientReferences: rspackDefaultClientReferences,
+    }),
+  );
 
-  // Skip @loadable/webpack-plugin for now — it may not be compatible with rspack v2.
-  // RSC pages don't need it (they use server-side rendering for code splitting).
-  // We can add it later if SSR/Client pages need it.
+  if (!isHMR) {
+    clientConfig.plugins.unshift(new LoadablePlugin({ filename: 'loadable-stats.json', writeToDisk: true }));
+  }
 
   clientConfig.resolve.fallback = {
     fs: false,

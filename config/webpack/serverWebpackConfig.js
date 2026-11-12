@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
-const { RSCWebpackPlugin } = require('react-on-rails-rsc/WebpackPlugin');
 const webpack = require('webpack');
 const path = require('path');
 const commonWebpackConfig = require('./commonWebpackConfig');
 const rscClientReferenceOptions = require('./rscClientReferences');
+const { getWebpackRscImplementation } = require('../rsc-implementations');
 
 function extractLoader(rule, loaderName) {
   return rule.use.find((item) => {
@@ -25,6 +25,7 @@ const configureServer = (rscBundle = false) => {
   // entry value will result in changing the client config!
   // Using webpack-merge into an empty object avoids this issue.
   const serverWebpackConfig = commonWebpackConfig();
+  const rscImplementation = getWebpackRscImplementation();
 
   // We just want the single server bundle entry
   const serverEntry = {
@@ -56,7 +57,7 @@ const configureServer = (rscBundle = false) => {
   };
 
   if (!rscBundle) {
-    serverWebpackConfig.plugins.push(new RSCWebpackPlugin({ isServer: true, ...rscClientReferenceOptions }));
+    serverWebpackConfig.plugins.push(rscImplementation.createServerPlugin(rscClientReferenceOptions));
   }
   serverWebpackConfig.plugins.unshift(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
 

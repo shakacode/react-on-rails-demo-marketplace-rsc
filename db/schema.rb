@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_04_170000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_02_084000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -84,6 +84,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_04_170000) do
     t.integer "helpful_count", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["product_id", "helpful_count", "created_at"], name: "index_product_reviews_for_search_snippets", order: { helpful_count: :desc, created_at: :desc }, where: "((rating >= 3) AND (verified_purchase = true))"
     t.index ["product_id", "created_at"], name: "index_product_reviews_on_product_id_and_created_at"
     t.index ["product_id", "helpful_count"], name: "index_product_reviews_on_product_id_and_helpful_count"
     t.index ["product_id", "rating"], name: "index_product_reviews_on_product_id_and_rating"

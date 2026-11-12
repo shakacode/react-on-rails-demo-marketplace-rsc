@@ -1,8 +1,14 @@
 Rails.application.routes.draw do
-  rsc_payload_route
+  # App-level payload controller guards browser-supplied props before the
+  # NDJSON stream starts (issue #245 hardening; see RscPayloadController).
+  rsc_payload_route(controller: 'rsc_payload')
   repository_url = ApplicationHelper::GITHUB_REPO_URL
   contributing_url = "#{repository_url}/blob/main/CONTRIBUTING.md"
   issues_url = "#{repository_url}/issues"
+
+  # GraphQL endpoint for Apollo Client RSC demo (issue #255).
+  # POST-only; the node-renderer's HttpLink queries this during RSC rendering.
+  post '/graphql', to: 'graphql#execute'
 
   # Health check endpoint
   get 'up' => 'rails/health#show', as: :rails_health_check
@@ -19,27 +25,61 @@ Rails.application.routes.draw do
   get '/how-rsc-works' => 'pages#how_rsc_works'
   get '/measure' => 'pages#measure'
   get '/lh-compare' => 'pages#lh_compare', as: :lh_compare
+  get '/ssr-rsc-playground' => 'pages#ssr_rsc_playground'
+  get '/products', to: 'product_search#search_rsc', as: :products
+
+  # Read-your-writes spike (issue #245): the /product/rsc mutation island POSTs
+  # a canned review here, then refetches the streamed RSC page. Non-GET, so it
+  # is deliberately outside the RouteContract GET-page inventory.
+  post '/products/:product_id/reviews', to: 'product_reviews#create', as: :product_reviews
+
+  # Multimedia showcase — media-heavy page (HLS video + responsive image galleries).
+  # RSC-first single page (issue #98). Both paths hit the same RSC action.
+  get '/media-gallery', to: 'media_gallery#show_rsc', as: :media_gallery
+  get '/media-gallery/rsc', to: 'media_gallery#show_rsc'
 
   # Restaurant detail page — three versions for the markdown-heavy detail view
   get '/restaurant/:id/ssr', to: 'restaurants#show_ssr', as: :restaurant_show_ssr
+  get '/restaurant/:id/ssr-cached', to: 'restaurants#show_ssr_cached' # SSR + cached_react_component
   get '/restaurant/:id/client', to: 'restaurants#show_client', as: :restaurant_show_client
   get '/restaurant/:id/rsc', to: 'restaurants#show_rsc', as: :restaurant_show_rsc
+  get '/restaurant/:id/rsc-cached', to: 'restaurants#show_rsc_cached' # RSC + cached_stream_react_component
+  # Virtualized review-list siblings (issue #184): SSR + react-virtuoso (Shape A)
+  # and RSC + react-virtuoso (Shape B). ?count= / ?initial= tune the experiment.
+  get '/restaurant/:id/ssr-virtual', to: 'restaurants#show_ssr_virtual', as: :restaurant_show_ssr_virtual
+  get '/restaurant/:id/rsc-virtual', to: 'restaurants#show_rsc_virtual', as: :restaurant_show_rsc_virtual
 
   # Product page routes — three versions demonstrating e-commerce RSC gains
   get '/product/ssr', to: 'products#show_ssr'        # V1: All data fetched on server, returned at once
+  get '/product/ssr-cached', to: 'products#show_ssr_cached' # V1 + cached_react_component
   get '/product/client', to: 'products#show_client'   # V2: Loadable components, client-side fetch
   get '/product/rsc', to: 'products#show_rsc'         # V3: RSC streaming
+  get '/product/rsc-cached', to: 'products#show_rsc_cached' # V3 + cached_stream_react_component_with_async_props
+  get '/product/rsc-pull', to: 'products#show_rsc_pull' # V5: RSC pull-mode — bidirectional async props + unstable_cache
+  get '/product/ppr', to: 'products#show_ppr'         # V4: PPR — cached shell + dynamic streaming
+  # Issue #244: form-library comparison (separate from benchmarked /rsc).
+  get '/product/rsc-forms', to: 'products#show_rsc_forms'
+  # Issue #255: Apollo Client × RSC — sibling routes for GraphQL integration demo.
+  # L1 = server-only Apollo query (zero browser Apollo JS).
+  # L2 = PreloadQuery → Flight → client island hydration.
+  get '/product/rsc-apollo-l1', to: 'products#show_rsc_apollo_l1'
+  get '/product/rsc-apollo-l2', to: 'products#show_rsc_apollo_l2'
 
   # Product search results — three versions demonstrating search page RSC gains
   get '/product-search/ssr', to: 'product_search#search_ssr'       # V1: Full SSR
+  get '/product-search/ssr-cached', to: 'product_search#search_ssr_cached' # V1 + cached_react_component
   get '/product-search/client', to: 'product_search#search_client'  # V2: Client-side search
   get '/product-search/rsc', to: 'product_search#search_rsc'        # V3: RSC streaming
+  get '/product-search/rsc-cached', to: 'product_search#search_rsc_cached' # V3 + cached stream w/ async props
 
   # Blog post routes — three versions demonstrating bundle size differences
   get '/blog/ssr', to: 'blog#post_ssr'       # V1: marked + highlight.js shipped to client
+  get '/blog/ssr-cached', to: 'blog#post_ssr_cached' # V1 + cached_react_component
   get '/blog/client', to: 'blog#post_client'  # V2: Libraries loaded in async chunk
   get '/blog/rsc', to: 'blog#post_rsc'              # V3: Libraries stay server-side + streaming
+  get '/blog/rsc-cached', to: 'blog#post_rsc_cached' # V3 + cache (cached_stream_react_component_with_async_props)
   get '/blog/rsc-simple', to: 'blog#post_rsc_simple' # V4: Libraries stay server-side, all data upfront
+  get '/blog/rsc-simple-cached', to: 'blog#post_rsc_simple_cached' # V4 + cached_stream_react_component
 
   # RSC debug steps (incremental complexity)
   get '/blog/rsc-step1', to: 'blog#post_rsc_step1'
@@ -50,6 +90,14 @@ Rails.application.routes.draw do
   get '/blog/rsc-step4', to: 'blog#post_rsc_step4'
   get '/blog/rsc-step5', to: 'blog#post_rsc_step5'
 
+  # CSS code-splitting experiment — per-page big CSS files, cssShared shared across pages.
+  # one = Shared + A, two = Shared + B. Three rendering shapes: ssr / rsc-server / rsc-client.
+  get '/css-demo/one/ssr', to: 'css_demo#one_ssr'
+  get '/css-demo/two/ssr', to: 'css_demo#two_ssr'
+  get '/css-demo/one/rsc-server', to: 'css_demo#one_rsc_server'
+  get '/css-demo/two/rsc-server', to: 'css_demo#two_rsc_server'
+  get '/css-demo/one/rsc-client', to: 'css_demo#one_rsc_client'
+  get '/css-demo/two/rsc-client', to: 'css_demo#two_rsc_client'
 
   # API endpoints (Task 2)
   namespace :api do
@@ -78,8 +126,5 @@ Rails.application.routes.draw do
         get :related_posts
       end
     end
-
-    # Performance metrics collection
-    post '/performance_metrics', to: 'performance_metrics#create'
   end
 end

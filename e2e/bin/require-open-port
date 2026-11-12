@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'socket'
+
+host = ARGV.fetch(0)
+port = Integer(ARGV.fetch(1), 10)
+begin
+  listener = TCPServer.new(host, port)
+  listener.close
+rescue Errno::EADDRINUSE
+  warn "Refusing Playwright E2E: #{host}:#{port} is already in use"
+  exit 1
+end

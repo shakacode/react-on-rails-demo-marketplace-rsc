@@ -64,6 +64,13 @@ export interface RestaurantStats {
   seasonal_menu_changes_per_year: number;
 }
 
+// Extra knobs for the virtualized review-list variants (issue #184).
+export interface VirtualizationConfig {
+  // Rows (of two review cards) rendered into the server HTML — Virtuoso's
+  // initialItemCount. 0 = no server-rendered rows (the no-JS/SEO preview lane).
+  initial_rows: number;
+}
+
 export interface RestaurantDetailProps {
   restaurant: DetailRestaurant;
   bio: string;
@@ -76,4 +83,8 @@ export interface RestaurantDetailProps {
   currencies: string[];
   currency_rates: Record<string, number>;
   stats: RestaurantStats;
+}
+
+export interface RestaurantDetailVirtualProps extends RestaurantDetailProps {
+  virtualization: VirtualizationConfig;
 }

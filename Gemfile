@@ -1,14 +1,11 @@
 source 'https://rubygems.org'
 
-ruby '3.3.0'
-
-# Fix connection_pool compatibility with Ruby 3.3
-gem 'connection_pool', '~> 2.4'
+ruby '3.4.9'
 
 # Core Rails
-gem 'rails', '~> 7.1'
-gem 'pg', '~> 1.5'
-gem 'puma', '~> 6.0'
+gem 'rails', '~> 8.1'
+gem 'pg', '~> 1.6'
+gem 'puma', '~> 8.0'
 
 # Asset Pipeline
 gem 'sprockets-rails'
@@ -17,11 +14,11 @@ gem 'turbo-rails'
 gem 'stimulus-rails'
 
 # React on Rails
-gem 'react_on_rails', '17.0.0.rc.3'
-gem 'react_on_rails_pro', '17.0.0.rc.3'
+gem 'react_on_rails', '17.2.1'
+gem 'react_on_rails_pro', '17.2.1'
 
 # Shakapacker for webpack integration
-gem 'shakapacker', '10.1.0'
+gem 'shakapacker', '10.3.2'
 
 # JSON handling
 gem 'jbuilder'
@@ -33,8 +30,9 @@ gem 'tzinfo-data', platforms: %i[windows jruby]
 gem 'bootsnap', require: false
 
 group :development, :test do
+  gem 'cypress-on-rails', '1.20.1'
   gem 'debug', platforms: %i[mri windows]
-  gem 'rspec-rails', '~> 6.1'
+  gem 'rspec-rails', '~> 8.0'
   gem 'factory_bot_rails'
   gem 'faker'
   gem "pry", "~> 0.16.0"
@@ -51,3 +49,6 @@ group :test do
   gem 'capybara'
   gem 'selenium-webdriver'
 end
+
+# GraphQL
+gem 'graphql', '~> 2.6'

@@ -4,8 +4,9 @@ name: RSC + Rspack E2E gate
 # route at runtime — the only trustworthy proof that Rspack + RSC works (build
 # success and manifest parity are not enough; see react_on_rails#3488).
 #
-# Option A: build the React on Rails Pro packages and react-on-rails-rsc from
-# source checkouts, link them via yalc, then run scripts/verify-rsc-e2e.sh.
+# PR and default dispatch runs test the committed published package graph.
+# Explicit manual source refs opt into source/yalc diagnostics; those runs do
+# not establish acceptance of the published packages.
 #
 # NOTE: first-run CI iteration is expected (Postgres wiring, yalc/pnpm interplay,
 # Puppeteer Chromium, exact Pro build commands). The orchestration in
@@ -19,11 +20,15 @@ on:
     paths:
       - 'config/rspack/**'
       - 'config/webpack/**'
+      - 'config/renderer-context.js'
       - 'scripts/verify-rsc-e2e.sh'
       - 'scripts/check-rsc-chunks.mjs'
+      - 'scripts/renderer-context.test.mjs'
+      - 'scripts/rsc-error-redaction.test.mjs'
       - '.verify-routes.js'
       - 'node-renderer.js'
       - 'package.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/rsc-rspack-e2e.yml'
   workflow_dispatch:
     inputs:
@@ -31,11 +36,11 @@ on:
       # refs are trusted. They are passed only to actions/checkout `ref:` (not a
       # shell), never interpolated into a run: command.
       ror_ref:
-        description: shakacode/react_on_rails ref (Pro packages). Empty = default branch.
+        description: Optional Pro source ref for source/yalc diagnostics. Empty = committed published packages unless rsc_ref is supplied.
         required: false
         default: ''
       rsc_ref:
-        description: shakacode/react_on_rails_rsc ref (RSCRspackPlugin). Empty = default branch.
+        description: Optional RSC source ref for source/yalc diagnostics. Empty = committed published packages unless ror_ref is supplied.
         required: false
         default: ''
 
@@ -77,7 +82,7 @@ jobs:
 
     steps:
       - name: Checkout demo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -85,7 +90,7 @@ jobs:
           bundler-cache: true
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -95,18 +100,33 @@ jobs:
       - name: Enable corepack
         run: corepack enable
 
+      - name: Verify committed demo dependency graph
+        # This is the lockfile contract for the demo. The yalc substitutions
+        # below may update only the linked React on Rails packages; they must
+        # start from the committed parser/sanitizer graph.
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify renderer VM web-platform globals
+        run: pnpm test:renderer-context
+
+      - name: Verify RSC error redaction is present (issue #237)
+        run: pnpm test:rsc-error-redaction
+
       - name: Install yalc
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         run: npm install -g yalc
 
-      # ── Option A: build the RoR Pro packages from a source checkout ──────────
+      # Optional, explicitly requested source diagnostics only.
       - name: Checkout react_on_rails (Pro packages)
-        uses: actions/checkout@v4
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
+        uses: actions/checkout@v7.0.1
         with:
           repository: shakacode/react_on_rails
           ref: ${{ github.event.inputs.ror_ref }}
           path: .pkgsrc/ror
 
       - name: Build + yalc publish Pro packages
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         working-directory: .pkgsrc/ror
         run: |
           pnpm install --frozen-lockfile=false
@@ -118,6 +138,7 @@ jobs:
           ( cd packages/react-on-rails-pro-node-renderer && yalc publish )
 
       - name: Checkout react_on_rails_rsc (RSCRspackPlugin)
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         # Manual clone (public repo, anonymous) so any branch/PR ref can be
         # tested. actions/checkout can't fetch a non-default ref of another repo
         # with the default GITHUB_TOKEN. RSC_REF comes from env (not inlined into
@@ -125,23 +146,29 @@ jobs:
         env:
           RSC_REF: ${{ github.event.inputs.rsc_ref }}
         run: |
-          if [ -n "$RSC_REF" ]; then
-            git clone --depth 1 --branch "$RSC_REF" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
-          else
-            git clone --depth 1 https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
-          fi
+          # When only ror_ref is supplied, match the demo's RSC dependency.
+          RSC_REF="${RSC_REF:-$(node -p "require('./package.json').dependencies['react-on-rails-rsc']")}"
+          git clone --depth 1 --branch "$RSC_REF" https://github.com/shakacode/react_on_rails_rsc.git .pkgsrc/rsc
           echo "react_on_rails_rsc @ $(git -C .pkgsrc/rsc rev-parse --short HEAD)"
 
       - name: Build + yalc publish react-on-rails-rsc
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         working-directory: .pkgsrc/rsc
         run: |
           corepack enable
-          yarn install --frozen-lockfile
+          # --no-frozen-lockfile: the upstream repo's yarn.lock occasionally
+          # lags its package.json (e.g. react_on_rails_rsc@fd5cf50 added
+          # es-module-lexer without a lockfile entry), which would fail every
+          # run here. This step only builds the upstream package as an input
+          # to the gate; enforcing upstream's lockfile freshness is that
+          # repo's CI's job, not this one's.
+          yarn install --no-frozen-lockfile
           yarn build
           yalc publish
 
       # ── Link the freshly-built packages into the demo (matches #72 setup) ────
       - name: Link packages + install
+        if: github.event_name == 'workflow_dispatch' && (inputs.ror_ref != '' || inputs.rsc_ref != '')
         run: |
           # The demo pins all RoR packages to the private
           # shakacode/react-on-rails-builds repo (unfetchable in CI) two ways:
@@ -156,7 +183,8 @@ jobs:
           # pnpm.overrides so react-on-rails-pro's workspace:* dep still resolves
           # to the local build instead of the private git repo.
           node -e 'const fs=require("fs"),p=JSON.parse(fs.readFileSync("package.json","utf8")),D={"react-on-rails-pro":"file:.yalc/react-on-rails-pro","react-on-rails-pro-node-renderer":"file:.yalc/react-on-rails-pro-node-renderer","react-on-rails-rsc":"file:.yalc/react-on-rails-rsc"},A=Object.assign({"react-on-rails":"file:.yalc/react-on-rails"},D);for(const s of ["dependencies","devDependencies"])if(p[s]){delete p[s]["react-on-rails"];for(const k in D)if(p[s][k])p[s][k]=D[k];}p.pnpm=p.pnpm||{};p.pnpm.overrides=Object.assign({},p.pnpm.overrides,A);fs.writeFileSync("package.json",JSON.stringify(p,null,2));'
-          rm -f pnpm-lock.yaml
+          # Keep the committed lockfile: pnpm now updates only the yalc-linked
+          # package edges while retaining the demo's transitive dependency graph.
           pnpm install --no-frozen-lockfile
 
       - name: Install Chromium for Puppeteer
@@ -167,7 +195,7 @@ jobs:
 
       - name: Upload server logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rsc-e2e-logs
           path: |

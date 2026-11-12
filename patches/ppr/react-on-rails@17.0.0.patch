@@ -1,0 +1,15 @@
+diff --git a/lib/types/index.d.ts b/lib/types/index.d.ts
+index 5b94298cbcd39a5af13610111e6dff1f8b6cd52f..4d74068cf427a0a08e1c923b4f584df2cb4dcf44 100644
+--- a/lib/types/index.d.ts
++++ b/lib/types/index.d.ts
+@@ -475,6 +475,10 @@ export interface ReactOnRailsInternal extends ReactOnRails {
+      * Used by server rendering by Rails
+      */
+     streamServerRenderedReactComponent(options: RenderParams): Readable;
++    pprPrerenderServerRenderedReactComponent(options: RenderParams): Readable;
++    pprResumeServerRenderedReactComponent(options: RenderParams & {
++        postponedState: unknown;
++    }): Readable;
+     /**
+      * Generates RSC payload, used by Rails
+      */

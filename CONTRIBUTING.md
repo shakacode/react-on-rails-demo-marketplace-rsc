@@ -12,7 +12,7 @@ This repo exists to make SSR, client components, and React Server Components eas
 
 ## Local setup
 
-1. Install Ruby `3.3.0`, PostgreSQL, and Node `20.x` or newer.
+1. Install Ruby `3.4.9`, PostgreSQL, and Node `20.x` or newer.
 2. Install dependencies:
 
    ```bash
@@ -66,6 +66,29 @@ git diff --check
 `script/demo-fleet-verify` is the broad demo gate. It runs the Rails test task, RSC import checks, generated pack checks, the production build, and RSC chunk verification.
 
 `pnpm lint` checks the JavaScript and TypeScript app tree with the repo ESLint config. `bundle exec rubocop` checks Ruby files with the repo RuboCop config and the current TODO baseline; remove entries from `.rubocop_todo.yml` as existing Ruby style debt is fixed.
+
+### Browser journey
+
+After the normal dependency install, install Playwright's Chromium binary once:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+Run the canonical Rails-aware browser test with:
+
+```bash
+pnpm test:e2e
+```
+
+This command uses its own `localhub_demo_playwright` database — not the
+`localhub_demo_test` one `bundle exec rspec` uses — and deletes its product and
+product-review rows before and after the journey, so the two suites can run at
+the same time without truncating each other's data. It enables a loopback-only
+Rails command bridge with an ephemeral capability token for two allowlisted
+repository files; the bridge remains disabled during normal app development
+and cannot boot in production. See
+[`e2e/README.md`](./e2e/README.md) for the security boundary and artifact paths.
 
 ## Documentation to read first
 

@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'tmpdir'
+
+lock_name = ARGV.shift
+abort 'usage: with-runner-lock LOCK_NAME COMMAND [ARG...]' unless lock_name && !ARGV.empty?
+abort "invalid lock name: #{lock_name}" unless lock_name.match?(/\A[a-zA-Z0-9._-]+\z/)
+
+lock_path = File.join(Dir.tmpdir, "#{lock_name}-#{Process.uid}.lock")
+lock = File.open(lock_path, File::RDWR | File::CREAT, 0o600)
+unless lock.flock(File::LOCK_EX | File::LOCK_NB)
+  abort 'Refusing Playwright E2E: another Playwright E2E runner is active'
+end
+
+lock.close_on_exec = false
+ENV['E2E_RUNNER_LOCK_HELD'] = '1'
+exec(*ARGV)

@@ -12,15 +12,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["app/javascript/*"]
-    }
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "app/javascript/**/*.ts",
-    "app/javascript/**/*.tsx"
+    "app/javascript/**/*.tsx",
+    "abtests.config.ts",
+    "ab-tests/**/*.ts"
   ],
   "exclude": [
     "node_modules",
