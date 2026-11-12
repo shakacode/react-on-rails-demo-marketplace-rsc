@@ -17,8 +17,11 @@ import redisCacheOwnerModule from '../config/redis-cache-owner.js';
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { createRedisCacheOwner } = redisCacheOwnerModule;
-const hasRedis = spawnSync('redis-server', ['--version'], { env: { ...process.env, LC_ALL: 'C' } }).status === 0;
-const cacheTest = (name, fn) => test(name, { skip: !hasRedis && 'requires redis-server on PATH' }, fn);
+assert.equal(
+  spawnSync('redis-server', ['--version'], { env: { ...process.env, LC_ALL: 'C' } }).status,
+  0,
+  'Redis cache tests require redis-server on PATH',
+);
 
 async function until(predicate, timeout = 5000) {
   const deadline = Date.now() + timeout;
@@ -67,12 +70,14 @@ async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'd
   const initialize = process.env.RSC_CACHE_TEST_CONTROL !== 'true';
   await writeFile(entry, `${initialize ? `import ${JSON.stringify(initializer)};` : ''}
     export { getCacheHandler } from ${JSON.stringify(registry)};
+    export { unstable_cache, registerCacheHandler } from 'react-on-rails-pro/cache';
   `);
   const compiler = webpack({
     mode: 'production', target: 'node', context: root, entry,
     output: { path: directory, filename: 'cache.cjs', library: { type: 'commonjs2' } },
     optimization: { minimize: false }, devtool: false,
-    resolve: { extensions: ['.ts', '.js'], conditionNames: ['react-server', 'node', '...'] },
+    resolve: { extensions: ['.ts', '.js'], conditionNames: ['react-server', 'node', '...'],
+      modules: [path.join(root, 'node_modules'), 'node_modules'] },
     module: { rules: [{ test: /\.ts$/, use: { loader: require.resolve('swc-loader'), options: {
       jsc: { parser: { syntax: 'typescript' } },
     } } }] },
@@ -93,7 +98,7 @@ async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'd
   }
   const code = await readFile(path.join(directory, 'cache.cjs'), 'utf8');
 
-  function worker(url = redisUrl, getSharedRedisCache = createRedisCacheOwner()) {
+  function worker(url = redisUrl, getSharedRedisCache = createRedisCacheOwner(), bundleId = 'cache-fixture') {
     const workerProcess = { env: { NODE_ENV: 'production' } };
     const module = { exports: {} };
     const logs = [];
@@ -104,11 +109,15 @@ async function cacheFixture(t, { enabled = true, maxEntries = '2', password = 'd
       setTimeout, clearTimeout, setImmediate, clearImmediate,
       __GET_REDIS_URL__: () => url,
       __GET_SHARED_REDIS_CACHE__: getSharedRedisCache,
+      __reactOnRailsProBundleId: bundleId,
       console: Object.fromEntries(['info', 'warn', 'error', 'debug'].map((level) => [
         level, (...args) => logs.push(args.join(' ')),
       ])),
     }, { filename: path.join(directory, 'cache.cjs') });
-    return { handler: module.exports.getCacheHandler('default'), logs };
+    return {
+      handler: module.exports.getCacheHandler('default'), logs,
+      cache: module.exports.unstable_cache, register: module.exports.registerCacheHandler,
+    };
   }
 
   return { worker, redis, server };
@@ -119,7 +128,7 @@ const entry = (text, revalidate = 60) => ({
 });
 const text = (cached) => cached?.value.map((chunk) => chunk.toString()).join('');
 
-cacheTest('a fresh worker reuses a fragment cached by another worker', async (t) => {
+test('a fresh worker reuses a fragment cached by another worker', async (t) => {
   const fixture = await cacheFixture(t);
   const first = fixture.worker();
   await first.handler.set('shared-fragment', entry('rendered once'));
@@ -127,7 +136,7 @@ cacheTest('a fresh worker reuses a fragment cached by another worker', async (t)
   assert.equal(text(await second.handler.get('shared-fragment')), 'rendered once');
 });
 
-cacheTest('without a Redis URL, workers retain separate in-memory caches', async (t) => {
+test('without a Redis URL, workers retain separate in-memory caches', async (t) => {
   const fixture = await cacheFixture(t);
   const first = fixture.worker('');
   await first.handler.set('local-fragment', entry('local only'));
@@ -136,7 +145,7 @@ cacheTest('without a Redis URL, workers retain separate in-memory caches', async
   assert.equal(await fixture.redis.dbsize(), 0);
 });
 
-cacheTest('a disabled build flag leaves Redis unused and reports caching as disabled', async (t) => {
+test('a disabled build flag leaves Redis unused and reports caching as disabled', async (t) => {
   const fixture = await cacheFixture(t, { enabled: false });
   const first = fixture.worker();
   await first.handler.set('disabled-fragment', entry('local handler'));
@@ -145,7 +154,7 @@ cacheTest('a disabled build flag leaves Redis unused and reports caching as disa
   assert.match(first.logs.join('\n'), /fragment caching is disabled/);
 });
 
-cacheTest('L1 evicts the least recently read entry at its configured capacity', async (t) => {
+test('L1 evicts the least recently read entry at its configured capacity', async (t) => {
   const fixture = await cacheFixture(t, { maxEntries: '2' });
   const { handler } = fixture.worker();
   await handler.set('a', entry('A'));
@@ -158,17 +167,20 @@ cacheTest('L1 evicts the least recently read entry at its configured capacity', 
   assert.equal(text(await handler.get('c')), 'C');
 });
 
-cacheTest('promotion from Redis does not extend a fragment beyond its original expiry', async (t) => {
+test('promotion from Redis does not extend a fragment beyond its original expiry', async (t) => {
   const fixture = await cacheFixture(t);
-  await fixture.worker().handler.set('expires', entry('short lived', 1));
+  const cached = entry('short lived', 3);
+  await fixture.worker().handler.set('expires', cached);
   await delay(600);
   const second = fixture.worker();
   assert.equal(text(await second.handler.get('expires')), 'short lived');
-  await delay(600);
+  await fixture.redis.del('expires');
+  assert.equal(text(await second.handler.get('expires')), 'short lived', 'the promoted entry must be in L1');
+  await delay(Math.max(0, cached.timestamp + 3100 - Date.now()));
   assert.equal(await second.handler.get('expires'), null);
 });
 
-cacheTest('Redis loss leaves local hits and subsequent local writes usable', async (t) => {
+test('Redis loss leaves local hits and subsequent local writes usable', async (t) => {
   const fixture = await cacheFixture(t);
   const { handler } = fixture.worker();
   await handler.set('before-outage', entry('already warm'));
@@ -180,7 +192,7 @@ cacheTest('Redis loss leaves local hits and subsequent local writes usable', asy
   assert.equal(await handler.get('missing'), null);
 });
 
-cacheTest('startup logging omits Redis URLs even with an at-sign in the password', async (t) => {
+test('startup logging omits Redis URLs even with an at-sign in the password', async (t) => {
   const password = 'disposable-cache-test@tail';
   const fixture = await cacheFixture(t, { password });
   const { logs } = fixture.worker();
@@ -189,7 +201,7 @@ cacheTest('startup logging omits Redis URLs even with an at-sign in the password
   assert.equal(logs.join('\n').includes(password), false);
 });
 
-cacheTest('several VM generations in one worker share one Redis connection', async (t) => {
+test('several VM generations in one worker share one Redis connection', async (t) => {
   const fixture = await cacheFixture(t);
   const owner = createRedisCacheOwner();
   const first = fixture.worker(undefined, owner);
@@ -200,4 +212,25 @@ cacheTest('several VM generations in one worker share one Redis connection', asy
   }
   // One fixture inspector plus one shared worker connection.
   assert.match(await fixture.redis.info('clients'), /connected_clients:2\r?\n/);
+});
+
+test('cached fragment lookups are isolated by renderer bundle identity', async (t) => {
+  const fixture = await cacheFixture(t);
+  async function lookup(bundleId) {
+    const context = fixture.worker('', undefined, bundleId);
+    let observedKey;
+    context.register('probe', {
+      get: async (key) => { observedKey = key; throw new Error('observed backend lookup'); },
+      set: async () => {},
+    });
+    await assert.rejects(
+      context.cache(async () => null, { id: 'same-component', kind: 'probe' })(),
+      /observed backend lookup/,
+    );
+    assert.equal(typeof observedKey, 'string');
+    return observedKey;
+  }
+  const firstBuild = await lookup('bundle-a');
+  assert.equal(await lookup('bundle-a'), firstBuild);
+  assert.notEqual(await lookup('bundle-b'), firstBuild);
 });

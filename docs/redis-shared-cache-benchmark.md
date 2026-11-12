@@ -84,9 +84,12 @@ Redis adds network work on misses; it does not promise faster warm L1 hits.
 The renderer owns one Redis connection per worker, shared by its bundle VM
 generations. Worker termination releases that connection through the renderer's
 normal process lifecycle; no per-VM signal handlers or private shutdown API are used.
-The RSC E2E gate builds with caching enabled. `test:renderer-context` also runs
-the Redis contract tests; hosts without `redis-server` report those cases as
-explicit skips. The running-app Redis and scheduled-restart checks remain manual.
+Cache keys include the renderer bundle identity, preventing reuse across builds.
+The RSC E2E gate builds with caching enabled, starts an isolated Redis server when
+`REDIS_URL` is unset, and verifies that the running renderer populated fragment keys.
+`test:renderer-context` also runs the Redis contract tests. Both commands require
+`redis-server`; the hosted workflow installs it when needed. Scheduled-restart
+checks remain manual.
 
 The [June 7 measurements](https://github.com/shakacode/react-on-rails-demo-marketplace-rsc/blob/53c10b37c92b6b5fb247b9ed5940ca4eab2797aa/docs/redis-shared-cache-benchmark.md)
 used development builds and earlier React on Rails packages. They are historical
