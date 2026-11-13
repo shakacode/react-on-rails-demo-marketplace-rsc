@@ -5,7 +5,7 @@
 // that mounts only the visible window.
 import React from 'react';
 import { cacheComponent } from '../../utils/rscCache';
-import { RestaurantDetailVirtualProps, MenuPayload, Review, HoursEntry, DetailRestaurant, VirtualizationConfig } from './types';
+import { RestaurantDetailVirtualProps, MenuPayload, HoursEntry, DetailRestaurant } from './types';
 import { RestaurantHeader } from './RestaurantHeader';
 import { BioSection } from './BioSectionForServer';
 import { MenuSection } from './MenuSectionForServer';
@@ -24,19 +24,6 @@ const CachedMenuSection = cacheComponent(
   { id: 'restaurant-menu', revalidate: 60 },
 );
 
-const CachedReviewsSectionVirtual = cacheComponent(
-  async ({ reviews, averageRating, reviewCount, virtualization }: {
-    restaurantId: number;
-    reviews: Review[];
-    averageRating: number;
-    reviewCount: number;
-    virtualization: VirtualizationConfig;
-  }) => (
-    <ReviewsSectionVirtual reviews={reviews} averageRating={averageRating} reviewCount={reviewCount} virtualization={virtualization} />
-  ),
-  { id: 'restaurant-reviews-virtual', revalidate: 60 },
-);
-
 const CachedSidebarSection = cacheComponent(
   async ({ neighborhood, faq, hours, restaurant }: { restaurantId: number; neighborhood: string; faq: string; hours: HoursEntry[]; restaurant: DetailRestaurant }) => (
     <SidebarSection neighborhood={neighborhood} faq={faq} hours={hours} restaurant={restaurant} />
@@ -51,8 +38,8 @@ export default function RestaurantDetailRSCVirtual(props: RestaurantDetailVirtua
       <RestaurantHeader restaurant={props.restaurant} stats={props.stats} hours={props.hours} variant="rsc-virtual" />
       <CachedBioSection restaurantId={rid} bio={props.bio} story={props.story} restaurant={props.restaurant} />
       <CachedMenuSection restaurantId={rid} menu={props.menu} />
-      <CachedReviewsSectionVirtual
-        restaurantId={rid}
+      {/* The virtual list and helpful buttons are client islands, outside the cache. */}
+      <ReviewsSectionVirtual
         reviews={props.reviews}
         averageRating={props.restaurant.average_rating}
         reviewCount={props.restaurant.review_count}

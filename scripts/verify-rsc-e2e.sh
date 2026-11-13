@@ -31,14 +31,23 @@ RAILS_PORT="${RAILS_PORT:-3010}"
 RENDERER_PORT="${RENDERER_PORT:-3800}"
 
 export SHAKAPACKER_ASSETS_BUNDLER=rspack
+# Exercise fragment encoding/decoding as well as ordinary rendering in CI.
+export RSC_CACHE_ENABLED=true
 export RENDERER_URL="http://localhost:${RENDERER_PORT}"
 export BASE_URL="http://localhost:${RAILS_PORT}"
 
 renderer_pid=""
 rails_pid=""
+redis_pid=""
+redis_dir=""
 cleanup() {
   [ -n "$rails_pid" ] && kill "$rails_pid" 2>/dev/null || true
   [ -n "$renderer_pid" ] && kill "$renderer_pid" 2>/dev/null || true
+  if [ -n "$redis_pid" ]; then
+    kill "$redis_pid" 2>/dev/null || true
+    wait "$redis_pid" 2>/dev/null || true
+  fi
+  if [ -n "$redis_dir" ]; then rm -rf -- "$redis_dir"; fi
 }
 trap cleanup EXIT INT TERM
 
@@ -58,6 +67,24 @@ wait_for_port() {
   exec 3>&- 2>/dev/null || true
   echo "ok ${name} is up on :${port}"
 }
+
+if [ -z "${REDIS_URL:-}" ]; then
+  command -v redis-server >/dev/null || { echo "redis-server is required for this gate" >&2; exit 1; }
+  redis_dir="$(mktemp -d)"
+  redis_port="${REDIS_PORT:-16379}"
+  : > tmp/rsc-redis.log
+  LC_ALL=C redis-server --bind 127.0.0.1 --port "$redis_port" --save '' --appendonly no \
+    --dir "$redis_dir" > tmp/rsc-redis.log 2>&1 &
+  redis_pid=$!
+  # Verify our server bound the port, rather than using an unrelated instance.
+  for ((attempt = 0; attempt < 50; attempt++)); do
+    grep -q 'Ready to accept connections' tmp/rsc-redis.log && break
+    kill -0 "$redis_pid" 2>/dev/null || { cat tmp/rsc-redis.log >&2; exit 1; }
+    sleep 0.1
+  done
+  grep -q 'Ready to accept connections' tmp/rsc-redis.log || { echo "Redis did not become ready" >&2; exit 1; }
+  export REDIS_URL="redis://127.0.0.1:${redis_port}"
+fi
 
 echo "== [1/5] Prepare database =="
 bundle exec rake db:prepare
@@ -84,11 +111,12 @@ wait_for_port "$RAILS_PORT" "Rails"
 # SSR/client variants and /search,/analytics routes have unrelated data/route
 # issues (404/500 without seed data) that are out of scope for an RSC-rendering
 # gate. Override with RSC_ROUTES if the demo's RSC routes change.
-export ROUTES="${RSC_ROUTES:-/rsc,/product/rsc,/product-search/rsc,/blog/rsc,/blog/rsc-simple,/blog/rsc-step1,/blog/rsc-step1b,/blog/rsc-step1c,/blog/rsc-step2,/blog/rsc-step3,/blog/rsc-step4,/blog/rsc-step5}"
+export ROUTES="${RSC_ROUTES:-/rsc,/product/rsc,/product-search/rsc,/restaurant/1/rsc,/restaurant/1/rsc-virtual,/blog/rsc,/blog/rsc-simple,/blog/rsc-step1,/blog/rsc-step1b,/blog/rsc-step1c,/blog/rsc-step2,/blog/rsc-step3,/blog/rsc-step4,/blog/rsc-step5}"
 
 # .verify-routes.js opens each route, waits for the hydration window, captures
 # console/page errors and classified React hydration codes, and exits non-zero
 # if any route fails to render or hydrate cleanly.
 node .verify-routes.js
+node scripts/verify-rsc-redis.mjs
 
 echo "ok RSC + Rspack route-hydration gate PASSED"

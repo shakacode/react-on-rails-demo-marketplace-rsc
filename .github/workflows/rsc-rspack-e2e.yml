@@ -18,12 +18,17 @@ on:
     # that affects the Rspack/RSC build or the gate itself changes. Broaden as
     # needed once the gate is green.
     paths:
+      - 'app/javascript/**'
       - 'config/rspack/**'
       - 'config/webpack/**'
+      - 'config/shared/**'
+      - 'config/redis-cache-owner.js'
       - 'config/renderer-context.js'
       - 'scripts/verify-rsc-e2e.sh'
       - 'scripts/check-rsc-chunks.mjs'
       - 'scripts/renderer-context.test.mjs'
+      - 'scripts/rsc-cache.test.mjs'
+      - 'scripts/verify-rsc-redis.mjs'
       - 'scripts/rsc-error-redaction.test.mjs'
       - '.verify-routes.js'
       - 'node-renderer.js'
@@ -106,7 +111,14 @@ jobs:
         # start from the committed parser/sanitizer graph.
         run: pnpm install --frozen-lockfile
 
-      - name: Verify renderer VM web-platform globals
+      - name: Install Redis for cache verification
+        run: |
+          if ! command -v redis-server >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends --yes redis-server
+          fi
+
+      - name: Verify renderer globals and Redis cache contract
         run: pnpm test:renderer-context
 
       - name: Verify RSC error redaction is present (issue #237)

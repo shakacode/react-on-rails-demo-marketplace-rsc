@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 const path = require('path');
+const rspack = require('@rspack/core');
 const commonRspackConfig = require('./commonRspackConfig');
 const {
   getRspackRscImplementation,
@@ -76,6 +77,14 @@ const configureServer = (rscBundle = false) => {
   if (LimitChunkCountPlugin) {
     serverConfig.plugins.unshift(new LimitChunkCountPlugin({ maxChunks: 1 }));
   }
+
+  serverConfig.plugins.push(
+    new rspack.DefinePlugin({
+      'process.env.REACT_ON_RAILS_RSC_BUNDLE': JSON.stringify(rscBundle ? 'true' : 'false'),
+      'process.env.RSC_CACHE_ENABLED': JSON.stringify(process.env.RSC_CACHE_ENABLED || 'false'),
+      'process.env.RSC_L1_CACHE_MAX_ENTRIES': JSON.stringify(process.env.RSC_L1_CACHE_MAX_ENTRIES || '50'),
+    }),
+  );
 
   serverConfig.output = {
     filename: 'server-bundle.js',

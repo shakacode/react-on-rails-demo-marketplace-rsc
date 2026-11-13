@@ -1,13 +1,19 @@
 const { default: serverWebpackConfig, extractLoader } = require('./serverWebpackConfig');
 const { getWebpackRscImplementation } = require('../rsc-implementations');
 
+const addIoredisExternal = require('../shared/addIoredisExternal');
+
 const configureRsc = () => {
   const rscConfig = serverWebpackConfig(true);
   const rscImplementation = getWebpackRscImplementation();
 
   // Update the entry name to be `rsc-bundle` instead of `server-bundle`
+  const serverBundleEntry = rscConfig.entry['server-bundle'];
   const rscEntry = {
-    'rsc-bundle': rscConfig.entry['server-bundle'],
+    'rsc-bundle': [
+      './app/javascript/utils/initRedisCache.ts',
+      ...(Array.isArray(serverBundleEntry) ? serverBundleEntry : [serverBundleEntry]),
+    ],
   };
   rscConfig.entry = rscEntry;
 
@@ -40,6 +46,7 @@ const configureRsc = () => {
 
   // Update the output bundle name to be `rsc-bundle.js` instead of `server-bundle.js`
   rscConfig.output.filename = 'rsc-bundle.js';
+  rscConfig.externals = addIoredisExternal(rscConfig.externals);
   return rscConfig;
 };
 
