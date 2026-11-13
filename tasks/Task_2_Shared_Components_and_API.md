@@ -1,5 +1,7 @@
 # Task 2: Shared Components & API
 
+> **Historical planning document.** This is the original proposal, not current operating instructions or a record of what shipped. Routes, commands, dataset sizes, performance targets, and checklists may be obsolete. Start with the [current README](../README.md).
+
 **Time**: 12-16 hours
 **Dependencies**: Task 1 (Database must be complete and seeded)
 **Blocks**: Tasks 3 & 4 (Both versions use these components and endpoints)

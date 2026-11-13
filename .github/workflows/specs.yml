@@ -1,7 +1,7 @@
 name: RSpec request & routing specs
 
 # Fast safety net for ordinary app-level changes — runs on every PR that touches
-# Ruby/config/spec paths, and again on push to main as a post-merge gate.
+# Ruby/config/spec paths or documentation inputs, and again on push to main.
 # The existing browser
 # gates prove the pages render and hydrate, but both need the full toolchain:
 # browser-smoke.yml builds production assets and boots Rails + the Node renderer
@@ -48,6 +48,11 @@ on:
       - '.github/workflows/specs.yml'
       - 'Rakefile'
       - 'bin/**'
+      # Entry-point docs also check local links and executable references.
+      - '**/*.md'
+      - 'script/**'
+      - 'package.json'
+      - 'db/seeds.rb'
   workflow_dispatch:
 
 permissions:
@@ -125,6 +130,7 @@ jobs:
                 app/*|config/*|lib/*|spec/*|bin/*) ruby=true; break 2 ;;
                 db/schema.rb|Gemfile|Gemfile.lock|.rspec|.verify-routes.js|Rakefile) ruby=true; break 2 ;;
                 .github/workflows/specs.yml) ruby=true; break 2 ;;
+                *.md|script/*|package.json|db/seeds.rb) ruby=true; break 2 ;;
               esac
             done
           done <<< "${files}"
@@ -179,12 +185,12 @@ jobs:
       - name: Load test schema
         run: bin/rails db:test:prepare
 
-      - name: Run request, routing & concern specs
+      - name: Run request, routing, service, concern & workflow specs
         # spec/ppr_production_boot_spec.rb lives outside spec/requests and
         # spec/routing but needs only Ruby (it shells out to `bin/rails
         # runner` in a self-contained production subprocess, no DB access),
         # so it rides along in this fast job instead of getting its own.
-        run: bundle exec rspec spec/requests spec/routing spec/concerns spec/workflows spec/ppr_production_boot_spec.rb
+        run: bundle exec rspec spec/requests spec/routing spec/services spec/concerns spec/workflows spec/ppr_production_boot_spec.rb
 
   # Always-emitting result for the required-checks gate (#206). This — not
   # `rspec` — is the required context, because it reports on every PR:

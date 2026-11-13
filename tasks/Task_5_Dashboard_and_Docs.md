@@ -1,5 +1,7 @@
 # Task 5: Dashboard & Documentation
 
+> **Historical planning document.** This is the original proposal, not current operating instructions or a record of what shipped. Routes, commands, dataset sizes, performance targets, and checklists may be obsolete. Start with the [current README](../README.md).
+
 **Time**: 6-10 hours
 **Dependencies**: Task 3 (Traditional) and Task 4 (RSC) both complete
 **Status**: Final polish and delivery

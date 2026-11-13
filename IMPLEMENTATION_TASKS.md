@@ -1,5 +1,7 @@
 # LocalHub: Simplified Implementation Tasks (5 Tasks)
 
+> **Historical planning document.** This is the original proposal, not current operating instructions or a record of what shipped. Routes, commands, dataset sizes, performance targets, and checklists may be obsolete. Start with the [current README](./README.md).
+
 **A demo app should be simple and focused. These 5 tasks cover everything needed.**
 
 ---

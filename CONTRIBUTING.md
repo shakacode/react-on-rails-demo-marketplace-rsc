@@ -12,12 +12,12 @@ This repo exists to make SSR, client components, and React Server Components eas
 
 ## Local setup
 
-1. Install Ruby `3.4.9`, PostgreSQL, and Node `20.x` or newer.
+1. Install Ruby `3.4.9`, PostgreSQL, and Node `22.12` or newer (or a supported Node 20 release in `package.json`), and pnpm `9.15.2`.
 2. Install dependencies:
 
    ```bash
    bundle install
-   pnpm install
+   pnpm install --frozen-lockfile
    ```
 
 3. Prepare the database:
@@ -37,12 +37,15 @@ This repo exists to make SSR, client components, and React Server Components eas
 ## Useful routes
 
 - `/` for the demo landing page and project links
-- `/search/ssr`, `/search/client`, `/search/rsc`
+- `/products` for the RSC product catalog
 - `/blog/ssr`, `/blog/client`, `/blog/rsc`
 - `/product/ssr`, `/product/client`, `/product/rsc`
 - `/product-search/ssr`, `/product-search/client`, `/product-search/rsc`
-- `/analytics/ssr`, `/analytics/client`, `/analytics/rsc`
-- `/dashboard` for comparison metrics
+- `/restaurant/1/ssr`, `/restaurant/1/client`, `/restaurant/1/rsc`
+- `/media-gallery` for the multimedia showcase
+- `/rsc-performance` for linked performance reports
+
+The [README demo table](./README.md#explore-the-demo) links to the live versions. The [route contract](./spec/support/route_contract.rb) is the complete GET-route inventory, including feature-gated experiments.
 
 ## Demo guardrails
 
@@ -56,6 +59,7 @@ This repo exists to make SSR, client components, and React Server Components eas
 Use the repo-specific verification commands before opening or updating a PR:
 
 ```bash
+bundle exec rspec spec/requests spec/routing spec/services spec/concerns spec/workflows spec/ppr_production_boot_spec.rb
 script/demo-fleet-verify
 pnpm type-check
 pnpm lint
@@ -63,7 +67,9 @@ bundle exec rubocop
 git diff --check
 ```
 
-`script/demo-fleet-verify` is the broad demo gate. It runs the Rails test task, RSC import checks, generated pack checks, the production build, and RSC chunk verification.
+`script/demo-fleet-verify` is the broad demo gate. It runs E2E type checks, lint and support unit tests, the Rails task, RSC import checks, the production build, and RSC chunk verification. RSpec runs separately; `bundle exec rake` does not run it.
+
+The routing specs check README and contributor-guide routes against the canonical route contract. CI runs these specs for changes to either document, including documentation-only PRs.
 
 `pnpm lint` checks the JavaScript and TypeScript app tree with the repo ESLint config. `bundle exec rubocop` checks Ruby files with the repo RuboCop config and the current TODO baseline; remove entries from `.rubocop_todo.yml` as existing Ruby style debt is fixed.
 
@@ -93,7 +99,7 @@ and cannot boot in production. See
 ## Documentation to read first
 
 - [README.md](./README.md)
-- [IMPLEMENTATION_TASKS.md](./IMPLEMENTATION_TASKS.md)
+- [PERFORMANCE_EVIDENCE.md](./PERFORMANCE_EVIDENCE.md)
 - [BENCHMARKING.md](./BENCHMARKING.md)
 - [DOCS_MANIFEST.md](./DOCS_MANIFEST.md)
 
@@ -110,6 +116,6 @@ If your work changes deployment or review-app behavior, mention that explicitly 
 
 ## Questions and follow-up
 
-- Repo issues: https://github.com/shakacode/react-server-components-marketplace-demo/issues
+- Repo issues: https://github.com/shakacode/react-on-rails-demo-marketplace-rsc/issues
 - React on Rails docs: https://reactonrails.com/docs
 - ShakaCode forum: https://forum.shakacode.com/c/reactjs
