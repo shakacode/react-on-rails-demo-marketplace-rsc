@@ -107,9 +107,9 @@ RSpec.describe 'specs.yml detect-changes step' do
     # (3 filenames + 2 previous names = 5), matching `declared` and silently
     # skipping specs; entry-unit counting sees 3 < 5 and fails open.
     files = [
-      { 'filename' => 'docs/index.md' },
-      { 'filename' => 'docs/new-a.md', 'previous_filename' => 'docs/old-a.md' },
-      { 'filename' => 'notes/new-b.md', 'previous_filename' => 'notes/old-b.md' }
+      { 'filename' => 'notes/index.txt' },
+      { 'filename' => 'notes/new-a.txt', 'previous_filename' => 'notes/old-a.txt' },
+      { 'filename' => 'notes/new-b.txt', 'previous_filename' => 'notes/old-b.txt' }
     ]
     result = run_detect_changes(files: files, changed_files: 5)
 
@@ -136,7 +136,7 @@ RSpec.describe 'specs.yml detect-changes step' do
   end
 
   it 'reports ruby=false when only irrelevant paths changed' do
-    files = [{ 'filename' => 'docs/x.md' }, { 'filename' => 'docs/y.md' }]
+    files = [{ 'filename' => 'notes/x.txt' }, { 'filename' => 'notes/y.txt' }]
     result = run_detect_changes(files: files, changed_files: 2)
 
     expect(result.fetch(:status)).to be_success
@@ -153,7 +153,26 @@ RSpec.describe 'specs.yml detect-changes step' do
     end
 
     it "detects a rename away from #{filename}" do
-      files = [{ 'filename' => 'docs/archived.md', 'previous_filename' => filename }]
+      files = [{ 'filename' => 'notes/archived.txt', 'previous_filename' => filename }]
+      result = run_detect_changes(files: files, changed_files: 1)
+
+      expect(result.fetch(:status)).to be_success
+      expect(result.fetch(:output)).to eq("ruby=true\n")
+    end
+  end
+
+  %w[
+    PERFORMANCE_EVIDENCE.md docs/rsc.md .controlplane/README.md package.json db/seeds.rb script/demo-fleet-verify
+  ].each do |filename|
+    it "checks documentation dependencies when only #{filename} changes" do
+      result = run_detect_changes(files: [{ 'filename' => filename }], changed_files: 1)
+
+      expect(result.fetch(:status)).to be_success
+      expect(result.fetch(:output)).to eq("ruby=true\n")
+    end
+
+    it "checks documentation dependencies when #{filename} is renamed away" do
+      files = [{ 'filename' => 'notes/archived.txt', 'previous_filename' => filename }]
       result = run_detect_changes(files: files, changed_files: 1)
 
       expect(result.fetch(:status)).to be_success
