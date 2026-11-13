@@ -4,7 +4,7 @@ ruby '3.4.9'
 
 # Core Rails
 gem 'rails', '~> 8.1'
-gem 'pg', '~> 1.6'
+gem 'pg', '~> 1.7'
 gem 'puma', '~> 8.0'
 
 # Asset Pipeline
@@ -35,7 +35,7 @@ group :development, :test do
   gem 'rspec-rails', '~> 8.0'
   gem 'factory_bot_rails'
   gem 'faker'
-  gem "pry", "~> 0.16.0"
+  gem "pry", "~> 0.16.1"
   gem "pry-byebug", "~> 3.12"
 end
 
