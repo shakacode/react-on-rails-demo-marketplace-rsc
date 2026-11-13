@@ -59,7 +59,7 @@ The [README demo table](./README.md#explore-the-demo) links to the live versions
 Use the repo-specific verification commands before opening or updating a PR:
 
 ```bash
-bundle exec rspec spec/requests spec/routing spec/concerns spec/workflows spec/ppr_production_boot_spec.rb
+bundle exec rspec spec/requests spec/routing spec/services spec/concerns spec/workflows spec/ppr_production_boot_spec.rb
 script/demo-fleet-verify
 pnpm type-check
 pnpm lint
