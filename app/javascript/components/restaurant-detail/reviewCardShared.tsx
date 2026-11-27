@@ -5,13 +5,16 @@
 import React from 'react';
 import { Review } from './types';
 
-const reviewDateFormatter = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
-});
+let reviewDateFormatter: Intl.DateTimeFormat | undefined;
 
 export function formatReviewDate(createdAt: string): string {
   const timestamp = Date.parse(createdAt);
-  return Number.isNaN(timestamp) ? 'Invalid Date' : reviewDateFormatter.format(timestamp);
+  if (Number.isNaN(timestamp)) return 'Invalid Date';
+
+  reviewDateFormatter ??= new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
+  });
+  return reviewDateFormatter.format(timestamp);
 }
 
 const AVATAR_PALETTE = [
