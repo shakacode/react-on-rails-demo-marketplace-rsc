@@ -1,10 +1,18 @@
 // Run against a marketplace server. The fixture lives only in this disposable browser tab.
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { chromium } from '@playwright/test';
+import webpack from 'webpack';
 
 const baseUrl = process.argv[2] || 'http://localhost:3000';
-const browser = await chromium.launch({ channel: process.env.CHROME_CHANNEL || 'chromium' });
+const scratch = await mkdtemp(join(tmpdir(), 'marketplace-store-probe-'));
+let browser;
 try {
+  browser = await chromium.launch({ channel: process.env.CHROME_CHANNEL || 'chromium' });
   const page = await browser.newPage();
   for (const path of ['/blog/ssr', '/product/ssr', '/product/rsc']) {
     const response = await page.goto(new URL(path, baseUrl).href);
@@ -22,72 +30,92 @@ try {
     console.log(JSON.stringify({ path, ...route }));
   }
 
-  // Exercise the demo's actual Pro client even on a page that declares no stores.
-  const control = await page.evaluate(async () => {
-    const api = window.ReactOnRails;
-    const names = ['catalog', 'account', 'currency', 'promo'].map((name) => `probe-${name}`);
-    for (const name of names) api.setStore(name, { getState: () => name });
+  // Build the locked public Pro client entry for an isolated Turbo-enabled page.
+  // A parser-blocking script sets the option before DOMContentLoaded and Pro lifecycle setup.
+  const stats = await promisify(webpack)({
+    mode: 'production',
+    entry: 'react-on-rails-pro/client',
+    output: { path: scratch, filename: 'pro.js', library: { type: 'window', name: 'ReactOnRails', export: 'default' } },
+    optimization: { minimize: false },
+    performance: { hints: false },
+  });
+  assert.ok(!stats.hasErrors(), stats.toString({ all: false, errors: true }));
 
-    const frame = document.createElement('turbo-frame');
-    for (const name of names) {
-      const store = document.createElement('script');
-      store.type = 'application/json';
-      store.dataset.jsReactOnRailsStore = name;
-      store.textContent = '{}';
-      frame.append(store);
-    }
-    const ids = Array.from({ length: 16 }, (_, i) => `probe-panel-${i}`);
-    for (const id of ids) {
-      const root = document.createElement('div');
-      root.id = id;
-      const spec = document.createElement('script');
-      spec.type = 'application/json';
-      spec.className = 'js-react-on-rails-component';
-      spec.dataset.domId = id;
-      spec.dataset.componentName = 'LookupProbe';
-      spec.dataset.storeDependencies = JSON.stringify(names);
-      spec.textContent = '{}';
-      frame.append(root, spec);
-    }
-    let renders = 0;
+  const fixture = await browser.newPage();
+  const origin = 'http://store-probe.test';
+  const names = ['catalog', 'account', 'currency', 'promo'];
+  const ids = Array.from({ length: 16 }, (_, i) => `panel-${i}`);
+  const tags = names.map((name) =>
+    `<script type="application/json" data-js-react-on-rails-store="${name}">{}</script>`).join('');
+  const panels = ids.map((id) => `<div id="${id}"></div>
+    <script type="application/json" class="js-react-on-rails-component" data-dom-id="${id}"
+      data-component-name="LookupProbe" data-store-dependencies='${JSON.stringify(names)}'>{}</script>
+    <script>typeof ReactOnRails === 'object' && ReactOnRails.reactOnRailsComponentLoaded('${id}');</script>`).join('');
+  // Playwright serves the fixture and its frame response on one origin. Turbo performs the request.
+  await fixture.route(`${origin}/turbo.js`, (route) => route.fulfill({ path: fileURLToPath(import.meta.resolve('@hotwired/turbo')) }));
+  await fixture.route(`${origin}/pro.js`, (route) => route.fulfill({ path: join(scratch, 'pro.js') }));
+  await fixture.route(`${origin}/start`, (route) => route.fulfill({
+    contentType: 'text/html',
+    body: `<!doctype html><html><head>
+      <script id="js-react-on-rails-context" type="application/json">{"rorPro":true}</script>
+      <script src="/turbo.js"></script><script src="/pro.js"></script>
+      <script>ReactOnRails.setOptions({turbo:true})</script></head><body>
+      <turbo-frame id="probe"><a href="/next">Load panels</a></turbo-frame></body></html>`,
+  }));
+  await fixture.route(`${origin}/next`, (route) => route.fulfill({
+    contentType: 'text/html',
+    body: `<!doctype html><html><body><turbo-frame id="probe">${panels}</turbo-frame></body></html>`,
+  }));
+  await fixture.goto(`${origin}/start`);
+  await fixture.evaluate(({ names, tags }) => {
+    const api = window.ReactOnRails;
+    if (!api.option('turbo')) throw new Error('Turbo support was not enabled');
+    for (const name of names) api.setStore(name, { getState: () => name });
+    document.body.insertAdjacentHTML('beforeend', tags);
+    const probe = { renders: 0, scans: 0, frameLoads: 0 };
+    window.storeProbe = probe;
     api.register({
       LookupProbe(_props, _railsContext, id) {
         document.getElementById(id).textContent = names.map((name) => api.getStore(name).getState()).join(',');
-        renders++;
+        probe.renders++;
         return { teardown() {} };
       },
     });
-    document.body.append(frame);
-
+    document.getElementById('probe').addEventListener('turbo:frame-load', () => { probe.frameLoads++; });
     const original = document.querySelectorAll;
-    let scans = 0;
     document.querySelectorAll = function (selector) {
-      if (selector.includes('data-js-react-on-rails-store')) scans++;
+      if (selector.includes('data-js-react-on-rails-store')) probe.scans++;
       return original.call(this, selector);
     };
-    try {
-      // Positive control for the counter, with four actual store tags present.
-      const observedTags = document.querySelectorAll('[data-js-react-on-rails-store]');
-      const fixtureTags = [...observedTags].filter((el) => frame.contains(el)).length;
-      if (scans !== 1 || fixtureTags !== names.length) throw new Error('Store scan instrumentation failed');
-      scans = 0;
-      frame.dispatchEvent(new Event('turbo:frame-render', { bubbles: true }));
-      await new Promise(requestAnimationFrame);
-      const afterFrameEvent = { renders, storeSelectorCalls: scans };
-
-      scans = 0;
-      await Promise.all(ids.map((id) => api.reactOnRailsComponentLoaded(id)));
-      const expected = names.join(',');
-      if (!ids.every((id) => document.getElementById(id).textContent === expected)) {
-        throw new Error('A panel did not read the expected stores');
-      }
-      return { afterFrameEvent, renders, dependenciesPerIsland: names.length, explicitMountStoreScans: scans };
-    } finally {
-      document.querySelectorAll = original;
+    if (document.querySelectorAll('[data-js-react-on-rails-store]').length !== names.length || probe.scans !== 1) {
+      throw new Error('Store scan instrumentation failed');
     }
-  });
-  assert.equal(control.renders, 16);
-  console.log(JSON.stringify({ chrome: browser.version(), control }));
+    probe.scans = 0;
+  }, { names, tags });
+
+  const [response] = await Promise.all([
+    fixture.waitForResponse(`${origin}/next`),
+    fixture.getByRole('link', { name: 'Load panels' }).click(),
+  ]);
+  assert.equal(response.status(), 200);
+  assert.equal(await response.request().headerValue('Turbo-Frame'), 'probe');
+  await fixture.waitForFunction(() => window.storeProbe.frameLoads === 1 && document.querySelector('#probe[complete] #panel-15'));
+  assert.equal(fixture.url(), `${origin}/start`);
+  // Turbo activates the inline component-loaded callbacks that the Rails helper includes
+  // after each declaration. Wait for their asynchronous Pro mounts as well as the frame load.
+  await fixture.waitForFunction((size) => window.storeProbe.renders === size, ids.length);
+  const scans = await fixture.evaluate(({ ids, names }) => {
+    const expected = names.join(',');
+    if (ids.some((id) => document.getElementById(id).textContent !== expected)) {
+      throw new Error('A panel did not read all four stores');
+    }
+    return window.storeProbe.scans;
+  }, { ids, names });
+  console.log(JSON.stringify({
+    chrome: browser.version(), turboFrameHeader: 'probe', verifiedMounts: ids.length,
+    dependenciesPerIsland: names.length, navigationStoreSelectorCalls: scans,
+  }));
 } finally {
-  await browser.close();
+  await browser?.close();
+  await rm(scratch, { recursive: true, force: true });
 }
