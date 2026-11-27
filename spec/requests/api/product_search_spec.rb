@@ -74,6 +74,40 @@ RSpec.describe 'Api::ProductSearch', type: :request do
       expect(facets).to include('categories', 'brands', 'price_ranges', 'rating_distribution')
       expect(facets['total_count']).to be >= 1
     end
+
+    it 'counts only matching products at the price and rating boundaries' do
+      token = "Facets#{SecureRandom.hex(6)}"
+      [
+        [49.99, nil, nil],
+        [50, 0.99, false],
+        [99.99, 1.00, true],
+        [249.99, 1.99, true],
+        [250, 2.00, true],
+        [999.99, 3.00, true],
+        [1_000, 4.00, true],
+        [99_999.99, 5.99, true],
+        [100_000, 6.00, true]
+      ].each do |price, rating, stock|
+        create_product(name: token, price: price, average_rating: rating, in_stock: stock)
+      end
+
+      get '/api/product_search/facets', params: { q: token }
+      facets = response.parsed_body.fetch('facets')
+
+      expect(facets.fetch('price_ranges').pluck('count')).to eq([1, 2, 1, 1, 1, 2])
+      expect(facets.fetch('rating_distribution').pluck('stars', 'count'))
+        .to eq([[5, 1], [4, 1], [3, 1], [2, 1], [1, 2]])
+      expect(facets).to include('in_stock_count' => 7, 'out_of_stock_count' => 1, 'total_count' => 9)
+    end
+
+    it 'returns zero for every bucket when the search has no matches' do
+      get '/api/product_search/facets', params: { q: "Unmatched#{SecureRandom.hex(6)}" }
+      facets = response.parsed_body.fetch('facets')
+
+      expect(facets.fetch('price_ranges').pluck('count')).to eq([0] * 6)
+      expect(facets.fetch('rating_distribution').pluck('count')).to eq([0] * 5)
+      expect(facets).to include('in_stock_count' => 0, 'out_of_stock_count' => 0, 'total_count' => 0)
+    end
   end
 
   describe 'POST /api/product_search/review_snippets' do

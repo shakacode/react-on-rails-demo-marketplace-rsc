@@ -20,14 +20,17 @@ class Product < ApplicationRecord
   }
 
   def self.facets(scope = all)
+    stock = arel_table[:in_stock]
+    in_stock, out_of_stock, total = facet_counts(scope, [stock.eq(true), stock.eq(false), nil])
+
     {
       categories: scope.group(:category).count.sort_by { |_, v| -v },
       brands: scope.group(:brand).count.sort_by { |_, v| -v },
       price_ranges: compute_price_ranges(scope),
       rating_distribution: compute_rating_distribution(scope),
-      in_stock_count: scope.where(in_stock: true).count,
-      out_of_stock_count: scope.where(in_stock: false).count,
-      total_count: scope.count
+      in_stock_count: in_stock,
+      out_of_stock_count: out_of_stock,
+      total_count: total
     }
   end
 
@@ -40,16 +43,26 @@ class Product < ApplicationRecord
       { label: '$500 - $1,000', min: 500, max: 1000 },
       { label: 'Over $1,000', min: 1000, max: 100_000 }
     ]
-    ranges.map do |r|
-      r.merge(count: scope.where(price: r[:min]...r[:max]).count)
-    end
+    buckets = ranges.map { |range| arel_table[:price].between(range[:min]...range[:max]) }
+    ranges.zip(facet_counts(scope, buckets)).map { |range, count| range.merge(count: count) }
   end
 
   def self.compute_rating_distribution(scope)
-    (1..5).map do |star|
-      { stars: star, count: scope.where('average_rating >= ? AND average_rating < ?', star, star + 1).count }
-    end.reverse
+    stars = 5.downto(1)
+    buckets = stars.map { |star| Arel.sql('average_rating').between(star...(star + 1)) }
+    stars.zip(facet_counts(scope, buckets)).map { |star, count| { stars: star, count: count } }
   end
+
+  def self.facet_counts(scope, buckets)
+    # Batch the search paths (all or where). Other relation clauses retain Active Record's
+    # per-bucket count semantics, e.g. a limit applies to the matching rows of each bucket.
+    return buckets.map { |bucket| scope.where(bucket).count } if scope.values.except(:where).any?
+
+    # Compute all requested counts in one scan. A nil bucket counts every row.
+    aggregates = buckets.map { |bucket| bucket ? Arel.star.count.filter(bucket) : Arel.star.count }
+    scope.pick(*aggregates) || Array.new(buckets.size, 0)
+  end
+  private_class_method :facet_counts
 
   def self.filtered_search(params)
     scope = all
