@@ -6,15 +6,13 @@ import React from 'react';
 import { Review } from './types';
 import { renderSanitizedMarkdown } from '../../utils/sanitizeAndRender';
 import { HelpfulButton } from './HelpfulButtonForServer';
-import { avatarFor, Stars } from './reviewCardShared';
+import { avatarFor, formatReviewDate, Stars } from './reviewCardShared';
 
 
 
 export function ReviewCard({ review }: { review: Review }) {
   const html = renderSanitizedMarkdown(review.body);
-  const date = new Date(review.created_at).toLocaleDateString('en-US', {
-    timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
-  });
+  const date = formatReviewDate(review.created_at);
   const av = avatarFor(review.reviewer);
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">

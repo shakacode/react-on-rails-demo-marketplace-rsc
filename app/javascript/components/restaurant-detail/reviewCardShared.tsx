@@ -5,6 +5,15 @@
 import React from 'react';
 import { Review } from './types';
 
+const reviewDateFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
+});
+
+export function formatReviewDate(createdAt: string): string {
+  const timestamp = Date.parse(createdAt);
+  return Number.isNaN(timestamp) ? 'Invalid Date' : reviewDateFormatter.format(timestamp);
+}
+
 const AVATAR_PALETTE = [
   ['bg-rose-100',    'text-rose-700'],
   ['bg-amber-100',   'text-amber-700'],
