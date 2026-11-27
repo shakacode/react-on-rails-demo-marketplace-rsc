@@ -153,7 +153,7 @@ With Turbo 8.0.23 and Pro 17.2.1, all **16 components mounted during the frame n
 
 ## Reading the Output
 
-Each run prints a comparison table and saves a JSON file to `.vitals-results/`.
+The Web Vitals measurement runner (`pnpm vitals`) prints a comparison table and saves JSON to `.vitals-results/` by default. The Turbo Frame store probe prints one JSON record per line to standard output.
 
 ### Metrics
 
