@@ -20,14 +20,16 @@ class Product < ApplicationRecord
   }
 
   def self.facets(scope = all)
+    stock_counts = scope.group(:in_stock).count
+
     {
       categories: scope.group(:category).count.sort_by { |_, v| -v },
       brands: scope.group(:brand).count.sort_by { |_, v| -v },
       price_ranges: compute_price_ranges(scope),
       rating_distribution: compute_rating_distribution(scope),
-      in_stock_count: scope.where(in_stock: true).count,
-      out_of_stock_count: scope.where(in_stock: false).count,
-      total_count: scope.count
+      in_stock_count: stock_counts.fetch(true, 0),
+      out_of_stock_count: stock_counts.fetch(false, 0),
+      total_count: stock_counts.values.sum
     }
   end
 
@@ -40,15 +42,17 @@ class Product < ApplicationRecord
       { label: '$500 - $1,000', min: 500, max: 1000 },
       { label: 'Over $1,000', min: 1000, max: 100_000 }
     ]
-    ranges.map do |r|
-      r.merge(count: scope.where(price: r[:min]...r[:max]).count)
+    # Compute every half-open price bucket in one pass over the search matches.
+    buckets = ranges.map do |range|
+      Arel.star.count.filter(arel_table[:price].between(range[:min]...range[:max]))
     end
+    counts = scope.pick(*buckets) || []
+    ranges.zip(counts).map { |range, count| range.merge(count: count.to_i) }
   end
 
   def self.compute_rating_distribution(scope)
-    (1..5).map do |star|
-      { stars: star, count: scope.where('average_rating >= ? AND average_rating < ?', star, star + 1).count }
-    end.reverse
+    counts = scope.where(average_rating: 1...6).group(Arel.sql('FLOOR(average_rating)::integer')).count
+    5.downto(1).map { |star| { stars: star, count: counts.fetch(star, 0) } }
   end
 
   def self.filtered_search(params)
