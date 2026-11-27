@@ -10,6 +10,12 @@ const { values } = parseArgs({
   },
 });
 const component = 'ProductSearchSSR';
+function predicates() {
+  return {
+    baseline: el => Boolean(el.innerHTML),
+    candidate: el => (el.localName !== 'template' && el.firstElementChild !== null) || Boolean(el.innerHTML),
+  };
+}
 const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN });
 
 async function measure() {
@@ -20,14 +26,11 @@ async function measure() {
   );
   const response = await page.goto(values.url, { waitUntil: 'domcontentloaded' });
   assert(response?.ok(), 'Expected a successful product search SSR response');
-  return page.evaluate((name) => {
+  const checks = await page.evaluateHandle(predicates);
+  return page.evaluate(({ name, checks: { baseline: htmlCheck, candidate: elementCheck } }) => {
     const script = document.querySelector(`script[data-component-name="${name}"]`);
     const root = script && document.getElementById(script.dataset.domId);
     if (!root?.firstElementChild) throw new Error('Expected prerendered ProductSearchSSR markup');
-    const htmlCheck = element => Boolean(element.innerHTML);
-    const elementCheck = element =>
-      (element.localName !== 'template' && element.firstElementChild !== null) || htmlCheck(element);
-
     const controls = ['', ' ', 'text', '<!--boundary-->', '<span></span>'].map(markup => {
       const element = document.createElement('div');
       element.innerHTML = markup;
@@ -80,49 +83,100 @@ async function measure() {
       repetitions,
       samples,
     };
-  }, component);
+  }, { name: component, checks });
 }
 
-async function verifyClient() {
-  const page = await browser.newPage();
+// Only rewrite the boolean lookup at the getter's exact Chromium call site.
+// If the deployed bundle changes shape, abort the experiment.
+function instrumentLookup(source, lookup) {
+  const lines = source.split('\n');
+  const line = lines[lookup.line - 1];
+  const before = line.slice(0, lookup.column - 1);
+  const after = line.slice(lookup.column - 1);
+  const match = before.match(/&&\s*!!([a-zA-Z_$][\w$]*)\.$/);
+  assert(match && /^innerHTML\b/.test(after), 'Observed read was not the supported hydration check');
+  const variable = match[1];
+  const from = before.lastIndexOf('!!');
+  const replacement = `window.__hydrationProbe.choose(${variable}, ${predicates().candidate})`;
+  lines[lookup.line - 1] = before.slice(0, from) + replacement + after.slice('innerHTML'.length);
+  return lines.join('\n');
+}
+
+async function verifyClient(lookup, forceClientRender = false) {
+  const page = await browser.newPage({ serviceWorkers: 'block' });
+  if (lookup) {
+    await page.route(lookup.url, async route => {
+      const original = await route.fetch();
+      await route.fulfill({ response: original, body: instrumentLookup(await original.text(), lookup) });
+    });
+  }
   // Instrument only this browser context. The native getter still returns its original value.
-  await page.addInitScript((name) => {
+  await page.addInitScript(({ name, forceClientRender }) => {
+    const isTarget = el => el.id &&
+      document.getElementById(`js-react-on-rails-component-${el.id}`)?.dataset.componentName === name;
     const descriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
-    const observations = { reads: 0, firstChild: null };
+    const observations = {
+      reads: [], firstChild: null, candidateCalls: 0,
+      choose(el, predicate) {
+        if (!isTarget(el)) return Boolean(el.innerHTML);
+        this.candidateCalls++;
+        this.firstChild = el.firstElementChild;
+        return forceClientRender ? false : predicate(el);
+      },
+    };
     window.__hydrationProbe = observations;
     Object.defineProperty(Element.prototype, 'innerHTML', {
       ...descriptor,
       get() {
         const html = descriptor.get.call(this);
-        const metadata = this.id && document.getElementById(`js-react-on-rails-component-${this.id}`);
-        if (metadata && metadata.dataset.componentName === name) {
-          observations.reads++;
+        if (isTarget(this)) {
+          observations.reads.push(new Error().stack.split('\n')[2]);
           observations.firstChild ??= this.firstElementChild;
         }
         return html;
       },
     });
-  }, component);
+  }, { name: component, forceClientRender });
   await page.goto(values.url, { waitUntil: 'domcontentloaded' });
   const script = page.locator(`script[data-component-name="${component}"]`);
   const rootId = await script.getAttribute('data-dom-id');
   assert(rootId, 'ProductSearchSSR root ID missing');
   const root = page.locator(`[id="${rootId}"]`);
   // This button only changes local React state. Its state change confirms interactivity.
-  await page.waitForFunction(() => window.__hydrationProbe.reads > 0);
+  await page.waitForFunction(() => window.__hydrationProbe.reads.length || window.__hydrationProbe.candidateCalls);
   await root.getByRole('button', { name: 'Add to Cart', exact: true }).first().click();
   await root.getByRole('button', { name: 'Added!', exact: true }).first().waitFor();
   const proof = await root.evaluate(el => ({
     reads: window.__hydrationProbe.reads,
+    candidateCalls: window.__hydrationProbe.candidateCalls,
     keptServerChild: el.firstElementChild === window.__hydrationProbe.firstChild,
   }));
-  assert(proof.keptServerChild, 'Hydration replaced the server-rendered first element');
+  assert.equal(proof.keptServerChild, !forceClientRender,
+    'Only the forced client render should replace the server-rendered first element');
+  await page.close();
+  if (lookup) {
+    assert.equal(proof.candidateCalls, 1, 'Candidate lookup did not run on the live render path');
+    assert.equal(proof.reads.length, 0, 'Candidate still serialized root HTML');
+  } else {
+    assert.equal(proof.reads.length, 1, 'Expected exactly one baseline root read to attribute');
+  }
   return proof;
+}
+
+async function verifyBothClients() {
+  const baseline = await verifyClient();
+  const frame = baseline.reads[0].match(/(https?:\/\/[^\s()]+):(\d+):(\d+)\)?$/);
+  assert(frame, 'Could not locate the baseline root read in a served script');
+  const lookup = { url: frame[1], line: Number(frame[2]), column: Number(frame[3]) };
+  const candidate = await verifyClient(lookup);
+  // Prove the observed boolean controls React's choice: forcing false must replace the SSR child.
+  const clientRenderControl = await verifyClient(lookup, true);
+  return { baseline, candidate, clientRenderControl, lookup };
 }
 
 try {
   const result = await measure();
-  if (values['verify-client']) result.currentClient = await verifyClient();
+  if (values['verify-client']) result.integration = await verifyBothClients();
   console.log(JSON.stringify({
     url: values.url,
     browser: browser.version(),

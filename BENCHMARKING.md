@@ -225,9 +225,13 @@ check that falls back to the current behavior for text, comments and templates. 
 same DOM in alternating order. The JSON output includes the input sizes, per-operation medians
 in milliseconds, and all 30 timing pairs.
 
-`--verify-client` also loads the actual app in a fresh browser context, observes the pinned
-client reading the root, and checks that the original first element survives a working Add to
-Cart interaction. This mode needs JavaScript packs and an in-stock product. The timings cover
+`--verify-client` also runs isolated browser contexts against the served app. The first
+records the caller of the root's native HTML getter. The second intercepts that JavaScript asset
+in the browser and substitutes the candidate at the exact observed lookup. It checks for one
+candidate call and zero root serializations. Both contexts verify that the first server-rendered
+element survives a working Add to Cart interaction. A third context forces that lookup to return false and verifies that client
+rendering replaces the server element. This mode needs JavaScript packs, a build
+with the recognizable boolean lookup, and an in-stock product. It changes no files on the server. The timings cover
 two synchronous setup operations on this SSR route. Use the Web Vitals suite for page-level
 measurements. RSC streaming follows separate client paths.
 
