@@ -49,7 +49,7 @@ class Product < ApplicationRecord
 
   def self.compute_rating_distribution(scope)
     stars = 5.downto(1)
-    buckets = stars.map { |star| arel_table[:average_rating].between(star...(star + 1)) }
+    buckets = stars.map { |star| Arel.sql('average_rating').between(star...(star + 1)) }
     stars.zip(facet_counts(scope, buckets)).map { |star, count| { stars: star, count: count } }
   end
 

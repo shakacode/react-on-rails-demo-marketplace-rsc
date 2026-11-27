@@ -23,6 +23,12 @@ RSpec.describe Product, '.facets' do
     ]
   end
 
+  it 'counts ratings for a relation with an aliased product table' do
+    relation = Product.from('products AS catalog').where('catalog.id IN (?)', scope.ids)
+
+    expect(Product.compute_rating_distribution(relation).pluck(:count)).to eq([0, 1, 2, 0, 0])
+  end
+
   it 'applies a limit to the matching rows within each bucket' do
     expect(facet_totals(scope.limit(0))).to eq([[0] * 6, [0] * 5, [0, 0, 0]])
     expect(facet_totals(scope.limit(1))).to eq([[1, 1, 0, 0, 0, 0], [0, 1, 1, 0, 0], [1, 1, 1]])
