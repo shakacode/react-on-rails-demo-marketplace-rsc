@@ -207,6 +207,30 @@ per-shape costs, the `verify:rsc` red-team, and the decision table — lives in
 
 ---
 
+## Browser cost of choosing hydration on product search
+
+Run this focused Chromium benchmark against a seeded marketplace server. The URL defaults to
+`http://localhost:3000/product-search/ssr`.
+
+```bash
+pnpm perf:preflight
+node scripts/measure-hydration-choice.mjs --verify-client
+```
+
+Pass `--url <product-search-ssr-url>` to select another server. Set `CHROME_BIN` to use a
+specific Chromium executable. The benchmark loads the initial HTML with application JavaScript
+disabled, reads the component props, then times parsing the props and deciding whether the
+server root contains markup. It compares the current full `innerHTML` read with an element-child
+check that falls back to the current behavior for text, comments and templates. Both run on the
+same DOM in alternating order. The JSON output includes the input sizes, per-operation medians
+in milliseconds, and all 30 timing pairs.
+
+`--verify-client` also loads the actual app in a fresh browser context, observes the pinned
+client reading the root, and checks that the original first element survives a working Add to
+Cart interaction. This mode needs JavaScript packs and an in-stock product. The timings cover
+two synchronous setup operations on this SSR route. Use the Web Vitals suite for page-level
+measurements. RSC streaming follows separate client paths.
+
 ## ShakaPerf A/B Testing
 
 [ShakaPerf](https://github.com/shakacode/shakaperf) compares two code versions
