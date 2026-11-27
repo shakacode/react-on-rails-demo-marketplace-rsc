@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { Review } from './types';
 import { renderSanitizedMarkdown } from '../../utils/sanitizeAndRender';
 import { HelpfulButton } from './HelpfulButton';
-import { avatarFor, RatingDistribution, Stars } from './reviewCardShared';
+import { avatarFor, formatReviewDate, RatingDistribution, Stars } from './reviewCardShared';
 
 type SortKey = 'newest' | 'rating' | 'helpful';
 
@@ -20,9 +20,7 @@ interface Props {
 
 export function ReviewCard({ review }: { review: Review }) {
   const html = useMemo(() => renderSanitizedMarkdown(review.body), [review.body]);
-  const date = new Date(review.created_at).toLocaleDateString('en-US', {
-    timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric',
-  });
+  const date = formatReviewDate(review.created_at);
   const av = avatarFor(review.reviewer);
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
