@@ -136,6 +136,19 @@ Runs throttled benchmarks at multiple content delays (0ms, 200ms, 500ms). Automa
 bash scripts/measure-with-delays.sh
 ```
 
+### Turbo Frame store lookups
+
+Run the browser probe against a running marketplace server:
+
+```bash
+pnpm exec playwright install chromium
+node scripts/probe-turbo-store-lookups.mjs http://localhost:3000
+```
+
+The probe visits `/blog/ssr`, `/product/ssr`, and `/product/rsc` and counts component declarations, Turbo Frames, Redux store tags, and declared store dependencies. It then adds a controlled frame to the disposable browser tab and registers four hydrated store values. It dispatches `turbo:frame-render`, explicitly mounts 16 probe components through the loaded React on Rails client, and verifies that every component reads all four values. The counter tracks document-wide `querySelectorAll` calls for the store attribute. A positive control first locates all four tags through that selector.
+
+On November 27, 2026, each [public demo](https://rsc.reactonrails.com/) route above reported one component, Pro 17.2.1, Turbo disabled, and zero frames, store tags, or store dependencies. The controlled frame event produced zero renders by the next animation frame. Explicitly mounting all 16 components succeeded with **zero store selector scans**. Pro 17.2.1 already resolves the declared names through [the store registry](https://github.com/shakacode/react_on_rails/blob/v17.2.1/packages/react-on-rails-pro/src/ClientSideRenderer.ts#L264-L273). An earlier registry check in the OSS renderer would save zero scans for this workload. The probe reports operation counts. Page latency was outside this measurement.
+
 ## Reading the Output
 
 Each run prints a comparison table and saves a JSON file to `.vitals-results/`.
