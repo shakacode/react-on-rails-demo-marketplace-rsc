@@ -97,7 +97,8 @@
       "react-on-rails": "17.2.1",
       "shakapacker": "10.3.2",
       "uuid@8": "^11.1.1",
-      "nanoid@3": "^3.3.18"
+      "nanoid@3": "^3.3.18",
+      "chromium-bidi>zod": "^4.6.6"
     }
   },
   "devDependencies": {
@@ -140,7 +141,6 @@
     "css-loader": "^7.1.5",
     "eslint": "^10.10.0",
     "eslint-plugin-react": "^7.34.0",
-    "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.12.0",
     "mini-css-extract-plugin": "^2.10.2",
@@ -153,9 +153,8 @@
     "rspack-manifest-plugin": "^5.2.2",
     "sass": "^1.104.0",
     "sass-loader": "^17.0.1",
-    "shaka-bundle-size": "0.0.12",
-    "shaka-perf": "0.2.5",
-    "shaka-shared": "0.2.4",
+    "shaka-perf": "0.7.0",
+    "shaka-shared": "0.7.0",
     "shakapacker": "10.3.2",
     "style-loader": "^4.0.0",
     "swc-loader": "^0.2.6",

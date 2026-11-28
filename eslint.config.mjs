@@ -2,7 +2,6 @@ import { fixupConfigRules } from '@eslint/compat';
 import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import react from 'eslint-plugin-react';
-import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
@@ -20,7 +19,6 @@ export default [
   ...fixupConfigRules(react.configs.flat.recommended),
   ...fixupConfigRules(react.configs.flat['jsx-runtime']),
   reactHooks.configs.flat.recommended,
-  reactCompiler.configs.recommended,
   {
     files: ['app/javascript/**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
@@ -52,7 +50,6 @@ export default [
       'react/no-unescaped-entities': 'off',
       'react/prop-types': 'off',
       'react-hooks/exhaustive-deps': 'error',
-      'react-compiler/react-compiler': 'error',
     },
   },
   {
