@@ -21,7 +21,6 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
   ],
-  plugins: ['react-compiler'],
   settings: {
     react: {
       version: 'detect',
@@ -38,6 +37,5 @@ module.exports = {
     'react/no-unescaped-entities': 'off',
     'react/prop-types': 'off',
     'react-hooks/exhaustive-deps': 'error',
-    'react-compiler/react-compiler': 'error',
   },
 };

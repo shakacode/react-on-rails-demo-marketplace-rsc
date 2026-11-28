@@ -232,7 +232,7 @@ supported.
 ### Single-Target Audit
 
 Point ShakaPerf at one running server to get a combined performance,
-accessibility, visual, and bundle-size report:
+accessibility, and visual report:
 
 ```bash
 # Against a running server on the default port
@@ -321,12 +321,9 @@ intervals are in the HTML report and per-test artifact directories.
 
 ### Bundle Size Diffing
 
-`shaka-bundle-size` (included as a dev dependency) complements the existing
-`scripts/measure-bundle-sizes.mjs`. Both tools remain available:
-
-- `scripts/measure-bundle-sizes.mjs` — absolute bundle sizes per loadable chunk
-- `shaka-bundle-size` — used by ShakaPerf internally for A/B bundle delta
-  reporting as part of the compare pipeline
+Use `scripts/measure-bundle-sizes.mjs` to measure the JS and CSS that each of
+its fixed pages downloads from `/packs/` on load. ShakaPerf does not report
+bundle sizes, and this repository does not install `shaka-bundle-size`.
 
 ### CI Integration
 
