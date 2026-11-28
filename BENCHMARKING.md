@@ -321,9 +321,9 @@ intervals are in the HTML report and per-test artifact directories.
 
 ### Bundle Size Diffing
 
-Use `scripts/measure-bundle-sizes.mjs` for absolute bundle sizes per loadable
-chunk. ShakaPerf does not report bundle-size deltas, and this repository does
-not install `shaka-bundle-size`.
+Use `scripts/measure-bundle-sizes.mjs` to measure the JS and CSS that each of
+its fixed pages downloads from `/packs/` on load. ShakaPerf does not report
+bundle sizes, and this repository does not install `shaka-bundle-size`.
 
 ### CI Integration
 
