@@ -232,7 +232,7 @@ supported.
 ### Single-Target Audit
 
 Point ShakaPerf at one running server to get a combined performance,
-accessibility, visual, and bundle-size report:
+accessibility, and visual report:
 
 ```bash
 # Against a running server on the default port
